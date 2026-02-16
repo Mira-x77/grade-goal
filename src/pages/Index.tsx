@@ -1,17 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AppState, Subject } from "@/types/exam";
+import { saveState, loadState } from "@/lib/storage";
 import OnboardingScreen from "@/components/OnboardingScreen";
 import SubjectsSetup from "@/components/SubjectsSetup";
 import MarksInput from "@/components/MarksInput";
 import ResultsScreen from "@/components/ResultsScreen";
 
 const Index = () => {
-  const [state, setState] = useState<AppState>({
-    step: "onboarding",
-    targetAverage: 16,
-    subjects: [],
+  const [state, setState] = useState<AppState>(() => {
+    const saved = loadState();
+    return saved || { step: "onboarding", targetAverage: 16, subjects: [] };
   });
+
+  // Persist state changes
+  useEffect(() => {
+    saveState(state);
+  }, [state]);
 
   const setStep = (step: AppState["step"]) => setState((s) => ({ ...s, step }));
   const setTarget = (targetAverage: number) => setState((s) => ({ ...s, targetAverage }));

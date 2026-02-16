@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Target, TrendingUp, AlertTriangle, XCircle, Star, ArrowLeft } from "lucide-react";
+import { Target, TrendingUp, AlertTriangle, XCircle, ArrowLeft, RefreshCw } from "lucide-react";
 import { Subject, FeedbackStatus } from "@/types/exam";
 import {
   calcYearlyAverage,
@@ -8,6 +8,9 @@ import {
   getPredictedRange,
   rankSubjectsByImpact,
 } from "@/lib/exam-logic";
+import SubjectBreakdown from "./SubjectBreakdown";
+import MotivationCard from "./MotivationCard";
+import HistoryTimeline from "./HistoryTimeline";
 
 interface ResultsScreenProps {
   subjects: Subject[];
@@ -33,7 +36,7 @@ const statusConfig: Record<FeedbackStatus, { bg: string; shadow: string; icon: R
     bg: "bg-danger",
     shadow: "card-shadow-danger",
     icon: <XCircle className="h-8 w-8" />,
-    text: "Target no longer achievable",
+    text: "Target may need adjusting",
   },
 };
 
@@ -66,9 +69,12 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
     : "risky";
 
   const config = statusConfig[overallStatus];
-
-  // Calculate overall progress toward target
   const progressPercent = currentAvg !== null ? Math.min(100, (currentAvg / targetAverage) * 100) : 0;
+
+  // Suggest realistic target if current is impossible
+  const realisticTarget = overallStatus === "impossible" && range
+    ? Math.min(range.max, Math.floor(range.max * 2) / 2)
+    : null;
 
   return (
     <motion.div
@@ -80,6 +86,9 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
         <ArrowLeft className="h-4 w-4" /> Edit marks
       </button>
 
+      {/* Motivation */}
+      <MotivationCard subjects={subjects} targetAverage={targetAverage} />
+
       {/* Status hero */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -89,6 +98,11 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
       >
         <div className="flex justify-center mb-2">{config.icon}</div>
         <h2 className="text-xl font-black">{config.text}</h2>
+        {realisticTarget && (
+          <p className="mt-2 text-sm font-bold opacity-90">
+            Realistic target: {realisticTarget}/20
+          </p>
+        )}
       </motion.div>
 
       {/* Current average */}
@@ -108,7 +122,6 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
         <div className="text-4xl font-black text-foreground mb-2">
           {currentAvg !== null ? currentAvg.toFixed(1) : "—"}<span className="text-lg text-muted-foreground">/20</span>
         </div>
-        {/* Progress bar */}
         <div className="rounded-full bg-muted h-3 overflow-hidden">
           <motion.div
             className={`h-full rounded-full ${overallStatus === "possible" ? "bg-success" : overallStatus === "risky" ? "bg-warning" : "bg-danger"}`}
@@ -152,7 +165,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
         </motion.div>
       )}
 
-      {/* Predicted range */}
+      {/* Predicted range with adjusted target suggestion */}
       {range && (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -160,7 +173,9 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
           transition={{ delay: 0.3 }}
           className="rounded-2xl bg-card p-5 card-shadow"
         >
-          <h3 className="font-black text-foreground mb-2">Predicted final range</h3>
+          <h3 className="font-black text-foreground mb-2">
+            {overallStatus === "impossible" ? "What you can still reach" : "Predicted final range"}
+          </h3>
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold text-danger">Pessimistic</span>
             <div className="flex-1 mx-3 h-2 rounded-full bg-muted relative overflow-hidden">
@@ -175,40 +190,19 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
             <span className="text-lg font-black text-foreground">{range.min}</span>
             <span className="text-lg font-black text-foreground">{range.max}</span>
           </div>
+          {overallStatus === "impossible" && (
+            <p className="mt-2 text-xs font-bold text-muted-foreground text-center">
+              🎯 Aim for {range.max}/20 — that's your best realistic outcome
+            </p>
+          )}
         </motion.div>
       )}
 
-      {/* Best subject to focus on */}
-      {ranked.length > 0 && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="rounded-2xl bg-card p-5 card-shadow"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Star className="h-5 w-5 text-accent" />
-            <h3 className="font-black text-foreground">Focus priority</h3>
-          </div>
-          <div className="flex flex-col gap-2">
-            {ranked.slice(0, 3).map(({ subject, impact }, i) => (
-              <div key={subject.id} className="flex items-center gap-3">
-                <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-sm font-black ${
-                  i === 0 ? "bg-primary text-primary-foreground" :
-                  i === 1 ? "bg-secondary text-secondary-foreground" :
-                  "bg-muted text-muted-foreground"
-                }`}>
-                  {i + 1}
-                </span>
-                <span className="flex-1 font-bold text-foreground">{subject.name}</span>
-                <span className="text-xs font-bold text-muted-foreground">
-                  Impact: {impact}
-                </span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
+      {/* Subject-by-subject breakdown */}
+      <SubjectBreakdown subjects={subjects} targetAverage={targetAverage} />
+
+      {/* History */}
+      <HistoryTimeline />
 
       <button
         onClick={onEditMarks}
