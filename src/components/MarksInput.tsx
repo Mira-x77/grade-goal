@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Subject } from "@/types/exam";
 import { calcSubjectAverage } from "@/lib/exam-logic";
+import { addHistoryEntry } from "@/lib/storage";
 
 interface MarksInputProps {
   subjects: Subject[];
@@ -18,11 +19,27 @@ const markLabels = {
 const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack }: MarksInputProps) => {
   const updateMark = (subjectId: string, markType: keyof Subject["marks"], value: string) => {
     const numValue = value === "" ? null : Math.min(20, Math.max(0, parseFloat(value)));
+    const finalValue = isNaN(numValue as number) ? null : numValue;
+    
+    // Find old value to check if this is a new entry
+    const oldSubject = subjects.find((s) => s.id === subjectId);
+    const oldValue = oldSubject?.marks[markType];
+    
     onSubjectsChange(
       subjects.map((s) =>
-        s.id === subjectId ? { ...s, marks: { ...s.marks, [markType]: isNaN(numValue as number) ? null : numValue } } : s
+        s.id === subjectId ? { ...s, marks: { ...s.marks, [markType]: finalValue } } : s
       )
     );
+
+    // Track in history if it's a new non-null value
+    if (finalValue !== null && oldValue === null && oldSubject) {
+      addHistoryEntry({
+        date: new Date().toISOString(),
+        subjectName: oldSubject.name,
+        markType,
+        value: finalValue,
+      });
+    }
   };
 
   const filledCount = subjects.reduce((acc, s) => {
