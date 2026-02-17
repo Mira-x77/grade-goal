@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { DEFAULT_SETTINGS } from "@/types/exam";
 import { useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Home } from "lucide-react";
@@ -16,7 +17,7 @@ const Index = () => {
   
   const [state, setState] = useState<AppState>(() => {
     const saved = loadState();
-    const initial = saved || { step: "onboarding" as const, targetAverage: 16, subjects: [] };
+    const initial = saved || { step: "onboarding" as const, targetAverage: 16, subjects: [], settings: DEFAULT_SETTINGS };
     // If URL has a step param and we have data, go to that step
     if (stepParam && saved && saved.subjects.length > 0) {
       const validSteps = ["onboarding", "subjects", "marks", "results"] as const;
