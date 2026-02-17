@@ -8,7 +8,6 @@ export function calcSubjectAverage(marks: Subject["marks"]): number | null {
   const { interro, dev, compo } = marks;
   if (interro === null && dev === null && compo === null) return null;
 
-  // Use available marks only, weighted
   let sum = 0;
   let weight = 0;
   if (interro !== null) { sum += interro * 1; weight += 1; }
@@ -47,7 +46,7 @@ export function calcYearlyAverage(subjects: Subject[]): number | null {
 
 /**
  * For a given subject and mark type, calculate the minimum value needed
- * to reach the target yearly average.
+ * to reach the target yearly average. Works with ANY combination of entered marks.
  */
 export function calcMinimumMarkNeeded(
   subjects: Subject[],
@@ -76,7 +75,6 @@ export function calcMinimumMarkNeeded(
   const marks = { ...targetSubject.marks };
   const markWeight = targetMarkType === "compo" ? 2 : 1;
 
-  // Known weight and sum in this subject (excluding target mark)
   let subKnownSum = 0;
   let subKnownWeight = 0;
   if (targetMarkType !== "interro" && marks.interro !== null) {
@@ -92,12 +90,6 @@ export function calcMinimumMarkNeeded(
     subKnownWeight += 2;
   }
 
-  // targetAverage = (knownPoints + ((subKnownSum + x * markWeight) / (subKnownWeight + markWeight)) * coeff) / totalCoeff
-  // Solve for x:
-  // targetAverage * totalCoeff = knownPoints + ((subKnownSum + x * markWeight) / (subKnownWeight + markWeight)) * coeff
-  // (targetAverage * totalCoeff - knownPoints) * (subKnownWeight + markWeight) / coeff = subKnownSum + x * markWeight
-  // x = ((targetAverage * totalCoeff - knownPoints) * (subKnownWeight + markWeight) / coeff - subKnownSum) / markWeight
-
   const coeff = targetSubject.coefficient;
   const totalWeight = subKnownWeight + markWeight;
 
@@ -109,10 +101,74 @@ export function calcMinimumMarkNeeded(
 }
 
 /**
+ * Calculate all possible required marks for a subject with multiple unknowns.
+ * Returns best-case and worst-case bounds for each unknown.
+ */
+export function calcAllRequiredMarks(
+  subjects: Subject[],
+  subjectId: string,
+  targetAverage: number
+): { markType: string; needed: number | null; status: FeedbackStatus; label: string }[] {
+  const sub = subjects.find((s) => s.id === subjectId);
+  if (!sub) return [];
+
+  const emptyMarks = (["interro", "dev", "compo"] as const).filter(
+    (t) => sub.marks[t] === null
+  );
+
+  const markLabels: Record<string, string> = {
+    interro: "Interro",
+    dev: "Devoir",
+    compo: "Composition",
+  };
+
+  return emptyMarks.map((markType) => {
+    const needed = calcMinimumMarkNeeded(subjects, subjectId, markType, targetAverage);
+    const status = getFeedbackStatus(needed);
+    const label = markLabels[markType];
+
+    return { markType, needed, status, label };
+  });
+}
+
+/**
+ * Calculate best-case and worst-case subject average for subjects with unknowns.
+ * Unknown marks: pessimistic=0, optimistic=20
+ */
+export function calcSubjectBounds(marks: Subject["marks"]): { min: number; max: number } | null {
+  const hasAnyMark = marks.interro !== null || marks.dev !== null || marks.compo !== null;
+  const hasAllMarks = marks.interro !== null && marks.dev !== null && marks.compo !== null;
+
+  if (hasAllMarks) {
+    const avg = (marks.interro! + marks.dev! + 2 * marks.compo!) / 4;
+    return { min: avg, max: avg };
+  }
+
+  if (!hasAnyMark) return null;
+
+  const pessimistic = {
+    interro: marks.interro ?? 0,
+    dev: marks.dev ?? 0,
+    compo: marks.compo ?? 0,
+  };
+  const optimistic = {
+    interro: marks.interro ?? 20,
+    dev: marks.dev ?? 20,
+    compo: marks.compo ?? 20,
+  };
+
+  const min = (pessimistic.interro + pessimistic.dev + 2 * pessimistic.compo) / 4;
+  const max = (optimistic.interro + optimistic.dev + 2 * optimistic.compo) / 4;
+
+  return { min: Math.round(min * 10) / 10, max: Math.round(max * 10) / 10 };
+}
+
+/**
  * Get feedback status based on required mark
  */
 export function getFeedbackStatus(requiredMark: number | null): FeedbackStatus {
   if (requiredMark === null) return "possible";
+  if (requiredMark <= 0) return "possible"; // already safe
   if (requiredMark <= 16) return "possible";
   if (requiredMark <= 20) return "risky";
   return "impossible";
@@ -122,7 +178,6 @@ export function getFeedbackStatus(requiredMark: number | null): FeedbackStatus {
  * Get predicted range based on current marks
  */
 export function getPredictedRange(subjects: Subject[]): { min: number; max: number } | null {
-  // Simulate: for empty marks, use pessimistic (8) and optimistic (18) values
   const pessimisticSubjects = subjects.map((s) => ({
     ...s,
     marks: {
@@ -149,6 +204,35 @@ export function getPredictedRange(subjects: Subject[]): { min: number; max: numb
 }
 
 /**
+ * Get absolute bounds (0 and 20 for unknowns)
+ */
+export function getAbsoluteBounds(subjects: Subject[]): { min: number; max: number } | null {
+  const worst = subjects.map((s) => ({
+    ...s,
+    marks: {
+      interro: s.marks.interro ?? 0,
+      dev: s.marks.dev ?? 0,
+      compo: s.marks.compo ?? 0,
+    },
+  }));
+
+  const best = subjects.map((s) => ({
+    ...s,
+    marks: {
+      interro: s.marks.interro ?? 20,
+      dev: s.marks.dev ?? 20,
+      compo: s.marks.compo ?? 20,
+    },
+  }));
+
+  const min = calcYearlyAverage(worst);
+  const max = calcYearlyAverage(best);
+
+  if (min === null || max === null) return null;
+  return { min: Math.round(min * 10) / 10, max: Math.round(max * 10) / 10 };
+}
+
+/**
  * Rank subjects by impact = coefficient × remaining empty mark weight
  */
 export function rankSubjectsByImpact(subjects: Subject[]): { subject: Subject; impact: number; emptyMarkType: string | null }[] {
@@ -163,4 +247,32 @@ export function rankSubjectsByImpact(subjects: Subject[]): { subject: Subject; i
     })
     .filter((x) => x.impact > 0)
     .sort((a, b) => b.impact - a.impact);
+}
+
+/**
+ * Get "already safe" label for marks that need < 0
+ */
+export function getMarkLabel(needed: number | null): string {
+  if (needed === null) return "—";
+  if (needed <= 0) return "Already safe ✅";
+  if (needed > 20) return "Target unreachable ❌";
+  return `Need ${needed.toFixed(1)}/20`;
+}
+
+/**
+ * Simulate yearly average with hypothetical marks
+ */
+export function simulateYearlyAverage(
+  subjects: Subject[],
+  overrides: { subjectId: string; markType: "interro" | "dev" | "compo"; value: number }[]
+): number | null {
+  const simSubjects = subjects.map((s) => {
+    const subOverrides = overrides.filter((o) => o.subjectId === s.id);
+    const marks = { ...s.marks };
+    for (const o of subOverrides) {
+      marks[o.markType] = o.value;
+    }
+    return { ...s, marks };
+  });
+  return calcYearlyAverage(simSubjects);
 }

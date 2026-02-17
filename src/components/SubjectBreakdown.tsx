@@ -1,14 +1,12 @@
 import { motion } from "framer-motion";
-import { BookOpen, ChevronRight } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { Subject, FeedbackStatus } from "@/types/exam";
-import { calcSubjectAverage, calcMinimumMarkNeeded, getFeedbackStatus } from "@/lib/exam-logic";
+import { calcSubjectAverage, calcAllRequiredMarks, calcSubjectBounds, getMarkLabel } from "@/lib/exam-logic";
 
 interface SubjectBreakdownProps {
   subjects: Subject[];
   targetAverage: number;
 }
-
-const markTypeLabels = { interro: "Interro", dev: "Devoir", compo: "Compo" };
 
 const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) => {
   return (
@@ -26,9 +24,9 @@ const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) =>
       <div className="flex flex-col gap-3">
         {subjects.map((sub, i) => {
           const avg = calcSubjectAverage(sub.marks);
-          const emptyMarks = (["interro", "dev", "compo"] as const).filter(
-            (t) => sub.marks[t] === null
-          );
+          const bounds = calcSubjectBounds(sub.marks);
+          const required = calcAllRequiredMarks(subjects, sub.id, targetAverage);
+          const allFilled = sub.marks.interro !== null && sub.marks.dev !== null && sub.marks.compo !== null;
 
           return (
             <motion.div
@@ -45,23 +43,29 @@ const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) =>
                 </span>
               </div>
 
-              {emptyMarks.length === 0 ? (
+              {/* Show bounds if multiple unknowns */}
+              {bounds && !allFilled && (
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] font-bold text-muted-foreground">Range:</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-muted relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-danger via-warning to-success rounded-full" />
+                  </div>
+                  <span className="text-[10px] font-black text-foreground">{bounds.min}–{bounds.max}</span>
+                </div>
+              )}
+
+              {allFilled ? (
                 <p className="text-xs text-success font-bold">✅ All marks entered</p>
               ) : (
                 <div className="flex flex-col gap-1">
-                  {emptyMarks.map((markType) => {
-                    const needed = calcMinimumMarkNeeded(subjects, sub.id, markType, targetAverage);
-                    const status = getFeedbackStatus(needed);
-
-                    return (
-                      <div key={markType} className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-muted-foreground">
-                          {markTypeLabels[markType]}
-                        </span>
-                        <NeededBadge needed={needed} status={status} />
-                      </div>
-                    );
-                  })}
+                  {required.map((r) => (
+                    <div key={r.markType} className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-muted-foreground">
+                        {r.label}
+                      </span>
+                      <NeededBadge needed={r.needed} status={r.status} />
+                    </div>
+                  ))}
                 </div>
               )}
             </motion.div>
@@ -77,8 +81,11 @@ function NeededBadge({ needed, status }: { needed: number | null; status: Feedba
     return <span className="text-xs font-bold text-muted-foreground">—</span>;
   }
 
+  const label = getMarkLabel(needed);
   const colorClass =
-    status === "possible"
+    needed <= 0
+      ? "bg-success/15 text-success"
+      : status === "possible"
       ? "bg-success/15 text-success"
       : status === "risky"
       ? "bg-warning/15 text-warning"
@@ -86,7 +93,7 @@ function NeededBadge({ needed, status }: { needed: number | null; status: Feedba
 
   return (
     <span className={`rounded-lg px-2 py-0.5 text-xs font-black ${colorClass}`}>
-      {needed > 20 ? "Impossible" : `Need ${needed.toFixed(1)}`}
+      {label}
     </span>
   );
 }

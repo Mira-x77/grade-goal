@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, Home } from "lucide-react";
+import { Link } from "react-router-dom";
 import { AppState, Subject } from "@/types/exam";
 import { saveState, loadState } from "@/lib/storage";
 import OnboardingScreen from "@/components/OnboardingScreen";
@@ -8,12 +11,22 @@ import MarksInput from "@/components/MarksInput";
 import ResultsScreen from "@/components/ResultsScreen";
 
 const Index = () => {
+  const [searchParams] = useSearchParams();
+  const stepParam = searchParams.get("step");
+  
   const [state, setState] = useState<AppState>(() => {
     const saved = loadState();
-    return saved || { step: "onboarding", targetAverage: 16, subjects: [] };
+    const initial = saved || { step: "onboarding" as const, targetAverage: 16, subjects: [] };
+    // If URL has a step param and we have data, go to that step
+    if (stepParam && saved && saved.subjects.length > 0) {
+      const validSteps = ["onboarding", "subjects", "marks", "results"] as const;
+      if (validSteps.includes(stepParam as any)) {
+        return { ...initial, step: stepParam as AppState["step"] };
+      }
+    }
+    return initial;
   });
 
-  // Persist state changes
   useEffect(() => {
     saveState(state);
   }, [state]);
@@ -27,7 +40,12 @@ const Index = () => {
       {/* Top bar */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-black text-primary">ScoreTarget</h1>
+          <div className="flex items-center gap-3">
+            <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Home className="h-5 w-5" />
+            </Link>
+            <h1 className="text-lg font-black text-primary">ScoreTarget</h1>
+          </div>
           <div className="flex gap-1">
             {(["onboarding", "subjects", "marks", "results"] as const).map((s, i) => (
               <div

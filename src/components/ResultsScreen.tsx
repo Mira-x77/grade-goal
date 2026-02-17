@@ -1,12 +1,14 @@
 import { motion } from "framer-motion";
-import { Target, TrendingUp, AlertTriangle, XCircle, ArrowLeft, RefreshCw } from "lucide-react";
+import { Target, TrendingUp, AlertTriangle, XCircle, ArrowLeft } from "lucide-react";
 import { Subject, FeedbackStatus } from "@/types/exam";
 import {
   calcYearlyAverage,
   calcMinimumMarkNeeded,
   getFeedbackStatus,
   getPredictedRange,
+  getAbsoluteBounds,
   rankSubjectsByImpact,
+  getMarkLabel,
 } from "@/lib/exam-logic";
 import SubjectBreakdown from "./SubjectBreakdown";
 import MotivationCard from "./MotivationCard";
@@ -43,6 +45,7 @@ const statusConfig: Record<FeedbackStatus, { bg: string; shadow: string; icon: R
 const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: ResultsScreenProps) => {
   const currentAvg = calcYearlyAverage(subjects);
   const range = getPredictedRange(subjects);
+  const bounds = getAbsoluteBounds(subjects);
   const ranked = rankSubjectsByImpact(subjects);
 
   // Find the best next mark opportunity
@@ -71,7 +74,6 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
   const config = statusConfig[overallStatus];
   const progressPercent = currentAvg !== null ? Math.min(100, (currentAvg / targetAverage) * 100) : 0;
 
-  // Suggest realistic target if current is impossible
   const realisticTarget = overallStatus === "impossible" && range
     ? Math.min(range.max, Math.floor(range.max * 2) / 2)
     : null;
@@ -86,7 +88,6 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
         <ArrowLeft className="h-4 w-4" /> Edit marks
       </button>
 
-      {/* Motivation */}
       <MotivationCard subjects={subjects} targetAverage={targetAverage} />
 
       {/* Status hero */}
@@ -132,6 +133,25 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
         </div>
       </motion.div>
 
+      {/* Best possible / realistic messaging */}
+      {bounds && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          className="rounded-2xl bg-card p-4 card-shadow"
+        >
+          <p className="text-sm font-black text-foreground">
+            With your current marks, best possible final: <span className="text-primary">{bounds.max}/20</span>
+          </p>
+          {range && (
+            <p className="text-xs font-bold text-muted-foreground mt-1">
+              Realistic expected range: {range.min}–{range.max}
+            </p>
+          )}
+        </motion.div>
+      )}
+
       {/* Required next mark */}
       {bestOpportunity && (
         <motion.div
@@ -153,9 +173,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
             </div>
             <div>
               <p className="font-bold text-foreground">
-                {bestOpportunity.needed > 20
-                  ? "Not possible with a single test"
-                  : `Get ${bestOpportunity.needed.toFixed(1)}/20 or higher`}
+                {getMarkLabel(bestOpportunity.needed)}
               </p>
               <p className="text-sm text-muted-foreground">
                 {bestOpportunity.subjectName} · {bestOpportunity.markType}
@@ -165,7 +183,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
         </motion.div>
       )}
 
-      {/* Predicted range with adjusted target suggestion */}
+      {/* Predicted range */}
       {range && (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -179,10 +197,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold text-danger">Pessimistic</span>
             <div className="flex-1 mx-3 h-2 rounded-full bg-muted relative overflow-hidden">
-              <div
-                className="absolute left-0 top-0 h-full bg-gradient-to-r from-danger via-warning to-success rounded-full"
-                style={{ width: "100%" }}
-              />
+              <div className="absolute left-0 top-0 h-full bg-gradient-to-r from-danger via-warning to-success rounded-full" style={{ width: "100%" }} />
             </div>
             <span className="text-sm font-bold text-success">Optimistic</span>
           </div>
@@ -198,10 +213,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
         </motion.div>
       )}
 
-      {/* Subject-by-subject breakdown */}
       <SubjectBreakdown subjects={subjects} targetAverage={targetAverage} />
-
-      {/* History */}
       <HistoryTimeline />
 
       <button
