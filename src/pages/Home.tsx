@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Target, BookOpen, BarChart3, TrendingUp, ChevronRight, Flame } from "lucide-react";
+import { Target, BookOpen, BarChart3, TrendingUp, ChevronRight, Flame, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { loadState, getStreak } from "@/lib/storage";
 import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds } from "@/lib/exam-logic";
@@ -33,12 +33,17 @@ const Home = () => {
             <h1 className="text-2xl font-black text-foreground">ScoreTarget</h1>
             <p className="text-sm font-semibold text-muted-foreground">Your strategic exam planner</p>
           </div>
-          {streak.currentStreak > 0 && (
-            <div className="flex items-center gap-1 rounded-xl bg-accent/15 px-3 py-1.5">
-              <Flame className="h-4 w-4 text-accent" />
-              <span className="text-sm font-black text-accent">{streak.currentStreak}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {streak.currentStreak > 0 && (
+              <div className="flex items-center gap-1 rounded-xl bg-accent/15 px-3 py-1.5">
+                <Flame className="h-4 w-4 text-accent" />
+                <span className="text-sm font-black text-accent">{streak.currentStreak}</span>
+              </div>
+            )}
+            <Link to="/settings" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Settings className="h-5 w-5" />
+            </Link>
+          </div>
         </motion.div>
       </div>
 
