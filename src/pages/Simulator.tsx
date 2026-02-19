@@ -4,6 +4,7 @@ import { ArrowLeft, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { loadState } from "@/lib/storage";
 import { simulateYearlyAverage, calcYearlyAverage, getFeedbackStatus, getAbsoluteBounds } from "@/lib/exam-logic";
+import TaskBar from "@/components/TaskBar";
 
 interface SliderOverride {
   subjectId: string;
@@ -70,7 +71,7 @@ const Simulator = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto">
+    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3">
         <div className="flex items-center gap-3">
           <Link to="/" className="text-muted-foreground">
@@ -155,6 +156,7 @@ const Simulator = () => {
           </div>
         )}
       </div>
+      <TaskBar />
     </div>
   );
 };

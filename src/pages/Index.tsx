@@ -10,6 +10,7 @@ import OnboardingScreen from "@/components/OnboardingScreen";
 import SubjectsSetup from "@/components/SubjectsSetup";
 import MarksInput from "@/components/MarksInput";
 import ResultsScreen from "@/components/ResultsScreen";
+import TaskBar from "@/components/TaskBar";
 
 const Index = () => {
   const [searchParams] = useSearchParams();
@@ -37,7 +38,7 @@ const Index = () => {
   const setSubjects = (subjects: Subject[]) => setState((s) => ({ ...s, subjects }));
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto">
+    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
       {/* Top bar */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3">
         <div className="flex items-center justify-between">
@@ -97,6 +98,8 @@ const Index = () => {
           )}
         </motion.div>
       </AnimatePresence>
+
+      <TaskBar />
     </div>
   );
 };

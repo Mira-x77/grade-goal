@@ -1,17 +1,31 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Target, BookOpen, BarChart3, TrendingUp, ChevronRight, Flame, Settings } from "lucide-react";
+import { Target, Flame, AlertTriangle, ChevronRight, BookOpen, BarChart3, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { loadState, getStreak } from "@/lib/storage";
 import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds } from "@/lib/exam-logic";
+import { calcAPCYearlyAverage, getPerformanceAlerts } from "@/lib/grading-apc";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import FrenchClassView from "@/components/FrenchClassView";
+import TaskBar from "@/components/TaskBar";
 
 const Home = () => {
   const state = loadState();
   const streak = getStreak();
   const hasData = state && state.subjects.length > 0;
-  const currentAvg = hasData ? calcYearlyAverage(state.subjects) : null;
+  const gradingSystem = state?.settings?.gradingSystem ?? "apc";
+  const weightedSplit = state?.settings?.apcWeightedSplit ?? false;
+
+  const currentAvg = hasData
+    ? gradingSystem === "apc"
+      ? calcAPCYearlyAverage(state.subjects, weightedSplit)
+      : calcYearlyAverage(state.subjects)
+    : null;
   const range = hasData ? getPredictedRange(state.subjects) : null;
   const bounds = hasData ? getAbsoluteBounds(state.subjects) : null;
   const targetAvg = state?.targetAverage ?? 16;
+
+  const alerts = hasData ? getPerformanceAlerts(state.subjects, weightedSplit) : [];
 
   const filledMarks = hasData
     ? state.subjects.reduce((acc, s) => {
@@ -21,7 +35,7 @@ const Home = () => {
   const totalMarks = hasData ? state.subjects.length * 3 : 0;
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto">
+    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
       {/* Header */}
       <div className="px-6 pt-8 pb-4">
         <motion.div
@@ -33,21 +47,35 @@ const Home = () => {
             <h1 className="text-2xl font-black text-foreground">ScoreTarget</h1>
             <p className="text-sm font-semibold text-muted-foreground">Your strategic exam planner</p>
           </div>
-          <div className="flex items-center gap-2">
-            {streak.currentStreak > 0 && (
-              <div className="flex items-center gap-1 rounded-xl bg-accent/15 px-3 py-1.5">
-                <Flame className="h-4 w-4 text-accent" />
-                <span className="text-sm font-black text-accent">{streak.currentStreak}</span>
-              </div>
-            )}
-            <Link to="/settings" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Settings className="h-5 w-5" />
-            </Link>
-          </div>
+          {streak.currentStreak > 0 && (
+            <div className="flex items-center gap-1 rounded-xl bg-accent/15 px-3 py-1.5">
+              <Flame className="h-4 w-4 text-accent" />
+              <span className="text-sm font-black text-accent">{streak.currentStreak}</span>
+            </div>
+          )}
         </motion.div>
       </div>
 
       <div className="flex flex-col gap-4 px-6 pb-8">
+        {/* Performance Alerts */}
+        {alerts.length > 0 && (
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="rounded-2xl bg-danger/15 p-4 border-2 border-danger/30"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-4 w-4 text-danger" />
+              <span className="text-sm font-black text-danger">Performance Alert</span>
+            </div>
+            {alerts.map((a) => (
+              <p key={a.subject.id} className="text-xs font-bold text-danger/80">
+                ⚠️ {a.subject.name} (Coeff {a.subject.coefficient}): {a.avg.toFixed(1)}/20 — below 07/20 threshold
+              </p>
+            ))}
+          </motion.div>
+        )}
+
         {/* Current status hero */}
         {hasData && currentAvg !== null ? (
           <motion.div
@@ -62,6 +90,9 @@ const Home = () => {
             <p className="text-sm font-bold opacity-90 text-primary-foreground">Current Average</p>
             <p className="text-5xl font-black text-primary-foreground">{currentAvg.toFixed(1)}<span className="text-xl opacity-75">/20</span></p>
             <p className="text-sm font-bold mt-1 opacity-90 text-primary-foreground">Target: {targetAvg}/20</p>
+            <p className="text-[10px] font-bold mt-1 opacity-70 text-primary-foreground uppercase tracking-wider">
+              {gradingSystem === "apc" ? "APC Weighted" : "French"} System
+            </p>
             {bounds && (
               <p className="text-xs font-bold mt-2 opacity-80 text-primary-foreground">
                 Best possible final: {bounds.max}/20
@@ -83,26 +114,77 @@ const Home = () => {
           </motion.div>
         )}
 
-        {/* Predicted range */}
-        {range && (
-          <motion.div
-            initial={{ y: 15, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.15 }}
-            className="rounded-2xl bg-card p-4 card-shadow"
-          >
-            <h3 className="font-black text-foreground text-sm mb-2">Realistic expected range</h3>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-danger">{range.min}</span>
-              <div className="flex-1 mx-3 h-2.5 rounded-full bg-muted relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-danger via-warning to-success rounded-full" />
+        {/* Dual View Toggle */}
+        {hasData && (
+          <Tabs defaultValue={gradingSystem === "apc" ? "weighted" : "ranking"} className="w-full">
+            <TabsList className="w-full rounded-xl bg-muted h-11">
+              <TabsTrigger value="weighted" className="flex-1 rounded-lg font-bold text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                📊 Weighted View
+              </TabsTrigger>
+              <TabsTrigger value="ranking" className="flex-1 rounded-lg font-bold text-xs data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                🏆 Class Ranking
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="weighted">
+              <div className="flex flex-col gap-4 mt-2">
+                {/* Predicted range */}
+                {range && (
+                  <motion.div
+                    initial={{ y: 15, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="rounded-2xl bg-card p-4 card-shadow"
+                  >
+                    <h3 className="font-black text-foreground text-sm mb-2">Realistic expected range</h3>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-danger">{range.min}</span>
+                      <div className="flex-1 mx-3 h-2.5 rounded-full bg-muted relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-danger via-warning to-success rounded-full" />
+                      </div>
+                      <span className="text-sm font-bold text-success">{range.max}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-semibold text-center mt-1">
+                      {filledMarks}/{totalMarks} marks entered
+                    </p>
+                  </motion.div>
+                )}
+
+                {/* Subject quick view */}
+                <motion.div
+                  initial={{ y: 15, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="rounded-2xl bg-card p-4 card-shadow"
+                >
+                  <h3 className="font-black text-foreground text-sm mb-3">Subjects at a glance</h3>
+                  <div className="flex flex-col gap-2">
+                    {state.subjects.map((sub) => {
+                      const filled = (sub.marks.interro !== null ? 1 : 0) + (sub.marks.dev !== null ? 1 : 0) + (sub.marks.compo !== null ? 1 : 0);
+                      return (
+                        <div key={sub.id} className="flex items-center justify-between rounded-xl bg-muted/50 px-3 py-2">
+                          <span className="text-sm font-bold text-foreground">{sub.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-muted-foreground">Coeff {sub.coefficient}</span>
+                            <div className="flex gap-0.5">
+                              {[sub.marks.interro, sub.marks.dev, sub.marks.compo].map((m, i) => (
+                                <div key={i} className={`h-2 w-2 rounded-full ${m !== null ? "bg-primary" : "bg-muted-foreground/30"}`} />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
               </div>
-              <span className="text-sm font-bold text-success">{range.max}</span>
-            </div>
-            <p className="text-xs text-muted-foreground font-semibold text-center mt-1">
-              {filledMarks}/{totalMarks} marks entered
-            </p>
-          </motion.div>
+            </TabsContent>
+
+            <TabsContent value="ranking">
+              <div className="mt-2">
+                <FrenchClassView subjects={state.subjects} />
+              </div>
+            </TabsContent>
+          </Tabs>
         )}
 
         {/* Quick actions */}
@@ -170,37 +252,9 @@ const Home = () => {
             </>
           )}
         </motion.div>
-
-        {/* Subject quick view */}
-        {hasData && (
-          <motion.div
-            initial={{ y: 15, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="rounded-2xl bg-card p-4 card-shadow"
-          >
-            <h3 className="font-black text-foreground text-sm mb-3">Subjects at a glance</h3>
-            <div className="flex flex-col gap-2">
-              {state.subjects.map((sub) => {
-                const filled = (sub.marks.interro !== null ? 1 : 0) + (sub.marks.dev !== null ? 1 : 0) + (sub.marks.compo !== null ? 1 : 0);
-                return (
-                  <div key={sub.id} className="flex items-center justify-between rounded-xl bg-muted/50 px-3 py-2">
-                    <span className="text-sm font-bold text-foreground">{sub.name}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-muted-foreground">Coeff {sub.coefficient}</span>
-                      <div className="flex gap-0.5">
-                        {[sub.marks.interro, sub.marks.dev, sub.marks.compo].map((m, i) => (
-                          <div key={i} className={`h-2 w-2 rounded-full ${m !== null ? "bg-primary" : "bg-muted-foreground/30"}`} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
       </div>
+
+      <TaskBar />
     </div>
   );
 };
