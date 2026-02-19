@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Lock, Unlock, Trash2, AlertTriangle, RotateCcw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
-import { AppSettings, DEFAULT_SETTINGS, AppState, RoundingMode } from "@/types/exam";
-import { calcYearlyAverage, getAbsoluteBounds } from "@/lib/exam-logic";
+import { AppSettings, DEFAULT_SETTINGS, AppState, RoundingMode, GradingSystem } from "@/types/exam";
+import { getAbsoluteBounds } from "@/lib/exam-logic";
 import { toast } from "sonner";
+import TaskBar from "@/components/TaskBar";
 
 const Settings = () => {
   const [state, setState] = useState<AppState | null>(null);
@@ -13,9 +14,15 @@ const Settings = () => {
   useEffect(() => {
     const loaded = loadState();
     if (loaded) {
-      // Migrate old states without settings
       if (!loaded.settings) {
         loaded.settings = DEFAULT_SETTINGS;
+      }
+      // Migrate old settings missing new fields
+      if (loaded.settings.gradingSystem === undefined) {
+        loaded.settings.gradingSystem = "apc";
+      }
+      if (loaded.settings.apcWeightedSplit === undefined) {
+        loaded.settings.apcWeightedSplit = false;
       }
       setState(loaded);
     } else {
@@ -52,6 +59,19 @@ const Settings = () => {
     );
   };
 
+  const updateFrenchData = (id: string, field: string, value: number | null) => {
+    setState((s) =>
+      s ? {
+        ...s,
+        subjects: s.subjects.map((sub) =>
+          sub.id === id
+            ? { ...sub, french: { ...(sub.french || { classAverage: null, classMin: null, classMax: null, appreciation: null }), [field]: value } }
+            : sub
+        ),
+      } : s
+    );
+  };
+
   const clearMarks = () => {
     setState((s) =>
       s ? {
@@ -79,7 +99,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto">
+    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3">
         <div className="flex items-center gap-3">
@@ -91,6 +111,49 @@ const Settings = () => {
       </div>
 
       <div className="flex flex-col gap-5 px-6 py-6">
+        {/* Grading System Toggle */}
+        <Section title="Grading System" subtitle="Choose your school's system">
+          <div className="flex flex-col gap-2">
+            {([
+              { value: "apc" as GradingSystem, label: "APC (Togolese Standard)", desc: "Weighted competency-based" },
+              { value: "french" as GradingSystem, label: "French Traditional", desc: "Comparative class ranking" },
+            ]).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => updateSettings({ gradingSystem: opt.value })}
+                className={`rounded-xl px-4 py-3 text-left transition-all ${
+                  settings.gradingSystem === opt.value
+                    ? "bg-primary/15 text-primary border-2 border-primary"
+                    : "bg-muted text-foreground border-2 border-transparent"
+                }`}
+              >
+                <span className="font-bold block">{opt.label}</span>
+                <span className="text-xs text-muted-foreground">{opt.desc}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* 40/60 Split Toggle (APC only) */}
+          {settings.gradingSystem === "apc" && (
+            <div className="mt-3 flex items-center justify-between">
+              <div>
+                <span className="text-sm font-bold text-foreground">40/60 Classwork/Exam Split</span>
+                <p className="text-[10px] text-muted-foreground">40% interro+devoir, 60% compo</p>
+              </div>
+              <button
+                onClick={() => updateSettings({ apcWeightedSplit: !settings.apcWeightedSplit })}
+                className={`relative h-7 w-12 rounded-full transition-colors ${
+                  settings.apcWeightedSplit ? "bg-primary" : "bg-muted"
+                }`}
+              >
+                <div className={`absolute top-0.5 h-6 w-6 rounded-full bg-card shadow transition-transform ${
+                  settings.apcWeightedSplit ? "translate-x-5" : "translate-x-0.5"
+                }`} />
+              </button>
+            </div>
+          )}
+        </Section>
+
         {/* Target Average */}
         <Section title="Target Average">
           <div className="flex items-center gap-3">
@@ -115,8 +178,8 @@ const Settings = () => {
           )}
         </Section>
 
-        {/* Grading Weights */}
-        <Section title="Grading System" subtitle="Edit assessment weights">
+        {/* Assessment Weights */}
+        <Section title="Assessment Weights" subtitle="Edit mark type weights">
           <div className="flex flex-col gap-3">
             {(["interro", "dev", "compo"] as const).map((type) => (
               <div key={type} className="flex items-center justify-between">
@@ -175,7 +238,7 @@ const Settings = () => {
           </div>
         </Section>
 
-        {/* Coefficient Management */}
+        {/* Subject Coefficients */}
         {state.subjects.length > 0 && (
           <Section title="Subject Coefficients">
             <div className="flex flex-col gap-2">
@@ -192,6 +255,61 @@ const Settings = () => {
                       onClick={() => updateCoeff(sub.id, sub.coefficient + 1)}
                       className="flex h-7 w-7 items-center justify-center rounded-lg bg-card text-sm font-bold text-foreground active:scale-95"
                     >+</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* French Class Data */}
+        {settings.gradingSystem === "french" && state.subjects.length > 0 && (
+          <Section title="Class Data (French System)" subtitle="Enter class averages and extremes per subject">
+            <div className="flex flex-col gap-3">
+              {state.subjects.map((sub) => (
+                <div key={sub.id} className="rounded-xl bg-muted/50 p-3">
+                  <span className="text-sm font-bold text-foreground block mb-2">{sub.name}</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { field: "classAverage", label: "Class Avg" },
+                      { field: "classMin", label: "Min" },
+                      { field: "classMax", label: "Max" },
+                    ] as const).map((f) => (
+                      <div key={f.field} className="flex flex-col items-center gap-1">
+                        <input
+                          type="number"
+                          min="0"
+                          max="20"
+                          step="0.5"
+                          placeholder="—"
+                          value={sub.french?.[f.field] ?? ""}
+                          onChange={(e) => {
+                            const v = e.target.value === "" ? null : parseFloat(e.target.value);
+                            updateFrenchData(sub.id, f.field, v !== null && !isNaN(v) ? Math.min(20, Math.max(0, v)) : null);
+                          }}
+                          className="w-full rounded-lg border-2 border-border bg-card px-2 py-1.5 text-center text-sm font-bold text-foreground focus:border-primary focus:outline-none transition-colors"
+                        />
+                        <span className="text-[10px] font-bold text-muted-foreground">{f.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2">
+                    <span className="text-[10px] font-bold text-muted-foreground">Appreciation (1-5)</span>
+                    <div className="flex gap-1 mt-1">
+                      {[1, 2, 3, 4, 5].map((val) => (
+                        <button
+                          key={val}
+                          onClick={() => updateFrenchData(sub.id, "appreciation", sub.french?.appreciation === val ? null : val)}
+                          className={`flex-1 h-7 rounded-lg text-xs font-bold transition-all ${
+                            sub.french?.appreciation === val
+                              ? "bg-accent text-accent-foreground"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {val}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -296,6 +414,8 @@ const Settings = () => {
           </div>
         </Section>
       </div>
+
+      <TaskBar />
     </div>
   );
 };

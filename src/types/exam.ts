@@ -1,8 +1,17 @@
 export type MarkType = "interro" | "dev" | "compo";
 
+export type GradingSystem = "apc" | "french";
+
 export interface Mark {
   type: MarkType;
-  value: number | null; // null = not yet taken
+  value: number | null;
+}
+
+export interface FrenchSubjectData {
+  classAverage: number | null;
+  classMin: number | null;
+  classMax: number | null;
+  appreciation: number | null; // 1-5 sentiment scale
 }
 
 export interface Subject {
@@ -14,6 +23,7 @@ export interface Subject {
     dev: number | null;
     compo: number | null;
   };
+  french?: FrenchSubjectData;
 }
 
 export interface GradingWeights {
@@ -26,8 +36,8 @@ export interface GradingWeights {
 export type RoundingMode = "exact" | "standard" | "school";
 
 export interface ColorThresholds {
-  greenBelow: number;   // distance from target where green applies
-  yellowBelow: number;  // distance from target where yellow applies
+  greenBelow: number;
+  yellowBelow: number;
 }
 
 export interface NotificationSettings {
@@ -41,6 +51,8 @@ export interface AppSettings {
   rounding: RoundingMode;
   colorThresholds: ColorThresholds;
   notifications: NotificationSettings;
+  gradingSystem: GradingSystem;
+  apcWeightedSplit: boolean; // 40/60 classwork/exam split toggle
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -48,6 +60,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   rounding: "standard",
   colorThresholds: { greenBelow: 0, yellowBelow: 2 },
   notifications: { targetUnreachable: true, subjectCritical: true, canSaveAverage: true },
+  gradingSystem: "apc",
+  apcWeightedSplit: false,
 };
 
 export interface AppState {
