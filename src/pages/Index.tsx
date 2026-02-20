@@ -36,6 +36,8 @@ const Index = () => {
   const setStep = (step: AppState["step"]) => setState((s) => ({ ...s, step }));
   const setTarget = (targetAverage: number) => setState((s) => ({ ...s, targetAverage }));
   const setSubjects = (subjects: Subject[]) => setState((s) => ({ ...s, subjects }));
+  const setGradingSystem = (gradingSystem: "apc" | "french") =>
+    setState((s) => ({ ...s, settings: { ...s.settings, gradingSystem } }));
 
   return (
     <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
@@ -70,6 +72,8 @@ const Index = () => {
               targetAverage={state.targetAverage}
               onTargetChange={setTarget}
               onContinue={() => setStep("subjects")}
+              gradingSystem={state.settings.gradingSystem}
+              onGradingSystemChange={setGradingSystem}
             />
           )}
           {state.step === "subjects" && (
