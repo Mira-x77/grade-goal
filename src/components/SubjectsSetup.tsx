@@ -2,27 +2,39 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, BookOpen, Trash2 } from "lucide-react";
 import { Subject } from "@/types/exam";
+import { getSubjectsForLevel } from "@/lib/subjects-data";
 
 interface SubjectsSetupProps {
   subjects: Subject[];
   onSubjectsChange: (subjects: Subject[]) => void;
   onContinue: () => void;
   onBack: () => void;
+  classLevel?: string;
+  serie?: string;
 }
 
-const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack }: SubjectsSetupProps) => {
+const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack, classLevel, serie }: SubjectsSetupProps) => {
   const [newName, setNewName] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const addSubject = () => {
-    if (!newName.trim()) return;
+  const suggestedSubjects = classLevel ? getSubjectsForLevel(classLevel, serie) : [];
+  const existingNames = new Set(subjects.map((s) => s.name.toLowerCase()));
+  const filteredSuggestions = suggestedSubjects.filter(
+    (s) => !existingNames.has(s.toLowerCase()) && s.toLowerCase().includes(newName.toLowerCase())
+  );
+
+  const addSubject = (name?: string) => {
+    const subjectName = name || newName.trim();
+    if (!subjectName) return;
     const newSubject: Subject = {
       id: crypto.randomUUID(),
-      name: newName.trim(),
+      name: subjectName,
       coefficient: 1,
       marks: { interro: null, dev: null, compo: null },
     };
     onSubjectsChange([...subjects, newSubject]);
     setNewName("");
+    setShowSuggestions(false);
   };
 
   const updateCoeff = (id: string, coeff: number) => {
@@ -51,21 +63,43 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack }: Subje
       </div>
 
       {/* Add subject input */}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="e.g. Maths, French..."
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addSubject()}
-          className="flex-1 rounded-xl border-2 border-border bg-card px-4 py-3 font-semibold text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
-        />
-        <button
-          onClick={addSubject}
-          className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground active:scale-95 transition-transform"
-        >
-          <Plus className="h-5 w-5" />
-        </button>
+      <div className="relative">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="e.g. Maths, French..."
+            value={newName}
+            onChange={(e) => { setNewName(e.target.value); setShowSuggestions(true); }}
+            onFocus={() => setShowSuggestions(true)}
+            onKeyDown={(e) => e.key === "Enter" && addSubject()}
+            className="flex-1 rounded-xl border-2 border-border bg-card px-4 py-3 font-semibold text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
+          />
+          <button
+            onClick={() => addSubject()}
+            className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground active:scale-95 transition-transform"
+          >
+            <Plus className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Suggestions dropdown */}
+        {showSuggestions && filteredSuggestions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute z-20 left-0 right-12 mt-1 rounded-xl bg-card border-2 border-border card-shadow max-h-48 overflow-y-auto"
+          >
+            {filteredSuggestions.map((s) => (
+              <button
+                key={s}
+                onClick={() => addSubject(s)}
+                className="w-full text-left px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors first:rounded-t-xl last:rounded-b-xl"
+              >
+                {s}
+              </button>
+            ))}
+          </motion.div>
+        )}
       </div>
 
       {/* Subject list */}

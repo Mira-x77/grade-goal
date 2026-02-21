@@ -7,7 +7,7 @@ import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Simulator from "./pages/Simulator";
 import Settings from "./pages/Settings";
-import Library from "./pages/Library";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,7 +23,7 @@ const App = () => (
           <Route path="/planner" element={<Index />} />
           <Route path="/simulator" element={<Simulator />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/library" element={<Library />} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

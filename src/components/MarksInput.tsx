@@ -1,13 +1,18 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Trash2 } from "lucide-react";
 import { Subject } from "@/types/exam";
 import { calcSubjectAverage } from "@/lib/exam-logic";
 import { addHistoryEntry } from "@/lib/storage";
+import { getSubjectsForLevel } from "@/lib/subjects-data";
 
 interface MarksInputProps {
   subjects: Subject[];
   onSubjectsChange: (subjects: Subject[]) => void;
   onContinue: () => void;
   onBack: () => void;
+  classLevel?: string;
+  serie?: string;
 }
 
 const markLabels = {
@@ -16,12 +21,40 @@ const markLabels = {
   compo: { label: "Compo", weight: "×2", emoji: "📋" },
 } as const;
 
-const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack }: MarksInputProps) => {
+const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack, classLevel, serie }: MarksInputProps) => {
+  const [showAddSubject, setShowAddSubject] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const suggestedSubjects = classLevel ? getSubjectsForLevel(classLevel, serie) : [];
+  const existingNames = new Set(subjects.map((s) => s.name.toLowerCase()));
+  const filteredSuggestions = suggestedSubjects.filter(
+    (s) => !existingNames.has(s.toLowerCase()) && s.toLowerCase().includes(newName.toLowerCase())
+  );
+
+  const addSubject = (name?: string) => {
+    const subjectName = name || newName.trim();
+    if (!subjectName) return;
+    const newSubject: Subject = {
+      id: crypto.randomUUID(),
+      name: subjectName,
+      coefficient: 1,
+      marks: { interro: null, dev: null, compo: null },
+    };
+    onSubjectsChange([...subjects, newSubject]);
+    setNewName("");
+    setShowAddSubject(false);
+    setShowSuggestions(false);
+  };
+
+  const removeSubject = (id: string) => {
+    onSubjectsChange(subjects.filter((s) => s.id !== id));
+  };
+
   const updateMark = (subjectId: string, markType: keyof Subject["marks"], value: string) => {
     const numValue = value === "" ? null : Math.min(20, Math.max(0, parseFloat(value)));
     const finalValue = isNaN(numValue as number) ? null : numValue;
     
-    // Find old value to check if this is a new entry
     const oldSubject = subjects.find((s) => s.id === subjectId);
     const oldValue = oldSubject?.marks[markType];
     
@@ -31,7 +64,6 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack }: MarksInp
       )
     );
 
-    // Track in history if it's a new non-null value
     if (finalValue !== null && oldValue === null && oldSubject) {
       addHistoryEntry({
         date: new Date().toISOString(),
@@ -75,6 +107,57 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack }: MarksInp
         {filledCount}/{totalMarks} marks entered
       </p>
 
+      {/* Add subject button */}
+      {!showAddSubject ? (
+        <button
+          onClick={() => setShowAddSubject(true)}
+          className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-primary/40 py-3 text-sm font-bold text-primary active:scale-[0.98] transition-transform"
+        >
+          <Plus className="h-4 w-4" /> Add a subject
+        </button>
+      ) : (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="relative">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Subject name..."
+              value={newName}
+              onChange={(e) => { setNewName(e.target.value); setShowSuggestions(true); }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addSubject();
+                if (e.key === "Escape") { setShowAddSubject(false); setNewName(""); }
+              }}
+              autoFocus
+              className="flex-1 rounded-xl border-2 border-border bg-card px-4 py-3 font-semibold text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
+            />
+            <button
+              onClick={() => addSubject()}
+              className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground active:scale-95 transition-transform"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          </div>
+          {showSuggestions && filteredSuggestions.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute z-20 left-0 right-12 mt-1 rounded-xl bg-card border-2 border-border card-shadow max-h-48 overflow-y-auto"
+            >
+              {filteredSuggestions.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => addSubject(s)}
+                  className="w-full text-left px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors first:rounded-t-xl last:rounded-b-xl"
+                >
+                  {s}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </motion.div>
+      )}
+
       {/* Subjects with marks */}
       <div className="flex flex-col gap-4">
         {subjects.map((sub, i) => {
@@ -89,11 +172,19 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack }: MarksInp
             >
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-black text-foreground">{sub.name}</h3>
-                {avg !== null && (
-                  <span className="text-sm font-bold text-primary">
-                    Avg: {avg.toFixed(1)}
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {avg !== null && (
+                    <span className="text-sm font-bold text-primary">
+                      Avg: {avg.toFixed(1)}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => removeSubject(sub.id)}
+                    className="text-destructive/50 hover:text-destructive transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {(Object.keys(markLabels) as Array<keyof typeof markLabels>).map((type) => (

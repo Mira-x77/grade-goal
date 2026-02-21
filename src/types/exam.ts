@@ -69,6 +69,9 @@ export interface AppState {
   targetAverage: number;
   subjects: Subject[];
   settings: AppSettings;
+  studentName?: string;
+  classLevel?: string;
+  serie?: string;
 }
 
 export type FeedbackStatus = "possible" | "risky" | "impossible";
