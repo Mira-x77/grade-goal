@@ -38,6 +38,9 @@ const Index = () => {
   const setSubjects = (subjects: Subject[]) => setState((s) => ({ ...s, subjects }));
   const setGradingSystem = (gradingSystem: "apc" | "french") =>
     setState((s) => ({ ...s, settings: { ...s.settings, gradingSystem } }));
+  const setStudentName = (studentName: string) => setState((s) => ({ ...s, studentName }));
+  const setClassLevel = (classLevel: string) => setState((s) => ({ ...s, classLevel }));
+  const setSerie = (serie: string) => setState((s) => ({ ...s, serie }));
 
   return (
     <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
@@ -74,6 +77,12 @@ const Index = () => {
               onContinue={() => setStep("subjects")}
               gradingSystem={state.settings.gradingSystem}
               onGradingSystemChange={setGradingSystem}
+              studentName={state.studentName || ""}
+              onStudentNameChange={setStudentName}
+              classLevel={state.classLevel || ""}
+              onClassLevelChange={setClassLevel}
+              serie={state.serie || ""}
+              onSerieChange={setSerie}
             />
           )}
           {state.step === "subjects" && (
@@ -82,6 +91,8 @@ const Index = () => {
               onSubjectsChange={setSubjects}
               onContinue={() => setStep("marks")}
               onBack={() => setStep("onboarding")}
+              classLevel={state.classLevel}
+              serie={state.serie}
             />
           )}
           {state.step === "marks" && (
@@ -90,6 +101,8 @@ const Index = () => {
               onSubjectsChange={setSubjects}
               onContinue={() => setStep("results")}
               onBack={() => setStep("subjects")}
+              classLevel={state.classLevel}
+              serie={state.serie}
             />
           )}
           {state.step === "results" && (

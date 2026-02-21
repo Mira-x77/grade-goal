@@ -44,8 +44,12 @@ const Home = () => {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className="text-2xl font-black text-foreground">ScoreTarget</h1>
-            <p className="text-sm font-semibold text-muted-foreground">Your strategic exam planner</p>
+            <h1 className="text-2xl font-black text-foreground">
+              {state?.studentName ? `Hey ${state.studentName}!` : "ScoreTarget"}
+            </h1>
+            <p className="text-sm font-semibold text-muted-foreground">
+              {state?.classLevel ? `${state.classLevel}${state?.serie ? ` · Série ${state.serie}` : ""}` : "Your strategic exam planner"}
+            </p>
           </div>
           {streak.currentStreak > 0 && (
             <div className="flex items-center gap-1 rounded-xl bg-accent/15 px-3 py-1.5">
