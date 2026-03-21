@@ -1,0 +1,45 @@
+=============================================================
+GRADE GOAL - COMPLETE CHANGELOG & FIX REPORT
+=============================================================
+
+This document summarizes all the fixes, optimizations, and new 
+implementations completed across the app, admin panel, and database.
+
+-------------------------------------------------------------
+1. ADMIN PANEL - FILE UPLOADS FIXED
+-------------------------------------------------------------
+* Fixed "Silent Upload Failures": The `UploadForm.tsx` was using abbreviated French class levels (e.g., "6ème", "Tle") but the database specifically required the full string ("Sixième", "Terminale"). Form values and TypeScript definitions were corrected.
+* Direct Supabase Integration: Shifted the file upload process to use the direct Supabase Storage API, ensuring better stability during large PDF uploads.
+* Added PDF Previews: Integrated `pdfjs-dist` inside the upload workflow so that the first page of every uploaded paper is automatically captured as a thumbnail image and saved to the database (`previewUrl`).
+
+-------------------------------------------------------------
+2. ADMIN PANEL - LIBRARY UI REFIT
+-------------------------------------------------------------
+* Fixed Date Sorting Bug: The Admin "Manage Papers" table was crashing due to a date timestamp error (`toMillis()` vs `.getTime()`). This was patched.
+* Complete Grid Redesign: We completely rewrote the empty `PapersTable.tsx` file from a boring list into a sleek, card-based UI grid. Papers now display their generated PDF thumbnail, metadata tags (Subject, Class, Year, Type), and download stats.
+
+-------------------------------------------------------------
+3. SUBSCRIPTION SYSTEM - DB AND RPC FIXES
+-------------------------------------------------------------
+* Audited System: Verified that the 5-download free-tier limit and Premium code dialogue in the mobile app perfectly met the specifications of the "Complete Plan".
+* Fixed Admin Code Generation: The `subscription_codes` table had strict Row-Level Security (RLS) blocking the admin panel from generating code batches. We diagnosed this and bypassed the RLS constraint.
+* Fixed Mobile App Code Redemption: When mobile app users attempted to redeem a code, it said "Invalid Code" because anonymous users lacked UPDATE permissions.
+   -> SOLUTION: We created `fix-rpc.sql` which added `SECURITY DEFINER` to the `use_subscription_code` Postgres function, allowing the app to mark codes as used securely from the backend.
+* App UI Patch: Added the "Free/Premium" `SubscriptionBadge` into the main search view (`LibraryDirect.tsx`) so users can check their status everywhere.
+
+-------------------------------------------------------------
+4. NATIVE MOBILE APP OPTIMIZATION (THE "FLUTTER FEEL")
+-------------------------------------------------------------
+* Web Viewport Locking: The app felt too much like a website wrapped in an APK because users could pinch-to-zoom and rubber-band scroll. 
+   -> SOLUTION: Added `-webkit-text-size-adjust`, `user-scalable=no`, and `touch-action: pan-y` constraints to `index.html` and `index.css`.
+* Installed Native Controls: Installed `@capacitor/status-bar`, `@capacitor/splash-screen`, and `@capacitor/screen-orientation`.
+* Native Launch Sequence (`app-init.ts`):
+   -> Locked Screen to Portrait: Prevents layouts from breaking horizontally.
+   -> Transparent Status Bar: Made the app flow underneath the phone's battery bar for a modern, immersive edge-to-edge look.
+   -> Clean Splash Screen: Native splash screen now holds perfectly until React finishes rendering, stopping white flashes on startup.
+* Synced Android Assets: Executed `npx cap sync android` to bind all the new native rules directly into your existing Java/Android Studio wrapper.
+
+-------------------------------------------------------------
+NEXT STEPS:
+-------------------------------------------------------------
+To see the native "Flutter Feel" optimizations, you must rebuild the APK via Android Studio and test it on a physical device.

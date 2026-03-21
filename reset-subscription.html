@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Subscription - ScoreTarget</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .status-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .value {
+            color: #333;
+            font-weight: 700;
+        }
+        
+        .premium {
+            color: #f59e0b;
+        }
+        
+        .free {
+            color: #10b981;
+        }
+        
+        .expired {
+            color: #ef4444;
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+        
+        .btn-reset {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-reset:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-refresh {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-refresh:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+        
+        .alert.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+        
+        .alert.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .warning {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            color: #92400e;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .warning strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Reset Subscription</h1>
+        <p class="subtitle">ScoreTarget Developer Tools</p>
+        
+        <div id="alert" class="alert"></div>
+        
+        <div class="status-card">
+            <h3 style="margin-bottom: 15px; color: #333;">Current Status</h3>
+            <div class="status-row">
+                <span class="label">Tier:</span>
+                <span class="value" id="tier">-</span>
+            </div>
+            <div class="status-row">
+                <span class="label">Status:</span>
+                <span class="value" id="status">-</span>
+            </div>
+            <div class="status-row">
+                <span class="label">Downloads:</span>
+                <span class="value" id="downloads">-</span>
+            </div>
+            <div class="status-row" id="expiresRow" style="display: none;">
+                <span class="label">Expires:</span>
+                <span class="value" id="expires">-</span>
+            </div>
+        </div>
+        
+        <div class="warning">
+            <strong>⚠️ Warning</strong>
+            This will reset your subscription to FREE tier with 0/5 downloads. Use this only for testing purposes.
+        </div>
+        
+        <button class="btn-reset" onclick="resetSubscription()">
+            🔄 Reset to Free Tier
+        </button>
+        
+        <button class="btn-refresh" onclick="loadStatus()">
+            ↻ Refresh Status
+        </button>
+    </div>
+
+    <script>
+        const SUBSCRIPTION_KEY = 'scoretarget_subscription';
+        
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type} show`;
+            
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 3000);
+        }
+        
+        function loadStatus() {
+            try {
+                const stored = localStorage.getItem(SUBSCRIPTION_KEY);
+                
+                if (!stored) {
+                    document.getElementById('tier').textContent = 'Not Found';
+                    document.getElementById('status').textContent = 'No subscription';
+                    document.getElementById('downloads').textContent = '-';
+                    return;
+                }
+                
+                const subscription = JSON.parse(stored);
+                
+                // Tier
+                const tierEl = document.getElementById('tier');
+                tierEl.textContent = subscription.tier.toUpperCase();
+                tierEl.className = `value ${subscription.tier}`;
+                
+                // Status
+                const statusEl = document.getElementById('status');
+                statusEl.textContent = subscription.status.toUpperCase();
+                statusEl.className = `value ${subscription.status === 'active' ? 'free' : 'expired'}`;
+                
+                // Downloads
+                const downloadsEl = document.getElementById('downloads');
+                if (subscription.maxDownloads === -1) {
+                    downloadsEl.textContent = `${subscription.downloadsThisMonth} (Unlimited)`;
+                } else {
+                    downloadsEl.textContent = `${subscription.downloadsThisMonth}/${subscription.maxDownloads}`;
+                }
+                
+                // Expires
+                if (subscription.expiresAt) {
+                    document.getElementById('expiresRow').style.display = 'flex';
+                    const expiresDate = new Date(subscription.expiresAt);
+                    const now = new Date();
+                    const daysRemaining = Math.ceil((expiresDate - now) / (1000 * 60 * 60 * 24));
+                    document.getElementById('expires').textContent = 
+                        `${expiresDate.toLocaleDateString()} (${daysRemaining} days)`;
+                } else {
+                    document.getElementById('expiresRow').style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('Failed to load status:', error);
+                showAlert('Failed to load subscription status', 'error');
+            }
+        }
+        
+        function resetSubscription() {
+            if (!confirm('Are you sure you want to reset your subscription to FREE tier? This will remove your premium access.')) {
+                return;
+            }
+            
+            try {
+                const now = new Date().toISOString();
+                
+                const freeSubscription = {
+                    deviceId: 'test-device-' + Date.now(),
+                    tier: 'free',
+                    status: 'active',
+                    downloadsThisMonth: 0,
+                    maxDownloads: 5,
+                    lastResetDate: now,
+                    createdAt: now,
+                    updatedAt: now
+                };
+                
+                localStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify(freeSubscription));
+                
+                showAlert('✅ Subscription reset to FREE tier successfully!', 'success');
+                loadStatus();
+                
+            } catch (error) {
+                console.error('Failed to reset subscription:', error);
+                showAlert('❌ Failed to reset subscription', 'error');
+            }
+        }
+        
+        // Load status on page load
+        loadStatus();
+    </script>
+</body>
+</html>

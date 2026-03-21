@@ -253,6 +253,19 @@ const Home = () => {
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </div>
               </Link>
+
+              <Link to="/library" className="block">
+                <div className="rounded-2xl bg-card p-4 card-shadow flex items-center gap-4 active:translate-y-0.5 transition-transform">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                    <BookOpen className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-black text-foreground">Exam Library</h3>
+                    <p className="text-xs font-semibold text-muted-foreground">Browse 10+ years of past papers</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </Link>
             </>
           )}
         </motion.div>

@@ -1,4 +1,4 @@
-import { Home, Target, TrendingUp, Settings } from "lucide-react";
+import { Home, Target, TrendingUp, Settings, BookOpen } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -6,6 +6,7 @@ const tabs = [
   { path: "/", icon: Home, label: "Home" },
   { path: "/planner", icon: Target, label: "Plan" },
   { path: "/simulator", icon: TrendingUp, label: "Simulate" },
+  { path: "/library", icon: BookOpen, label: "Library" },
   { path: "/settings", icon: Settings, label: "Settings" },
 ] as const;
 

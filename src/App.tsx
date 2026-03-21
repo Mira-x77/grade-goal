@@ -7,7 +7,9 @@ import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Simulator from "./pages/Simulator";
 import Settings from "./pages/Settings";
-
+import LibraryDirect from "./pages/LibraryDirect";
+import PaperDetail from "./pages/PaperDetail";
+import MyDownloads from "./pages/MyDownloads";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,9 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/planner" element={<Index />} />
           <Route path="/simulator" element={<Simulator />} />
+          <Route path="/library" element={<LibraryDirect />} />
+          <Route path="/library/:paperId" element={<PaperDetail />} />
+          <Route path="/my-downloads" element={<MyDownloads />} />
           <Route path="/settings" element={<Settings />} />
           
           <Route path="*" element={<NotFound />} />
