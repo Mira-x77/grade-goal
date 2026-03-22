@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Target, TrendingUp, AlertTriangle, XCircle, ArrowLeft, Pencil } from "lucide-react";
+import { Target, TrendingUp, AlertTriangle, XCircle, ArrowLeft, Pencil, Home } from "lucide-react";
 import { Subject, FeedbackStatus } from "@/types/exam";
+import { useNavigate } from "react-router-dom";
 import {
   calcYearlyAverage,
   calcMinimumMarkNeeded,
@@ -43,6 +44,7 @@ const statusConfig: Record<FeedbackStatus, { bg: string; shadow: string; icon: R
 };
 
 const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: ResultsScreenProps) => {
+  const navigate = useNavigate();
   const currentAvg = calcYearlyAverage(subjects);
   const range = getPredictedRange(subjects);
   const bounds = getAbsoluteBounds(subjects);
@@ -221,6 +223,13 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
         className="w-full rounded-2xl border-2 border-border bg-card py-4 text-lg font-extrabold text-foreground card-shadow active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2"
       >
         <Pencil className="h-5 w-5" /> EDIT MARKS
+      </button>
+
+      <button
+        onClick={() => navigate("/")}
+        className="w-full rounded-2xl bg-primary py-4 text-lg font-extrabold text-primary-foreground card-shadow-primary active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2"
+      >
+        <Home className="h-5 w-5" /> GO TO DASHBOARD
       </button>
     </motion.div>
   );

@@ -12,8 +12,8 @@ const TaskBar = () => {
   const location = useLocation();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border">
-      <div className="max-w-md mx-auto flex items-center justify-around py-2 px-2">
+    <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none">
+      <div className="pointer-events-auto flex items-center gap-1 bg-card border border-border rounded-full px-3 py-2 shadow-xl">
         {tabs.map((tab) => {
           const isActive =
             tab.path === "/"
@@ -25,12 +25,12 @@ const TaskBar = () => {
             <Link
               key={tab.path}
               to={tab.path}
-              className="relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-colors"
+              className="relative flex flex-col items-center gap-0.5 px-4 py-2 rounded-full transition-colors"
             >
               {isActive && (
                 <motion.div
                   layoutId="taskbar-active"
-                  className="absolute inset-0 bg-primary/10 rounded-xl"
+                  className="absolute inset-0 bg-primary/10 rounded-full"
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 />
               )}
@@ -50,8 +50,6 @@ const TaskBar = () => {
           );
         })}
       </div>
-      {/* Safe area for mobile */}
-      <div className="h-[env(safe-area-inset-bottom)]" />
     </div>
   );
 };

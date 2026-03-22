@@ -26,15 +26,20 @@ export default function AuthPage() {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate("/");
+        redirectAfterAuth();
       } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { full_name: name } },
         });
         if (error) throw error;
-        setInfo("Check your email to confirm your account.");
+        // If email confirmation is disabled, session is returned immediately
+        if (data.session) {
+          redirectAfterAuth(true);
+        } else {
+          setInfo("Check your email to confirm your account.");
+        }
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email);
         if (error) throw error;
@@ -47,11 +52,16 @@ export default function AuthPage() {
     }
   };
 
+  const redirectAfterAuth = (isNew = false) => {
+    const hasAppData = !!localStorage.getItem("scoretarget_state");
+    navigate(isNew || !hasAppData ? "/onboarding" : "/");
+  };
+
   const handleGoogle = async () => {
     reset();
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
   };
 
@@ -59,7 +69,7 @@ export default function AuthPage() {
     reset();
     await supabase.auth.signInWithOAuth({
       provider: "apple",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
   };
 

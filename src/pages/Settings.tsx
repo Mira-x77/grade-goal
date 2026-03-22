@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Lock, Unlock, Trash2, AlertTriangle, RotateCcw, Mail, LogOut, Pencil, Check } from "lucide-react";
+import { ArrowLeft, Trash2, RotateCcw, Mail, LogOut, Pencil, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
-import { AppSettings, DEFAULT_SETTINGS, AppState, RoundingMode, GradingSystem } from "@/types/exam";
-import { getAbsoluteBounds } from "@/lib/exam-logic";
+import { AppSettings, DEFAULT_SETTINGS, AppState, RoundingMode } from "@/types/exam";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import TaskBar from "@/components/TaskBar";
@@ -46,15 +45,9 @@ const Settings = () => {
   if (!state) return null;
 
   const settings = state.settings;
-  const bounds = state.subjects.length > 0 ? getAbsoluteBounds(state.subjects) : null;
-  const targetImpossible = bounds ? state.targetAverage > bounds.max : false;
 
   const updateSettings = (patch: Partial<AppSettings>) => {
     setState((s) => s ? { ...s, settings: { ...s.settings, ...patch } } : s);
-  };
-
-  const setTarget = (val: number) => {
-    setState((s) => s ? { ...s, targetAverage: Math.max(0, Math.min(20, val)) } : s);
   };
 
   const updateCoeff = (id: string, coeff: number) => {
@@ -115,73 +108,6 @@ const Settings = () => {
       </div>
 
       <div className="flex flex-col gap-5 px-6 py-6">
-        {/* Grading System Toggle */}
-        <Section title="Grading System" subtitle="Choose your school's system">
-          <div className="flex flex-col gap-2">
-            {([
-              { value: "apc" as GradingSystem, label: "APC (Togolese Standard)", desc: "Weighted competency-based" },
-              { value: "french" as GradingSystem, label: "French Traditional", desc: "Comparative class ranking" },
-            ]).map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => updateSettings({ gradingSystem: opt.value })}
-                className={`rounded-xl px-4 py-3 text-left transition-all ${
-                  settings.gradingSystem === opt.value
-                    ? "bg-primary/15 text-primary border-2 border-primary"
-                    : "bg-muted text-foreground border-2 border-transparent"
-                }`}
-              >
-                <span className="font-bold block">{opt.label}</span>
-                <span className="text-xs text-muted-foreground">{opt.desc}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* 40/60 Split Toggle (APC only) */}
-          {settings.gradingSystem === "apc" && (
-            <div className="mt-3 flex items-center justify-between">
-              <div>
-                <span className="text-sm font-bold text-foreground">40/60 Classwork/Exam Split</span>
-                <p className="text-[10px] text-muted-foreground">40% interro+devoir, 60% compo</p>
-              </div>
-              <button
-                onClick={() => updateSettings({ apcWeightedSplit: !settings.apcWeightedSplit })}
-                className={`relative h-7 w-12 rounded-full transition-colors ${
-                  settings.apcWeightedSplit ? "bg-primary" : "bg-muted"
-                }`}
-              >
-                <div className={`absolute top-0.5 h-6 w-6 rounded-full bg-card shadow transition-transform ${
-                  settings.apcWeightedSplit ? "translate-x-5" : "translate-x-0.5"
-                }`} />
-              </button>
-            </div>
-          )}
-        </Section>
-
-        {/* Target Average */}
-        <Section title="Target Average">
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              min={0}
-              max={20}
-              step={0.5}
-              value={state.targetAverage}
-              onChange={(e) => setTarget(parseFloat(e.target.value) || 0)}
-              className="w-24 rounded-xl border-2 border-border bg-card px-4 py-3 font-black text-foreground text-center focus:border-primary focus:outline-none transition-colors"
-            />
-            <span className="font-bold text-muted-foreground">/20</span>
-          </div>
-          {targetImpossible && (
-            <div className="flex items-center gap-2 mt-2 rounded-xl bg-danger/15 px-3 py-2">
-              <AlertTriangle className="h-4 w-4 text-danger" />
-              <span className="text-xs font-bold text-danger">
-                Target is mathematically impossible (max possible: {bounds?.max}/20)
-              </span>
-            </div>
-          )}
-        </Section>
-
         {/* Assessment Weights */}
         <Section title="Assessment Weights" subtitle="Edit mark type weights">
           <div className="flex flex-col gap-3">

@@ -226,8 +226,6 @@ const Profile = () => {
             </button>
           </div>
         </motion.div>
-
-        </motion.div>
       </div>
 
       <TaskBar />

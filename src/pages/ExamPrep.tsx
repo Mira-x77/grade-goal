@@ -1,36 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
 import { Target, Lock, Lightbulb, CheckCircle2, Crown, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import TaskBar from '@/components/TaskBar';
-import { Loader } from '@/components/ui/loader';
-
-const supabaseUrl = 'https://aaayzhvqgqptgqaxxbdh.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhYXl6aHZxZ3FwdGdxYXh4YmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzAwNDksImV4cCI6MjA4ODA0NjA0OX0.NNKOn17jGZHEbBKBnX3oxVhSYJhKm28QSOkK76I0bgo';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { loadState } from '@/lib/storage';
 
 export default function ExamPrep() {
   const navigate = useNavigate();
-  const [subjects, setSubjects] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadSubjects();
-  }, []);
-
-  const loadSubjects = async () => {
-    try {
-      const { data } = await supabase.from('exam_papers').select('subject');
-      if (data) {
-        setSubjects(Array.from(new Set(data.map(d => d.subject))).sort());
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const state = loadState();
+  const userSubjects = state?.subjects.map(s => s.name) ?? [];
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -71,13 +49,14 @@ export default function ExamPrep() {
 
           <h2 className="text-lg font-black text-foreground mt-8 mb-4">Select a subject to unlock:</h2>
 
-          {loading ? (
-            <div className="py-10 text-center">
-              <Loader text="Loading subjects..." />
+          {userSubjects.length === 0 ? (
+            <div className="py-10 text-center rounded-2xl bg-muted/50">
+              <p className="text-sm font-bold text-muted-foreground">No subjects found.</p>
+              <p className="text-xs text-muted-foreground mt-1">Complete onboarding to add your subjects.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {subjects.map((subject, i) => (
+              {userSubjects.map((subject, i) => (
                 <motion.div
                   key={subject}
                   initial={{ opacity: 0, y: 10 }}

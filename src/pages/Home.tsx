@@ -55,9 +55,6 @@ const Home = () => {
             <h1 className="text-2xl font-black text-foreground">
               {state?.studentName ? `Hey ${state.studentName}!` : "ScoreTarget"}
             </h1>
-            <p className="text-sm font-semibold text-muted-foreground">
-              {state?.classLevel ? `${state.classLevel}${state?.serie ? ` · Série ${state.serie}` : ""}` : "Your strategic exam planner"}
-            </p>
           </div>
           <div className="flex items-center gap-2">
             {streak.currentStreak > 0 && (
@@ -249,8 +246,8 @@ const Home = () => {
           )}
         </motion.div>
 
-        {/* Activity Overview — only show when there's meaningful data */}
-        {(filledMarks > 0 || (state?.subjects.length ?? 0) > 0 || streak.totalEntries > 0 || downloadedCount > 0) && (
+        {/* Activity Overview — only show when there's actual activity */}
+        {(filledMarks > 0 || streak.totalEntries > 0 || downloadedCount > 0) && (
         <motion.div
           initial={{ y: 15, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

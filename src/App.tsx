@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AuthPage from "./pages/AuthPage";
+import AuthCallback from "./pages/AuthCallback";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Simulator from "./pages/Simulator";
@@ -30,18 +31,22 @@ const App = () => (
           <Routes>
             {/* Public */}
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
-            {/* Protected */}
-            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-            <Route path="/planner" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/simulator" element={<ProtectedRoute><Simulator /></ProtectedRoute>} />
-            <Route path="/library" element={<ProtectedRoute><LibraryDirect /></ProtectedRoute>} />
-            <Route path="/library/:paperId" element={<ProtectedRoute><PaperDetail /></ProtectedRoute>} />
-            <Route path="/subject/:subjectName" element={<ProtectedRoute><SubjectDashboard /></ProtectedRoute>} />
-            <Route path="/exam-prep" element={<ProtectedRoute><ExamPrep /></ProtectedRoute>} />
-            <Route path="/my-downloads" element={<ProtectedRoute><MyDownloads /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            {/* Onboarding — authenticated but no app data yet */}
+            <Route path="/onboarding" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+
+            {/* Protected — requires auth + completed onboarding */}
+            <Route path="/" element={<ProtectedRoute requireOnboarding><Home /></ProtectedRoute>} />
+            <Route path="/planner" element={<ProtectedRoute requireOnboarding><Index /></ProtectedRoute>} />
+            <Route path="/simulator" element={<ProtectedRoute requireOnboarding><Simulator /></ProtectedRoute>} />
+            <Route path="/library" element={<ProtectedRoute requireOnboarding><LibraryDirect /></ProtectedRoute>} />
+            <Route path="/library/:paperId" element={<ProtectedRoute requireOnboarding><PaperDetail /></ProtectedRoute>} />
+            <Route path="/subject/:subjectName" element={<ProtectedRoute requireOnboarding><SubjectDashboard /></ProtectedRoute>} />
+            <Route path="/exam-prep" element={<ProtectedRoute requireOnboarding><ExamPrep /></ProtectedRoute>} />
+            <Route path="/my-downloads" element={<ProtectedRoute requireOnboarding><MyDownloads /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute requireOnboarding><Settings /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute requireOnboarding><Profile /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
