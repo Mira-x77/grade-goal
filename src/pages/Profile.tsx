@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Target, BookOpen, Pencil, Check, LogOut, Mail } from "lucide-react";
+import { ArrowLeft, User, Target, BookOpen, Pencil, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
 import { AppState } from "@/types/exam";
 import { CLASS_LEVELS, LYCEE_SERIES } from "@/lib/subjects-data";
-import { useAuth } from "@/contexts/AuthContext";
 import TaskBar from "@/components/TaskBar";
 
 const allLevels = [...CLASS_LEVELS.college, ...CLASS_LEVELS.lycee];
@@ -13,7 +12,6 @@ const isLycee = (level: string) => (CLASS_LEVELS.lycee as readonly string[]).inc
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
   const [state, setState] = useState<AppState | null>(null);
   const [editingBasic, setEditingBasic] = useState(false);
   const [draft, setDraft] = useState({ studentName: "", classLevel: "", serie: "" });
@@ -229,28 +227,6 @@ const Profile = () => {
           </div>
         </motion.div>
 
-        {/* Account */}
-        <motion.div
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-2xl bg-card p-5 card-shadow mb-4"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-              <Mail className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <h3 className="font-black text-foreground">Account</h3>
-              <p className="text-xs font-semibold text-muted-foreground truncate max-w-[220px]">{user?.email}</p>
-            </div>
-          </div>
-          <button
-            onClick={async () => { await signOut(); navigate("/auth"); }}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-danger/10 py-3 text-sm font-bold text-danger active:scale-[0.98] transition-transform"
-          >
-            <LogOut className="h-4 w-4" /> Sign Out
-          </button>
         </motion.div>
       </div>
 

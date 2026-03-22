@@ -153,40 +153,48 @@ export default function LibraryDirect() {
                 />
               </div>
 
-              {/* Horizontal Scrollable Filters */}
-              <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 hide-scrollbar snap-x mt-2">
-                <FilterPill
-                  label="Class"
-                  value={filters.classLevel}
-                  options={uniqueClassLevels}
-                  onSelect={(v) => setFilters({ ...filters, classLevel: v })}
-                />
-                <FilterPill
-                  label="Subject"
-                  value={filters.subject}
-                  options={uniqueSubjects}
-                  onSelect={(v) => setFilters({ ...filters, subject: v })}
-                />
-                <FilterPill
-                  label="Year"
-                  value={filters.year}
-                  options={uniqueYears.map(String)}
-                  onSelect={(v) => setFilters({ ...filters, year: v })}
-                />
-                <FilterPill
-                  label="Type"
-                  value={filters.examType}
-                  options={uniqueExamTypes}
-                  onSelect={(v) => setFilters({ ...filters, examType: v })}
-                />
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearFilters}
-                    className="snap-start shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold bg-danger/10 text-danger border-2 border-danger/30 active:scale-95 transition-transform"
-                  >
-                    <X className="h-3 w-3" /> Clear
-                  </button>
-                )}
+              {/* Filters row + layout toggle */}
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex gap-2 overflow-x-auto hide-scrollbar flex-1">
+                  <FilterPill
+                    label="Class"
+                    value={filters.classLevel}
+                    options={uniqueClassLevels}
+                    onSelect={(v) => setFilters({ ...filters, classLevel: v })}
+                  />
+                  <FilterPill
+                    label="Subject"
+                    value={filters.subject}
+                    options={uniqueSubjects}
+                    onSelect={(v) => setFilters({ ...filters, subject: v })}
+                  />
+                  <FilterPill
+                    label="Year"
+                    value={filters.year}
+                    options={uniqueYears.map(String)}
+                    onSelect={(v) => setFilters({ ...filters, year: v })}
+                  />
+                  <FilterPill
+                    label="Type"
+                    value={filters.examType}
+                    options={uniqueExamTypes}
+                    onSelect={(v) => setFilters({ ...filters, examType: v })}
+                  />
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold bg-danger/10 text-danger border-2 border-danger/30 active:scale-95 transition-transform"
+                    >
+                      <X className="h-3 w-3" /> Clear
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={() => setViewLayout(prev => prev === 'grid' ? 'list' : 'grid')}
+                  className="shrink-0 p-2 rounded-xl bg-muted border border-border text-muted-foreground active:scale-95 transition-all"
+                >
+                  {viewLayout === 'grid' ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+                </button>
               </div>
             </div>
           )}
@@ -194,22 +202,17 @@ export default function LibraryDirect() {
 
         {/* Loading */}
         {loading && (
-          <div className="px-6 py-12 text-center">
-            <Loader size="lg" text="Loading papers..." />
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <div className="relative h-16 w-16">
+              <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+              <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+            </div>
+            <p className="text-sm font-bold text-muted-foreground">Loading papers...</p>
           </div>
         )}
 
         {!loading && !error && filteredPapers.length > 0 && (
-          <div className="px-4">
-            <div className="flex items-center justify-between mb-3 px-2">
-              <h2 className="text-lg font-black text-foreground">Past Papers</h2>
-              <button
-                onClick={() => setViewLayout(prev => prev === 'grid' ? 'list' : 'grid')}
-                className="p-1.5 rounded-lg bg-muted border border-border text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-sm"
-              >
-                {viewLayout === 'grid' ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
-              </button>
-            </div>
+          <div className="px-4 pt-3">
 
             <div className={viewLayout === 'grid' ? 'grid grid-cols-3 gap-2' : 'flex flex-col gap-3'}>
               {filteredPapers.map((paper) => (
@@ -340,10 +343,9 @@ export default function LibraryDirect() {
       {/* Downloads FAB */}
       <button
         onClick={() => navigate("/my-downloads")}
-        className="fixed bottom-24 right-4 z-40 flex items-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground card-shadow-primary active:scale-95 transition-transform"
+        className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground card-shadow-primary active:scale-95 transition-transform"
       >
-        <Download className="h-4 w-4" />
-        Downloads
+        <Download className="h-6 w-6" />
       </button>
     </div>
   );
@@ -360,6 +362,8 @@ interface FilterPillProps {
 function FilterPill({ label, value, options, onSelect }: FilterPillProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0 });
 
   // Close on outside click
   useEffect(() => {
@@ -371,12 +375,21 @@ function FilterPill({ label, value, options, onSelect }: FilterPillProps) {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
+  const handleOpen = () => {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setDropPos({ top: rect.bottom + 8, left: rect.left });
+    }
+    setOpen((o) => !o);
+  };
+
   const active = !!value;
 
   return (
-    <div ref={ref} className="relative snap-start shrink-0">
+    <div ref={ref} className="relative shrink-0">
       <button
-        onClick={() => setOpen((o) => !o)}
+        ref={btnRef}
+        onClick={handleOpen}
         className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold border-2 transition-all active:scale-95 ${
           active
             ? "bg-primary/10 border-primary text-primary"
@@ -395,8 +408,10 @@ function FilterPill({ label, value, options, onSelect }: FilterPillProps) {
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-2 z-50 min-w-[160px] rounded-2xl bg-card border border-border shadow-xl overflow-hidden">
-          {/* All option */}
+        <div
+          style={{ top: dropPos.top, left: dropPos.left }}
+          className="fixed z-[200] min-w-[160px] rounded-2xl bg-card border border-border shadow-xl overflow-hidden"
+        >
           <button
             onClick={() => { onSelect(""); setOpen(false); }}
             className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-colors hover:bg-muted/60 ${

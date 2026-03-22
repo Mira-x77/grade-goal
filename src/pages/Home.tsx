@@ -96,8 +96,8 @@ const Home = () => {
           </motion.div>
         )}
 
-        {/* Current status hero */}
-        {hasData && currentAvg !== null ? (
+        {/* Current status hero — only show when there's data */}
+        {hasData && currentAvg !== null && (
           <Link to="/planner?step=results">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -121,19 +121,6 @@ const Home = () => {
             )}
           </motion.div>
           </Link>
-        ) : (
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="rounded-2xl bg-primary p-6 text-center card-shadow-primary"
-          >
-            <Target className="h-10 w-10 text-primary-foreground mx-auto mb-2" />
-            <h2 className="text-xl font-black text-primary-foreground">Set your target</h2>
-            <p className="text-sm font-bold text-primary-foreground opacity-80">
-              Start planning your exam strategy
-            </p>
-          </motion.div>
         )}
 
         {/* Dual View Toggle */}
@@ -262,7 +249,8 @@ const Home = () => {
           )}
         </motion.div>
 
-        {/* Activity Overview */}
+        {/* Activity Overview — only show when there's meaningful data */}
+        {(filledMarks > 0 || (state?.subjects.length ?? 0) > 0 || streak.totalEntries > 0 || downloadedCount > 0) && (
         <motion.div
           initial={{ y: 15, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -308,6 +296,7 @@ const Home = () => {
             </div>
           </div>
         </motion.div>
+        )}
       </div>
 
       <TaskBar />

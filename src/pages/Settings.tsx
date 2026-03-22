@@ -1,15 +1,19 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Lock, Unlock, Trash2, AlertTriangle, RotateCcw } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, Lock, Unlock, Trash2, AlertTriangle, RotateCcw, Mail, LogOut, Pencil, Check } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
 import { AppSettings, DEFAULT_SETTINGS, AppState, RoundingMode, GradingSystem } from "@/types/exam";
 import { getAbsoluteBounds } from "@/lib/exam-logic";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import TaskBar from "@/components/TaskBar";
 
 const Settings = () => {
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [state, setState] = useState<AppState | null>(null);
+  const [editingWeights, setEditingWeights] = useState(false);
 
   useEffect(() => {
     const loaded = loadState();
@@ -188,30 +192,40 @@ const Settings = () => {
                 </span>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => !settings.weights.locked && updateSettings({
+                    onClick={() => editingWeights && updateSettings({
                       weights: { ...settings.weights, [type]: Math.max(1, settings.weights[type] - 1) }
                     })}
-                    disabled={settings.weights.locked}
+                    disabled={!editingWeights}
                     className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground disabled:opacity-40 active:scale-95"
                   >−</button>
                   <span className="w-8 text-center font-black text-foreground">{settings.weights[type]}</span>
                   <button
-                    onClick={() => !settings.weights.locked && updateSettings({
+                    onClick={() => editingWeights && updateSettings({
                       weights: { ...settings.weights, [type]: settings.weights[type] + 1 }
                     })}
-                    disabled={settings.weights.locked}
+                    disabled={!editingWeights}
                     className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground disabled:opacity-40 active:scale-95"
                   >+</button>
                 </div>
               </div>
             ))}
-            <button
-              onClick={() => updateSettings({ weights: { ...settings.weights, locked: !settings.weights.locked } })}
-              className="flex items-center gap-2 self-end rounded-xl bg-muted px-3 py-2 text-xs font-bold text-muted-foreground active:scale-95 transition-transform"
-            >
-              {settings.weights.locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-              {settings.weights.locked ? "Weights locked" : "Lock weights"}
-            </button>
+            <div className="flex justify-end">
+              {editingWeights ? (
+                <button
+                  onClick={() => setEditingWeights(false)}
+                  className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-black text-primary-foreground active:scale-95 transition-transform"
+                >
+                  <Check className="h-3.5 w-3.5" /> Done
+                </button>
+              ) : (
+                <button
+                  onClick={() => setEditingWeights(true)}
+                  className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 text-xs font-bold text-foreground active:scale-95 transition-transform"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Edit
+                </button>
+              )}
+            </div>
           </div>
         </Section>
 
@@ -410,6 +424,22 @@ const Settings = () => {
             >
               <Trash2 className="h-4 w-4" />
               Wipe all data
+            </button>
+          </div>
+        </Section>
+
+        {/* Account */}
+        <Section title="Account">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3 rounded-xl bg-muted/50 px-4 py-3">
+              <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+              <p className="text-sm font-bold text-foreground truncate">{user?.email}</p>
+            </div>
+            <button
+              onClick={async () => { await signOut(); navigate("/auth"); }}
+              className="flex items-center justify-center gap-2 rounded-xl bg-danger/10 px-4 py-3 font-bold text-danger active:scale-[0.98] transition-transform"
+            >
+              <LogOut className="h-4 w-4" /> Sign Out
             </button>
           </div>
         </Section>
