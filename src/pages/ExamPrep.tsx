@@ -1,0 +1,108 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
+import { Target, Lock, Lightbulb, CheckCircle2, Crown, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import TaskBar from '@/components/TaskBar';
+import { Loader } from '@/components/ui/loader';
+
+const supabaseUrl = 'https://aaayzhvqgqptgqaxxbdh.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhYXl6aHZxZ3FwdGdxYXh4YmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzAwNDksImV4cCI6MjA4ODA0NjA0OX0.NNKOn17jGZHEbBKBnX3oxVhSYJhKm28QSOkK76I0bgo';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export default function ExamPrep() {
+  const navigate = useNavigate();
+  const [subjects, setSubjects] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadSubjects();
+  }, []);
+
+  const loadSubjects = async () => {
+    try {
+      const { data } = await supabase.from('exam_papers').select('subject');
+      if (data) {
+        setSubjects(Array.from(new Set(data.map(d => d.subject))).sort());
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      <div className="max-w-md mx-auto">
+        {/* Header Hero */}
+        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 px-6 pt-10 pb-8 border-b border-yellow-200 dark:border-yellow-800 text-center relative overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-yellow-200/50 dark:bg-yellow-600/20 rounded-full blur-3xl"></div>
+          
+          <Crown className="h-10 w-10 text-yellow-500 mx-auto mb-3 relative z-10" />
+          <h1 className="text-2xl font-black text-yellow-950 dark:text-yellow-500 leading-tight mb-2 relative z-10">
+            Pass smarter, not harder.
+          </h1>
+          <p className="text-sm font-semibold text-yellow-800/80 dark:text-yellow-500/80 relative z-10 max-w-[280px] mx-auto">
+            Focus on what actually matters. Get the exact questions that repeat every year.
+          </p>
+        </div>
+
+        <div className="px-6 py-6 space-y-6">
+          {/* Features Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-card p-4 rounded-2xl border border-border card-shadow flex flex-col items-center text-center">
+              <Target className="h-6 w-6 text-primary mb-2" />
+              <span className="text-xs font-black text-foreground">Top 30 Questions</span>
+            </div>
+            <div className="bg-card p-4 rounded-2xl border border-border card-shadow flex flex-col items-center text-center">
+              <Lightbulb className="h-6 w-6 text-primary mb-2" />
+              <span className="text-xs font-black text-foreground">What to Study</span>
+            </div>
+            <div className="bg-card p-4 rounded-2xl border border-border card-shadow flex flex-col items-center text-center">
+              <CheckCircle2 className="h-6 w-6 text-primary mb-2" />
+              <span className="text-xs font-black text-foreground">Step-by-step Solutions</span>
+            </div>
+            <div className="bg-card p-4 rounded-2xl border border-border card-shadow flex flex-col items-center text-center opacity-50 relative overflow-hidden">
+              <Lock className="absolute inset-0 m-auto h-6 w-6 text-muted-foreground z-10" />
+              <span className="text-xs font-black text-foreground blur-[2px]">Secret Sauce</span>
+            </div>
+          </div>
+
+          <h2 className="text-lg font-black text-foreground mt-8 mb-4">Select a subject to unlock:</h2>
+
+          {loading ? (
+            <div className="py-10 text-center">
+              <Loader text="Loading subjects..." />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {subjects.map((subject, i) => (
+                <motion.div
+                  key={subject}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  onClick={() => navigate(`/subject/${encodeURIComponent(subject)}`)}
+                  className="bg-card hover:bg-muted p-4 rounded-2xl border border-border flex items-center justify-between cursor-pointer transition-colors active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                      <Crown className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-base text-foreground">{subject}</h3>
+                      <p className="text-xs font-bold text-muted-foreground mt-0.5">Unlock specific prep plan</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <TaskBar />
+    </div>
+  );
+}

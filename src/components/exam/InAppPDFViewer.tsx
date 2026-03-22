@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, BookOpen } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, BookOpen, Sun, Moon, Scroll } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Loader } from '@/components/ui/loader';
 
@@ -11,10 +11,10 @@ const MAX_CANVAS_DIM = 4096;
 const DPR = Math.min(window.devicePixelRatio || 1, 3);
 
 type ReadingMode = 'light' | 'dark' | 'sepia';
-const MODE_CFG: Record<ReadingMode, { bg: string; filter: string; icon: string }> = {
-  light: { bg: '#f5f5f5', filter: 'none', icon: '☀️' },
-  dark:  { bg: '#121212', filter: 'invert(1) hue-rotate(180deg)', icon: '🌙' },
-  sepia: { bg: '#f4ecd8', filter: 'sepia(0.35) brightness(0.95)', icon: '📜' },
+const MODE_CFG: Record<ReadingMode, { bg: string; filter: string; icon: React.ReactNode }> = {
+  light: { bg: '#f5f5f5', filter: 'none', icon: <Sun className="h-4 w-4 text-white" /> },
+  dark:  { bg: '#121212', filter: 'invert(1) hue-rotate(180deg)', icon: <Moon className="h-4 w-4 text-white" /> },
+  sepia: { bg: '#f4ecd8', filter: 'sepia(0.35) brightness(0.95)', icon: <Scroll className="h-4 w-4 text-white" /> },
 };
 
 interface InAppPDFViewerProps {
@@ -408,7 +408,7 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
       {/* ── Hint ── */}
       {!loading && !error && currentPage === 1 && showControls && numPages > 1 && (
         <div className="absolute bottom-32 left-0 right-0 flex justify-center pointer-events-none z-30">
-          <div className="bg-black/70 text-white/70 text-xs px-4 py-1.5 rounded-full backdrop-blur-sm">
+          <div className="bg-black/70 text-white/70 text-xs px-4 py-1.5 rounded-full backdrop-blur-sm flex items-center gap-1.5">
             Swipe · Pinch zoom · Double-tap · {mode.icon} Reading mode
           </div>
         </div>

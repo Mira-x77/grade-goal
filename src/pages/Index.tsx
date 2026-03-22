@@ -1,20 +1,20 @@
 import { useState, useEffect } from "react";
 import { DEFAULT_SETTINGS } from "@/types/exam";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Home } from "lucide-react";
-import { Link } from "react-router-dom";
 import { AppState, Subject } from "@/types/exam";
 import { saveState, loadState } from "@/lib/storage";
-import OnboardingScreen from "@/components/OnboardingScreen";
+import { OnboardingHeader } from "@/components/OnboardingHeader";
+import OnboardingScreen, { OnboardingStep } from "@/components/OnboardingScreen";
 import SubjectsSetup from "@/components/SubjectsSetup";
 import MarksInput from "@/components/MarksInput";
 import ResultsScreen from "@/components/ResultsScreen";
-import TaskBar from "@/components/TaskBar";
 
 const Index = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const stepParam = searchParams.get("step");
+  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>("system");
   
   const [state, setState] = useState<AppState>(() => {
     const saved = loadState();
@@ -42,31 +42,47 @@ const Index = () => {
   const setClassLevel = (classLevel: string) => setState((s) => ({ ...s, classLevel }));
   const setSerie = (serie: string) => setState((s) => ({ ...s, serie }));
 
+  const handleBack = () => {
+    if (state.step === "onboarding") {
+      if (onboardingStep === "target") setOnboardingStep("profile");
+      else if (onboardingStep === "profile") setOnboardingStep("system");
+      else navigate("/");
+    } else if (state.step === "subjects") {
+      setStep("onboarding");
+      setOnboardingStep("target");
+    } else if (state.step === "marks") {
+      setStep("subjects");
+    } else if (state.step === "results") {
+      setStep("marks");
+    }
+  };
+
+  const stepTitles: Record<AppState["step"], string> = {
+    onboarding: onboardingStep === "system" ? "Grading System" : onboardingStep === "profile" ? "Your Profile" : "Set Target",
+    subjects: "Add Subject",
+    marks: "Enter Marks",
+    results: "Your Results",
+  };
+
+  const stepNumbers: Record<AppState["step"], number> = {
+    onboarding: onboardingStep === "system" ? 1 : onboardingStep === "profile" ? 2 : 3,
+    subjects: 4,
+    marks: 5,
+    results: 5,
+  };
+
+  const TOTAL_STEPS = 5;
+
   return (
     <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
-      {/* Top bar */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Home className="h-5 w-5" />
-            </Link>
-            <h1 className="text-lg font-black text-primary">ScoreTarget</h1>
-          </div>
-          <div className="flex gap-1">
-            {(["onboarding", "subjects", "marks", "results"] as const).map((s, i) => (
-              <div
-                key={s}
-                className={`h-2 rounded-full transition-all ${
-                  state.step === s ? "w-8 bg-primary" :
-                  (["onboarding", "subjects", "marks", "results"].indexOf(state.step) > i) ? "w-4 bg-primary/40" :
-                  "w-4 bg-muted"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
+      {state.step !== "results" && (
+        <OnboardingHeader
+          title={stepTitles[state.step]}
+          onBack={handleBack}
+          currentStep={stepNumbers[state.step]}
+          totalSteps={TOTAL_STEPS}
+        />
+      )}
 
       <AnimatePresence mode="wait">
         <motion.div key={state.step}>
@@ -83,6 +99,8 @@ const Index = () => {
               onClassLevelChange={setClassLevel}
               serie={state.serie || ""}
               onSerieChange={setSerie}
+              step={onboardingStep}
+              onStepChange={setOnboardingStep}
             />
           )}
           {state.step === "subjects" && (
@@ -116,7 +134,6 @@ const Index = () => {
         </motion.div>
       </AnimatePresence>
 
-      <TaskBar />
     </div>
   );
 };

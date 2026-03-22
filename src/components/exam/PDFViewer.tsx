@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Download, AlertCircle } from 'lucide-react';
+import { X, Download, AlertCircle, Smartphone } from 'lucide-react';
 
 interface PDFViewerProps {
   fileUrl: string;
@@ -119,8 +119,8 @@ export function PDFViewer({ fileUrl, fileName, onClose, onDownload }: PDFViewerP
 
       {/* Info Banner */}
       <div className="bg-gradient-to-r from-primary/10 to-primary/5 border-t border-primary/20 px-4 py-3 text-center flex-shrink-0">
-        <p className="text-xs font-bold text-primary">
-          📱 Viewing in preview mode • Tap "Download" to save to your device for offline access
+        <p className="text-xs font-bold text-primary flex items-center justify-center gap-1.5">
+          <Smartphone className="h-3.5 w-3.5" /> Viewing in preview mode • Tap "Download" to save to your device for offline access
         </p>
       </div>
     </div>

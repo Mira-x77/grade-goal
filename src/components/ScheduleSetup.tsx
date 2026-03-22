@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Plus } from "lucide-react";
+import { X, Plus, BookOpen } from "lucide-react";
 import { DayOfWeek, WeeklySchedule } from "@/types/schedule";
 import { updateSchedule, markSetupCompleted, loadScheduleState } from "@/lib/schedule-storage";
 import { scheduleAllReminders, requestNotificationPermission } from "@/lib/notification-scheduler";
@@ -86,7 +86,7 @@ export function ScheduleSetup({ onComplete, onSkip, initialSchedule }: ScheduleS
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-2xl font-black text-foreground">📚 {t("weeklySchedule")}</h1>
+          <h1 className="text-2xl font-black text-foreground flex items-center gap-2"><BookOpen className="h-6 w-6" /> {t("weeklySchedule")}</h1>
           <p className="text-sm font-semibold text-muted-foreground mt-1">
             {t("addSubjectsReminder")}
           </p>

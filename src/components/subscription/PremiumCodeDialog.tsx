@@ -49,7 +49,7 @@ export function PremiumCodeDialog({
     setLoading(true);
     try {
       await subscriptionService.activatePremiumCode(code);
-      toast.success('Premium activated! You now have unlimited downloads.');
+      toast.success('Full Access granted! You now have unlimited intelligence access.');
       onSuccess();
       onClose();
       setCode('');
@@ -70,7 +70,7 @@ export function PremiumCodeDialog({
 
   const handleWhatsAppContact = () => {
     const phoneNumber = '22890676722'; // +228 90676722
-    const message = encodeURIComponent('Hello! I would like to purchase a ScoreTarget Premium code.');
+    const message = encodeURIComponent('Hello! I would like to purchase a ScoreTarget Access code.');
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -81,10 +81,10 @@ export function PremiumCodeDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Crown className="h-5 w-5 text-yellow-500" />
-            Enter Premium Code
+            Enter Access Code
           </DialogTitle>
           <DialogDescription>
-            Enter your premium code to unlock unlimited downloads
+            Enter your code to unlock full exam intelligence & downloads
           </DialogDescription>
         </DialogHeader>
 
@@ -93,7 +93,7 @@ export function PremiumCodeDialog({
           <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
             <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
               <Crown className="h-4 w-4 text-yellow-600" />
-              Premium Plans
+              Pass Smarter Plans (Full Access)
             </h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between items-center">
@@ -132,7 +132,7 @@ export function PremiumCodeDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="code">Enter Premium Code</Label>
+            <Label htmlFor="code">Enter Access Code</Label>
             <Input
               id="code"
               placeholder="XXXX-XXXX-XXXX"

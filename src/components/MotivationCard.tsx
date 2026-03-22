@@ -11,22 +11,22 @@ interface MotivationCardProps {
 
 const encouragements = {
   great: [
-    "You're crushing it! 🔥",
-    "Keep this energy! 💪",
-    "On fire today! 🚀",
-    "Unstoppable! ⚡",
+    "You're crushing it!",
+    "Keep this energy!",
+    "On fire today!",
+    "Unstoppable!",
   ],
   good: [
-    "Solid progress! 👏",
-    "You've got this! 💯",
-    "Stay focused! 🎯",
-    "Almost there! ✨",
+    "Solid progress!",
+    "You've got this!",
+    "Stay focused!",
+    "Almost there!",
   ],
   tough: [
-    "Every point counts! 💪",
-    "Don't give up! 🏋️",
-    "Push through! 🔥",
-    "You can turn this around! 🚀",
+    "Every point counts!",
+    "Don't give up!",
+    "Push through!",
+    "You can turn this around!",
   ],
 };
 

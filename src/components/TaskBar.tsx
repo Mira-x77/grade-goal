@@ -4,10 +4,8 @@ import { motion } from "framer-motion";
 
 const tabs = [
   { path: "/", icon: Home, label: "Home" },
-  { path: "/planner", icon: Target, label: "Plan" },
-  { path: "/simulator", icon: TrendingUp, label: "Simulate" },
-  { path: "/library", icon: BookOpen, label: "Library" },
-  { path: "/settings", icon: Settings, label: "Settings" },
+  { path: "/library", icon: BookOpen, label: "Past Papers" },
+  { path: "/exam-prep", icon: Target, label: "Exam Prep" },
 ] as const;
 
 const TaskBar = () => {

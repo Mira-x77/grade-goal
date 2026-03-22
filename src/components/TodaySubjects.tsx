@@ -73,7 +73,7 @@ export function TodaySubjects() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-2xl font-black text-foreground">📖 {t("todaysBooks")}</h1>
+          <h1 className="text-2xl font-black text-foreground flex items-center gap-2"><BookOpen className="h-6 w-6" /> {t("todaysBooks")}</h1>
           <p className="text-sm font-semibold text-muted-foreground mt-1">{dayName}</p>
         </motion.div>
       </div>

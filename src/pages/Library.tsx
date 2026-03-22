@@ -5,7 +5,7 @@ import { WifiOff, RefreshCw, Download } from "lucide-react";
 import { PaperGrid } from "@/components/exam/PaperGrid";
 import { PaperFilters } from "@/components/exam/PaperFilters";
 import { PaperSearch } from "@/components/exam/PaperSearch";
-import { SubscriptionBadge } from "@/components/subscription/SubscriptionBadge";
+
 import { SubscriptionDetailDialog } from "@/components/subscription/SubscriptionDetailDialog";
 import { PremiumCodeDialog } from "@/components/subscription/PremiumCodeDialog";
 import TaskBar from "@/components/TaskBar";
@@ -201,7 +201,6 @@ const Library = () => {
                   {t("browseDownloadPapers")}
                 </p>
               </div>
-              <SubscriptionBadge onClick={() => setShowDetailDialog(true)} />
             </div>
             <button
               onClick={() => navigate("/my-downloads")}

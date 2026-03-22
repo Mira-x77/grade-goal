@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
-import { Download, Search, Eye, Filter, X } from 'lucide-react';
+import { Download, Search, Eye, X, LayoutGrid, List, FileText, ChevronDown, Check } from 'lucide-react';
 import { cacheService } from '@/services/cacheService';
-import { SubscriptionBadge } from '@/components/subscription/SubscriptionBadge';
+
 import { SubscriptionDetailDialog } from '@/components/subscription/SubscriptionDetailDialog';
 import { PremiumCodeDialog } from '@/components/subscription/PremiumCodeDialog';
 import { Loader } from '@/components/ui/loader';
+import TaskBar from '@/components/TaskBar';
 
 const supabaseUrl = 'https://aaayzhvqgqptgqaxxbdh.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhYXl6aHZxZ3FwdGdxYXh4YmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzAwNDksImV4cCI6MjA4ODA0NjA0OX0.NNKOn17jGZHEbBKBnX3oxVhSYJhKm28QSOkK76I0bgo';
@@ -20,9 +21,13 @@ export default function LibraryDirect() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [downloadedPaperIds, setDownloadedPaperIds] = useState<Set<string>>(new Set());
+  const queryParams = new URLSearchParams(window.location.search);
+  const initialSubject = queryParams.get('subject') || '';
+  const [viewLayout, setViewLayout] = useState<'grid' | 'list'>('grid');
+
   const [filters, setFilters] = useState({
     classLevel: '',
-    subject: '',
+    subject: initialSubject,
     year: '',
     examType: ''
   });
@@ -115,36 +120,23 @@ export default function LibraryDirect() {
   const hasActiveFilters = filters.classLevel || filters.subject || filters.year || filters.examType;
 
   const clearFilters = () => {
-    setFilters({
-      classLevel: '',
-      subject: '',
-      year: '',
-      examType: ''
-    });
+    setFilters({ classLevel: '', subject: '', year: '', examType: '' });
   };
 
   return (
-    <div className="flex-1">
+    <div className="flex-1 pb-20">
       <div className="max-w-md mx-auto">
         {/* Sticky Header Section */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md px-6 pt-8 pb-4 border-b border-border/50">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-2xl font-black text-foreground">Exam Library</h1>
+              <h1 className="text-2xl font-black text-foreground">Past Papers Library</h1>
               <p className="text-sm font-semibold text-muted-foreground">
                 Browse and download past papers
               </p>
             </div>
-            <button
-              onClick={() => navigate("/my-downloads")}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 active:scale-95 transition-transform"
-            >
-              <Download className="h-5 w-5 text-primary" />
-            </button>
           </div>
-          <div className="mt-4">
-            <SubscriptionBadge onClick={() => setShowDetailDialog(true)} />
-          </div>
+
 
           {/* Search and Filters moved inside sticky header */}
           {!loading && papers.length > 0 && (
@@ -161,49 +153,44 @@ export default function LibraryDirect() {
                 />
               </div>
 
-              {/* Filter Toggle Button */}
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors shadow-sm ${hasActiveFilters
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border bg-card text-foreground'
-                  }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  <span className="font-semibold text-sm">
-                    Filters {hasActiveFilters && `(${Object.values(filters).filter(Boolean).length})`}
-                  </span>
-                </div>
-                <X className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-0' : 'rotate-45'}`} />
-              </button>
+              {/* Horizontal Scrollable Filters */}
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6 hide-scrollbar snap-x mt-2">
+                <FilterPill
+                  label="Class"
+                  value={filters.classLevel}
+                  options={uniqueClassLevels}
+                  onSelect={(v) => setFilters({ ...filters, classLevel: v })}
+                />
+                <FilterPill
+                  label="Subject"
+                  value={filters.subject}
+                  options={uniqueSubjects}
+                  onSelect={(v) => setFilters({ ...filters, subject: v })}
+                />
+                <FilterPill
+                  label="Year"
+                  value={filters.year}
+                  options={uniqueYears.map(String)}
+                  onSelect={(v) => setFilters({ ...filters, year: v })}
+                />
+                <FilterPill
+                  label="Type"
+                  value={filters.examType}
+                  options={uniqueExamTypes}
+                  onSelect={(v) => setFilters({ ...filters, examType: v })}
+                />
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="snap-start shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold bg-danger/10 text-danger border-2 border-danger/30 active:scale-95 transition-transform"
+                  >
+                    <X className="h-3 w-3" /> Clear
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
-
-        {/* Debug Info */}
-        <div className="px-6 mb-4">
-          <div className="bg-muted/50 rounded-xl p-3 text-xs">
-            <p><strong>Status:</strong> {loading ? 'Loading...' : error ? 'Error' : `${papers.length} papers loaded`}</p>
-            <p><strong>Supabase:</strong> Connected</p>
-          </div>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div className="px-6 mb-4">
-            <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4">
-              <p className="text-sm font-bold text-destructive mb-2">Error:</p>
-              <p className="text-xs text-destructive">{error}</p>
-              <button
-                onClick={loadPapers}
-                className="mt-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold"
-              >
-                Retry
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Loading */}
         {loading && (
@@ -212,138 +199,92 @@ export default function LibraryDirect() {
           </div>
         )}
 
-        {/* Filters Panel (shows below sticky header but still within regular flow) */}
-        {!loading && papers.length > 0 && showFilters && (
-          <div className="px-6 mt-3">
-            <div className="bg-card border border-border rounded-xl p-4 space-y-3 shadow-md animate-in slide-in-from-top-2 duration-200">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-sm">Filter Papers</h3>
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearFilters}
-                    className="text-xs font-semibold text-destructive"
-                  >
-                    Clear All
-                  </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {/* Class Level */}
-                <div>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">
-                    Class Level
-                  </label>
-                  <select
-                    value={filters.classLevel}
-                    onChange={(e) => setFilters({ ...filters, classLevel: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                  >
-                    <option value="">All</option>
-                    {uniqueClassLevels.map(level => (
-                      <option key={level} value={level}>{level}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Subject */}
-                <div>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">
-                    Subject
-                  </label>
-                  <select
-                    value={filters.subject}
-                    onChange={(e) => setFilters({ ...filters, subject: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                  >
-                    <option value="">All</option>
-                    {uniqueSubjects.map(subject => (
-                      <option key={subject} value={subject}>{subject}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Year */}
-                <div>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">
-                    Year
-                  </label>
-                  <select
-                    value={filters.year}
-                    onChange={(e) => setFilters({ ...filters, year: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                  >
-                    <option value="">All</option>
-                    {uniqueYears.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Exam Type */}
-                <div>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">
-                    Exam Type
-                  </label>
-                  <select
-                    value={filters.examType}
-                    onChange={(e) => setFilters({ ...filters, examType: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                  >
-                    <option value="">All</option>
-                    {uniqueExamTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Papers Grid - 3 columns */}
         {!loading && !error && filteredPapers.length > 0 && (
           <div className="px-4">
-            <div className="grid grid-cols-3 gap-2">
-              {filteredPapers.map((paper) => (
-                <div
-                  key={paper.id}
-                  className="bg-card rounded-lg border border-border overflow-hidden cursor-pointer active:scale-95 transition-transform"
-                  onClick={() => navigate(`/library/${paper.id}`)}
-                >
-                  {/* Preview Image Thumbnail */}
-                  <div className="relative h-32 bg-muted/50 overflow-hidden">
-                    {paper.preview_url ? (
-                      <img
-                        src={paper.preview_url}
-                        alt={`Preview of ${paper.title}`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Eye className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
+            <div className="flex items-center justify-between mb-3 px-2">
+              <h2 className="text-lg font-black text-foreground">Past Papers</h2>
+              <button
+                onClick={() => setViewLayout(prev => prev === 'grid' ? 'list' : 'grid')}
+                className="p-1.5 rounded-lg bg-muted border border-border text-muted-foreground hover:text-foreground active:scale-95 transition-all shadow-sm"
+              >
+                {viewLayout === 'grid' ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+              </button>
+            </div>
 
-                  {/* Paper Info */}
-                  <div className="p-2">
-                    <h3 className="font-bold text-foreground text-xs mb-1 line-clamp-2 leading-tight">
-                      {paper.title}
-                    </h3>
-                    <div className="flex flex-col gap-1 text-[10px]">
-                      <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded font-semibold truncate">
-                        {paper.subject}
-                      </span>
-                      <span className="px-1.5 py-0.5 bg-muted text-muted-foreground rounded font-semibold truncate">
-                        {paper.class_level}
-                      </span>
+            <div className={viewLayout === 'grid' ? 'grid grid-cols-3 gap-2' : 'flex flex-col gap-3'}>
+              {filteredPapers.map((paper) => (
+                viewLayout === 'grid' ? (
+                  // Grid View Item
+                  <div
+                    key={paper.id}
+                    className="bg-card rounded-lg border border-border overflow-hidden cursor-pointer active:scale-95 transition-transform flex flex-col h-full"
+                    onClick={() => navigate(`/library/${paper.id}`)}
+                  >
+                    {/* Preview Image Thumbnail */}
+                    <div className="relative h-32 bg-muted/50 overflow-hidden shrink-0 border-b border-border/50">
+                      {paper.preview_url ? (
+                        <img
+                          src={paper.preview_url}
+                          alt={`Preview of ${paper.title}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Eye className="h-6 w-6 text-muted-foreground/50" />
+                        </div>
+                      )}
                     </div>
-                    <p className="text-[9px] text-muted-foreground mt-1 truncate">
-                      {paper.year} • {paper.downloads || 0}↓
-                    </p>
+
+                    {/* Paper Info */}
+                    <div className="p-2 flex flex-col flex-1">
+                      <h3 className="font-bold text-foreground text-xs mb-2 line-clamp-2 leading-tight flex-1">
+                        {paper.title || `${paper.subject} ${paper.year}`}
+                      </h3>
+                      <div className="flex flex-col gap-1.5 mt-auto">
+                        <div className="flex gap-1 overflow-hidden">
+                          <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[9px] font-bold truncate">
+                            {paper.subject}
+                          </span>
+                          <span className="px-1.5 py-0.5 bg-muted text-muted-foreground rounded text-[9px] font-bold truncate">
+                            {paper.class_level}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black">{paper.year}</span>
+                          <span className="text-[9px] font-bold text-muted-foreground">{paper.downloads || 0}↓</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  // List View Item
+                  <div
+                    key={paper.id}
+                    className="bg-card rounded-2xl p-4 border border-border flex items-center gap-4 cursor-pointer card-shadow active:scale-[0.98] transition-all"
+                    onClick={() => navigate(`/library/${paper.id}`)}
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0 border border-primary/20">
+                      {paper.preview_url ? (
+                        <img src={paper.preview_url} className="w-full h-full object-cover rounded-xl" alt="" />
+                      ) : (
+                        <FileText className="h-6 w-6 text-primary" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-black text-foreground text-sm truncate">
+                        {paper.title || `${paper.subject} ${paper.year}`}
+                      </h3>
+                      <p className="text-xs font-bold text-muted-foreground mt-0.5 truncate flex items-center gap-1.5">
+                        <span className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{paper.class_level}</span>
+                        <span>{paper.exam_type} {paper.serie ? `· Série ${paper.serie}` : ''}</span>
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full">{paper.year}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-0.5">{paper.downloads || 0} <Download className="h-3 w-3" /></span>
+                    </div>
+                  </div>
+                )
               ))}
             </div>
             <div className="text-center py-4">
@@ -393,6 +334,95 @@ export default function LibraryDirect() {
         onClose={() => setShowCodeDialog(false)}
         onSuccess={() => setShowCodeDialog(false)}
       />
+
+      <TaskBar />
+
+      {/* Downloads FAB */}
+      <button
+        onClick={() => navigate("/my-downloads")}
+        className="fixed bottom-24 right-4 z-40 flex items-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-black text-primary-foreground card-shadow-primary active:scale-95 transition-transform"
+      >
+        <Download className="h-4 w-4" />
+        Downloads
+      </button>
+    </div>
+  );
+}
+
+// ── FilterPill ──────────────────────────────────────────────────────────────
+interface FilterPillProps {
+  label: string;
+  value: string;
+  options: string[];
+  onSelect: (value: string) => void;
+}
+
+function FilterPill({ label, value, options, onSelect }: FilterPillProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const active = !!value;
+
+  return (
+    <div ref={ref} className="relative snap-start shrink-0">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold border-2 transition-all active:scale-95 ${
+          active
+            ? "bg-primary/10 border-primary text-primary"
+            : "bg-card border-border text-foreground"
+        }`}
+      >
+        {active ? value : label}
+        {active ? (
+          <X
+            className="h-3 w-3 opacity-70"
+            onClick={(e) => { e.stopPropagation(); onSelect(""); setOpen(false); }}
+          />
+        ) : (
+          <ChevronDown className={`h-3 w-3 opacity-60 transition-transform ${open ? "rotate-180" : ""}`} />
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 mt-2 z-50 min-w-[160px] rounded-2xl bg-card border border-border shadow-xl overflow-hidden">
+          {/* All option */}
+          <button
+            onClick={() => { onSelect(""); setOpen(false); }}
+            className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-colors hover:bg-muted/60 ${
+              !value ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            All {label}s
+            {!value && <Check className="h-3.5 w-3.5" />}
+          </button>
+          <div className="h-px bg-border mx-3" />
+          <div className="max-h-52 overflow-y-auto">
+            {options.map((opt) => (
+              <button
+                key={opt}
+                onClick={() => { onSelect(opt); setOpen(false); }}
+                className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-colors hover:bg-muted/60 ${
+                  value === opt ? "text-primary bg-primary/5" : "text-foreground"
+                }`}
+              >
+                {opt}
+                {value === opt && <Check className="h-3.5 w-3.5 text-primary" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

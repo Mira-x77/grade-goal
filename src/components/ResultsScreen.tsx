@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Target, TrendingUp, AlertTriangle, XCircle, ArrowLeft } from "lucide-react";
+import { Target, TrendingUp, AlertTriangle, XCircle, ArrowLeft, Pencil } from "lucide-react";
 import { Subject, FeedbackStatus } from "@/types/exam";
 import {
   calcYearlyAverage,
@@ -26,13 +26,13 @@ const statusConfig: Record<FeedbackStatus, { bg: string; shadow: string; icon: R
     bg: "bg-success",
     shadow: "card-shadow-primary",
     icon: <TrendingUp className="h-8 w-8" />,
-    text: "On track! 🎯",
+    text: "On track!",
   },
   risky: {
     bg: "bg-warning",
     shadow: "card-shadow-warning",
     icon: <AlertTriangle className="h-8 w-8" />,
-    text: "Tight, but doable 😤",
+    text: "Tight, but doable",
   },
   impossible: {
     bg: "bg-danger",
@@ -206,8 +206,8 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
             <span className="text-lg font-black text-foreground">{range.max}</span>
           </div>
           {overallStatus === "impossible" && (
-            <p className="mt-2 text-xs font-bold text-muted-foreground text-center">
-              🎯 Aim for {range.max}/20 — that's your best realistic outcome
+            <p className="mt-2 text-xs font-bold text-muted-foreground text-center flex items-center justify-center gap-1">
+              <Target className="h-3.5 w-3.5" /> Aim for {range.max}/20 — that's your best realistic outcome
             </p>
           )}
         </motion.div>
@@ -218,9 +218,9 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
 
       <button
         onClick={onEditMarks}
-        className="w-full rounded-2xl border-2 border-border bg-card py-4 text-lg font-extrabold text-foreground card-shadow active:translate-y-1 active:shadow-none transition-all"
+        className="w-full rounded-2xl border-2 border-border bg-card py-4 text-lg font-extrabold text-foreground card-shadow active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2"
       >
-        EDIT MARKS ✏️
+        <Pencil className="h-5 w-5" /> EDIT MARKS
       </button>
     </motion.div>
   );

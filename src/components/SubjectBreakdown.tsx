@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { BookOpen } from "lucide-react";
+import { BookOpen, CheckCircle2 } from "lucide-react";
 import { Subject, FeedbackStatus } from "@/types/exam";
 import { calcSubjectAverage, calcAllRequiredMarks, calcSubjectBounds, getMarkLabel } from "@/lib/exam-logic";
 
@@ -55,7 +55,7 @@ const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) =>
               )}
 
               {allFilled ? (
-                <p className="text-xs text-success font-bold">✅ All marks entered</p>
+                <p className="text-xs text-success font-bold flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> All marks entered</p>
               ) : (
                 <div className="flex flex-col gap-1">
                   {required.map((r) => (

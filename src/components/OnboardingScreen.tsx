@@ -1,8 +1,9 @@
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, Zap, BookOpen, GraduationCap, User } from "lucide-react";
 import { GradingSystem } from "@/types/exam";
 import { CLASS_LEVELS, LYCEE_SERIES } from "@/lib/subjects-data";
+
+export type OnboardingStep = "system" | "profile" | "target";
 
 interface OnboardingScreenProps {
   targetAverage: number;
@@ -16,12 +17,24 @@ interface OnboardingScreenProps {
   onClassLevelChange: (level: string) => void;
   serie: string;
   onSerieChange: (serie: string) => void;
+  step: OnboardingStep;
+  onStepChange: (step: OnboardingStep) => void;
 }
-
-type Step = "system" | "profile" | "target";
 
 const allLevels = [...CLASS_LEVELS.college, ...CLASS_LEVELS.lycee];
 const isLycee = (level: string) => (CLASS_LEVELS.lycee as readonly string[]).includes(level);
+
+const FixedNextButton = ({ onClick, disabled = false, label = "NEXT" }: { onClick: () => void; disabled?: boolean; label?: string }) => (
+  <div className="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto px-6 pb-10 pt-4 bg-background">
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="w-full rounded-2xl bg-primary py-4 text-base font-extrabold text-primary-foreground card-shadow-primary active:translate-y-1 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none"
+    >
+      {label}
+    </button>
+  </div>
+);
 
 const OnboardingScreen = ({
   targetAverage, onTargetChange, onContinue,
@@ -29,8 +42,8 @@ const OnboardingScreen = ({
   studentName, onStudentNameChange,
   classLevel, onClassLevelChange,
   serie, onSerieChange,
+  step, onStepChange
 }: OnboardingScreenProps) => {
-  const [step, setStep] = useState<Step>("system");
 
   return (
     <AnimatePresence mode="wait">
@@ -40,7 +53,7 @@ const OnboardingScreen = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, x: -50 }}
-          className="flex flex-col items-center gap-8 px-6 py-10"
+          className="flex flex-col items-center gap-8 px-6 pt-28 pb-36"
         >
           <motion.div
             initial={{ scale: 0.3, opacity: 0 }}
@@ -52,7 +65,7 @@ const OnboardingScreen = ({
           </motion.div>
 
           <div className="text-center">
-            <h1 className="text-3xl font-black text-foreground">Welcome! 👋</h1>
+            <h1 className="text-3xl font-black text-foreground">Welcome</h1>
             <p className="mt-2 text-muted-foreground font-semibold">
               Which grading system does your school use?
             </p>
@@ -60,7 +73,7 @@ const OnboardingScreen = ({
 
           <div className="w-full max-w-xs flex flex-col gap-3">
             <button
-              onClick={() => { onGradingSystemChange("apc"); setStep("profile"); }}
+              onClick={() => onGradingSystemChange("apc")}
               className={`rounded-2xl p-5 text-left card-shadow transition-all active:scale-[0.98] ${
                 gradingSystem === "apc" ? "bg-primary/10 border-2 border-primary" : "bg-card border-2 border-transparent"
               }`}
@@ -77,7 +90,7 @@ const OnboardingScreen = ({
             </button>
 
             <button
-              onClick={() => { onGradingSystemChange("french"); setStep("profile"); }}
+              onClick={() => onGradingSystemChange("french")}
               className={`rounded-2xl p-5 text-left card-shadow transition-all active:scale-[0.98] ${
                 gradingSystem === "french" ? "bg-secondary/10 border-2 border-secondary" : "bg-card border-2 border-transparent"
               }`}
@@ -93,6 +106,8 @@ const OnboardingScreen = ({
               </div>
             </button>
           </div>
+
+          <FixedNextButton onClick={() => onStepChange("profile")} />
         </motion.div>
       ) : step === "profile" ? (
         <motion.div
@@ -100,7 +115,7 @@ const OnboardingScreen = ({
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -50 }}
-          className="flex flex-col items-center gap-8 px-6 py-10"
+          className="flex flex-col items-center gap-8 px-6 pt-28 pb-36"
         >
           <motion.div
             initial={{ scale: 0.3, opacity: 0 }}
@@ -112,9 +127,6 @@ const OnboardingScreen = ({
           </motion.div>
 
           <div className="text-center">
-            <button onClick={() => setStep("system")} className="text-sm font-bold text-muted-foreground mb-2">
-              ← Change system
-            </button>
             <h1 className="text-3xl font-black text-foreground">About you</h1>
             <p className="mt-2 text-muted-foreground font-semibold">Tell us your name and class</p>
           </div>
@@ -173,18 +185,12 @@ const OnboardingScreen = ({
                 </div>
               </motion.div>
             )}
-
-            {studentName.trim() && classLevel && (!isLycee(classLevel) || serie) && (
-              <motion.button
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                onClick={() => setStep("target")}
-                className="w-full rounded-2xl bg-primary py-4 text-lg font-extrabold text-primary-foreground card-shadow-primary active:translate-y-1 active:shadow-none transition-all"
-              >
-                NEXT →
-              </motion.button>
-            )}
           </div>
+
+          <FixedNextButton
+            onClick={() => onStepChange("target")}
+            disabled={!studentName.trim() || !classLevel || (isLycee(classLevel) && !serie)}
+          />
         </motion.div>
       ) : (
         <motion.div
@@ -192,7 +198,7 @@ const OnboardingScreen = ({
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -50 }}
-          className="flex flex-col items-center gap-8 px-6 py-10"
+          className="flex flex-col items-center gap-8 px-6 pt-28 pb-36"
         >
           <motion.div
             initial={{ scale: 0.3, opacity: 0 }}
@@ -204,9 +210,6 @@ const OnboardingScreen = ({
           </motion.div>
 
           <div className="text-center">
-            <button onClick={() => setStep("profile")} className="text-sm font-bold text-muted-foreground mb-2">
-              ← Back
-            </button>
             <h1 className="text-3xl font-black text-foreground">What's your target?</h1>
             <p className="mt-2 text-muted-foreground font-semibold">Set the yearly average you want to reach</p>
           </div>
@@ -218,23 +221,23 @@ const OnboardingScreen = ({
             className="w-full max-w-xs"
           >
             <div className="rounded-2xl bg-card p-8 card-shadow text-center">
-              <div className="flex items-center justify-center gap-2">
-                <button
-                  onClick={() => onTargetChange(Math.max(0, targetAverage - 0.5))}
-                  className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-2xl font-bold text-foreground active:scale-95 transition-transform"
-                >
-                  −
-                </button>
-                <div className="mx-4">
-                  <span className="text-5xl font-black text-primary">{targetAverage}</span>
-                  <span className="text-2xl font-bold text-muted-foreground">/20</span>
+              <span className="text-5xl font-black text-primary">{targetAverage.toFixed(1)}</span>
+              <span className="text-2xl font-bold text-muted-foreground">/20</span>
+              <div className="mt-8">
+                <input
+                  type="range"
+                  min="0"
+                  max="20"
+                  step="0.5"
+                  value={targetAverage}
+                  onChange={(e) => onTargetChange(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+                <div className="flex justify-between text-xs font-bold text-muted-foreground mt-2 px-1">
+                  <span>0</span>
+                  <span>10</span>
+                  <span>20</span>
                 </div>
-                <button
-                  onClick={() => onTargetChange(Math.min(20, targetAverage + 0.5))}
-                  className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-2xl font-bold text-foreground active:scale-95 transition-transform"
-                >
-                  +
-                </button>
               </div>
             </div>
 
@@ -253,15 +256,7 @@ const OnboardingScreen = ({
             </div>
           </motion.div>
 
-          <motion.button
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            onClick={onContinue}
-            className="w-full max-w-xs rounded-2xl bg-primary py-4 text-lg font-extrabold text-primary-foreground card-shadow-primary active:translate-y-1 active:shadow-none transition-all"
-          >
-            LET'S GO 🚀
-          </motion.button>
+          <FixedNextButton onClick={onContinue} />
         </motion.div>
       )}
     </AnimatePresence>

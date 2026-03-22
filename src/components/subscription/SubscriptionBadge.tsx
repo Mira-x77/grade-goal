@@ -36,7 +36,7 @@ export function SubscriptionBadge({ onClick }: SubscriptionBadgeProps) {
         className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 hover:bg-yellow-500/25 transition-colors"
       >
         <Crown className="h-4 w-4 text-yellow-500" />
-        <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400">Premium</span>
+        <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400">Full Access</span>
       </button>
     );
   }
