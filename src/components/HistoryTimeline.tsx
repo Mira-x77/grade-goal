@@ -19,7 +19,7 @@ const HistoryTimeline = () => {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="rounded-2xl bg-card p-5 card-shadow text-center"
+        className="rounded-2xl bg-card p-5 border-2 border-border text-center"
       >
         <Clock className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
         <p className="font-bold text-muted-foreground">No history yet</p>
@@ -33,7 +33,7 @@ const HistoryTimeline = () => {
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.5 }}
-      className="rounded-2xl bg-card p-5 card-shadow"
+      className="rounded-2xl bg-card p-5 border-2 border-border"
     >
       <div className="flex items-center gap-2 mb-3">
         <Clock className="h-5 w-5 text-secondary" />
@@ -67,3 +67,4 @@ const HistoryTimeline = () => {
 };
 
 export default HistoryTimeline;
+

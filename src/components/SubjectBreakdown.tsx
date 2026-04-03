@@ -14,7 +14,7 @@ const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) =>
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.3 }}
-      className="rounded-2xl bg-card p-5 card-shadow"
+      className="rounded-2xl bg-card p-5 border-2 border-border"
     >
       <div className="flex items-center gap-2 mb-4">
         <BookOpen className="h-5 w-5 text-secondary" />
@@ -54,20 +54,7 @@ const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) =>
                 </div>
               )}
 
-              {allFilled ? (
-                <p className="text-xs text-success font-bold flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> All marks entered</p>
-              ) : (
-                <div className="flex flex-col gap-1">
-                  {required.map((r) => (
-                    <div key={r.markType} className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-muted-foreground">
-                        {r.label}
-                      </span>
-                      <NeededBadge needed={r.needed} status={r.status} />
-                    </div>
-                  ))}
-                </div>
-              )}
+
             </motion.div>
           );
         })}
@@ -99,3 +86,4 @@ function NeededBadge({ needed, status }: { needed: number | null; status: Feedba
 }
 
 export default SubjectBreakdown;
+

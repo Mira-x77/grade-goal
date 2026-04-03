@@ -49,7 +49,7 @@ export interface SubscriptionLimits {
 // Default limits
 export const DEFAULT_SUBSCRIPTION_LIMITS: SubscriptionLimits = {
   free: {
-    downloadsPerMonth: 5
+    downloadsPerMonth: 2000
   },
   premium: {
     downloadsPerMonth: -1 // Unlimited

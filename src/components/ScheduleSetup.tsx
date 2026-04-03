@@ -99,7 +99,7 @@ export function ScheduleSetup({ onComplete, onSkip, initialSchedule }: ScheduleS
             key={key}
             initial={{ y: 15, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="rounded-2xl bg-card p-4 card-shadow"
+            className="rounded-2xl bg-card p-4 border-2 border-border"
           >
             <h3 className="font-black text-foreground text-sm mb-3">{label()}</h3>
             
@@ -164,3 +164,4 @@ export function ScheduleSetup({ onComplete, onSkip, initialSchedule }: ScheduleS
     </div>
   );
 }
+

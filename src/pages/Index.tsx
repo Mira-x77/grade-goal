@@ -15,11 +15,19 @@ const Index = () => {
   const navigate = useNavigate();
   const stepParam = searchParams.get("step");
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>("system");
+
+  const handleOnboardingStepChange = (step: OnboardingStep) => {
+    setOnboardingStep(step);
+  };
   
   const [state, setState] = useState<AppState>(() => {
     const saved = loadState();
-    const initial = saved || { step: "onboarding" as const, targetAverage: 16, subjects: [], settings: DEFAULT_SETTINGS };
-    // If URL has a step param and we have data, go to that step
+    const initial: AppState = saved || { step: "onboarding" as const, targetAverage: 16, subjects: [], settings: DEFAULT_SETTINGS };
+    // Ensure targetAverage always has a value
+    if (initial.targetAverage === undefined || initial.targetAverage === null) {
+      initial.targetAverage = 16;
+    }
+    // If URL has a step param and we have subjects, jump to that step
     if (stepParam && saved && saved.subjects.length > 0) {
       const validSteps = ["onboarding", "subjects", "marks", "results"] as const;
       if (validSteps.includes(stepParam as any)) {
@@ -41,15 +49,16 @@ const Index = () => {
   const setStudentName = (studentName: string) => setState((s) => ({ ...s, studentName }));
   const setClassLevel = (classLevel: string) => setState((s) => ({ ...s, classLevel }));
   const setSerie = (serie: string) => setState((s) => ({ ...s, serie }));
+  const setSemester = (semester: string) => setState((s) => ({ ...s, semester }));
 
   const handleBack = () => {
     if (state.step === "onboarding") {
-      if (onboardingStep === "target") setOnboardingStep("profile");
-      else if (onboardingStep === "profile") setOnboardingStep("system");
+      if (onboardingStep === "target") handleOnboardingStepChange("profile");
+      else if (onboardingStep === "profile") handleOnboardingStepChange("system");
       else navigate("/");
     } else if (state.step === "subjects") {
       setStep("onboarding");
-      setOnboardingStep("target");
+      handleOnboardingStepChange("target");
     } else if (state.step === "marks") {
       setStep("subjects");
     } else if (state.step === "results") {
@@ -85,7 +94,7 @@ const Index = () => {
       )}
 
       <AnimatePresence mode="wait">
-        <motion.div key={state.step}>
+        <motion.div key={state.step + onboardingStep}>
           {state.step === "onboarding" && (
             <OnboardingScreen
               targetAverage={state.targetAverage}
@@ -99,8 +108,10 @@ const Index = () => {
               onClassLevelChange={setClassLevel}
               serie={state.serie || ""}
               onSerieChange={setSerie}
+              semester={state.semester || ""}
+              onSemesterChange={setSemester}
               step={onboardingStep}
-              onStepChange={setOnboardingStep}
+              onStepChange={handleOnboardingStepChange}
             />
           )}
           {state.step === "subjects" && (

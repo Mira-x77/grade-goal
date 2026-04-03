@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Target, Zap, BookOpen, GraduationCap, User } from "lucide-react";
 import { GradingSystem } from "@/types/exam";
 import { CLASS_LEVELS, LYCEE_SERIES } from "@/lib/subjects-data";
+import Mascot from "@/components/Mascot";
 
 export type OnboardingStep = "system" | "profile" | "target";
 
@@ -17,6 +18,8 @@ interface OnboardingScreenProps {
   onClassLevelChange: (level: string) => void;
   serie: string;
   onSerieChange: (serie: string) => void;
+  semester: string;
+  onSemesterChange: (semester: string) => void;
   step: OnboardingStep;
   onStepChange: (step: OnboardingStep) => void;
 }
@@ -29,7 +32,7 @@ const FixedNextButton = ({ onClick, disabled = false, label = "NEXT" }: { onClic
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-full rounded-2xl bg-primary py-4 text-base font-extrabold text-primary-foreground card-shadow-primary active:translate-y-1 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none"
+      className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 text-base font-black text-foreground card-shadow active:translate-y-1 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none"
     >
       {label}
     </button>
@@ -42,6 +45,7 @@ const OnboardingScreen = ({
   studentName, onStudentNameChange,
   classLevel, onClassLevelChange,
   serie, onSerieChange,
+  semester, onSemesterChange,
   step, onStepChange
 }: OnboardingScreenProps) => {
 
@@ -59,9 +63,8 @@ const OnboardingScreen = ({
             initial={{ scale: 0.3, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="flex h-24 w-24 items-center justify-center rounded-full bg-secondary"
           >
-            <GraduationCap className="h-12 w-12 text-secondary-foreground" />
+            <Mascot pose="thinking" size={110} animate />
           </motion.div>
 
           <div className="text-center">
@@ -74,13 +77,13 @@ const OnboardingScreen = ({
           <div className="w-full max-w-xs flex flex-col gap-3">
             <button
               onClick={() => onGradingSystemChange("apc")}
-              className={`rounded-2xl p-5 text-left card-shadow transition-all active:scale-[0.98] ${
-                gradingSystem === "apc" ? "bg-primary/10 border-2 border-primary" : "bg-card border-2 border-transparent"
+              className={`rounded-2xl p-5 text-left transition-all active:scale-[0.98] border-2 border-foreground card-shadow ${
+                gradingSystem === "apc" ? "bg-secondary" : "bg-card"
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20">
-                  <BookOpen className="h-5 w-5 text-primary" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-foreground bg-background">
+                  <BookOpen className="h-5 w-5 text-foreground" />
                 </div>
                 <div>
                   <p className="font-black text-foreground">APC System</p>
@@ -91,13 +94,13 @@ const OnboardingScreen = ({
 
             <button
               onClick={() => onGradingSystemChange("french")}
-              className={`rounded-2xl p-5 text-left card-shadow transition-all active:scale-[0.98] ${
-                gradingSystem === "french" ? "bg-secondary/10 border-2 border-secondary" : "bg-card border-2 border-transparent"
+              className={`rounded-2xl p-5 text-left transition-all active:scale-[0.98] border-2 border-foreground card-shadow ${
+                gradingSystem === "french" ? "bg-secondary" : "bg-card"
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/20">
-                  <Target className="h-5 w-5 text-secondary" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-foreground bg-background">
+                  <Target className="h-5 w-5 text-foreground" />
                 </div>
                 <div>
                   <p className="font-black text-foreground">French Traditional</p>
@@ -121,9 +124,8 @@ const OnboardingScreen = ({
             initial={{ scale: 0.3, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="flex h-24 w-24 items-center justify-center rounded-full bg-primary"
           >
-            <User className="h-12 w-12 text-primary-foreground" />
+            <Mascot pose="idle" size={110} animate />
           </motion.div>
 
           <div className="text-center">
@@ -153,10 +155,10 @@ const OnboardingScreen = ({
                       onClassLevelChange(level);
                       if (!isLycee(level)) onSerieChange("");
                     }}
-                    className={`rounded-xl px-3 py-2.5 text-sm font-bold transition-all active:scale-95 ${
+                    className={`rounded-xl px-3 py-2.5 text-sm font-black transition-all active:scale-95 border-2 border-foreground ${
                       classLevel === level
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-card border-2 border-border text-foreground"
+                        ? "bg-secondary text-foreground card-shadow"
+                        : "bg-card text-foreground"
                     }`}
                   >
                     {level}
@@ -173,10 +175,8 @@ const OnboardingScreen = ({
                     <button
                       key={s}
                       onClick={() => onSerieChange(s)}
-                      className={`rounded-xl px-3 py-2.5 text-sm font-bold transition-all active:scale-95 ${
-                        serie === s
-                          ? "bg-secondary text-secondary-foreground"
-                          : "bg-card border-2 border-border text-foreground"
+                      className={`rounded-xl px-3 py-2.5 text-sm font-black transition-all active:scale-95 border-2 border-foreground ${
+                        serie === s ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
                       }`}
                     >
                       Série {s}
@@ -185,11 +185,28 @@ const OnboardingScreen = ({
                 </div>
               </motion.div>
             )}
+
+            <div>
+              <label className="text-sm font-bold text-muted-foreground mb-1 block">Current semester</label>
+              <div className="grid grid-cols-3 gap-2">
+                {["1st Semester", "2nd Semester", "Annual"].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => onSemesterChange(s)}
+                    className={`rounded-xl px-3 py-2.5 text-xs font-black transition-all active:scale-95 border-2 border-foreground ${
+                      semester === s ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <FixedNextButton
             onClick={() => onStepChange("target")}
-            disabled={!studentName.trim() || !classLevel || (isLycee(classLevel) && !serie)}
+            disabled={!studentName.trim() || !classLevel || (isLycee(classLevel) && !serie) || !semester}
           />
         </motion.div>
       ) : (
@@ -204,9 +221,8 @@ const OnboardingScreen = ({
             initial={{ scale: 0.3, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="flex h-24 w-24 items-center justify-center rounded-full bg-primary"
           >
-            <Target className="h-12 w-12 text-primary-foreground" />
+            <Mascot pose="pointing" size={110} animate />
           </motion.div>
 
           <div className="text-center">
@@ -220,8 +236,8 @@ const OnboardingScreen = ({
             transition={{ delay: 0.2 }}
             className="w-full max-w-xs"
           >
-            <div className="rounded-2xl bg-card p-8 card-shadow text-center">
-              <span className="text-5xl font-black text-primary">{targetAverage.toFixed(1)}</span>
+            <div className="rounded-2xl bg-card p-8 border-2 border-border text-center">
+              <span className="text-5xl font-black text-primary">{(targetAverage ?? 16).toFixed(1)}</span>
               <span className="text-2xl font-bold text-muted-foreground">/20</span>
               <div className="mt-8">
                 <input
@@ -241,7 +257,7 @@ const OnboardingScreen = ({
               </div>
             </div>
 
-            <div className="mt-4 rounded-2xl bg-card p-4 card-shadow">
+            <div className="mt-4 rounded-2xl bg-card p-4 border-2 border-border">
               <div className="flex items-center gap-3 text-sm">
                 <Zap className="h-5 w-5 text-accent" />
                 <div>

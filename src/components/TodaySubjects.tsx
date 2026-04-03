@@ -53,7 +53,7 @@ export function TodaySubjects() {
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="rounded-2xl bg-card p-8 card-shadow text-center"
+          className="rounded-2xl bg-card p-8 border-2 border-border text-center"
         >
           <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
           <p className="text-lg font-bold text-foreground">
@@ -100,7 +100,7 @@ export function TodaySubjects() {
               className={`flex items-center gap-4 p-4 rounded-2xl transition-all ${
                 packed[subject]
                   ? "bg-success/10 border-2 border-success/30"
-                  : "bg-card border-2 border-border card-shadow"
+                  : "bg-card border-2 border-border"
               }`}
             >
               <Checkbox

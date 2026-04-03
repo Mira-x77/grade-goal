@@ -4,7 +4,7 @@ export const translations = {
   en: {
     // Home
     hey: "Hey",
-    scoreTarget: "ScoreTarget",
+    scoreTarget: "Go Study!",
     strategicPlanner: "Your strategic exam planner",
     performanceAlert: "Performance Alert",
     belowThreshold: "below 07/20 threshold",
@@ -26,8 +26,16 @@ export const translations = {
     logMark: "Log an interro, devoir, or compo",
     viewStrategy: "View Strategy",
     seeWhatYouNeed: "See what you need on each test",
-    whatIfSimulator: "What-If Simulator",
+    whatIfSimulator: "Score Strategizer",
     slideToPreview: "Slide to preview future outcomes",
+    simulatedAverage: "Simulated Average",
+    adjustHypotheticalMarks: "Adjust hypothetical marks",
+    allMarksEntered: "All marks entered!",
+    nothingToSimulate: "Nothing to simulate",
+    bestPossible: "Best possible",
+    worst: "Worst",
+    noSubjectsYet: "No subjects yet",
+    requiredAvgRemaining: "Required Avg (Remaining)",
     weightedView: "Weighted View",
     classRanking: "Class Ranking",
 
@@ -57,8 +65,43 @@ export const translations = {
     today: "Today",
     youNeed: "You need",
 
-    // Settings
+    // Settings UI labels
     settings: "Settings",
+    appearance: "Appearance",
+    accentColor: "Accent Color",
+    roundingRulesTitle: "Rounding Rules",
+    subjectCoefficientsTitle: "Subject Coefficients",
+    colorFeedbackTitle: "Color Feedback",
+    notificationsTitle: "Notifications",
+    scenarioResetTitle: "Scenario Reset",
+    dataControlTitle: "Data & Control",
+    accountTitle: "Account",
+    done: "Done",
+    edit: "Edit",
+    storageLocalOnly: "Storage: Local only",
+    allDataStoredDevice: "All data stored on this device",
+    wipeAllDataBtn: "Wipe all data",
+    signOut: "Sign Out",
+    clearMarksBtn: "Clear all marks (keep subjects & coefficients)",
+    alertUnreachableLabel: "Alert when target becomes unreachable",
+    alertCriticalLabel: "Alert when a subject becomes critical",
+    alertCanSaveLabel: "Alert when a test can still save the average",
+    greenOnTargetLabel: "Green (on target)",
+    yellowRiskyLabel: "Yellow (risky)",
+    redCriticalLabel: "Red (critical)",
+    beyondYellowLabel: "beyond yellow",
+    withinLabel: "within",
+    ptsLabel: "pts",
+    ptsBelowLabel: "pts below",
+    exactNoRoundingLabel: "Exact (no rounding)",
+    standardRoundingLabel: "Standard (2 decimals)",
+    schoolRoundingLabel: "School-style (nearest 0.25)",
+    classAvgLabel: "Class Avg",
+    appreciationLabel: "Appreciation (1-5)",
+    classDataTitle: "Class Data (French System)",
+    enterClassDataSubtitle: "Enter class averages and extremes per subject",
+    distanceFromTargetSubtitle: "Distance from target for each color zone",
+    editWeightsSubtitle: "Edit mark type weights",
     gradingSystem: "Grading System",
     chooseSystem: "Choose your school's system",
     apcSystem: "APC System",
@@ -248,7 +291,7 @@ export const translations = {
   fr: {
     // Home
     hey: "Salut",
-    scoreTarget: "ScoreTarget",
+    scoreTarget: "Go Study!",
     strategicPlanner: "Votre planificateur d'examens stratégique",
     performanceAlert: "Alerte de Performance",
     belowThreshold: "en dessous du seuil de 07/20",
@@ -270,8 +313,16 @@ export const translations = {
     logMark: "Enregistrer une interro, devoir ou compo",
     viewStrategy: "Voir la Stratégie",
     seeWhatYouNeed: "Voir ce dont vous avez besoin à chaque test",
-    whatIfSimulator: "Simulateur Et Si",
+    whatIfSimulator: "Stratégie de Notes",
     slideToPreview: "Glissez pour prévisualiser les résultats futurs",
+    simulatedAverage: "Moyenne Simulée",
+    adjustHypotheticalMarks: "Ajuster les notes hypothétiques",
+    allMarksEntered: "Toutes les notes saisies !",
+    nothingToSimulate: "Rien à simuler",
+    bestPossible: "Meilleur possible",
+    worst: "Pire",
+    noSubjectsYet: "Aucune matière pour l'instant",
+    requiredAvgRemaining: "Moy. Requise (Restants)",
     weightedView: "Vue Pondérée",
     classRanking: "Classement",
 
@@ -301,8 +352,43 @@ export const translations = {
     today: "Aujourd'hui",
     youNeed: "Vous avez besoin de",
 
-    // Settings
+    // Settings UI labels
     settings: "Paramètres",
+    appearance: "Apparence",
+    accentColor: "Couleur d'accent",
+    roundingRulesTitle: "Règles d'arrondi",
+    subjectCoefficientsTitle: "Coefficients des matières",
+    colorFeedbackTitle: "Retour coloré",
+    notificationsTitle: "Notifications",
+    scenarioResetTitle: "Réinitialisation",
+    dataControlTitle: "Données et contrôle",
+    accountTitle: "Compte",
+    done: "Terminé",
+    edit: "Modifier",
+    storageLocalOnly: "Stockage : Local uniquement",
+    allDataStoredDevice: "Toutes les données stockées sur cet appareil",
+    wipeAllDataBtn: "Effacer toutes les données",
+    signOut: "Se déconnecter",
+    clearMarksBtn: "Effacer toutes les notes (garder matières et coefficients)",
+    alertUnreachableLabel: "Alerter quand l'objectif devient inaccessible",
+    alertCriticalLabel: "Alerter quand une matière devient critique",
+    alertCanSaveLabel: "Alerter quand un test peut encore sauver la moyenne",
+    greenOnTargetLabel: "Vert (sur l'objectif)",
+    yellowRiskyLabel: "Jaune (risqué)",
+    redCriticalLabel: "Rouge (critique)",
+    beyondYellowLabel: "au-delà du jaune",
+    withinLabel: "dans les",
+    ptsLabel: "pts",
+    ptsBelowLabel: "pts en dessous",
+    exactNoRoundingLabel: "Exact (pas d'arrondi)",
+    standardRoundingLabel: "Standard (2 décimales)",
+    schoolRoundingLabel: "Style scolaire (au 0,25 près)",
+    classAvgLabel: "Moy. Classe",
+    appreciationLabel: "Appréciation (1-5)",
+    classDataTitle: "Données de classe (Système français)",
+    enterClassDataSubtitle: "Entrez les moyennes et extrêmes de classe par matière",
+    distanceFromTargetSubtitle: "Distance de l'objectif pour chaque zone de couleur",
+    editWeightsSubtitle: "Modifier les poids des types de notes",
     gradingSystem: "Système de Notation",
     chooseSystem: "Choisissez le système de votre école",
     apcSystem: "Système APC",
@@ -493,16 +579,17 @@ export const translations = {
 
 const LANGUAGE_KEY = "scoretarget_language";
 
+let _currentLanguage: Language = (localStorage.getItem(LANGUAGE_KEY) as Language) ?? "en";
+
 export function getLanguage(): Language {
-  const stored = localStorage.getItem(LANGUAGE_KEY);
-  return (stored === "fr" ? "fr" : "en") as Language;
+  return _currentLanguage;
 }
 
 export function setLanguage(lang: Language) {
+  _currentLanguage = lang;
   localStorage.setItem(LANGUAGE_KEY, lang);
 }
 
 export function t(key: keyof typeof translations.en): string {
-  const lang = getLanguage();
-  return translations[lang][key] || translations.en[key];
+  return translations[_currentLanguage][key] || translations.en[key];
 }

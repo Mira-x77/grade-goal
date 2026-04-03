@@ -70,7 +70,7 @@ export function PremiumCodeDialog({
 
   const handleWhatsAppContact = () => {
     const phoneNumber = '22890676722'; // +228 90676722
-    const message = encodeURIComponent('Hello! I would like to purchase a ScoreTarget Access code.');
+    const message = encodeURIComponent('Hello! I would like to purchase a Go Study! Access code.');
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };

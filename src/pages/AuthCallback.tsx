@@ -2,23 +2,28 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-export default function AuthCallback() {
+const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        const hasAppData = !!localStorage.getItem("scoretarget_state");
-        navigate(hasAppData ? "/" : "/onboarding", { replace: true });
+    const handleCallback = async () => {
+      const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+      if (error) {
+        console.error("Auth callback error:", error.message);
+        navigate("/auth");
       } else {
-        navigate("/auth", { replace: true });
+        navigate("/");
       }
-    });
+    };
+
+    handleCallback();
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="h-10 w-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+    <div className="flex items-center justify-center min-h-screen">
+      <p className="text-muted-foreground">Signing you in...</p>
     </div>
   );
-}
+};
+
+export default AuthCallback;

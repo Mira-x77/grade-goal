@@ -22,17 +22,7 @@ export default function SubjectDashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        
-        {/* Header */}
-        <button
-          onClick={() => navigate("/library")}
-          className="flex items-center gap-2 text-muted-foreground mb-4 hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span>Back to Library</span>
-        </button>
-        
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 safe-area-top">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -138,7 +128,7 @@ export default function SubjectDashboard() {
         </div>
       </div>
 
-      <TaskBar />
+      <TaskBar showBack />
 
       <SubscriptionDetailDialog
         open={showPaywall}

@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { loadState } from "@/lib/storage";
 import { simulateYearlyAverage, calcYearlyAverage, getFeedbackStatus, getAbsoluteBounds } from "@/lib/exam-logic";
 import TaskBar from "@/components/TaskBar";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SliderOverride {
   subjectId: string;
@@ -22,6 +23,7 @@ const Simulator = () => {
   const state = loadState();
   const subjects = state?.subjects ?? [];
   const targetAvg = state?.targetAverage ?? 16;
+  const { t } = useLanguage();
 
   // Collect all empty marks as sliders
   const emptySlots = useMemo(() => {
@@ -62,23 +64,37 @@ const Simulator = () => {
   if (subjects.length === 0) {
     return (
       <div className="min-h-screen bg-background max-w-md mx-auto flex flex-col items-center justify-center px-6 gap-4">
-        <p className="text-lg font-black text-foreground">No subjects yet</p>
+        <p className="text-lg font-black text-foreground">{t("noSubjectsYet")}</p>
         <Link to="/planner" className="rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground">
-          Start Planning
+          {t("startPlanningAction")}
         </Link>
       </div>
     );
   }
 
+  let totalCoeff = 0;
+  let currentKnownPoints = 0;
+  let remainingWeightCoeff = 0;
+
+  for (const sub of subjects) {
+    totalCoeff += sub.coefficient;
+    let knownSum = 0;
+    let missingW = 0;
+    if (sub.marks.interro !== null) knownSum += sub.marks.interro * 1; else missingW += 1;
+    if (sub.marks.dev !== null) knownSum += sub.marks.dev * 1; else missingW += 1;
+    if (sub.marks.compo !== null) knownSum += sub.marks.compo * 2; else missingW += 2;
+    currentKnownPoints += sub.coefficient * (knownSum / 4);
+    remainingWeightCoeff += sub.coefficient * (missingW / 4);
+  }
+
+  const requiredAvgRemaining = remainingWeightCoeff > 0 
+    ? (targetAvg * totalCoeff - currentKnownPoints) / remainingWeightCoeff
+    : null;
+
   return (
     <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3">
-        <div className="flex items-center gap-3">
-          <Link to="/" className="text-muted-foreground">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <h1 className="text-lg font-black text-foreground">What-If Simulator</h1>
-        </div>
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3 safe-area-top">
+        <h1 className="text-lg font-black text-foreground">{t("whatIfSimulator")}</h1>
       </div>
 
       <div className="flex flex-col gap-5 px-6 py-6">
@@ -86,24 +102,32 @@ const Simulator = () => {
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className={`rounded-2xl p-6 text-center ${statusBg} card-shadow`}
+          className={`rounded-2xl p-6 text-center ${statusBg} border-2 border-foreground/10`}
         >
           <TrendingUp className="h-6 w-6 text-primary-foreground mx-auto mb-1" />
-          <p className="text-sm font-bold text-primary-foreground opacity-80">Simulated Average</p>
+          <p className="text-sm font-bold text-primary-foreground opacity-80">{t("simulatedAverage")}</p>
           <p className="text-5xl font-black text-primary-foreground">
             {simulatedAvg !== null ? simulatedAvg.toFixed(1) : "—"}<span className="text-xl opacity-75">/20</span>
           </p>
-          <p className="text-sm font-bold text-primary-foreground opacity-80 mt-1">Target: {targetAvg}/20</p>
-          {bounds && (
-            <p className="text-xs font-bold text-primary-foreground opacity-70 mt-1">
-              Best possible: {bounds.max} · Worst: {bounds.min}
-            </p>
-          )}
+          
+          <div className="mt-4 pt-4 border-t border-primary-foreground/20 flex flex-col gap-1.5">
+            <p className="text-sm font-bold text-primary-foreground opacity-90">{t("target")}: {targetAvg}/20</p>
+            {requiredAvgRemaining !== null && (
+              <p className="text-xs font-black text-primary-foreground bg-primary-foreground/20 py-1.5 px-3 rounded-lg inline-block mx-auto">
+                {t("requiredAvgRemaining")}: {Math.max(0, requiredAvgRemaining).toFixed(1)}/20
+              </p>
+            )}
+            {bounds && (
+              <p className="text-xs font-bold text-primary-foreground opacity-70 mt-1">
+                {t("bestPossible")}: {bounds.max} · {t("worst")}: {bounds.min}
+              </p>
+            )}
+          </div>
         </motion.div>
 
         {/* Sliders for each empty mark */}
         <div className="flex flex-col gap-3">
-          <h3 className="font-black text-foreground text-sm">Adjust hypothetical marks</h3>
+          <h3 className="font-black text-foreground text-sm">{t("adjustHypotheticalMarks")}</h3>
           {emptySlots.map((slot, i) => {
             const override = overrides[i];
             if (!override) return null;
@@ -151,12 +175,12 @@ const Simulator = () => {
 
         {emptySlots.length === 0 && (
           <div className="rounded-2xl bg-card p-6 card-shadow text-center">
-            <p className="font-black text-foreground">All marks entered!</p>
-            <p className="text-sm text-muted-foreground font-semibold">Nothing to simulate</p>
+            <p className="font-black text-foreground">{t("allMarksEntered")}</p>
+            <p className="text-sm text-muted-foreground font-semibold">{t("nothingToSimulate")}</p>
           </div>
         )}
       </div>
-      <TaskBar />
+      <TaskBar showBack />
     </div>
   );
 };

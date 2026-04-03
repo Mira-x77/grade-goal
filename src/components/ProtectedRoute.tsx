@@ -18,11 +18,20 @@ export default function ProtectedRoute({
     );
   }
 
-  if (!session) return <Navigate to="/auth" replace />;
+  const isDevBypass = import.meta.env.DEV && localStorage.getItem("dev_bypass") === "true";
 
-  // If this route requires onboarding to be complete, check for app data
+  if (!session && !isDevBypass) return <Navigate to="/auth" replace />;
+
+  // requireOnboarding routes: redirect to onboarding if not set up
   if (requireOnboarding) {
-    const hasAppData = !!localStorage.getItem("scoretarget_state");
+    const raw = localStorage.getItem("scoretarget_state");
+    let hasAppData = false;
+    try {
+      const parsed = raw ? JSON.parse(raw) : null;
+      hasAppData = parsed && Array.isArray(parsed.subjects) && parsed.subjects.length > 0;
+    } catch {
+      hasAppData = false;
+    }
     if (!hasAppData) return <Navigate to="/onboarding" replace />;
   }
 

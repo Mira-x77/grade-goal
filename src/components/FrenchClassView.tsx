@@ -19,7 +19,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="rounded-2xl bg-card p-5 card-shadow"
+        className="rounded-2xl bg-card p-5 border-2 border-border"
       >
         <div className="flex items-center gap-2 mb-3">
           <ArrowUpDown className="h-5 w-5 text-secondary" />
@@ -85,7 +85,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
           initial={{ y: 15, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="rounded-2xl bg-card p-4 card-shadow"
+          className="rounded-2xl bg-card p-4 border-2 border-border"
         >
           <div className="flex items-center gap-2 mb-2">
             <Star className="h-4 w-4 text-accent" />
@@ -121,7 +121,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
         initial={{ y: 15, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="rounded-2xl bg-card p-4 card-shadow"
+        className="rounded-2xl bg-card p-4 border-2 border-border"
       >
         <h4 className="font-black text-foreground text-sm mb-3">Subject Comparison</h4>
         <div className="flex flex-col gap-2">
@@ -175,3 +175,4 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
 };
 
 export default FrenchClassView;
+

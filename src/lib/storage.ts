@@ -27,7 +27,19 @@ export function loadState(): AppState | null {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as AppState;
+    const parsed = JSON.parse(raw) as AppState;
+    // Migration for old class levels (e.g. 3ème -> Troisième)
+    const CLASS_MAPPINGS: Record<string, string> = {
+      "6ème": "Sixième",
+      "5ème": "Cinquième",
+      "4ème": "Quatrième",
+      "3ème": "Troisième",
+    };
+    if (parsed.classLevel && CLASS_MAPPINGS[parsed.classLevel]) {
+      parsed.classLevel = CLASS_MAPPINGS[parsed.classLevel];
+      saveState(parsed);
+    }
+    return parsed;
   } catch {
     return null;
   }

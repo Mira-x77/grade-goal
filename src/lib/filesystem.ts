@@ -62,9 +62,16 @@ export function base64ToBlob(base64: string, contentType: string = 'application/
  */
 export async function savePDF(fileName: string, data: Blob): Promise<string> {
   if (Capacitor.getPlatform() === 'web') {
-    // For web, use localStorage or IndexedDB
-    // This is a fallback - web doesn't support file system
-    throw new Error('File system not supported on web platform');
+    // On web: trigger a native browser download
+    const url = URL.createObjectURL(data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return fileName;
   }
 
   const base64Data = await blobToBase64(data);
@@ -112,22 +119,22 @@ export async function getFileUri(fileName: string): Promise<string> {
  * Check available storage space
  * Platform-specific implementation
  */
-export async function getAvailableSpace(): Promise<number> {
+export async function getAvailableSpace(): Promise<{ available: number; used: number; total: number }> {
   if (Capacitor.getPlatform() === 'web') {
-    // For web, estimate using Storage API
     if ('storage' in navigator && 'estimate' in navigator.storage) {
       const estimate = await navigator.storage.estimate();
-      const available = (estimate.quota || 0) - (estimate.usage || 0);
-      return available;
+      const used = estimate.usage ?? 0;
+      const total = estimate.quota ?? 0;
+      const available = total - used;
+      return { available, used, total };
     }
-    // Default to 1GB if not available
-    return 1024 * 1024 * 1024;
+    const total = 1024 * 1024 * 1024;
+    return { available: total, used: 0, total };
   }
 
-  // For mobile platforms, we'll use a conservative estimate
-  // In a real app, you'd use platform-specific plugins
-  // For now, assume 1GB available (this is a simplification)
-  return 1024 * 1024 * 1024;
+  // Mobile: conservative estimate — no platform plugin available
+  const total = 1024 * 1024 * 1024;
+  return { available: total, used: 0, total };
 }
 
 /**

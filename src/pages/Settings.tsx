@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { ArrowLeft, Trash2, RotateCcw, Mail, LogOut, Pencil, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Trash2, RotateCcw, Mail, LogOut, Pencil, Check, Sun, Moon, Monitor, Zap, ChevronDown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAppTheme, AccentColor } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { loadState, saveState } from "@/lib/storage";
 import { AppSettings, DEFAULT_SETTINGS, AppState, RoundingMode } from "@/types/exam";
 import { toast } from "sonner";
@@ -11,6 +13,9 @@ import TaskBar from "@/components/TaskBar";
 const Settings = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { theme, setTheme, accent, setAccent, accentMap } = useAppTheme();
+  const { language, setLang, t } = useLanguage();
+  const [accentOpen, setAccentOpen] = useState(false);
   const [state, setState] = useState<AppState | null>(null);
   const [editingWeights, setEditingWeights] = useState(false);
 
@@ -98,23 +103,119 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3">
-        <div className="flex items-center gap-3">
-          <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <h1 className="text-lg font-black text-primary">Settings</h1>
-        </div>
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3 safe-area-top">
+        <h1 className="text-lg font-black text-primary">{t("settings")}</h1>
       </div>
 
       <div className="flex flex-col gap-5 px-6 py-6">
+        {/* Appearance */}
+        <Section title={t("appearance")}>
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              { value: "light",    label: "Light",    icon: Sun },
+              { value: "dark",     label: "Dark",     icon: Moon },
+              { value: "system",   label: "System",   icon: Monitor },
+              { value: "midnight", label: "Midnight", icon: Moon },
+              { value: "ink",      label: "Ink",      icon: Zap },
+            ] as const).map(({ value, label, icon: Icon }) => (
+              <button
+                key={value}
+                onClick={() => setTheme(value)}
+                className={`flex flex-col items-center gap-1.5 rounded-xl py-3 font-bold text-xs transition-all active:scale-95 border-2 ${
+                  theme === value
+                    ? "bg-secondary border-foreground card-shadow text-foreground"
+                    : "bg-muted border-transparent text-muted-foreground"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground font-semibold mt-3">
+            Midnight — navy blue · Ink — pure AMOLED black
+          </p>
+        </Section>
+
+        {/* Accent Color — collapsible */}
+        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="rounded-2xl bg-card border-2 border-border overflow-hidden">
+          <button
+            onClick={() => setAccentOpen(o => !o)}
+            className="w-full flex items-center justify-between px-5 py-4 active:bg-muted/50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="h-4 w-4 rounded-full border-2 border-foreground/20 shrink-0" style={{ backgroundColor: accentMap[accent].hex }} />
+              <div className="text-left">
+                <p className="font-black text-foreground text-sm">{t("accentColor")}</p>
+                <p className="text-xs text-muted-foreground font-semibold">{accentMap[accent].label}</p>
+              </div>
+            </div>
+            <motion.div animate={{ rotate: accentOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            </motion.div>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {accentOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="flex flex-col gap-1 px-4 pb-4">
+                  {(Object.entries(accentMap) as [AccentColor, { hsl: string; label: string; hex: string }][]).map(([key, { label, hex }]) => (
+                    <button
+                      key={key}
+                      onClick={() => { setAccent(key); setAccentOpen(false); }}
+                      className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all active:scale-[0.98] border-2 ${
+                        accent === key
+                          ? "border-foreground card-shadow bg-muted"
+                          : "border-transparent bg-muted/50"
+                      }`}
+                    >
+                      <span className="h-5 w-5 rounded-full border-2 border-foreground/20 shrink-0" style={{ backgroundColor: hex }} />
+                      <span className="font-bold text-sm text-foreground">{label}</span>
+                      {accent === key && <Check className="h-4 w-4 text-foreground ml-auto" />}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Language */}
+        <Section title={t("language")}>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { value: "en" as const, label: "English", flag: "🇬🇧" },
+              { value: "fr" as const, label: "Français", flag: "🇫🇷" },
+            ]).map(({ value, label, flag }) => (
+              <button
+                key={value}
+                onClick={() => setLang(value)}
+                className={`flex items-center gap-2 rounded-xl px-4 py-3 font-bold text-sm transition-all active:scale-95 border-2 ${
+                  language === value
+                    ? "bg-secondary border-foreground card-shadow text-foreground"
+                    : "bg-muted border-transparent text-muted-foreground"
+                }`}
+              >
+                <span className="text-lg">{flag}</span>
+                {label}
+              </button>
+            ))}
+          </div>
+        </Section>
+
         {/* Assessment Weights */}
-        <Section title="Assessment Weights" subtitle="Edit mark type weights">
+        <Section title={t("assessmentWeights")} subtitle={t("editWeightsSubtitle")}>
           <div className="flex flex-col gap-3">
             {(["interro", "dev", "compo"] as const).map((type) => (
               <div key={type} className="flex items-center justify-between">
                 <span className="font-bold text-foreground capitalize">
-                  {type === "dev" ? "Devoir" : type === "compo" ? "Composition" : "Interro"}
+                  {type === "dev" ? t("devoir") : type === "compo" ? t("composition") : t("interro")}
                 </span>
                 <div className="flex items-center gap-2">
                   <button
@@ -141,14 +242,14 @@ const Settings = () => {
                   onClick={() => setEditingWeights(false)}
                   className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-black text-primary-foreground active:scale-95 transition-transform"
                 >
-                  <Check className="h-3.5 w-3.5" /> Done
+                  <Check className="h-3.5 w-3.5" /> {t("done")}
                 </button>
               ) : (
                 <button
                   onClick={() => setEditingWeights(true)}
                   className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 text-xs font-bold text-foreground active:scale-95 transition-transform"
                 >
-                  <Pencil className="h-3.5 w-3.5" /> Edit
+                  <Pencil className="h-3.5 w-3.5" /> {t("edit")}
                 </button>
               )}
             </div>
@@ -156,12 +257,12 @@ const Settings = () => {
         </Section>
 
         {/* Rounding */}
-        <Section title="Rounding Rules">
+        <Section title={t("roundingRulesTitle")}>
           <div className="flex flex-col gap-2">
             {([
-              { value: "exact" as RoundingMode, label: "Exact (no rounding)" },
-              { value: "standard" as RoundingMode, label: "Standard (2 decimals)" },
-              { value: "school" as RoundingMode, label: "School-style (nearest 0.25)" },
+              { value: "exact" as RoundingMode, label: t("exactNoRoundingLabel") },
+              { value: "standard" as RoundingMode, label: t("standardRoundingLabel") },
+              { value: "school" as RoundingMode, label: t("schoolRoundingLabel") },
             ]).map((opt) => (
               <button
                 key={opt.value}
@@ -180,7 +281,7 @@ const Settings = () => {
 
         {/* Subject Coefficients */}
         {state.subjects.length > 0 && (
-          <Section title="Subject Coefficients">
+          <Section title={t("subjectCoefficientsTitle")}>
             <div className="flex flex-col gap-2">
               {state.subjects.map((sub) => (
                 <div key={sub.id} className="flex items-center justify-between rounded-xl bg-muted/50 px-3 py-2">
@@ -204,16 +305,16 @@ const Settings = () => {
 
         {/* French Class Data */}
         {settings.gradingSystem === "french" && state.subjects.length > 0 && (
-          <Section title="Class Data (French System)" subtitle="Enter class averages and extremes per subject">
+          <Section title={t("classDataTitle")} subtitle={t("enterClassDataSubtitle")}>
             <div className="flex flex-col gap-3">
               {state.subjects.map((sub) => (
                 <div key={sub.id} className="rounded-xl bg-muted/50 p-3">
                   <span className="text-sm font-bold text-foreground block mb-2">{sub.name}</span>
                   <div className="grid grid-cols-3 gap-2">
                     {([
-                      { field: "classAverage", label: "Class Avg" },
-                      { field: "classMin", label: "Min" },
-                      { field: "classMax", label: "Max" },
+                      { field: "classAverage", label: t("classAvgLabel") },
+                      { field: "classMin", label: t("min") },
+                      { field: "classMax", label: t("max") },
                     ] as const).map((f) => (
                       <div key={f.field} className="flex flex-col items-center gap-1">
                         <input
@@ -234,7 +335,7 @@ const Settings = () => {
                     ))}
                   </div>
                   <div className="mt-2">
-                    <span className="text-[10px] font-bold text-muted-foreground">Appreciation (1-5)</span>
+                    <span className="text-[10px] font-bold text-muted-foreground">{t("appreciationLabel")}</span>
                     <div className="flex gap-1 mt-1">
                       {[1, 2, 3, 4, 5].map((val) => (
                         <button
@@ -258,19 +359,19 @@ const Settings = () => {
         )}
 
         {/* Color Thresholds */}
-        <Section title="Color Feedback" subtitle="Distance from target for each color zone">
+        <Section title={t("colorFeedbackTitle")} subtitle={t("distanceFromTargetSubtitle")}>
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-success" />
-                <span className="text-sm font-bold text-foreground">Green (on target)</span>
+                <span className="text-sm font-bold text-foreground">{t("greenOnTargetLabel")}</span>
               </div>
-              <span className="text-xs font-bold text-muted-foreground">within {settings.colorThresholds.greenBelow} pts</span>
+              <span className="text-xs font-bold text-muted-foreground">{t("withinLabel")} {settings.colorThresholds.greenBelow} {t("ptsLabel")}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-warning" />
-                <span className="text-sm font-bold text-foreground">Yellow (risky)</span>
+                <span className="text-sm font-bold text-foreground">{t("yellowRiskyLabel")}</span>
               </div>
               <div className="flex items-center gap-1">
                 <input
@@ -284,24 +385,24 @@ const Settings = () => {
                   })}
                   className="w-16 rounded-lg border-2 border-border bg-card px-2 py-1 text-sm font-bold text-foreground text-center focus:border-primary focus:outline-none"
                 />
-                <span className="text-xs font-bold text-muted-foreground">pts below</span>
+                <span className="text-xs font-bold text-muted-foreground">{t("ptsBelowLabel")}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-danger" />
-              <span className="text-sm font-bold text-foreground">Red (critical)</span>
-              <span className="ml-auto text-xs font-bold text-muted-foreground">beyond yellow</span>
+              <span className="text-sm font-bold text-foreground">{t("redCriticalLabel")}</span>
+              <span className="ml-auto text-xs font-bold text-muted-foreground">{t("beyondYellowLabel")}</span>
             </div>
           </div>
         </Section>
 
         {/* Notifications */}
-        <Section title="Notifications">
+        <Section title={t("notificationsTitle")}>
           <div className="flex flex-col gap-3">
             {([
-              { key: "targetUnreachable" as const, label: "Alert when target becomes unreachable" },
-              { key: "subjectCritical" as const, label: "Alert when a subject becomes critical" },
-              { key: "canSaveAverage" as const, label: "Alert when a test can still save the average" },
+              { key: "targetUnreachable" as const, label: t("alertUnreachableLabel") },
+              { key: "subjectCritical" as const, label: t("alertCriticalLabel") },
+              { key: "canSaveAverage" as const, label: t("alertCanSaveLabel") },
             ]).map((item) => (
               <label key={item.key} className="flex items-center justify-between cursor-pointer">
                 <span className="text-sm font-bold text-foreground">{item.label}</span>
@@ -323,39 +424,37 @@ const Settings = () => {
         </Section>
 
         {/* Scenario Reset */}
-        <Section title="Scenario Reset">
+        <Section title={t("scenarioResetTitle")}>
           <div className="flex flex-col gap-2">
             <button
               onClick={clearMarks}
               className="flex items-center gap-2 rounded-xl bg-warning/15 px-4 py-3 font-bold text-warning active:scale-[0.98] transition-transform"
             >
               <RotateCcw className="h-4 w-4" />
-              Clear all marks (keep subjects & coefficients)
+              {t("clearMarksBtn")}
             </button>
           </div>
         </Section>
 
-        {/* Data & Control */}
-        <Section title="Data & Control">
+        <Section title={t("dataControlTitle")}>
           <div className="flex flex-col gap-2">
             <div className="rounded-xl bg-muted/50 px-4 py-3">
-              <p className="text-sm font-bold text-foreground">Storage: Local only</p>
-              <p className="text-xs text-muted-foreground font-semibold">All data stored on this device</p>
+              <p className="text-sm font-bold text-foreground">{t("storageLocalOnly")}</p>
+              <p className="text-xs text-muted-foreground font-semibold">{t("allDataStoredDevice")}</p>
             </div>
             <button
               onClick={() => {
-                if (confirm("This will permanently delete ALL data. Continue?")) wipeAll();
+                if (confirm(t("wipeConfirm"))) wipeAll();
               }}
               className="flex items-center gap-2 rounded-xl bg-danger/15 px-4 py-3 font-bold text-danger active:scale-[0.98] transition-transform"
             >
               <Trash2 className="h-4 w-4" />
-              Wipe all data
+              {t("wipeAllDataBtn")}
             </button>
           </div>
         </Section>
 
-        {/* Account */}
-        <Section title="Account">
+        <Section title={t("accountTitle")}>
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3 rounded-xl bg-muted/50 px-4 py-3">
               <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -365,28 +464,55 @@ const Settings = () => {
               onClick={async () => { await signOut(); navigate("/auth"); }}
               className="flex items-center justify-center gap-2 rounded-xl bg-danger/10 px-4 py-3 font-bold text-danger active:scale-[0.98] transition-transform"
             >
-              <LogOut className="h-4 w-4" /> Sign Out
+              <LogOut className="h-4 w-4" /> {t("signOut")}
             </button>
           </div>
         </Section>
       </div>
 
-      <TaskBar />
+      <TaskBar showBack />
     </div>
   );
 };
 
-const Section = ({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) => (
-  <motion.div
-    initial={{ y: 10, opacity: 0 }}
-    animate={{ y: 0, opacity: 1 }}
-    className="rounded-2xl bg-card p-5 card-shadow"
-  >
-    <h3 className="font-black text-foreground mb-1">{title}</h3>
-    {subtitle && <p className="text-xs text-muted-foreground font-semibold mb-3">{subtitle}</p>}
-    {!subtitle && <div className="mb-3" />}
-    {children}
-  </motion.div>
-);
+const Section = ({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <motion.div
+      initial={{ y: 10, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className="rounded-2xl bg-card border-2 border-border overflow-hidden"
+    >
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-5 py-4 active:bg-muted/50 transition-colors text-left"
+      >
+        <div>
+          <h3 className="font-black text-foreground">{title}</h3>
+          {subtitle && <p className="text-xs text-muted-foreground font-semibold mt-0.5">{subtitle}</p>}
+        </div>
+        <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+        </motion.div>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-5 pt-1">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
 
 export default Settings;

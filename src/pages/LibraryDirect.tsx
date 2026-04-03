@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
 import { Download, Search, Eye, X, LayoutGrid, List, FileText, ChevronDown, Check } from 'lucide-react';
 import { cacheService } from '@/services/cacheService';
-
+import { loadState } from '@/lib/storage';
 import { SubscriptionDetailDialog } from '@/components/subscription/SubscriptionDetailDialog';
 import { PremiumCodeDialog } from '@/components/subscription/PremiumCodeDialog';
 import { Loader } from '@/components/ui/loader';
 import TaskBar from '@/components/TaskBar';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const supabaseUrl = 'https://aaayzhvqgqptgqaxxbdh.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhYXl6aHZxZ3FwdGdxYXh4YmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzAwNDksImV4cCI6MjA4ODA0NjA0OX0.NNKOn17jGZHEbBKBnX3oxVhSYJhKm28QSOkK76I0bgo';
@@ -15,6 +17,13 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default function LibraryDirect() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  // User profile — class level and subject names from onboarding
+  const userState = loadState();
+  const userClassLevel = userState?.classLevel ?? null;
+  const userSubjectNames = userState?.subjects?.map(s => s.name) ?? [];
+
   const [papers, setPapers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -84,21 +93,17 @@ export default function LibraryDirect() {
   };
 
   const filteredPapers = papers.filter(p => {
-    // Hide downloaded papers - they should only appear in MyDownloads
+    // Hide downloaded papers
     if (downloadedPaperIds.has(p.id)) return false;
+
+    // Always filter by user's class level
+    if (userClassLevel && p.class_level !== userClassLevel) return false;
 
     // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      const matchesSearch = (
-        p.title?.toLowerCase().includes(query) ||
-        p.subject?.toLowerCase().includes(query)
-      );
-      if (!matchesSearch) return false;
+      if (!p.title?.toLowerCase().includes(query) && !p.subject?.toLowerCase().includes(query)) return false;
     }
-
-    // Class level filter
-    if (filters.classLevel && p.class_level !== filters.classLevel) return false;
 
     // Subject filter
     if (filters.subject && p.subject !== filters.subject) return false;
@@ -112,12 +117,19 @@ export default function LibraryDirect() {
     return true;
   });
 
-  const uniqueSubjects = Array.from(new Set(papers.map(p => p.subject))).sort();
-  const uniqueYears = Array.from(new Set(papers.map(p => p.year))).sort((a, b) => b - a);
-  const uniqueClassLevels = Array.from(new Set(papers.map(p => p.class_level))).sort();
-  const uniqueExamTypes = Array.from(new Set(papers.map(p => p.exam_type))).sort();
+  // Papers matching user's class
+  const classPapers = userClassLevel ? papers.filter(p => p.class_level === userClassLevel) : papers;
 
-  const hasActiveFilters = filters.classLevel || filters.subject || filters.year || filters.examType;
+  // Subjects: user's own subjects that exist in the library for their class
+  const availableSubjectsInLib = new Set(classPapers.map(p => p.subject));
+  const uniqueSubjects = userSubjectNames.length > 0
+    ? userSubjectNames.filter(s => availableSubjectsInLib.has(s))
+    : Array.from(availableSubjectsInLib).sort();
+
+  const uniqueYears = Array.from(new Set(classPapers.map(p => p.year))).sort((a: number, b: number) => b - a);
+  const uniqueExamTypes = Array.from(new Set(classPapers.map(p => p.exam_type))).sort();
+
+  const hasActiveFilters = filters.subject || filters.year || filters.examType;
 
   const clearFilters = () => {
     setFilters({ classLevel: '', subject: '', year: '', examType: '' });
@@ -127,12 +139,12 @@ export default function LibraryDirect() {
     <div className="flex-1 pb-20">
       <div className="max-w-md mx-auto">
         {/* Sticky Header Section */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md px-6 pt-8 pb-4 border-b border-border/50">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md px-6 pt-8 pb-4 border-b border-border/50 overflow-visible">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-2xl font-black text-foreground">Past Papers Library</h1>
+              <h1 className="text-2xl font-black text-foreground">{t("examLibrary")}</h1>
               <p className="text-sm font-semibold text-muted-foreground">
-                Browse and download past papers
+                {t("browseDownloadPapers")}
               </p>
             </div>
           </div>
@@ -148,7 +160,7 @@ export default function LibraryDirect() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search papers..."
+                  placeholder={t("searchByTitle")}
                   className="w-full pl-9 pr-4 py-3 rounded-xl border border-border bg-card text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
                 />
               </div>
@@ -157,25 +169,19 @@ export default function LibraryDirect() {
               <div className="flex items-center gap-2 mt-2">
                 <div className="flex gap-2 overflow-x-auto hide-scrollbar flex-1">
                   <FilterPill
-                    label="Class"
-                    value={filters.classLevel}
-                    options={uniqueClassLevels}
-                    onSelect={(v) => setFilters({ ...filters, classLevel: v })}
-                  />
-                  <FilterPill
-                    label="Subject"
+                    label={t("subject")}
                     value={filters.subject}
                     options={uniqueSubjects}
                     onSelect={(v) => setFilters({ ...filters, subject: v })}
                   />
                   <FilterPill
-                    label="Year"
+                    label={t("year")}
                     value={filters.year}
                     options={uniqueYears.map(String)}
                     onSelect={(v) => setFilters({ ...filters, year: v })}
                   />
                   <FilterPill
-                    label="Type"
+                    label={t("examType")}
                     value={filters.examType}
                     options={uniqueExamTypes}
                     onSelect={(v) => setFilters({ ...filters, examType: v })}
@@ -292,7 +298,7 @@ export default function LibraryDirect() {
             </div>
             <div className="text-center py-4">
               <p className="text-xs text-muted-foreground font-medium">
-                {filteredPapers.length} of {papers.length} papers
+                {filteredPapers.length} {t("of")} {papers.length} {t("papersFound")}
               </p>
             </div>
           </div>
@@ -310,13 +316,25 @@ export default function LibraryDirect() {
           </div>
         )}
 
-        {/* No Results */}
-        {!loading && !error && papers.length > 0 && filteredPapers.length === 0 && (
+        {/* No papers for this class yet */}
+        {!loading && !error && papers.length > 0 && classPapers.length === 0 && (
           <div className="px-4 py-12 text-center">
             <div className="bg-muted/50 rounded-2xl p-8">
-              <p className="text-lg font-bold text-foreground mb-2">No papers match your search</p>
+              <p className="text-lg font-bold text-foreground mb-2">No papers for your class yet</p>
               <p className="text-sm text-muted-foreground">
-                Try a different search term
+                Papers for {userClassLevel ?? "your class"} will appear here once they're added
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* No results from search/filter */}
+        {!loading && !error && classPapers.length > 0 && filteredPapers.length === 0 && (
+          <div className="px-4 py-12 text-center">
+            <div className="bg-muted/50 rounded-2xl p-8">
+              <p className="text-lg font-bold text-foreground mb-2">No papers match your filters</p>
+              <p className="text-sm text-muted-foreground">
+                Try adjusting or clearing your filters
               </p>
             </div>
           </div>
@@ -338,15 +356,19 @@ export default function LibraryDirect() {
         onSuccess={() => setShowCodeDialog(false)}
       />
 
-      <TaskBar />
-
-      {/* Downloads FAB */}
-      <button
-        onClick={() => navigate("/my-downloads")}
-        className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground card-shadow-primary active:scale-95 transition-transform"
-      >
-        <Download className="h-6 w-6" />
-      </button>
+      <TaskBar action={
+        downloadedPaperIds.size > 0 ? (
+          <button
+            onClick={() => navigate("/my-downloads")}
+            className="h-12 w-12 rounded-full bg-primary border-2 border-foreground card-shadow flex flex-col items-center justify-center active:scale-95 transition-transform"
+          >
+            <Download className="h-4 w-4 text-primary-foreground" />
+            <span className="text-[9px] font-black text-primary-foreground leading-none mt-0.5">
+              {downloadedPaperIds.size}
+            </span>
+          </button>
+        ) : undefined
+      } />
     </div>
   );
 }
@@ -361,36 +383,13 @@ interface FilterPillProps {
 
 function FilterPill({ label, value, options, onSelect }: FilterPillProps) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const [dropPos, setDropPos] = useState({ top: 0, left: 0 });
-
-  // Close on outside click
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
-
-  const handleOpen = () => {
-    if (btnRef.current) {
-      const rect = btnRef.current.getBoundingClientRect();
-      setDropPos({ top: rect.bottom + 8, left: rect.left });
-    }
-    setOpen((o) => !o);
-  };
-
   const active = !!value;
 
   return (
-    <div ref={ref} className="relative shrink-0">
+    <>
       <button
-        ref={btnRef}
-        onClick={handleOpen}
-        className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold border-2 transition-all active:scale-95 ${
+        onClick={() => setOpen(true)}
+        className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold border-2 transition-all active:scale-95 shrink-0 ${
           active
             ? "bg-primary/10 border-primary text-primary"
             : "bg-card border-border text-foreground"
@@ -400,44 +399,55 @@ function FilterPill({ label, value, options, onSelect }: FilterPillProps) {
         {active ? (
           <X
             className="h-3 w-3 opacity-70"
-            onClick={(e) => { e.stopPropagation(); onSelect(""); setOpen(false); }}
+            onClick={(e) => { e.stopPropagation(); onSelect(""); }}
           />
         ) : (
-          <ChevronDown className={`h-3 w-3 opacity-60 transition-transform ${open ? "rotate-180" : ""}`} />
+          <ChevronDown className="h-3 w-3 opacity-60" />
         )}
       </button>
 
-      {open && (
-        <div
-          style={{ top: dropPos.top, left: dropPos.left }}
-          className="fixed z-[200] min-w-[160px] rounded-2xl bg-card border border-border shadow-xl overflow-hidden"
-        >
-          <button
-            onClick={() => { onSelect(""); setOpen(false); }}
-            className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-colors hover:bg-muted/60 ${
-              !value ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            All {label}s
-            {!value && <Check className="h-3.5 w-3.5" />}
-          </button>
-          <div className="h-px bg-border mx-3" />
-          <div className="max-h-52 overflow-y-auto">
-            {options.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => { onSelect(opt); setOpen(false); }}
-                className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-colors hover:bg-muted/60 ${
-                  value === opt ? "text-primary bg-primary/5" : "text-foreground"
-                }`}
-              >
-                {opt}
-                {value === opt && <Check className="h-3.5 w-3.5 text-primary" />}
-              </button>
-            ))}
+      {open && createPortal(
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-[200] bg-black/40"
+            onClick={() => setOpen(false)}
+          />
+          {/* Centered modal */}
+          <div className="fixed inset-0 z-[201] flex items-center justify-center px-8 pointer-events-none">
+            <div className="pointer-events-auto w-full max-w-xs rounded-2xl bg-card border border-border shadow-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border">
+                <p className="text-sm font-black text-foreground text-center">{label}</p>
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                <button
+                  onClick={() => { onSelect(""); setOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-colors hover:bg-muted/60 ${
+                    !value ? "text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  All {label}s
+                  {!value && <Check className="h-3.5 w-3.5" />}
+                </button>
+                <div className="h-px bg-border mx-3" />
+                {options.map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => { onSelect(opt); setOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-colors hover:bg-muted/60 ${
+                      value === opt ? "text-primary bg-primary/5" : "text-foreground"
+                    }`}
+                  >
+                    {opt}
+                    {value === opt && <Check className="h-3.5 w-3.5 text-primary" />}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        </>,
+        document.body
       )}
-    </div>
+    </>
   );
 }

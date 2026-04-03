@@ -72,6 +72,7 @@ export interface AppState {
   studentName?: string;
   classLevel?: string;
   serie?: string;
+  semester?: string;
 }
 
 export type FeedbackStatus = "possible" | "risky" | "impossible";

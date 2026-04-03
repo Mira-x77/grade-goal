@@ -301,8 +301,8 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
   const mode = MODE_CFG[readingMode];
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col select-none overflow-hidden safe-area-inset"
-         style={{ backgroundColor: mode.bg }}>
+    <div className="pdf-viewer-root fixed inset-0 z-50 flex flex-col select-none overflow-hidden safe-area-inset"
+         style={{ backgroundColor: mode.bg, WebkitUserSelect: 'none', userSelect: 'none' }}>
 
       {/* ── Top Bar ── */}
       <div className={'absolute top-0 left-0 right-0 z-20 transition-transform duration-300 safe-area-top '

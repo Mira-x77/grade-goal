@@ -14,7 +14,7 @@ export default function ExamPrep() {
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-md mx-auto">
         {/* Header Hero */}
-        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 px-6 pt-10 pb-8 border-b border-yellow-200 dark:border-yellow-800 text-center relative overflow-hidden">
+        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 px-6 pb-8 border-b border-yellow-200 dark:border-yellow-800 text-center relative overflow-hidden safe-area-top">
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-yellow-200/50 dark:bg-yellow-600/20 rounded-full blur-3xl"></div>
           
           <Crown className="h-10 w-10 text-yellow-500 mx-auto mb-3 relative z-10" />
@@ -29,19 +29,19 @@ export default function ExamPrep() {
         <div className="px-6 py-6 space-y-6">
           {/* Features Grid */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-card p-4 rounded-2xl border border-border card-shadow flex flex-col items-center text-center">
+            <div className="bg-card p-4 rounded-2xl border border-border flex flex-col items-center text-center">
               <Target className="h-6 w-6 text-primary mb-2" />
               <span className="text-xs font-black text-foreground">Top 30 Questions</span>
             </div>
-            <div className="bg-card p-4 rounded-2xl border border-border card-shadow flex flex-col items-center text-center">
+            <div className="bg-card p-4 rounded-2xl border border-border flex flex-col items-center text-center">
               <Lightbulb className="h-6 w-6 text-primary mb-2" />
               <span className="text-xs font-black text-foreground">What to Study</span>
             </div>
-            <div className="bg-card p-4 rounded-2xl border border-border card-shadow flex flex-col items-center text-center">
+            <div className="bg-card p-4 rounded-2xl border border-border flex flex-col items-center text-center">
               <CheckCircle2 className="h-6 w-6 text-primary mb-2" />
               <span className="text-xs font-black text-foreground">Step-by-step Solutions</span>
             </div>
-            <div className="bg-card p-4 rounded-2xl border border-border card-shadow flex flex-col items-center text-center opacity-50 relative overflow-hidden">
+            <div className="bg-card p-4 rounded-2xl border border-border flex flex-col items-center text-center opacity-50 relative overflow-hidden">
               <Lock className="absolute inset-0 m-auto h-6 w-6 text-muted-foreground z-10" />
               <span className="text-xs font-black text-foreground blur-[2px]">Secret Sauce</span>
             </div>
@@ -81,7 +81,7 @@ export default function ExamPrep() {
           )}
         </div>
       </div>
-      <TaskBar />
+      <TaskBar showBack />
     </div>
   );
 }
