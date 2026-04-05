@@ -915,26 +915,23 @@ const Home = () => {
               className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground"
               style={{ maxHeight: "75vh" }}
             >
-              {/* Handle */}
               <div className="flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1.5 rounded-full bg-foreground/30" />
               </div>
-              {/* Header */}
               <div className="flex items-center justify-between px-6 py-3 border-b border-border">
-                <h2 className="text-lg font-black text-foreground">Notifications</h2>
+                <h2 className="text-lg font-black text-foreground">{t("notifications")}</h2>
                 <button onClick={() => setShowNotifications(false)}>
                   <X className="h-5 w-5 text-muted-foreground" />
                 </button>
               </div>
-              {/* Empty state */}
               <div className="flex flex-col items-center justify-center px-8 py-16 gap-4">
                 <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-muted border-2 border-border">
                   <Bell className="h-9 w-9 text-muted-foreground/50" />
                 </div>
                 <div className="text-center">
-                  <p className="font-black text-foreground text-base">All quiet here</p>
+                  <p className="font-black text-foreground text-base">{t("allQuiet")}</p>
                   <p className="text-sm font-semibold text-muted-foreground mt-1 leading-relaxed">
-                    You'll get notified about exam reminders, score updates, and important alerts.
+                    {t("notificationsDesc")}
                   </p>
                 </div>
               </div>

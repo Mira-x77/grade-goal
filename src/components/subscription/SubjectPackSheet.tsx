@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check, ChevronRight, Zap } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SubjectPackSheetProps {
   open: boolean;
@@ -14,6 +15,7 @@ const PRICE_PER_SUBJECT = 500;
 const ALL_SUBJECTS_PRICE = 1500;
 
 export function SubjectPackSheet({ open, onClose, onBack, subjects, onConfirm }: SubjectPackSheetProps) {
+  const { t } = useLanguage();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const toggle = (s: string) => {
@@ -27,7 +29,6 @@ export function SubjectPackSheet({ open, onClose, onBack, subjects, onConfirm }:
 
   const count = selected.size;
   const total = count * PRICE_PER_SUBJECT;
-  // Show "switch to all" nudge when total reaches or exceeds 1500 FCFA
   const switchToAll = total >= ALL_SUBJECTS_PRICE;
 
   const handleClose = () => {
@@ -69,8 +70,8 @@ export function SubjectPackSheet({ open, onClose, onBack, subjects, onConfirm }:
                   </button>
                 )}
                 <div>
-                  <h2 className="text-lg font-black text-foreground">Select subjects</h2>
-                  <p className="text-xs font-semibold text-muted-foreground">500 FCFA per subject · 3 months</p>
+                  <h2 className="text-lg font-black text-foreground">{t("selectSubjects")}</h2>
+                  <p className="text-xs font-semibold text-muted-foreground">{t("pricePerSubject")}</p>
                 </div>
               </div>
               <button onClick={handleClose} className="text-muted-foreground active:scale-95 transition-transform">
@@ -105,7 +106,6 @@ export function SubjectPackSheet({ open, onClose, onBack, subjects, onConfirm }:
 
             {/* Sticky footer */}
             <div className="px-5 pb-8 pt-3 border-t border-border bg-background">
-              {/* Switch to all nudge — appears when total >= 1500 FCFA */}
               <AnimatePresence>
                 {switchToAll && (
                   <motion.div
@@ -120,8 +120,8 @@ export function SubjectPackSheet({ open, onClose, onBack, subjects, onConfirm }:
                     >
                       <Zap className="h-4 w-4 text-primary shrink-0" />
                       <div className="text-left flex-1">
-                        <p className="text-xs font-black text-primary">Switch to All Subjects Pass</p>
-                        <p className="text-[10px] font-semibold text-primary/70">Same 1,500 FCFA — get every subject instead</p>
+                        <p className="text-xs font-black text-primary">{t("switchToAllPass")}</p>
+                        <p className="text-[10px] font-semibold text-primary/70">{t("switchToAllDesc")}</p>
                       </div>
                       <ChevronRight className="h-4 w-4 text-primary shrink-0" />
                     </button>
@@ -134,7 +134,11 @@ export function SubjectPackSheet({ open, onClose, onBack, subjects, onConfirm }:
                 disabled={count === 0}
                 className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-between px-5"
               >
-                <span>{count === 0 ? "Select subjects" : `${count} subject${count > 1 ? "s" : ""} selected`}</span>
+                <span>
+                  {count === 0
+                    ? t("selectSubjectsPrompt")
+                    : `${count} ${count > 1 ? t("subjectsSelectedPlural") : t("subjectsSelected")}`}
+                </span>
                 <span className="font-black">{count > 0 ? `${total.toLocaleString()} FCFA →` : ""}</span>
               </button>
             </div>

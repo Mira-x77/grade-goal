@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Crown, ChevronRight, BookOpen, Layers } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PlanSelectSheetProps {
   open: boolean;
@@ -11,6 +12,8 @@ interface PlanSelectSheetProps {
 }
 
 export function PlanSelectSheet({ open, onClose, onBack, subjectName, onSelectPack, onSelectAll }: PlanSelectSheetProps) {
+  const { t } = useLanguage();
+
   return (
     <AnimatePresence>
       {open && (
@@ -40,7 +43,7 @@ export function PlanSelectSheet({ open, onClose, onBack, subjectName, onSelectPa
                 )}
                 <div className="flex items-center gap-2">
                   <Crown className="h-5 w-5 text-secondary" />
-                  <h2 className="text-lg font-black text-foreground">Choose a plan</h2>
+                  <h2 className="text-lg font-black text-foreground">{t("choosePlan")}</h2>
                 </div>
               </div>
               <button onClick={onClose} className="text-muted-foreground active:scale-95 transition-transform">
@@ -59,10 +62,8 @@ export function PlanSelectSheet({ open, onClose, onBack, subjectName, onSelectPa
                   <BookOpen className="h-6 w-6 text-foreground" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-black text-foreground text-sm">Subject Pack</p>
-                  <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">
-                    Pick one or more subjects · 500 FCFA each
-                  </p>
+                  <p className="font-black text-foreground text-sm">{t("subjectPack")}</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">{t("subjectPackDesc")}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </button>
@@ -76,13 +77,13 @@ export function PlanSelectSheet({ open, onClose, onBack, subjectName, onSelectPa
                   <Layers className="h-6 w-6 text-foreground" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-black text-foreground text-sm">All Subjects Pass</p>
+                  <p className="font-black text-foreground text-sm">{t("allSubjectsPass")}</p>
                   <p className="text-[10px] font-semibold text-foreground/70 mt-0.5">
-                    Every subject in your class · 3 months · <span className="font-black">1,500 FCFA</span>
+                    {t("allSubjectsPassDesc")} · <span className="font-black">1 500 FCFA</span>
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <span className="text-[10px] font-black text-foreground bg-foreground/20 px-2 py-0.5 rounded-full whitespace-nowrap">Best value</span>
+                  <span className="text-[10px] font-black text-foreground bg-foreground/20 px-2 py-0.5 rounded-full whitespace-nowrap">{t("bestValue")}</span>
                   <ChevronRight className="h-4 w-4 text-foreground/60" />
                 </div>
               </button>

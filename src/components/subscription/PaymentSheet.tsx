@@ -3,23 +3,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Crown, Smartphone, Key, Check, Loader2 } from "lucide-react";
 import { subscriptionService } from "@/services/subscriptionService";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PaymentSheetProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   onBack?: () => void;
-  subjectName?: string;   // if set → single subject pack label
-  amount?: number;        // explicit amount override; falls back to PRICES logic
+  subjectName?: string;
+  amount?: number;
 }
 
 type Tab = "mobile" | "code";
 type Provider = "flooz" | "mixx";
 
-const PRICES = {
-  single: 500,
-  all: 1500,
-};
+const PRICES = { single: 500, all: 1500 };
 
 const PROVIDERS: { id: Provider; name: string; network: string; color: string }[] = [
   { id: "flooz", name: "Flooz", network: "Moov Africa", color: "bg-blue-500" },
@@ -27,6 +25,7 @@ const PROVIDERS: { id: Provider; name: string; network: string; color: string }[
 ];
 
 export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, amount }: PaymentSheetProps) {
+  const { t } = useLanguage();
   const [tab, setTab] = useState<Tab>("mobile");
   const [provider, setProvider] = useState<Provider>("flooz");
   const [phone, setPhone] = useState("");
@@ -35,7 +34,7 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
   const [mobileSent, setMobileSent] = useState(false);
 
   const price = amount ?? (subjectName ? PRICES.single : PRICES.all);
-  const planLabel = subjectName ? `${subjectName} Pack` : "All Subjects";
+  const planLabel = subjectName ? `${subjectName} Pack` : t("allSubjectsPass");
 
   const handleClose = () => {
     if (loading) return;
@@ -43,14 +42,12 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
     onClose();
   };
 
-  // ── Mobile Money ──
   const handleMobileSubmit = async () => {
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 8) { toast.error("Enter a valid phone number"); return; }
     setLoading(true);
     try {
-      // UI-only for now — backend integration pending
-      await new Promise(r => setTimeout(r, 1200)); // simulate network
+      await new Promise(r => setTimeout(r, 1200));
       setMobileSent(true);
     } catch {
       toast.error("Something went wrong. Try again.");
@@ -59,7 +56,6 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
     }
   };
 
-  // ── Access Code ──
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
     if (v.length > 4 && v.length <= 8) v = v.slice(0, 4) + "-" + v.slice(4);
@@ -116,7 +112,7 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
                     <h2 className="text-lg font-black text-foreground">{planLabel}</h2>
                   </div>
                   <p className="text-xs font-semibold text-muted-foreground">
-                    3 months access · <span className="font-black text-foreground">{price.toLocaleString()} FCFA</span>
+                    {t("monthsAccess")} · <span className="font-black text-foreground">{price.toLocaleString()} FCFA</span>
                   </p>
                 </div>
               </div>
@@ -128,8 +124,8 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
             {/* Tabs */}
             <div className="flex gap-1 px-5 pt-4 pb-2">
               {([
-                { id: "mobile" as Tab, label: "Mobile Money", icon: Smartphone },
-                { id: "code"   as Tab, label: "Access Code",  icon: Key },
+                { id: "mobile" as Tab, label: t("mobileMoney"), icon: Smartphone },
+                { id: "code"   as Tab, label: t("accessCode"),  icon: Key },
               ]).map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
@@ -152,17 +148,14 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
                 <div className="flex flex-col gap-4 pt-2">
                   {!mobileSent ? (
                     <>
-                      {/* Provider selection */}
                       <div className="flex flex-col gap-2">
-                        <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Choose provider</p>
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">{t("chooseProvider")}</p>
                         {PROVIDERS.map((p) => (
                           <button
                             key={p.id}
                             onClick={() => setProvider(p.id)}
                             className={`flex items-center gap-3 rounded-2xl px-4 py-3 border-2 transition-all active:scale-[0.98] ${
-                              provider === p.id
-                                ? "border-foreground card-shadow bg-card"
-                                : "border-border bg-muted/50"
+                              provider === p.id ? "border-foreground card-shadow bg-card" : "border-border bg-muted/50"
                             }`}
                           >
                             <div className={`h-9 w-9 rounded-xl ${p.color} flex items-center justify-center shrink-0`}>
@@ -177,9 +170,10 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
                         ))}
                       </div>
 
-                      {/* Phone input */}
                       <div className="flex flex-col gap-1.5">
-                        <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Your {provider === "flooz" ? "Flooz" : "Mixx"} number</p>
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">
+                          {t("yourNumber")} {provider === "flooz" ? "Flooz" : "Mixx"}
+                        </p>
                         <div className="flex items-center gap-2 rounded-2xl border-2 border-foreground bg-card px-4 py-3 card-shadow">
                           <span className="text-sm font-black text-muted-foreground">+228</span>
                           <input
@@ -192,7 +186,7 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
                           />
                         </div>
                         <p className="text-[10px] font-semibold text-muted-foreground">
-                          You'll receive a USSD push to confirm {price.toLocaleString()} FCFA
+                          {t("ussdPushConfirm")} {price.toLocaleString()} FCFA
                         </p>
                       </div>
 
@@ -202,49 +196,43 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
                         className="w-full rounded-2xl bg-foreground border-2 border-foreground py-4 font-black text-background card-shadow active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-2"
                       >
                         {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-                        {loading ? "Sending request..." : `Pay ${price.toLocaleString()} FCFA`}
+                        {loading ? t("sendingRequest") : `${t("pay")} ${price.toLocaleString()} FCFA`}
                       </button>
                     </>
                   ) : (
-                    /* Pending confirmation state */
                     <div className="flex flex-col items-center gap-4 py-6 text-center">
                       <div className="h-16 w-16 rounded-full bg-secondary border-2 border-foreground flex items-center justify-center card-shadow">
                         <Smartphone className="h-8 w-8 text-foreground" />
                       </div>
                       <div>
-                        <p className="font-black text-foreground text-lg">Check your phone</p>
+                        <p className="font-black text-foreground text-lg">{t("checkYourPhone")}</p>
                         <p className="text-sm font-semibold text-muted-foreground mt-1">
-                          A USSD push has been sent to <span className="font-black text-foreground">+228 {phone}</span>
+                          {t("ussdSentTo")} <span className="font-black text-foreground">+228 {phone}</span>
                         </p>
                         <p className="text-xs font-semibold text-muted-foreground mt-2">
-                          Confirm the payment of <span className="font-black text-foreground">{price.toLocaleString()} FCFA</span> on your phone to unlock access.
+                          {t("confirmPayment")} <span className="font-black text-foreground">{price.toLocaleString()} FCFA</span> {t("onYourPhone")}
                         </p>
                       </div>
                       <div className="rounded-2xl bg-muted/60 border-2 border-border px-4 py-3 w-full text-left">
-                        <p className="text-xs font-semibold text-muted-foreground">
-                          Once confirmed, your access will be activated automatically within a few seconds.
-                        </p>
+                        <p className="text-xs font-semibold text-muted-foreground">{t("accessActivated")}</p>
                       </div>
                       <button
                         onClick={() => setMobileSent(false)}
                         className="text-xs font-black text-muted-foreground active:scale-95 transition-transform"
                       >
-                        Wrong number? Go back
+                        {t("wrongNumber")}
                       </button>
                     </div>
                   )}
                 </div>
               ) : (
-                /* Access Code tab */
                 <div className="flex flex-col gap-4 pt-2">
                   <div className="rounded-2xl bg-muted/50 border-2 border-border px-4 py-3">
-                    <p className="text-xs font-semibold text-muted-foreground">
-                      Have a code from a reseller or promotion? Enter it below to activate your access instantly.
-                    </p>
+                    <p className="text-xs font-semibold text-muted-foreground">{t("haveCode")}</p>
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Access code</p>
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">{t("accessCodeLabel")}</p>
                     <input
                       type="text"
                       placeholder="XXXX-XXXX-XXXX"
@@ -264,7 +252,7 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
                     className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-2"
                   >
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Key className="h-5 w-5" />}
-                    {loading ? "Activating..." : "Activate Code"}
+                    {loading ? t("activating") : t("activateCode")}
                   </button>
                 </div>
               )}

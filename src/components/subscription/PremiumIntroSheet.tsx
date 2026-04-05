@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Crown, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PremiumIntroSheetProps {
   open: boolean;
@@ -9,15 +10,26 @@ interface PremiumIntroSheetProps {
 }
 
 const FEATURES = [
-  { icon: "🎯", title: "Top Questions", desc: "The 30 most repeated questions across all past papers for your subject and class" },
-  { icon: "🗺️", title: "Key Topics", desc: "Topics ranked by exam frequency so you know exactly what to focus on" },
-  { icon: "📋", title: "Cheat Sheet", desc: "One-page summary of formulas, definitions and rules that appear most in exams" },
-  { icon: "✅", title: "Solutions", desc: "Step-by-step worked solutions to past questions with pattern explanations" },
-  { icon: "📊", title: "Score Predictor", desc: "Predicts your likely final score range based on your marks and exam patterns" },
-  { icon: "🔍", title: "Weak Spots", desc: "Identifies your weakest areas by comparing your marks to what exams test most" },
+  { icon: "🎯", titleKey: "topQuestions" as const, descKey: "topQuestionsDesc" as const },
+  { icon: "🗺️", titleKey: "keyTopics" as const, descKey: "keyTopicsDesc" as const },
+  { icon: "📋", titleKey: "cheatSheet" as const, descKey: "cheatSheetDesc" as const },
+  { icon: "✅", titleKey: "solutions" as const, descKey: "solutionsDesc" as const },
+  { icon: "📊", titleKey: "scorePredictor" as const, descKey: "scorePredictorDesc" as const },
+  { icon: "🔍", titleKey: "weakSpots" as const, descKey: "weakSpotsDesc" as const },
 ];
 
 export function PremiumIntroSheet({ open, onClose, onContinue, subjectName }: PremiumIntroSheetProps) {
+  const { t } = useLanguage();
+
+  const features = [
+    { icon: "🎯", title: "Top Questions", desc: "The 30 most repeated questions across all past papers for your subject and class" },
+    { icon: "🗺️", title: "Key Topics", desc: "Topics ranked by exam frequency so you know exactly what to focus on" },
+    { icon: "📋", title: "Cheat Sheet", desc: "One-page summary of formulas, definitions and rules that appear most in exams" },
+    { icon: "✅", title: "Solutions", desc: "Step-by-step worked solutions to past questions with pattern explanations" },
+    { icon: "📊", title: "Score Predictor", desc: "Predicts your likely final score range based on your marks and exam patterns" },
+    { icon: "🔍", title: "Weak Spots", desc: "Identifies your weakest areas by comparing your marks to what exams test most" },
+  ];
+
   return (
     <AnimatePresence>
       {open && (
@@ -43,9 +55,9 @@ export function PremiumIntroSheet({ open, onClose, onContinue, subjectName }: Pr
               <div className="flex items-center gap-2">
                 <Crown className="h-6 w-6 text-secondary" />
                 <div>
-                  <h2 className="text-lg font-black text-foreground">Pass Smarter</h2>
+                  <h2 className="text-lg font-black text-foreground">{t("passSmarter")}</h2>
                   <p className="text-xs font-semibold text-muted-foreground">
-                    {subjectName ? `Prep tools for ${subjectName}` : "Prep tools for every subject"}
+                    {subjectName ? `${t("prepToolsFor")} ${subjectName}` : t("prepToolsEvery")}
                   </p>
                 </div>
               </div>
@@ -56,12 +68,8 @@ export function PremiumIntroSheet({ open, onClose, onContinue, subjectName }: Pr
 
             {/* Scrollable content */}
             <div className="overflow-y-auto px-5 pb-32" style={{ maxHeight: "calc(95vh - 80px)" }}>
-              <p className="text-sm font-semibold text-muted-foreground mt-4 mb-5">
-                6 study tools built specifically from past exam papers for your class — not generic content.
-              </p>
-
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {FEATURES.map(({ icon, title, desc }) => (
+              <div className="grid grid-cols-2 gap-3 mt-4 mb-6">
+                {features.map(({ icon, title, desc }) => (
                   <div key={title} className="rounded-2xl bg-card border-2 border-border p-4 flex flex-col gap-2">
                     <span className="text-2xl">{icon}</span>
                     <p className="font-black text-sm text-foreground">{title}</p>
@@ -77,7 +85,7 @@ export function PremiumIntroSheet({ open, onClose, onContinue, subjectName }: Pr
                 onClick={onContinue}
                 className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2"
               >
-                See Plans
+                {t("seePlans")}
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
