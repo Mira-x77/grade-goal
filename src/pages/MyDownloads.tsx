@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Trash2, FileText, HardDrive, Search, X } from "lucide-react";
+import { Trash2, FileText, HardDrive, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { downloadService } from "@/services/downloadService";
@@ -19,7 +19,6 @@ const MyDownloads = () => {
   const { t } = useLanguage();
   const [downloadedPapers, setDownloadedPapers] = useState<CachedPaper[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalStorage, setTotalStorage] = useState(0);
   const [storageInfo, setStorageInfo] = useState<{ available: number; used: number; total: number } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [revealedDelete, setRevealedDelete] = useState<string | null>(null);
@@ -28,22 +27,29 @@ const MyDownloads = () => {
   const [showPDFViewer, setShowPDFViewer] = useState(false);
   const [currentPDF, setCurrentPDF] = useState<{ data: string; title: string } | null>(null);
 
+  // Ref to measure the fixed header height for padding
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
   useEffect(() => {
     loadDownloads();
   }, []);
 
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      setHeaderHeight(headerRef.current?.getBoundingClientRect().height ?? 0);
+    });
+    ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, [loading]);
+
   const loadDownloads = async () => {
     try {
       setLoading(true);
-      console.log('📥 MyDownloads: Loading downloads...');
       const cachedPapers = await cacheService.getCachedPapers();
-      console.log('📦 MyDownloads: Total cached papers:', cachedPapers.length);
       const downloaded = cachedPapers.filter(p => p.isDownloaded);
-      console.log('✅ MyDownloads: Downloaded papers:', downloaded.length, downloaded);
       setDownloadedPapers(downloaded);
-
-      const storage = await downloadService.getTotalStorageUsed();
-      setTotalStorage(storage);
       const info = await getAvailableSpace();
       setStorageInfo(info);
     } catch (error) {
@@ -55,23 +61,16 @@ const MyDownloads = () => {
   };
 
   const handlePaperClick = async (paper: CachedPaper) => {
-    // If delete is revealed, just dismiss it
-    if (revealedDelete === paper.id) {
-      setRevealedDelete(null);
-      return;
-    }
+    if (revealedDelete === paper.id) { setRevealedDelete(null); return; }
     const isWeb = Capacitor.getPlatform() === "web";
     try {
       setShowPDFViewer(true);
       setCurrentPDF({ data: "loading", title: paper.title });
-
       if (!isWeb && paper.localPath) {
-        // Mobile: read from local filesystem
         const fileName = paper.localPath.split("/").pop() || "";
         const base64Data = await readFileAsBase64(fileName);
         setCurrentPDF({ data: base64Data, title: paper.title });
       } else {
-        // Web: fetch from remote URL
         const fullPaper = await examService.getPaper(paper.id);
         if (!fullPaper) throw new Error("Paper not found");
         const response = await fetch(fullPaper.fileUrl);
@@ -93,16 +92,11 @@ const MyDownloads = () => {
   };
 
   const startLongPress = useCallback((paperId: string) => {
-    longPressTimer.current = setTimeout(() => {
-      setRevealedDelete(paperId);
-    }, 500);
+    longPressTimer.current = setTimeout(() => setRevealedDelete(paperId), 500);
   }, []);
 
   const cancelLongPress = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   }, []);
 
   const totalCapacity = storageInfo?.total ?? 0;
@@ -111,11 +105,7 @@ const MyDownloads = () => {
 
   const filteredPapers = downloadedPapers.filter((p) => {
     const q = search.toLowerCase();
-    return (
-      p.title.toLowerCase().includes(q) ||
-      p.subject.toLowerCase().includes(q) ||
-      p.classLevel.toLowerCase().includes(q)
-    );
+    return p.title.toLowerCase().includes(q) || p.subject.toLowerCase().includes(q) || p.classLevel.toLowerCase().includes(q);
   });
 
   const handleDeleteSingle = async (paperId: string) => {
@@ -134,13 +124,11 @@ const MyDownloads = () => {
     return (
       <div className="flex-1 bg-background">
         <div className="w-full max-w-md mx-auto px-4 py-4 safe-area-top">
-          <div className="animate-pulse">
-            <div className="h-8 bg-muted rounded w-1/2 mb-4"></div>
-            <div className="h-20 bg-muted rounded mb-4"></div>
+          <div className="animate-pulse space-y-4">
+            <div className="h-28 bg-muted rounded-2xl" />
+            <div className="h-12 bg-muted rounded-2xl" />
             <div className="space-y-3">
-              <div className="h-24 bg-muted rounded"></div>
-              <div className="h-24 bg-muted rounded"></div>
-              <div className="h-24 bg-muted rounded"></div>
+              {[1,2,3].map(i => <div key={i} className="h-20 bg-muted rounded-2xl" />)}
             </div>
           </div>
         </div>
@@ -149,84 +137,86 @@ const MyDownloads = () => {
   }
 
   return (
-    <div className="flex-1">
-      <div className="w-full max-w-md mx-auto px-4 py-4 safe-area-top">
-        {/* Merged title + storage card */}
-        <div className="bg-card rounded-2xl p-5 border-2 border-border mb-6">
-          <h1 className="text-2xl font-black mb-4">{t("myDownloads")}</h1>
+    <div className="flex-1 bg-background min-h-screen">
+      {/* ── Fixed header: storage card + search ── */}
+      <div
+        ref={headerRef}
+        className="fixed top-0 left-0 right-0 z-20 max-w-md mx-auto bg-background/90 backdrop-blur-lg border-b border-border px-4 pb-3 safe-area-top"
+      >
+        {/* Storage card — compact, always visible */}
+        <div className="mt-3 rounded-2xl bg-card border-2 border-border px-4 py-3">
+          <div className="flex items-center gap-3">
+            {/* Icon */}
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+              <HardDrive className="h-5 w-5 text-primary" />
+            </div>
 
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-              <HardDrive className="h-6 w-6 text-primary" />
-            </div>
+            {/* Used / Free */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-baseline justify-between gap-2 mb-1">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Used</span>
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Free</span>
-              </div>
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-xl font-black">{formatBytes(storageInfo?.used ?? 0)}</span>
-                <span className="text-xl font-black">
-                  {storageInfo !== null ? formatBytes(storageInfo.available) : "—"}
-                </span>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="text-center">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Used</p>
+                  <p className="text-base font-black text-foreground leading-tight">{formatBytes(storageInfo?.used ?? 0)}</p>
+                </div>
+                <div className="flex-1 mx-2">
+                  <div className="h-2 rounded-full bg-muted overflow-hidden border border-border">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${storageWarning ? "bg-destructive" : "bg-primary"}`}
+                      style={{ width: `${usedPct}%` }}
+                    />
+                  </div>
+                  <p className="text-[9px] font-bold text-muted-foreground text-center mt-0.5">{usedPct.toFixed(0)}%</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Free</p>
+                  <p className="text-base font-black text-foreground leading-tight">
+                    {storageInfo !== null ? formatBytes(storageInfo.available) : "—"}
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="text-right shrink-0 pl-2 border-l border-border">
-              <p className="text-2xl font-black">{downloadedPapers.length}</p>
-              <p className="text-xs font-semibold text-muted-foreground">
+
+            {/* Paper count */}
+            <div className="text-center shrink-0 pl-3 border-l border-border">
+              <p className="text-2xl font-black text-foreground leading-none">{downloadedPapers.length}</p>
+              <p className="text-[10px] font-bold text-muted-foreground mt-0.5">
                 {downloadedPapers.length === 1 ? t("paper") : t("papers")}
               </p>
             </div>
           </div>
-
-          {/* Storage progress bar */}
-          {storageInfo !== null && (
-            <div>
-              <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden border border-border">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${storageWarning ? "bg-destructive" : "bg-primary"}`}
-                  style={{ width: `${usedPct}%` }}
-                />
-              </div>
-              <p className="text-xs font-semibold text-muted-foreground mt-1.5 text-right">
-                {usedPct.toFixed(1)}% used
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Search bar */}
         {downloadedPapers.length > 0 && (
-          <div className="relative mb-4">
+          <div className="relative mt-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search downloads..."
-              className="w-full bg-card border-2 border-foreground rounded-2xl py-3 pl-9 pr-10 text-sm font-semibold placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+              placeholder={t("searchByTitle")}
+              className="w-full bg-card border-2 border-foreground rounded-2xl py-2.5 pl-9 pr-10 text-sm font-semibold placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
             />
             {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              >
+              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
         )}
+      </div>
 
-        {/* Papers List */}
+      {/* ── Scrollable content — padded to clear fixed header ── */}
+      <div
+        className="w-full max-w-md mx-auto px-4 pb-24"
+        style={{ paddingTop: headerHeight + 12 }}
+        onClick={() => setRevealedDelete(null)}
+      >
         {downloadedPapers.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-16">
             <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-bold text-muted-foreground mb-2">
-              {t("noDownloadsYet")}
-            </p>
-            <p className="text-sm text-muted-foreground mb-6">
-              {t("papersDownloadAppear")}
-            </p>
+            <p className="text-lg font-bold text-muted-foreground mb-2">{t("noDownloadsYet")}</p>
+            <p className="text-sm text-muted-foreground mb-6">{t("papersDownloadAppear")}</p>
             <button
               onClick={() => navigate("/library")}
               className="bg-primary text-primary-foreground rounded-xl px-6 py-3 font-bold"
@@ -239,10 +229,7 @@ const MyDownloads = () => {
             <p className="text-sm font-bold text-muted-foreground">No results for "{search}"</p>
           </div>
         ) : (
-          <div
-            className="space-y-3"
-            onClick={() => setRevealedDelete(null)}
-          >
+          <div className="space-y-3">
             {filteredPapers.map((paper) => (
               <motion.div
                 key={paper.id}
@@ -255,25 +242,23 @@ const MyDownloads = () => {
                 onTouchMove={cancelLongPress}
               >
                 <div className="flex items-stretch">
-                  {/* Main tappable area */}
                   <div
                     className="flex-1 p-4 cursor-pointer active:bg-muted/40 transition-colors"
                     onClick={(e) => { e.stopPropagation(); handlePaperClick(paper); }}
                   >
                     <h3 className="font-black text-sm line-clamp-2 mb-1">{paper.title}</h3>
                     <p className="text-xs font-semibold text-muted-foreground mb-2">
-                      {paper.subject} • {paper.classLevel}
+                      {paper.subject} · {paper.classLevel}
                     </p>
                     <div className="flex items-center gap-2 text-xs">
                       <span className="font-bold text-muted-foreground">{paper.fileSizeFormatted}</span>
-                      <span className="text-muted-foreground">•</span>
+                      <span className="text-muted-foreground">·</span>
                       <span className="font-semibold text-muted-foreground">
                         {t("downloadedOn")} {new Date(paper.downloadedAt!).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
 
-                  {/* Delete — revealed on long press */}
                   <AnimatePresence>
                     {revealedDelete === paper.id && (
                       <motion.div
@@ -295,7 +280,6 @@ const MyDownloads = () => {
                   </AnimatePresence>
                 </div>
 
-                {/* Delete Confirmation */}
                 <AnimatePresence>
                   {showDeleteConfirm === paper.id && (
                     <motion.div
@@ -328,15 +312,11 @@ const MyDownloads = () => {
         )}
       </div>
 
-      {/* PDF Viewer */}
-      {showPDFViewer && currentPDF && currentPDF.data !== 'loading' && (
+      {showPDFViewer && currentPDF && currentPDF.data !== "loading" && (
         <InAppPDFViewer
           pdfData={currentPDF.data}
           fileName={currentPDF.title}
-          onClose={() => {
-            setShowPDFViewer(false);
-            setCurrentPDF(null);
-          }}
+          onClose={() => { setShowPDFViewer(false); setCurrentPDF(null); }}
         />
       )}
 
