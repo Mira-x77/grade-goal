@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Download, FileText, Trash2, AlertCircle, Eye, Crown, ChevronDown, Lock, BookOpen, Lightbulb, CheckCircle2, FileText as FileText2, X } from "lucide-react";
+import { Download, FileText, Trash2, AlertCircle, Eye, Crown, ChevronDown, Lock, BookOpen, Lightbulb, CheckCircle2, FileText as FileText2, X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ExamPaper, DownloadProgress } from "@/types/exam-library";
 import { examService } from "@/services/examService";
@@ -243,11 +243,11 @@ const PaperDetail = () => {
 
             {isDownloaded ? (
               <button
-                onClick={handleView}
-                className="flex flex-col items-center justify-center gap-2 bg-card border-2 border-foreground py-4 rounded-2xl font-black text-sm text-foreground active:scale-[0.98] transition-all card-shadow"
+                disabled
+                className="flex flex-col items-center justify-center gap-2 bg-muted border-2 border-border py-4 rounded-2xl font-black text-sm text-muted-foreground opacity-60 cursor-default"
               >
-                <FileText className="h-5 w-5" />
-                Open
+                <Check className="h-5 w-5" />
+                Downloaded
               </button>
             ) : downloadProgress ? (
               <button
@@ -353,16 +353,15 @@ const PaperDetail = () => {
             <motion.div
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground flex flex-col"
-              style={{ maxHeight: "92vh" }}
+              className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground"
             >
               {/* Handle */}
-              <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+              <div className="flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1.5 rounded-full bg-foreground/30" />
               </div>
 
               {/* Header */}
-              <div className="px-5 pt-2 pb-4 flex-shrink-0">
+              <div className="px-5 pt-2 pb-4">
                 <div className="flex items-start justify-between mb-1">
                   <div>
                     <h2 className="text-xl font-black text-foreground">Prep — {paper.subject}</h2>
@@ -385,26 +384,26 @@ const PaperDetail = () => {
                 </button>
               </div>
 
-              {/* Feature grid — scrollable */}
-              <div className="overflow-y-auto flex-1 px-5 pb-10">
-                <div className="grid grid-cols-2 gap-3">
+              {/* Feature grid — no scroll, all tiles visible */}
+              <div className="px-5 pb-6">
+                <div className="grid grid-cols-2 gap-2">
                   {[
-                    { icon: "🎯", title: "Top Questions", desc: "The 30 most repeated questions across all past papers for this subject and class" },
-                    { icon: "🗺️", title: "Key Topics", desc: "Topics ranked by exam frequency — know exactly what to focus on" },
-                    { icon: "📋", title: "Cheat Sheet", desc: "One-page summary of formulas, definitions and rules that appear most in exams" },
-                    { icon: "✅", title: "Solutions", desc: "Step-by-step worked solutions to past questions with pattern explanations" },
-                    { icon: "📊", title: "Score Predictor", desc: "Predicts your likely final score range based on your marks + exam patterns" },
-                    { icon: "🔍", title: "Weak Spots", desc: "Identifies your weakest areas by comparing your marks to what exams test most" },
+                    { icon: "🎯", title: "Top Questions", desc: "30 most repeated questions across past papers" },
+                    { icon: "🗺️", title: "Key Topics", desc: "Topics ranked by exam frequency" },
+                    { icon: "📋", title: "Cheat Sheet", desc: "Formulas, definitions and rules that appear most" },
+                    { icon: "✅", title: "Solutions", desc: "Step-by-step worked solutions with patterns" },
+                    { icon: "📊", title: "Score Predictor", desc: "Predicts your likely final score range" },
+                    { icon: "🔍", title: "Weak Spots", desc: "Your weakest areas vs what exams test most" },
                   ].map(({ icon, title, desc }) => (
                     <button
                       key={title}
                       onClick={() => { setPrepOpen(false); setShowPlanSelect(true); }}
-                      className="rounded-2xl bg-card border-2 border-border p-4 text-left active:scale-[0.97] transition-transform flex flex-col gap-2"
+                      className="rounded-2xl bg-card border-2 border-border p-3 text-left active:scale-[0.97] transition-transform flex flex-col gap-1.5"
                     >
-                      <span className="text-2xl">{icon}</span>
-                      <p className="font-black text-sm text-foreground">{title}</p>
+                      <span className="text-xl">{icon}</span>
+                      <p className="font-black text-xs text-foreground">{title}</p>
                       <p className="text-[10px] font-semibold text-muted-foreground leading-relaxed">{desc}</p>
-                      <div className="flex items-center gap-1 mt-auto pt-1">
+                      <div className="flex items-center gap-1 mt-auto pt-0.5">
                         <Lock className="h-3 w-3 text-muted-foreground" />
                         <span className="text-[10px] font-black text-muted-foreground">Premium</span>
                       </div>

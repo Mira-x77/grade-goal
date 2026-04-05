@@ -278,11 +278,11 @@ export default function LibraryDirect() {
                           <Eye className="h-6 w-6 text-muted-foreground/50" />
                         </div>
                       )}
-                      {/* Overlay tags on image — Saved only */}
+                      {/* Overlay tags on image — Downloaded only */}
                       {isSaved && (
                         <div className="absolute top-1.5 right-1.5">
                           <span className="px-1.5 py-0.5 bg-secondary border border-foreground/30 text-foreground rounded text-[8px] font-black">
-                            Saved
+                            Downloaded
                           </span>
                         </div>
                       )}
@@ -321,7 +321,7 @@ export default function LibraryDirect() {
                     <div className="flex flex-col items-end gap-1.5 shrink-0">
                       <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full">{paper.year}</span>
                       {downloadedPaperIds.has(paper.id) && (
-                        <span className="text-[10px] font-black bg-secondary border border-foreground/20 text-foreground px-2 py-0.5 rounded-full">Saved</span>
+                        <span className="text-[10px] font-black bg-secondary border border-foreground/20 text-foreground px-2 py-0.5 rounded-full">Downloaded</span>
                       )}
                     </div>
                   </div>

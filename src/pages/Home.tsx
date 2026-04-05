@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, Flame, AlertTriangle, ChevronRight, BookOpen, BarChart3, TrendingUp, Settings as SettingsIcon, User, Trophy, FileDown, PenLine, Zap, Plus, X, Check, Clock, ArrowUpRight, Trash2, Pencil, Crown } from "lucide-react";
+import { Target, Flame, AlertTriangle, ChevronRight, BookOpen, BarChart3, TrendingUp, Settings as SettingsIcon, User, Trophy, FileDown, PenLine, Zap, Plus, X, Check, Clock, ArrowUpRight, Trash2, Pencil, Crown, Bell } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState, getStreak, getHistory, HistoryEntry } from "@/lib/storage";
 import { downloadService } from "@/services/downloadService";
@@ -236,6 +236,9 @@ const Home = () => {
             >
               <Crown className="h-4 w-4" />
               Unlock
+            </button>
+            <button className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow">
+              <Bell className="h-5 w-5" />
             </button>
             <Link to="/profile" className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow">
               <User className="h-5 w-5" />
