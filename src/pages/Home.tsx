@@ -53,6 +53,7 @@ const Home = () => {
   const [showPaymentSheet, setShowPaymentSheet] = useState(false);
   const [showPremiumIntro, setShowPremiumIntro] = useState(false);
   const [showSubjectPack, setShowSubjectPack] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [paymentPlan, setPaymentPlan] = useState<"single" | "all">("all");
   const [avgCardVisible, setAvgCardVisible] = useState(true);
@@ -217,27 +218,30 @@ const Home = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between pt-2"
+          className="flex items-start justify-between pt-2 gap-3"
         >
-          <div>
-            <h1 className="text-2xl font-black text-foreground">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-black text-foreground truncate">
               {state?.studentName ? `${t("hey")} ${appState?.studentName}!` : t("scoreTarget")}
             </h1>
             {(appState?.classLevel || appState?.semester) && (
-              <p className="text-xs font-bold text-muted-foreground mt-0.5">
+              <p className="text-xs font-bold text-muted-foreground mt-0.5 truncate">
                 {[appState?.classLevel, appState?.serie ? `Série ${appState.serie}` : null, appState?.semester].filter(Boolean).join(" · ")}
               </p>
             )}
-          </div>
-          <div className="flex items-center gap-2">
             <button
               onClick={() => setShowPremiumIntro(true)}
-              className="flex h-9 items-center gap-1.5 px-3 rounded-xl border-2 border-foreground bg-secondary text-foreground active:scale-95 transition-all card-shadow text-xs font-black"
+              className="mt-2 flex h-7 items-center gap-1 px-2.5 rounded-lg border-2 border-foreground bg-secondary text-foreground active:scale-95 transition-all card-shadow text-[11px] font-black"
             >
-              <Crown className="h-4 w-4" />
-              Unlock
+              <Crown className="h-3.5 w-3.5" />
+              Unlock Premium
             </button>
-            <button className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow">
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowNotifications(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow"
+            >
               <Bell className="h-5 w-5" />
             </button>
             <Link to="/profile" className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow">
@@ -874,6 +878,52 @@ const Home = () => {
                     </div>
                   );
                 })}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      {/* Notifications bottom sheet */}
+      <AnimatePresence>
+        {showNotifications && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowNotifications(false)}
+              className="fixed inset-0 z-50 bg-black/50"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 32 }}
+              className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground"
+              style={{ maxHeight: "75vh" }}
+            >
+              {/* Handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1.5 rounded-full bg-foreground/30" />
+              </div>
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-3 border-b border-border">
+                <h2 className="text-lg font-black text-foreground">Notifications</h2>
+                <button onClick={() => setShowNotifications(false)}>
+                  <X className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </div>
+              {/* Empty state */}
+              <div className="flex flex-col items-center justify-center px-8 py-16 gap-4">
+                <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-muted border-2 border-border">
+                  <Bell className="h-9 w-9 text-muted-foreground/50" />
+                </div>
+                <div className="text-center">
+                  <p className="font-black text-foreground text-base">All quiet here</p>
+                  <p className="text-sm font-semibold text-muted-foreground mt-1 leading-relaxed">
+                    You'll get notified about exam reminders, score updates, and important alerts.
+                  </p>
+                </div>
               </div>
             </motion.div>
           </>
