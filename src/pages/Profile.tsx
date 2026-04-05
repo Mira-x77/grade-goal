@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, User, Target, BookOpen, Pencil, Check, Settings } from "lucide-react";
+import { ArrowLeft, User, Target, BookOpen, Pencil, Check, Settings, Crown, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
 import { AppState } from "@/types/exam";
 import { CLASS_LEVELS, LYCEE_SERIES } from "@/lib/subjects-data";
 import TaskBar from "@/components/TaskBar";
+import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
+import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
+import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
+import { PaymentSheet } from "@/components/subscription/PaymentSheet";
 
 const allLevels = [...CLASS_LEVELS.college, ...CLASS_LEVELS.lycee];
 const isLycee = (level: string) => (CLASS_LEVELS.lycee as readonly string[]).includes(level);
@@ -18,6 +22,13 @@ const Profile = () => {
   const [editingGrading, setEditingGrading] = useState(false);
   const [draft, setDraft] = useState({ studentName: "", classLevel: "", serie: "", semester: "" });
   const [draftTarget, setDraftTarget] = useState(16);
+
+  // Premium flow
+  const [showPremiumIntro, setShowPremiumIntro] = useState(false);
+  const [showPlanSelect, setShowPlanSelect] = useState(false);
+  const [showSubjectPack, setShowSubjectPack] = useState(false);
+  const [showPaymentSheet, setShowPaymentSheet] = useState(false);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
   useEffect(() => {
     const loaded = loadState();
@@ -65,7 +76,22 @@ const Profile = () => {
 
       <div className="flex flex-col gap-6 px-6 py-6">
 
-        {/* Basic Info */}
+        {/* Premium banner */}
+        <motion.button
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          onClick={() => setShowPremiumIntro(true)}
+          className="w-full rounded-2xl bg-secondary border-2 border-foreground p-4 card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-4 text-left"
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-foreground/10 border-2 border-foreground/20 shrink-0">
+            <Crown className="h-6 w-6 text-foreground" />
+          </div>
+          <div className="flex-1">
+            <p className="font-black text-foreground text-sm">Unlock Premium</p>
+            <p className="text-[10px] font-semibold text-foreground/70 mt-0.5">6 study tools · Exam-specific prep · 3 months</p>
+          </div>
+          <ChevronRight className="h-5 w-5 text-foreground/60 shrink-0" />
+        </motion.button>
         <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="rounded-2xl bg-card p-5 border-2 border-border">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -250,6 +276,43 @@ const Profile = () => {
       </div>
 
       <TaskBar showBack />
+
+      <PremiumIntroSheet
+        open={showPremiumIntro}
+        onClose={() => setShowPremiumIntro(false)}
+        onContinue={() => { setShowPremiumIntro(false); setShowPlanSelect(true); }}
+      />
+      <PlanSelectSheet
+        open={showPlanSelect}
+        onClose={() => setShowPlanSelect(false)}
+        onBack={() => { setShowPlanSelect(false); setShowPremiumIntro(true); }}
+        onSelectPack={() => { setShowPlanSelect(false); setShowSubjectPack(true); }}
+        onSelectAll={() => { setShowPlanSelect(false); (window as any).__packAmount = undefined; setShowPaymentSheet(true); }}
+      />
+      <SubjectPackSheet
+        open={showSubjectPack}
+        onClose={() => setShowSubjectPack(false)}
+        onBack={() => { setShowSubjectPack(false); setShowPlanSelect(true); }}
+        subjects={state?.subjects?.map(s => s.name) ?? []}
+        onConfirm={(subs, amount) => {
+          setSelectedSubjects(subs);
+          setShowSubjectPack(false);
+          (window as any).__packAmount = amount;
+          setShowPaymentSheet(true);
+        }}
+      />
+      <PaymentSheet
+        open={showPaymentSheet}
+        onClose={() => setShowPaymentSheet(false)}
+        onBack={() => {
+          setShowPaymentSheet(false);
+          if (selectedSubjects.length === 0) setShowPlanSelect(true);
+          else setShowSubjectPack(true);
+        }}
+        onSuccess={() => setShowPaymentSheet(false)}
+        subjectName={selectedSubjects.length === 1 ? selectedSubjects[0] : undefined}
+        amount={(window as any).__packAmount ?? undefined}
+      />
     </div>
   );
 };

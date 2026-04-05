@@ -103,9 +103,6 @@ export default function LibraryDirect() {
   };
 
   const filteredPapers = papers.filter(p => {
-    // Hide downloaded papers
-    if (downloadedPaperIds.has(p.id)) return false;
-
     // Filter by selected class level
     if (filters.classLevel && p.class_level?.toLowerCase() !== filters.classLevel.toLowerCase()) return false;
 
@@ -373,11 +370,6 @@ export default function LibraryDirect() {
         )}
       </div>
 
-      <PremiumIntroSheet
-        open={showPremiumIntro}
-        onClose={() => setShowPremiumIntro(false)}
-        onContinue={() => { setShowPremiumIntro(false); setShowPlanSelect(true); }}
-      />
       <PremiumIntroSheet
         open={showPremiumIntro}
         onClose={() => setShowPremiumIntro(false)}
