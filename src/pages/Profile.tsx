@@ -10,12 +10,14 @@ import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
 import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
 import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
 import { PaymentSheet } from "@/components/subscription/PaymentSheet";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const allLevels = [...CLASS_LEVELS.college, ...CLASS_LEVELS.lycee];
 const isLycee = (level: string) => (CLASS_LEVELS.lycee as readonly string[]).includes(level);
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [state, setState] = useState<AppState | null>(null);
   const [editingBasic, setEditingBasic] = useState(false);
   const [editingTarget, setEditingTarget] = useState(false);
@@ -68,7 +70,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3 flex items-center justify-between safe-area-top">
-        <h1 className="text-lg font-black text-primary">Your Profile</h1>
+        <h1 className="text-lg font-black text-primary">{t("yourProfile")}</h1>
         <Link to="/settings" className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow">
           <Settings className="h-4 w-4" />
         </Link>
@@ -87,8 +89,8 @@ const Profile = () => {
             <Crown className="h-6 w-6 text-foreground" />
           </div>
           <div className="flex-1">
-            <p className="font-black text-foreground text-sm">Unlock Premium</p>
-            <p className="text-[10px] font-semibold text-foreground/70 mt-0.5">6 study tools · Exam-specific prep · 3 months</p>
+            <p className="font-black text-foreground text-sm">{t("unlockPremium")}</p>
+            <p className="text-[10px] font-semibold text-foreground/70 mt-0.5">{t("monthsAccess")} · {t("prepToolsEvery")}</p>
           </div>
           <ChevronRight className="h-5 w-5 text-foreground/60 shrink-0" />
         </motion.button>
@@ -98,15 +100,15 @@ const Profile = () => {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                 <User className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="font-black text-foreground">Basic Info</h3>
+              <h3 className="font-black text-foreground">{t("basicInfo")}</h3>
             </div>
             {editingBasic ? (
               <button onClick={saveBasic} className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground active:scale-95 transition-transform">
-                <Check className="h-3.5 w-3.5" /> Done
+                <Check className="h-3.5 w-3.5" /> {t("done")}
               </button>
             ) : (
               <button onClick={startEditBasic} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-1.5 text-xs font-black text-foreground active:scale-95 transition-transform">
-                <Pencil className="h-3.5 w-3.5" /> Edit
+                <Pencil className="h-3.5 w-3.5" /> {t("edit")}
               </button>
             )}
           </div>
@@ -115,7 +117,7 @@ const Profile = () => {
             {editingBasic ? (
               <motion.div key="editing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                 <div>
-                  <label className="text-sm font-bold text-muted-foreground mb-1 block">Full Name</label>
+                  <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("fullName")}</label>
                   <input
                     type="text"
                     value={draft.studentName}
@@ -124,13 +126,13 @@ const Profile = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-bold text-muted-foreground mb-1 block">Class Level</label>
+                  <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("classLevel")}</label>
                   <select
                     value={draft.classLevel}
                     onChange={(e) => { const l = e.target.value; setDraft((d) => ({ ...d, classLevel: l, serie: isLycee(l) ? d.serie : "" })); }}
                     className="w-full rounded-xl border-2 border-border bg-background px-4 py-3 font-semibold text-foreground focus:border-primary focus:outline-none transition-colors appearance-none"
                   >
-                    <option value="" disabled>Select your class</option>
+                    <option value="" disabled>{t("selectClass")}</option>
                     {allLevels.map(l => <option key={l} value={l}>{l}</option>)}
                   </select>
                 </div>
@@ -142,13 +144,13 @@ const Profile = () => {
                       onChange={(e) => setDraft((d) => ({ ...d, serie: e.target.value }))}
                       className="w-full rounded-xl border-2 border-border bg-background px-4 py-3 font-semibold text-foreground focus:border-primary focus:outline-none transition-colors appearance-none"
                     >
-                      <option value="" disabled>Select your série</option>
+                      <option value="" disabled>{t("selectSerie")}</option>
                       {LYCEE_SERIES.map(s => <option key={s} value={s}>Série {s}</option>)}
                     </select>
                   </div>
                 )}
                 <div>
-                  <label className="text-sm font-bold text-muted-foreground mb-1 block">Semester</label>
+                  <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("semester")}</label>
                   <div className="grid grid-cols-3 gap-2">
                     {["1st Semester", "2nd Semester", "Annual"].map((s) => (
                       <button
@@ -166,12 +168,12 @@ const Profile = () => {
               </motion.div>
             ) : (
               <motion.div key="viewing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
-                <InfoRow label="Name" value={state.studentName || "—"} />
-                <InfoRow label="Class" value={state.classLevel || "—"} />
+                <InfoRow label={t("fullName")} value={state.studentName || "—"} />
+                <InfoRow label={t("classLevel")} value={state.classLevel || "—"} />
                 {state.classLevel && isLycee(state.classLevel) && (
                   <InfoRow label="Série" value={state.serie ? `Série ${state.serie}` : "—"} />
                 )}
-                <InfoRow label="Semester" value={state.semester || "—"} />
+                <InfoRow label={t("semester")} value={state.semester || "—"} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -184,15 +186,15 @@ const Profile = () => {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10">
                 <Target className="h-5 w-5 text-secondary" />
               </div>
-              <h3 className="font-black text-foreground">Target Average</h3>
+              <h3 className="font-black text-foreground">{t("targetAverage")}</h3>
             </div>
             {editingTarget ? (
               <button onClick={() => { updateState({ targetMin: draftTarget, targetAverage: draftTarget }); setEditingTarget(false); }} className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground active:scale-95 transition-transform">
-                <Check className="h-3.5 w-3.5" /> Done
+                <Check className="h-3.5 w-3.5" /> {t("done")}
               </button>
             ) : (
               <button onClick={startEditTarget} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-1.5 text-xs font-black text-foreground active:scale-95 transition-transform">
-                <Pencil className="h-3.5 w-3.5" /> Edit
+                <Pencil className="h-3.5 w-3.5" /> {t("edit")}
               </button>
             )}
           </div>
@@ -201,12 +203,12 @@ const Profile = () => {
             {editingTarget ? (
               <motion.div key="editing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center">
                 <div className="text-center mb-2">
-                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Target range</p>
+                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{t("targetRange")}</p>
                   <div className="flex items-baseline justify-center gap-2">
                     <span className="text-5xl font-black text-primary">{draftTarget.toFixed(1)}</span>
                     <span className="text-xl font-bold text-muted-foreground">– 20 / 20</span>
                   </div>
-                  <p className="text-xs font-semibold text-muted-foreground mt-1">Minimum target · Max stays at 20</p>
+                  <p className="text-xs font-semibold text-muted-foreground mt-1">{t("minimumTarget")}</p>
                 </div>
                 <input
                   type="range" min="0" max="20" step="0.5"
@@ -220,7 +222,7 @@ const Profile = () => {
               </motion.div>
             ) : (
               <motion.div key="viewing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-2">
-                <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Target range</p>
+                <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{t("targetRange")}</p>
                 <div className="flex items-baseline justify-center gap-2">
                   <span className="text-5xl font-black text-primary">{state.targetMin ?? state.targetAverage}</span>
                   <span className="text-xl font-bold text-muted-foreground">– 20 / 20</span>
@@ -237,15 +239,15 @@ const Profile = () => {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
                 <BookOpen className="h-5 w-5 text-accent" />
               </div>
-              <h3 className="font-black text-foreground">Grading System</h3>
+              <h3 className="font-black text-foreground">{t("gradingSystemLabel")}</h3>
             </div>
             {editingGrading ? (
               <button onClick={() => setEditingGrading(false)} className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground active:scale-95 transition-transform">
-                <Check className="h-3.5 w-3.5" /> Done
+                <Check className="h-3.5 w-3.5" /> {t("done")}
               </button>
             ) : (
               <button onClick={() => setEditingGrading(true)} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-1.5 text-xs font-black text-foreground active:scale-95 transition-transform">
-                <Pencil className="h-3.5 w-3.5" /> Edit
+                <Pencil className="h-3.5 w-3.5" /> {t("edit")}
               </button>
             )}
           </div>
@@ -257,18 +259,18 @@ const Profile = () => {
                   onClick={() => updateSetting("gradingSystem", "apc")}
                   className={`rounded-xl px-4 py-3 text-left transition-all ${state.settings.gradingSystem === "apc" ? "bg-primary/15 text-primary border-2 border-primary" : "bg-muted text-foreground border-2 border-transparent"}`}
                 >
-                  <span className="font-bold block">APC (Togolese Standard)</span>
+                  <span className="font-bold block">{t("apcTogolese")}</span>
                 </button>
                 <button
                   onClick={() => updateSetting("gradingSystem", "french")}
                   className={`rounded-xl px-4 py-3 text-left transition-all ${state.settings.gradingSystem === "french" ? "bg-secondary/15 text-secondary border-2 border-secondary" : "bg-muted text-foreground border-2 border-transparent"}`}
                 >
-                  <span className="font-bold block">French Traditional</span>
+                  <span className="font-bold block">{t("frenchTrad")}</span>
                 </button>
               </motion.div>
             ) : (
               <motion.div key="viewing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <InfoRow label="System" value={state.settings.gradingSystem === "apc" ? "APC (Togolese Standard)" : "French Traditional"} />
+                <InfoRow label={t("gradingSystemLabel")} value={state.settings.gradingSystem === "apc" ? t("apcTogolese") : t("frenchTrad")} />
               </motion.div>
             )}
           </AnimatePresence>

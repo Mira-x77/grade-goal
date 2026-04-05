@@ -218,7 +218,7 @@ const Home = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-start justify-between pt-2 gap-3"
+          className="flex items-center justify-between pt-2 gap-3"
         >
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-black text-foreground truncate">
@@ -229,15 +229,15 @@ const Home = () => {
                 {[appState?.classLevel, appState?.serie ? `Série ${appState.serie}` : null, appState?.semester].filter(Boolean).join(" · ")}
               </p>
             )}
-            <button
-              onClick={() => setShowPremiumIntro(true)}
-              className="mt-2 flex h-7 items-center gap-1 px-2.5 rounded-lg border-2 border-foreground bg-secondary text-foreground active:scale-95 transition-all card-shadow text-[11px] font-black"
-            >
-              <Crown className="h-3.5 w-3.5" />
-              Unlock Premium
-            </button>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowPremiumIntro(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-secondary text-foreground active:scale-95 transition-all card-shadow"
+              title={t("unlockPremium")}
+            >
+              <Crown className="h-5 w-5" />
+            </button>
             <button
               onClick={() => setShowNotifications(true)}
               className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow"
