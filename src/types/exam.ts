@@ -64,15 +64,30 @@ export const DEFAULT_SETTINGS: AppSettings = {
   apcWeightedSplit: false,
 };
 
+export interface StrategyMark {
+  subjectId: string;
+  subjectName: string;
+  markType: "interro" | "dev" | "compo";
+  targetValue: number;
+}
+
+export interface SavedStrategy {
+  savedAt: string;
+  simulatedAverage: number;
+  marks: StrategyMark[];
+}
+
 export interface AppState {
   step: "onboarding" | "subjects" | "marks" | "results";
-  targetAverage: number;
+  targetAverage: number;   // kept for backward compat — use targetMin going forward
+  targetMin: number;       // minimum of the target range (user-set)
   subjects: Subject[];
   settings: AppSettings;
   studentName?: string;
   classLevel?: string;
   serie?: string;
   semester?: string;
+  savedStrategy?: SavedStrategy;
 }
 
 export type FeedbackStatus = "possible" | "risky" | "impossible";

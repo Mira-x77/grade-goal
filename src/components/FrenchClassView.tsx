@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { ArrowUpDown, TrendingUp, TrendingDown, Minus, Star } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowUpDown, TrendingUp, TrendingDown, Minus, Star, ChevronDown } from "lucide-react";
 import { Subject } from "@/types/exam";
 import { calcFrenchSummary, getAppreciationTrend } from "@/lib/grading-french";
 
@@ -12,6 +13,7 @@ const sentimentLabels = ["", "Very poor", "Poor", "Average", "Good", "Excellent"
 const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
   const summary = calcFrenchSummary(subjects);
   const trend = getAppreciationTrend(subjects);
+  const [showComparison, setShowComparison] = useState(false);
 
   return (
     <div className="flex flex-col gap-4">
@@ -116,59 +118,70 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
         </motion.div>
       )}
 
-      {/* Per-subject details */}
+      {/* Per-subject details — collapsible */}
       <motion.div
         initial={{ y: 15, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="rounded-2xl bg-card p-4 border-2 border-border"
+        className="rounded-2xl bg-card border-2 border-border overflow-hidden"
       >
-        <h4 className="font-black text-foreground text-sm mb-3">Subject Comparison</h4>
-        <div className="flex flex-col gap-2">
-          {summary.subjectDetails.map((d, i) => (
+        <button
+          onClick={() => setShowComparison(v => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/50 transition-colors"
+        >
+          <h4 className="font-black text-foreground text-sm">Subject Comparison</h4>
+          <motion.div animate={{ rotate: showComparison ? 180 : 0 }} transition={{ duration: 0.2 }}>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </motion.div>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {showComparison && (
             <motion.div
-              key={d.subject.id}
-              initial={{ x: -10, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2 + i * 0.03 }}
-              className="rounded-xl bg-muted/50 p-3"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-bold text-foreground">{d.subject.name}</span>
-                <span className="text-xs font-bold text-muted-foreground">
-                  {d.studentAvg?.toFixed(1) ?? "—"}/20
-                </span>
-              </div>
-
-              {d.percentile !== null && (
-                <div className="h-1.5 rounded-full bg-muted relative overflow-hidden mb-1">
-                  <div className="absolute inset-0 bg-gradient-to-r from-danger via-warning to-success rounded-full" />
-                  <div
-                    className="absolute top-0 h-1.5 w-1.5 rounded-full bg-foreground"
-                    style={{ left: `${d.percentile}%`, transform: "translateX(-50%)" }}
-                  />
-                </div>
-              )}
-
-              <div className="flex items-center justify-between">
-                {d.delta !== null ? (
-                  <span className={`text-[10px] font-black ${
-                    d.delta >= 0 ? "text-success" : "text-danger"
-                  }`}>
-                    Δ {d.delta > 0 ? "+" : ""}{d.delta.toFixed(1)}
-                  </span>
-                ) : (
-                  <span className="text-[10px] font-bold text-muted-foreground">No class data</span>
-                )}
-                {d.subject.french?.appreciation && (
-                  <span className="text-[10px] font-bold text-accent">
-                    {sentimentLabels[d.subject.french.appreciation]}
-                  </span>
-                )}
+              <div className="flex flex-col gap-2 px-4 pb-4">
+                {summary.subjectDetails.map((d, i) => (
+                  <div key={d.subject.id} className="rounded-xl bg-muted/50 p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-bold text-foreground">{d.subject.name}</span>
+                      <span className="text-xs font-bold text-muted-foreground">
+                        {d.studentAvg?.toFixed(1) ?? "—"}/20
+                      </span>
+                    </div>
+                    {d.percentile !== null && (
+                      <div className="h-1.5 rounded-full bg-muted relative overflow-hidden mb-1">
+                        <div className="absolute inset-0 bg-gradient-to-r from-danger via-warning to-success rounded-full" />
+                        <div
+                          className="absolute top-0 h-1.5 w-1.5 rounded-full bg-foreground"
+                          style={{ left: `${d.percentile}%`, transform: "translateX(-50%)" }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      {d.delta !== null ? (
+                        <span className={`text-[10px] font-black ${d.delta >= 0 ? "text-success" : "text-danger"}`}>
+                          Δ {d.delta > 0 ? "+" : ""}{d.delta.toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-muted-foreground">No class data</span>
+                      )}
+                      {d.subject.french?.appreciation && (
+                        <span className="text-[10px] font-bold text-accent">
+                          {sentimentLabels[d.subject.french.appreciation]}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </motion.div>
-          ))}
-        </div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

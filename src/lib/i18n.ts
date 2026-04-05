@@ -287,6 +287,32 @@ export const translations = {
     sessionRequired: "Session is required",
     tooManyTags: "Maximum 10 tags allowed",
     descriptionTooLong: "Description must be less than 1000 characters",
+
+    // Strategy
+    myStrategy: "My Strategy",
+    saveAsStrategy: "Save as My Strategy",
+    updateStrategy: "Update Strategy",
+    strategySaved: "Strategy saved!",
+    strategyPlanFor: "Your plan for",
+    editStrategy: "Edit Strategy",
+    clearStrategy: "Clear",
+    targetMarks: "Target marks for remaining tests",
+    fulfilled: "Done",
+    pending: "Pending",
+    projectedAverage: "Projected Average",
+
+    // Dashboard extras
+    bestPossibleFinal: "Best possible final",
+    worstCase: "Worst case",
+    streakDays: "day streak",
+    totalEntriesLogged: "entries logged",
+    bestStreak: "Best streak",
+    recentActivity: "Recent Activity",
+    noActivityYet: "No activity yet",
+    loggedMark: "Logged",
+    downloadedPapers: "papers saved",
+    viewAll: "View All",
+    quickActions: "Quick Actions",
   },
   fr: {
     // Home
@@ -574,6 +600,32 @@ export const translations = {
     sessionRequired: "La session est requise",
     tooManyTags: "Maximum 10 étiquettes autorisées",
     descriptionTooLong: "La description doit contenir moins de 1000 caractères",
+
+    // Strategy
+    myStrategy: "Ma Stratégie",
+    saveAsStrategy: "Enregistrer comme Stratégie",
+    updateStrategy: "Mettre à jour la Stratégie",
+    strategySaved: "Stratégie enregistrée !",
+    strategyPlanFor: "Votre plan pour",
+    editStrategy: "Modifier la Stratégie",
+    clearStrategy: "Effacer",
+    targetMarks: "Notes cibles pour les tests restants",
+    fulfilled: "Fait",
+    pending: "En attente",
+    projectedAverage: "Moyenne Projetée",
+
+    // Dashboard extras
+    bestPossibleFinal: "Meilleur final possible",
+    worstCase: "Pire cas",
+    streakDays: "jours consécutifs",
+    totalEntriesLogged: "notes saisies",
+    bestStreak: "Meilleur série",
+    recentActivity: "Activité Récente",
+    noActivityYet: "Aucune activité",
+    loggedMark: "Noté",
+    downloadedPapers: "sujets enregistrés",
+    viewAll: "Voir Tout",
+    quickActions: "Actions Rapides",
   },
 };
 

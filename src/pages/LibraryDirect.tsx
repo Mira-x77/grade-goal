@@ -2,11 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
-import { Download, Search, Eye, X, LayoutGrid, List, FileText, ChevronDown, Check } from 'lucide-react';
+import { Download, Search, Eye, X, LayoutGrid, List, FileText, ChevronDown, Check, Crown } from 'lucide-react';
 import { cacheService } from '@/services/cacheService';
 import { loadState } from '@/lib/storage';
 import { SubscriptionDetailDialog } from '@/components/subscription/SubscriptionDetailDialog';
 import { PremiumCodeDialog } from '@/components/subscription/PremiumCodeDialog';
+import { PaymentSheet } from '@/components/subscription/PaymentSheet';
+import { PlanSelectSheet } from '@/components/subscription/PlanSelectSheet';
+import { PremiumIntroSheet } from '@/components/subscription/PremiumIntroSheet';
+import { SubjectPackSheet } from '@/components/subscription/SubjectPackSheet';
 import { Loader } from '@/components/ui/loader';
 import TaskBar from '@/components/TaskBar';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -35,13 +39,19 @@ export default function LibraryDirect() {
   const [viewLayout, setViewLayout] = useState<'grid' | 'list'>('grid');
 
   const [filters, setFilters] = useState({
-    classLevel: '',
+    classLevel: userClassLevel ?? '',
     subject: initialSubject,
     year: '',
     examType: ''
   });
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showCodeDialog, setShowCodeDialog] = useState(false);
+  const [showPlanSelect, setShowPlanSelect] = useState(false);
+  const [showPaymentSheet, setShowPaymentSheet] = useState(false);
+  const [showPremiumIntro, setShowPremiumIntro] = useState(false);
+  const [showSubjectPack, setShowSubjectPack] = useState(false);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [paymentPlan, setPaymentPlan] = useState<"all">("all");
 
   useEffect(() => {
     loadPapers();
@@ -96,8 +106,8 @@ export default function LibraryDirect() {
     // Hide downloaded papers
     if (downloadedPaperIds.has(p.id)) return false;
 
-    // Always filter by user's class level
-    if (userClassLevel && p.class_level !== userClassLevel) return false;
+    // Filter by selected class level
+    if (filters.classLevel && p.class_level?.toLowerCase() !== filters.classLevel.toLowerCase()) return false;
 
     // Search filter
     if (searchQuery.trim()) {
@@ -117,36 +127,55 @@ export default function LibraryDirect() {
     return true;
   });
 
-  // Papers matching user's class
-  const classPapers = userClassLevel ? papers.filter(p => p.class_level === userClassLevel) : papers;
+  // Papers matching selected class level (defaults to user's class)
+  const activeClassLevel = filters.classLevel || null;
+  const classPapers = activeClassLevel
+    ? papers.filter(p => p.class_level?.toLowerCase() === activeClassLevel.toLowerCase())
+    : papers;
 
-  // Subjects: user's own subjects that exist in the library for their class
-  const availableSubjectsInLib = new Set(classPapers.map(p => p.subject));
-  const uniqueSubjects = userSubjectNames.length > 0
-    ? userSubjectNames.filter(s => availableSubjectsInLib.has(s))
-    : Array.from(availableSubjectsInLib).sort();
+  // Use all papers as fallback if class filter yields nothing
+  const effectivePapers = classPapers.length > 0 ? classPapers : papers;
 
-  const uniqueYears = Array.from(new Set(classPapers.map(p => p.year))).sort((a: number, b: number) => b - a);
-  const uniqueExamTypes = Array.from(new Set(classPapers.map(p => p.exam_type))).sort();
+  // Subjects: user's own subjects that exist in the library
+  const availableSubjectsInLib = new Set(effectivePapers.map((p: any) => p.subject));
+  const availableSubjectsArr = Array.from(availableSubjectsInLib).sort() as string[];
+  const userMatched = userSubjectNames.length > 0
+    ? userSubjectNames.filter(s =>
+        Array.from(availableSubjectsInLib).some(
+          (a: any) => a.toLowerCase() === s.toLowerCase()
+        )
+      )
+    : [];
+  const uniqueSubjects = userMatched.length > 0 ? userMatched : availableSubjectsArr;
 
-  const hasActiveFilters = filters.subject || filters.year || filters.examType;
+  const uniqueYears = Array.from(new Set(effectivePapers.map(p => p.year))).sort((a: number, b: number) => b - a);
+  const uniqueExamTypes = Array.from(new Set(effectivePapers.map(p => p.exam_type))).sort();
+
+  const hasActiveFilters = (filters.classLevel && filters.classLevel !== (userClassLevel ?? '')) || filters.subject || filters.year || filters.examType;
 
   const clearFilters = () => {
-    setFilters({ classLevel: '', subject: '', year: '', examType: '' });
+    setFilters({ classLevel: userClassLevel ?? '', subject: '', year: '', examType: '' });
   };
 
   return (
     <div className="flex-1 pb-20">
       <div className="max-w-md mx-auto">
         {/* Sticky Header Section */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md px-6 pt-8 pb-4 border-b border-border/50 overflow-visible">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md px-6 pb-4 border-b border-border/50 overflow-visible safe-area-top">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-2xl font-black text-foreground">{t("examLibrary")}</h1>
+              <h1 className="text-2xl font-black text-foreground">{t("library")}</h1>
               <p className="text-sm font-semibold text-muted-foreground">
                 {t("browseDownloadPapers")}
               </p>
             </div>
+            <button
+              onClick={() => setShowPremiumIntro(true)}
+              className="flex h-9 items-center gap-1.5 px-3 rounded-xl border-2 border-foreground bg-secondary text-foreground active:scale-95 transition-all card-shadow text-xs font-black shrink-0 mt-1"
+            >
+              <Crown className="h-4 w-4" />
+              Unlock
+            </button>
           </div>
 
 
@@ -168,6 +197,12 @@ export default function LibraryDirect() {
               {/* Filters row + layout toggle */}
               <div className="flex items-center gap-2 mt-2">
                 <div className="flex gap-2 overflow-x-auto hide-scrollbar flex-1">
+                  <FilterPill
+                    label={t("classLevel")}
+                    value={filters.classLevel}
+                    options={Array.from(new Set(papers.map(p => p.class_level))).filter(Boolean).sort() as string[]}
+                    onSelect={(v) => setFilters({ ...filters, classLevel: v })}
+                  />
                   <FilterPill
                     label={t("subject")}
                     value={filters.subject}
@@ -221,16 +256,17 @@ export default function LibraryDirect() {
           <div className="px-4 pt-3">
 
             <div className={viewLayout === 'grid' ? 'grid grid-cols-3 gap-2' : 'flex flex-col gap-3'}>
-              {filteredPapers.map((paper) => (
-                viewLayout === 'grid' ? (
+              {filteredPapers.map((paper) => {
+                const isSaved = downloadedPaperIds.has(paper.id);
+                return viewLayout === 'grid' ? (
                   // Grid View Item
                   <div
                     key={paper.id}
-                    className="bg-card rounded-lg border border-border overflow-hidden cursor-pointer active:scale-95 transition-transform flex flex-col h-full"
+                    className="bg-card rounded-xl border-2 border-foreground overflow-hidden cursor-pointer active:scale-95 transition-transform flex flex-col card-shadow"
                     onClick={() => navigate(`/library/${paper.id}`)}
                   >
-                    {/* Preview Image Thumbnail */}
-                    <div className="relative h-32 bg-muted/50 overflow-hidden shrink-0 border-b border-border/50">
+                    {/* Preview Image with overlay tags */}
+                    <div className="relative h-32 bg-muted/50 overflow-hidden shrink-0">
                       {paper.preview_url ? (
                         <img
                           src={paper.preview_url}
@@ -242,27 +278,21 @@ export default function LibraryDirect() {
                           <Eye className="h-6 w-6 text-muted-foreground/50" />
                         </div>
                       )}
+                      {/* Overlay tags on image — Saved only */}
+                      {isSaved && (
+                        <div className="absolute top-1.5 right-1.5">
+                          <span className="px-1.5 py-0.5 bg-secondary border border-foreground/30 text-foreground rounded text-[8px] font-black">
+                            Saved
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Paper Info */}
-                    <div className="p-2 flex flex-col flex-1">
-                      <h3 className="font-bold text-foreground text-xs mb-2 line-clamp-2 leading-tight flex-1">
+                    {/* Title only — no truncation limit */}
+                    <div className="p-2">
+                      <h3 className="font-bold text-foreground text-[10px] leading-tight">
                         {paper.title || `${paper.subject} ${paper.year}`}
                       </h3>
-                      <div className="flex flex-col gap-1.5 mt-auto">
-                        <div className="flex gap-1 overflow-hidden">
-                          <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[9px] font-bold truncate">
-                            {paper.subject}
-                          </span>
-                          <span className="px-1.5 py-0.5 bg-muted text-muted-foreground rounded text-[9px] font-bold truncate">
-                            {paper.class_level}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black">{paper.year}</span>
-                          <span className="text-[9px] font-bold text-muted-foreground">{paper.downloads || 0}↓</span>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 ) : (
@@ -290,11 +320,13 @@ export default function LibraryDirect() {
                     </div>
                     <div className="flex flex-col items-end gap-1.5 shrink-0">
                       <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full">{paper.year}</span>
-                      <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-0.5">{paper.downloads || 0} <Download className="h-3 w-3" /></span>
+                      {downloadedPaperIds.has(paper.id) && (
+                        <span className="text-[10px] font-black bg-secondary border border-foreground/20 text-foreground px-2 py-0.5 rounded-full">Saved</span>
+                      )}
                     </div>
                   </div>
-                )
-              ))}
+                );
+              })}
             </div>
             <div className="text-center py-4">
               <p className="text-xs text-muted-foreground font-medium">
@@ -317,7 +349,7 @@ export default function LibraryDirect() {
         )}
 
         {/* No papers for this class yet */}
-        {!loading && !error && papers.length > 0 && classPapers.length === 0 && (
+        {!loading && !error && papers.length > 0 && classPapers.length === 0 && effectivePapers === papers && (
           <div className="px-4 py-12 text-center">
             <div className="bg-muted/50 rounded-2xl p-8">
               <p className="text-lg font-bold text-foreground mb-2">No papers for your class yet</p>
@@ -341,19 +373,37 @@ export default function LibraryDirect() {
         )}
       </div>
 
-      <SubscriptionDetailDialog
-        open={showDetailDialog}
-        onClose={() => setShowDetailDialog(false)}
-        onUpgrade={() => {
-          setShowDetailDialog(false);
-          setShowCodeDialog(true);
+      <PremiumIntroSheet
+        open={showPremiumIntro}
+        onClose={() => setShowPremiumIntro(false)}
+        onContinue={() => { setShowPremiumIntro(false); setShowPlanSelect(true); }}
+      />
+      <PremiumIntroSheet
+        open={showPremiumIntro}
+        onClose={() => setShowPremiumIntro(false)}
+        onContinue={() => { setShowPremiumIntro(false); setShowPlanSelect(true); }}
+      />
+      <PlanSelectSheet
+        open={showPlanSelect}
+        onClose={() => setShowPlanSelect(false)}
+        onSelectPack={() => { setShowPlanSelect(false); setShowSubjectPack(true); }}
+        onSelectAll={() => { setShowPlanSelect(false); setShowPaymentSheet(true); }}
+      />
+      <SubjectPackSheet
+        open={showSubjectPack}
+        onClose={() => setShowSubjectPack(false)}
+        subjects={uniqueSubjects}
+        onConfirm={(subs) => {
+          setSelectedSubjects(subs);
+          setShowSubjectPack(false);
+          setShowPaymentSheet(true);
         }}
       />
-
-      <PremiumCodeDialog
-        open={showCodeDialog}
-        onClose={() => setShowCodeDialog(false)}
-        onSuccess={() => setShowCodeDialog(false)}
+      <PaymentSheet
+        open={showPaymentSheet}
+        onClose={() => setShowPaymentSheet(false)}
+        onSuccess={() => setShowPaymentSheet(false)}
+        subjectName={selectedSubjects.length === 1 ? selectedSubjects[0] : undefined}
       />
 
       <TaskBar action={

@@ -22,8 +22,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLang = (l: Language) => {
     setLanguage(l);
-    // Reassign href to force a hard reload — more reliable than reload() on Android WebView
-    window.location.href = window.location.href;
+    setLanguageState(l);
   };
 
   const t = useCallback<TFunction>(

@@ -50,7 +50,7 @@ const Profile = () => {
   };
 
   const startEditTarget = () => {
-    setDraftTarget(state.targetAverage);
+    setDraftTarget(state.targetMin ?? state.targetAverage);
     setEditingTarget(true);
   };
 
@@ -161,7 +161,7 @@ const Profile = () => {
               <h3 className="font-black text-foreground">Target Average</h3>
             </div>
             {editingTarget ? (
-              <button onClick={() => { updateState({ targetAverage: draftTarget }); setEditingTarget(false); }} className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground active:scale-95 transition-transform">
+              <button onClick={() => { updateState({ targetMin: draftTarget, targetAverage: draftTarget }); setEditingTarget(false); }} className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground active:scale-95 transition-transform">
                 <Check className="h-3.5 w-3.5" /> Done
               </button>
             ) : (
@@ -174,15 +174,19 @@ const Profile = () => {
           <AnimatePresence mode="wait">
             {editingTarget ? (
               <motion.div key="editing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center">
-                <div className="text-center mb-4">
-                  <span className="text-5xl font-black text-primary">{draftTarget.toFixed(1)}</span>
-                  <span className="text-2xl font-bold text-muted-foreground">/20</span>
+                <div className="text-center mb-2">
+                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Target range</p>
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-5xl font-black text-primary">{draftTarget.toFixed(1)}</span>
+                    <span className="text-xl font-bold text-muted-foreground">– 20 / 20</span>
+                  </div>
+                  <p className="text-xs font-semibold text-muted-foreground mt-1">Minimum target · Max stays at 20</p>
                 </div>
                 <input
                   type="range" min="0" max="20" step="0.5"
                   value={draftTarget}
                   onChange={(e) => setDraftTarget(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary mt-4"
                 />
                 <div className="flex justify-between w-full text-xs font-bold text-muted-foreground mt-2 px-1">
                   <span>0</span><span>10</span><span>20</span>
@@ -190,8 +194,11 @@ const Profile = () => {
               </motion.div>
             ) : (
               <motion.div key="viewing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-2">
-                <span className="text-5xl font-black text-primary">{state.targetAverage.toFixed(1)}</span>
-                <span className="text-2xl font-bold text-muted-foreground">/20</span>
+                <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Target range</p>
+                <div className="flex items-baseline justify-center gap-2">
+                  <span className="text-5xl font-black text-primary">{state.targetMin ?? state.targetAverage}</span>
+                  <span className="text-xl font-bold text-muted-foreground">– 20 / 20</span>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

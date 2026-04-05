@@ -28,17 +28,18 @@ export function loadState(): AppState | null {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as AppState;
-    // Migration for old class levels (e.g. 3ème -> Troisième)
+    // Migration: old class levels
     const CLASS_MAPPINGS: Record<string, string> = {
-      "6ème": "Sixième",
-      "5ème": "Cinquième",
-      "4ème": "Quatrième",
-      "3ème": "Troisième",
+      "6ème": "Sixième", "5ème": "Cinquième", "4ème": "Quatrième", "3ème": "Troisième",
     };
     if (parsed.classLevel && CLASS_MAPPINGS[parsed.classLevel]) {
       parsed.classLevel = CLASS_MAPPINGS[parsed.classLevel];
-      saveState(parsed);
     }
+    // Migration: targetMin from old targetAverage
+    if (parsed.targetMin === undefined || parsed.targetMin === null) {
+      parsed.targetMin = parsed.targetAverage ?? 16;
+    }
+    saveState(parsed);
     return parsed;
   } catch {
     return null;

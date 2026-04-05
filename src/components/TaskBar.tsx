@@ -7,11 +7,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 // Routes that belong to the Home tab
 const HOME_ROUTES = ["/", "/profile", "/settings", "/simulator", "/planner", "/exam-prep", "/subject"];
 
-const tabs = [
-  { path: "/", icon: Home, label: "Home" },
-  { path: "/library", icon: BookOpen, label: "Past Papers" },
-] as const;
-
 interface TaskBarProps {
   action?: ReactNode;
   backAction?: ReactNode;
@@ -73,7 +68,7 @@ const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
                 <Link
                 key={tab.path}
                 to={tab.path}
-                className={`tour-${tab.path === '/' ? 'home' : tab.path.replace('/', '')} relative flex flex-col items-center gap-0.5 px-4 py-2 rounded-full transition-colors`}
+                className={`${tab.path === '/library' ? 'tour-library' : ''} relative flex flex-col items-center gap-0.5 px-4 py-2 rounded-full transition-colors`}
               >
                 {isActive && (
                   <motion.div

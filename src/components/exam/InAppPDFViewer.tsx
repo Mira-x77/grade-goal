@@ -12,9 +12,9 @@ const DPR = Math.min(window.devicePixelRatio || 1, 3);
 
 type ReadingMode = 'light' | 'dark' | 'sepia';
 const MODE_CFG: Record<ReadingMode, { bg: string; filter: string; icon: React.ReactNode }> = {
-  light: { bg: '#f5f5f5', filter: 'none', icon: <Sun className="h-4 w-4 text-white" /> },
-  dark:  { bg: '#121212', filter: 'invert(1) hue-rotate(180deg)', icon: <Moon className="h-4 w-4 text-white" /> },
-  sepia: { bg: '#f4ecd8', filter: 'sepia(0.35) brightness(0.95)', icon: <Scroll className="h-4 w-4 text-white" /> },
+  light: { bg: '#f5f5f5', filter: 'none', icon: <Sun className="h-4 w-4 text-foreground" /> },
+  dark:  { bg: '#121212', filter: 'invert(1) hue-rotate(180deg)', icon: <Moon className="h-4 w-4 text-foreground" /> },
+  sepia: { bg: '#f4ecd8', filter: 'sepia(0.35) brightness(0.95)', icon: <Scroll className="h-4 w-4 text-foreground" /> },
 };
 
 interface InAppPDFViewerProps {
@@ -307,12 +307,12 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
       {/* ── Top Bar ── */}
       <div className={'absolute top-0 left-0 right-0 z-20 transition-transform duration-300 safe-area-top '
         + (showControls ? 'translate-y-0' : '-translate-y-full')}>
-        <div className="bg-black/85 backdrop-blur-xl flex items-center gap-2 px-3 pt-12 pb-2">
-          <button onClick={onClose} className="p-2 rounded-xl bg-white/10 active:bg-white/25 transition-colors">
-            <X className="h-5 w-5 text-white" />
+        <div className="bg-card border-b-2 border-foreground flex items-center gap-2 px-3 pt-12 pb-2">
+          <button onClick={onClose} className="p-2 rounded-xl bg-muted border-2 border-foreground active:scale-95 transition-transform">
+            <X className="h-5 w-5 text-foreground" />
           </button>
           <div className="flex-1 min-w-0 mx-2">
-            <p className="text-white text-xs font-semibold truncate">{fileName}</p>
+            <p className="text-foreground text-xs font-black truncate">{fileName}</p>
           </div>
           {numPages > 0 && (
             showPageInput ? (
@@ -321,23 +321,23 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
                   onChange={e => setPageInputVal(e.target.value)}
                   onBlur={submitPageInput}
                   onKeyDown={e => e.key === 'Enter' && submitPageInput()}
-                  className="w-14 text-center text-white bg-white/20 rounded-lg px-1 py-1 text-sm outline-none border border-white/30"
+                  className="w-14 text-center text-foreground bg-muted rounded-lg px-1 py-1 text-sm outline-none border-2 border-foreground font-bold"
                   min={1} max={numPages} />
-                <span className="text-white/50 text-xs">/ {numPages}</span>
+                <span className="text-muted-foreground text-xs font-bold">/ {numPages}</span>
               </div>
             ) : (
               <button onClick={() => { setShowPageInput(true); setPageInputVal(String(currentPage)); resetControlsTimer(); }}
-                className="px-3 py-1.5 rounded-xl bg-white/10 active:bg-white/25 transition-colors">
-                <span className="text-white text-xs font-bold">{currentPage} / {numPages}</span>
+                className="px-3 py-1.5 rounded-xl bg-muted border-2 border-foreground active:scale-95 transition-transform">
+                <span className="text-foreground text-xs font-black">{currentPage} / {numPages}</span>
               </button>
             )
           )}
           <button onClick={() => { setRotation(r => (r + 90) % 360); resetControlsTimer(); }}
-            className="p-2 rounded-xl bg-white/10 active:bg-white/25 transition-colors">
-            <RotateCw className="h-4 w-4 text-white" />
+            className="p-2 rounded-xl bg-muted border-2 border-foreground active:scale-95 transition-transform">
+            <RotateCw className="h-4 w-4 text-foreground" />
           </button>
           <button onClick={cycleReadingMode}
-            className="p-2 rounded-xl bg-white/10 active:bg-white/25 transition-colors text-base leading-none">
+            className="p-2 rounded-xl bg-muted border-2 border-foreground active:scale-95 transition-transform text-base leading-none">
             {mode.icon}
           </button>
         </div>
@@ -357,9 +357,9 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
         )}
         {error && (
           <div className="flex flex-col items-center justify-center h-full gap-4 px-6 text-center">
-            <BookOpen className="h-12 w-12 text-red-400" />
-            <p className="text-red-400 text-sm">{error}</p>
-            <button onClick={onClose} className="px-4 py-2 bg-white/10 rounded-xl text-white text-sm">Close</button>
+            <BookOpen className="h-12 w-12 text-danger" />
+            <p className="text-danger text-sm font-bold">{error}</p>
+            <button onClick={onClose} className="px-4 py-2 bg-muted border-2 border-foreground rounded-xl text-foreground text-sm font-bold card-shadow active:scale-95">Close</button>
           </div>
         )}
         {!loading && !error && (
@@ -380,26 +380,26 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
       {!loading && !error && (
         <div className={'absolute bottom-0 left-0 right-0 z-20 transition-transform duration-300 safe-area-bottom '
           + (showControls ? 'translate-y-0' : 'translate-y-full')}>
-          <div className="bg-black/85 backdrop-blur-xl flex items-center justify-between px-4 pt-2 pb-10 gap-2">
+          <div className="bg-card border-t-2 border-foreground flex items-center justify-between px-4 pt-2 pb-10 gap-2">
             <button onClick={() => goTo(currentPage - 1)} disabled={currentPage === 1}
-              className="p-3 rounded-xl bg-white/10 active:bg-white/25 disabled:opacity-25 transition-colors">
-              <ChevronLeft className="h-5 w-5 text-white" />
+              className="p-3 rounded-xl bg-muted border-2 border-foreground active:scale-95 disabled:opacity-30 transition-transform">
+              <ChevronLeft className="h-5 w-5 text-foreground" />
             </button>
             <button onClick={() => zoom(-0.25)} disabled={baseScale <= MIN_SCALE}
-              className="p-3 rounded-xl bg-white/10 active:bg-white/25 disabled:opacity-25 transition-colors">
-              <ZoomOut className="h-5 w-5 text-white" />
+              className="p-3 rounded-xl bg-muted border-2 border-foreground active:scale-95 disabled:opacity-30 transition-transform">
+              <ZoomOut className="h-5 w-5 text-foreground" />
             </button>
             <button onClick={() => { panRef.current = { x: 0, y: 0 }; setBaseScale(1.0); resetControlsTimer(); }}
-              className="px-3 py-2 rounded-xl bg-white/10 active:bg-white/25 min-w-[64px] text-center transition-colors">
-              <span className="text-white text-sm font-bold">{Math.round(baseScale * 100)}%</span>
+              className="px-3 py-2 rounded-xl bg-secondary border-2 border-foreground active:scale-95 min-w-[64px] text-center transition-transform card-shadow">
+              <span className="text-foreground text-sm font-black">{Math.round(baseScale * 100)}%</span>
             </button>
             <button onClick={() => zoom(0.25)} disabled={baseScale >= MAX_SCALE}
-              className="p-3 rounded-xl bg-white/10 active:bg-white/25 disabled:opacity-25 transition-colors">
-              <ZoomIn className="h-5 w-5 text-white" />
+              className="p-3 rounded-xl bg-muted border-2 border-foreground active:scale-95 disabled:opacity-30 transition-transform">
+              <ZoomIn className="h-5 w-5 text-foreground" />
             </button>
             <button onClick={() => goTo(currentPage + 1)} disabled={currentPage === numPages}
-              className="p-3 rounded-xl bg-white/10 active:bg-white/25 disabled:opacity-25 transition-colors">
-              <ChevronRight className="h-5 w-5 text-white" />
+              className="p-3 rounded-xl bg-muted border-2 border-foreground active:scale-95 disabled:opacity-30 transition-transform">
+              <ChevronRight className="h-5 w-5 text-foreground" />
             </button>
           </div>
         </div>
@@ -408,8 +408,8 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
       {/* ── Hint ── */}
       {!loading && !error && currentPage === 1 && showControls && numPages > 1 && (
         <div className="absolute bottom-32 left-0 right-0 flex justify-center pointer-events-none z-30">
-          <div className="bg-black/70 text-white/70 text-xs px-4 py-1.5 rounded-full backdrop-blur-sm flex items-center gap-1.5">
-            Swipe · Pinch zoom · Double-tap · {mode.icon} Reading mode
+          <div className="bg-card/90 border-2 border-foreground text-foreground text-xs px-4 py-1.5 rounded-full backdrop-blur-sm flex items-center gap-1.5 font-bold">
+            Swipe · Pinch zoom · Double-tap
           </div>
         </div>
       )}

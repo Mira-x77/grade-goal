@@ -22,12 +22,10 @@ const Index = () => {
   
   const [state, setState] = useState<AppState>(() => {
     const saved = loadState();
-    const initial: AppState = saved || { step: "onboarding" as const, targetAverage: 16, subjects: [], settings: DEFAULT_SETTINGS };
-    // Ensure targetAverage always has a value
-    if (initial.targetAverage === undefined || initial.targetAverage === null) {
-      initial.targetAverage = 16;
+    const initial: AppState = saved || { step: "onboarding" as const, targetAverage: 16, targetMin: 16, subjects: [], settings: DEFAULT_SETTINGS };
+    if (initial.targetMin === undefined || initial.targetMin === null) {
+      initial.targetMin = initial.targetAverage ?? 16;
     }
-    // If URL has a step param and we have subjects, jump to that step
     if (stepParam && saved && saved.subjects.length > 0) {
       const validSteps = ["onboarding", "subjects", "marks", "results"] as const;
       if (validSteps.includes(stepParam as any)) {
@@ -42,7 +40,7 @@ const Index = () => {
   }, [state]);
 
   const setStep = (step: AppState["step"]) => setState((s) => ({ ...s, step }));
-  const setTarget = (targetAverage: number) => setState((s) => ({ ...s, targetAverage }));
+  const setTarget = (targetMin: number) => setState((s) => ({ ...s, targetMin, targetAverage: targetMin }));
   const setSubjects = (subjects: Subject[]) => setState((s) => ({ ...s, subjects }));
   const setGradingSystem = (gradingSystem: "apc" | "french") =>
     setState((s) => ({ ...s, settings: { ...s.settings, gradingSystem } }));
@@ -137,7 +135,7 @@ const Index = () => {
           {state.step === "results" && (
             <ResultsScreen
               subjects={state.subjects}
-              targetAverage={state.targetAverage}
+              targetAverage={state.targetMin ?? state.targetAverage}
               onBack={() => setStep("marks")}
               onEditMarks={() => setStep("marks")}
             />

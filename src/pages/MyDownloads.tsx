@@ -340,7 +340,7 @@ const MyDownloads = () => {
         />
       )}
 
-      <TaskBar showBack />
+      {!showPDFViewer && <TaskBar showBack />}
     </div>
   );
 };

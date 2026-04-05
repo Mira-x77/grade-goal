@@ -237,8 +237,12 @@ const OnboardingScreen = ({
             className="w-full max-w-xs"
           >
             <div className="rounded-2xl bg-card p-8 border-2 border-border text-center">
-              <span className="text-5xl font-black text-primary">{(targetAverage ?? 16).toFixed(1)}</span>
-              <span className="text-2xl font-bold text-muted-foreground">/20</span>
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Target range</p>
+              <div className="flex items-baseline justify-center gap-2">
+                <span className="text-5xl font-black text-primary">{(targetAverage ?? 16).toFixed(1)}</span>
+                <span className="text-xl font-bold text-muted-foreground">– 20 / 20</span>
+              </div>
+              <p className="text-xs font-semibold text-muted-foreground mt-1">Minimum target · Max stays at 20</p>
               <div className="mt-8">
                 <input
                   type="range"
