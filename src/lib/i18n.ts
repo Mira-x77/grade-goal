@@ -379,6 +379,9 @@ export const translations = {
     startFreshDesc: "Clear all marks, keep subjects & coefficients",
     keepGoing: "Keep Going",
     keepGoingDesc: "Continue with current data",
+
+    next: "Next",
+    tellUsNameClass: "Tell us your name and class",
   },
   fr: {
     // Home
@@ -758,6 +761,9 @@ export const translations = {
     startFreshDesc: "Effacer toutes les notes, garder matières et coefficients",
     keepGoing: "Continuer",
     keepGoingDesc: "Continuer avec les données actuelles",
+
+    next: "Suivant",
+    tellUsNameClass: "Dites-nous votre nom et votre classe",
   },
 };
 

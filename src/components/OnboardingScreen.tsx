@@ -1,10 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, Zap, BookOpen, GraduationCap, User } from "lucide-react";
+import { Target, Zap, BookOpen, Globe } from "lucide-react";
 import { GradingSystem } from "@/types/exam";
 import { CLASS_LEVELS, LYCEE_SERIES } from "@/lib/subjects-data";
 import Mascot from "@/components/Mascot";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Language } from "@/lib/i18n";
 
-export type OnboardingStep = "system" | "profile" | "target";
+export type OnboardingStep = "language" | "system" | "profile" | "target";
 
 interface OnboardingScreenProps {
   targetAverage: number;
@@ -27,12 +29,12 @@ interface OnboardingScreenProps {
 const allLevels = [...CLASS_LEVELS.college, ...CLASS_LEVELS.lycee];
 const isLycee = (level: string) => (CLASS_LEVELS.lycee as readonly string[]).includes(level);
 
-const FixedNextButton = ({ onClick, disabled = false, label = "NEXT" }: { onClick: () => void; disabled?: boolean; label?: string }) => (
+const FixedNextButton = ({ onClick, disabled = false, label }: { onClick: () => void; disabled?: boolean; label: string }) => (
   <div className="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto px-6 pb-10 pt-4 bg-background">
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 text-base font-black text-foreground card-shadow active:translate-y-1 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none"
+      className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 text-base font-black text-foreground card-shadow active:translate-y-1 active:shadow-none transition-all disabled:opacity-30 disabled:pointer-events-none"
     >
       {label}
     </button>
@@ -48,12 +50,17 @@ const OnboardingScreen = ({
   semester, onSemesterChange,
   step, onStepChange
 }: OnboardingScreenProps) => {
+  const { t, language, setLang } = useLanguage();
+
+  const profileValid = !!studentName.trim() && !!classLevel && (!isLycee(classLevel) || !!serie) && !!semester;
 
   return (
     <AnimatePresence mode="wait">
-      {step === "system" ? (
+
+      {/* ── STEP 0: Language ── */}
+      {step === "language" && (
         <motion.div
-          key="system"
+          key="language"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, x: -50 }}
@@ -68,10 +75,59 @@ const OnboardingScreen = ({
           </motion.div>
 
           <div className="text-center">
-            <h1 className="text-3xl font-black text-foreground">Welcome</h1>
-            <p className="mt-2 text-muted-foreground font-semibold">
-              Which grading system does your school use?
-            </p>
+            <h1 className="text-3xl font-black text-foreground">Language / Langue</h1>
+            <p className="mt-2 text-muted-foreground font-semibold">Choose your preferred language · Choisissez votre langue</p>
+          </div>
+
+          <div className="w-full max-w-xs flex flex-col gap-3">
+            {([
+              { code: "en" as Language, label: "English", sub: "Continue in English" },
+              { code: "fr" as Language, label: "Français", sub: "Continuer en français" },
+            ]).map(({ code, label, sub }) => (
+              <button
+                key={code}
+                onClick={() => setLang(code)}
+                className={`rounded-2xl p-5 text-left transition-all active:scale-[0.98] border-2 border-foreground card-shadow ${
+                  language === code ? "bg-secondary" : "bg-card"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-foreground bg-background">
+                    <Globe className="h-5 w-5 text-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-black text-foreground">{label}</p>
+                    <p className="text-xs font-semibold text-muted-foreground">{sub}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <FixedNextButton onClick={() => onStepChange("system")} label={language === "fr" ? "Suivant" : "Next"} />
+        </motion.div>
+      )}
+
+      {/* ── STEP 1: Grading System ── */}
+      {step === "system" && (
+        <motion.div
+          key="system"
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -50 }}
+          className="flex flex-col items-center gap-8 px-6 pt-28 pb-36"
+        >
+          <motion.div
+            initial={{ scale: 0.3, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          >
+            <Mascot pose="thinking" size={110} animate />
+          </motion.div>
+
+          <div className="text-center">
+            <h1 className="text-3xl font-black text-foreground">{t("gradingSystem")}</h1>
+            <p className="mt-2 text-muted-foreground font-semibold">{t("chooseSystem")}</p>
           </div>
 
           <div className="w-full max-w-xs flex flex-col gap-3">
@@ -86,8 +142,8 @@ const OnboardingScreen = ({
                   <BookOpen className="h-5 w-5 text-foreground" />
                 </div>
                 <div>
-                  <p className="font-black text-foreground">APC System</p>
-                  <p className="text-xs font-semibold text-muted-foreground">Togolese standard · Weighted competency</p>
+                  <p className="font-black text-foreground">{t("apcSystem")}</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{t("togoleseStandard")}</p>
                 </div>
               </div>
             </button>
@@ -103,16 +159,19 @@ const OnboardingScreen = ({
                   <Target className="h-5 w-5 text-foreground" />
                 </div>
                 <div>
-                  <p className="font-black text-foreground">French Traditional</p>
-                  <p className="text-xs font-semibold text-muted-foreground">Comparative · Class ranking view</p>
+                  <p className="font-black text-foreground">{t("frenchTraditional")}</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{t("comparativeRanking")}</p>
                 </div>
               </div>
             </button>
           </div>
 
-          <FixedNextButton onClick={() => onStepChange("profile")} />
+          <FixedNextButton onClick={() => onStepChange("profile")} label={t("next") || "Next"} />
         </motion.div>
-      ) : step === "profile" ? (
+      )}
+
+      {/* ── STEP 2: Profile ── */}
+      {step === "profile" && (
         <motion.div
           key="profile"
           initial={{ opacity: 0, x: 50 }}
@@ -129,16 +188,16 @@ const OnboardingScreen = ({
           </motion.div>
 
           <div className="text-center">
-            <h1 className="text-3xl font-black text-foreground">About you</h1>
-            <p className="mt-2 text-muted-foreground font-semibold">Tell us your name and class</p>
+            <h1 className="text-3xl font-black text-foreground">{t("basicInfo")}</h1>
+            <p className="mt-2 text-muted-foreground font-semibold">{t("tellUsNameClass") || "Tell us your name and class"}</p>
           </div>
 
           <div className="w-full max-w-xs flex flex-col gap-4">
             <div>
-              <label className="text-sm font-bold text-muted-foreground mb-1 block">Your name</label>
+              <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("fullName")}</label>
               <input
                 type="text"
-                placeholder="e.g. Kofi, Ama..."
+                placeholder={language === "fr" ? "ex. Kofi, Ama..." : "e.g. Kofi, Ama..."}
                 value={studentName}
                 onChange={(e) => onStudentNameChange(e.target.value)}
                 className="w-full rounded-xl border-2 border-border bg-card px-4 py-3 font-semibold text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
@@ -146,19 +205,14 @@ const OnboardingScreen = ({
             </div>
 
             <div>
-              <label className="text-sm font-bold text-muted-foreground mb-1 block">Your class</label>
+              <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("classLevel")}</label>
               <div className="grid grid-cols-2 gap-2">
                 {allLevels.map((level) => (
                   <button
                     key={level}
-                    onClick={() => {
-                      onClassLevelChange(level);
-                      if (!isLycee(level)) onSerieChange("");
-                    }}
+                    onClick={() => { onClassLevelChange(level); if (!isLycee(level)) onSerieChange(""); }}
                     className={`rounded-xl px-3 py-2.5 text-sm font-black transition-all active:scale-95 border-2 border-foreground ${
-                      classLevel === level
-                        ? "bg-secondary text-foreground card-shadow"
-                        : "bg-card text-foreground"
+                      classLevel === level ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
                     }`}
                   >
                     {level}
@@ -169,7 +223,7 @@ const OnboardingScreen = ({
 
             {isLycee(classLevel) && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
-                <label className="text-sm font-bold text-muted-foreground mb-1 block">Your série</label>
+                <label className="text-sm font-bold text-muted-foreground mb-1 block">Série</label>
                 <div className="grid grid-cols-3 gap-2">
                   {LYCEE_SERIES.map((s) => (
                     <button
@@ -187,29 +241,50 @@ const OnboardingScreen = ({
             )}
 
             <div>
-              <label className="text-sm font-bold text-muted-foreground mb-1 block">Current semester</label>
+              <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("semester")}</label>
               <div className="grid grid-cols-3 gap-2">
-                {["1st Semester", "2nd Semester", "Annual"].map((s) => (
+                {[
+                  { key: "1st Semester", label: language === "fr" ? "1er Semestre" : "1st Semester" },
+                  { key: "2nd Semester", label: language === "fr" ? "2ème Semestre" : "2nd Semester" },
+                  { key: "Annual", label: language === "fr" ? "Annuel" : "Annual" },
+                ].map(({ key, label }) => (
                   <button
-                    key={s}
-                    onClick={() => onSemesterChange(s)}
+                    key={key}
+                    onClick={() => onSemesterChange(key)}
                     className={`rounded-xl px-3 py-2.5 text-xs font-black transition-all active:scale-95 border-2 border-foreground ${
-                      semester === s ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
+                      semester === key ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
                     }`}
                   >
-                    {s}
+                    {label}
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
+          {/* Show what's still missing */}
+          {!profileValid && (studentName.trim() || classLevel) && (
+            <p className="text-xs font-bold text-muted-foreground text-center -mt-4">
+              {!studentName.trim()
+                ? (language === "fr" ? "Entrez votre nom" : "Enter your name")
+                : !classLevel
+                ? (language === "fr" ? "Choisissez votre classe" : "Choose your class")
+                : (isLycee(classLevel) && !serie)
+                ? (language === "fr" ? "Choisissez votre série" : "Choose your série")
+                : (language === "fr" ? "Choisissez votre semestre" : "Choose your semester")}
+            </p>
+          )}
+
           <FixedNextButton
             onClick={() => onStepChange("target")}
-            disabled={!studentName.trim() || !classLevel || (isLycee(classLevel) && !serie) || !semester}
+            disabled={!profileValid}
+            label={t("next") || "Next"}
           />
         </motion.div>
-      ) : (
+      )}
+
+      {/* ── STEP 3: Target ── */}
+      {step === "target" && (
         <motion.div
           key="target"
           initial={{ opacity: 0, x: 50 }}
@@ -226,8 +301,12 @@ const OnboardingScreen = ({
           </motion.div>
 
           <div className="text-center">
-            <h1 className="text-3xl font-black text-foreground">What's your target?</h1>
-            <p className="mt-2 text-muted-foreground font-semibold">Set the yearly average you want to reach</p>
+            <h1 className="text-3xl font-black text-foreground">
+              {language === "fr" ? "Votre objectif ?" : "What's your target?"}
+            </h1>
+            <p className="mt-2 text-muted-foreground font-semibold">
+              {language === "fr" ? "Définissez la moyenne annuelle que vous voulez atteindre" : "Set the yearly average you want to reach"}
+            </p>
           </div>
 
           <motion.div
@@ -237,26 +316,21 @@ const OnboardingScreen = ({
             className="w-full max-w-xs"
           >
             <div className="rounded-2xl bg-card p-8 border-2 border-border text-center">
-              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Target range</p>
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">{t("targetRange")}</p>
               <div className="flex items-baseline justify-center gap-2">
                 <span className="text-5xl font-black text-primary">{(targetAverage ?? 16).toFixed(1)}</span>
                 <span className="text-xl font-bold text-muted-foreground">– 20 / 20</span>
               </div>
-              <p className="text-xs font-semibold text-muted-foreground mt-1">Minimum target · Max stays at 20</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-1">{t("minimumTarget")}</p>
               <div className="mt-8">
                 <input
-                  type="range"
-                  min="0"
-                  max="20"
-                  step="0.5"
+                  type="range" min="0" max="20" step="0.5"
                   value={targetAverage}
                   onChange={(e) => onTargetChange(parseFloat(e.target.value))}
                   className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                 />
                 <div className="flex justify-between text-xs font-bold text-muted-foreground mt-2 px-1">
-                  <span>0</span>
-                  <span>10</span>
-                  <span>20</span>
+                  <span>0</span><span>10</span><span>20</span>
                 </div>
               </div>
             </div>
@@ -266,7 +340,7 @@ const OnboardingScreen = ({
                 <Zap className="h-5 w-5 text-accent" />
                 <div>
                   <p className="font-bold text-foreground">
-                    {gradingSystem === "apc" ? "APC System" : "French Traditional"}
+                    {gradingSystem === "apc" ? t("apcSystem") : t("frenchTraditional")}
                   </p>
                   <p className="text-muted-foreground">
                     {classLevel}{serie ? ` · Série ${serie}` : ""}
@@ -276,9 +350,10 @@ const OnboardingScreen = ({
             </div>
           </motion.div>
 
-          <FixedNextButton onClick={onContinue} />
+          <FixedNextButton onClick={onContinue} label={language === "fr" ? "Commencer" : "Let's go"} />
         </motion.div>
       )}
+
     </AnimatePresence>
   );
 };

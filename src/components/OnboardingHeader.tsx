@@ -9,7 +9,7 @@ interface OnboardingHeaderProps {
 
 export function OnboardingHeader({ title, onBack, currentStep, totalSteps }: OnboardingHeaderProps) {
   return (
-    <div className="fixed top-0 left-0 right-0 z-30 max-w-md mx-auto bg-background flex items-center justify-between px-6 pt-8 pb-4">
+    <div className="fixed top-0 left-0 right-0 z-30 max-w-md mx-auto bg-background flex items-center justify-between px-6 pb-4 safe-area-top pt-3">
       {currentStep > 1 ? (
         <button
           onClick={onBack}

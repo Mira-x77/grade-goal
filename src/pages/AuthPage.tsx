@@ -40,6 +40,9 @@ export default function AuthPage() {
             windowName: "_self",
             presentationStyle: "popover",
           });
+          // Keep loading state — the browser will redirect back via deep link
+          // Don't reset oauthLoading here so the button stays in loading state
+          return;
         }
       } else {
         const { error } = await supabase.auth.signInWithOAuth({
@@ -47,10 +50,11 @@ export default function AuthPage() {
           options: { redirectTo: getRedirectUrl() },
         });
         if (error) throw error;
+        // Web redirect — keep loading
+        return;
       }
     } catch (e: any) {
       setError(e.message ?? "Something went wrong.");
-    } finally {
       setOauthLoading(null);
     }
   };
@@ -119,7 +123,7 @@ export default function AuthPage() {
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
               )}
-              {oauthLoading === "google" ? "Opening..." : "Continue with Google"}
+              {oauthLoading === "google" ? "Signing in..." : "Continue with Google"}
             </button>
 
             <button
@@ -134,7 +138,7 @@ export default function AuthPage() {
                   <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 3.99zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                 </svg>
               )}
-              {oauthLoading === "apple" ? "Opening..." : "Continue with Apple"}
+              {oauthLoading === "apple" ? "Signing in..." : "Continue with Apple"}
             </button>
 
             <div className="flex items-center gap-3 my-1">
