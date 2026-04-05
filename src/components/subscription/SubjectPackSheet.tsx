@@ -5,14 +5,15 @@ import { X, Check, ChevronRight, Zap } from "lucide-react";
 interface SubjectPackSheetProps {
   open: boolean;
   onClose: () => void;
+  onBack?: () => void;
   subjects: string[];
-  onConfirm: (selected: string[]) => void;
+  onConfirm: (selected: string[], amount: number) => void;
 }
 
 const PRICE_PER_SUBJECT = 500;
 const ALL_SUBJECTS_PRICE = 1500;
 
-export function SubjectPackSheet({ open, onClose, subjects, onConfirm }: SubjectPackSheetProps) {
+export function SubjectPackSheet({ open, onClose, onBack, subjects, onConfirm }: SubjectPackSheetProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const toggle = (s: string) => {
@@ -26,11 +27,17 @@ export function SubjectPackSheet({ open, onClose, subjects, onConfirm }: Subject
 
   const count = selected.size;
   const total = count * PRICE_PER_SUBJECT;
-  const switchToAll = total >= ALL_SUBJECTS_PRICE && count < subjects.length;
+  // Show "switch to all" nudge when total reaches or exceeds 1500 FCFA
+  const switchToAll = total >= ALL_SUBJECTS_PRICE;
 
   const handleClose = () => {
     setSelected(new Set());
     onClose();
+  };
+
+  const handleBack = () => {
+    setSelected(new Set());
+    onBack?.();
   };
 
   return (
@@ -55,9 +62,16 @@ export function SubjectPackSheet({ open, onClose, subjects, onConfirm }: Subject
 
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-2 pb-4 border-b border-border">
-              <div>
-                <h2 className="text-lg font-black text-foreground">Select subjects</h2>
-                <p className="text-xs font-semibold text-muted-foreground">500 FCFA per subject · 3 months</p>
+              <div className="flex items-center gap-3">
+                {onBack && (
+                  <button onClick={handleBack} className="text-muted-foreground active:scale-95 transition-transform">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12 15L7 10L12 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                )}
+                <div>
+                  <h2 className="text-lg font-black text-foreground">Select subjects</h2>
+                  <p className="text-xs font-semibold text-muted-foreground">500 FCFA per subject · 3 months</p>
+                </div>
               </div>
               <button onClick={handleClose} className="text-muted-foreground active:scale-95 transition-transform">
                 <X className="h-5 w-5" />
@@ -65,7 +79,7 @@ export function SubjectPackSheet({ open, onClose, subjects, onConfirm }: Subject
             </div>
 
             {/* Subject list */}
-            <div className="overflow-y-auto px-5 py-4 flex flex-col gap-2" style={{ maxHeight: "calc(85vh - 180px)" }}>
+            <div className="overflow-y-auto px-5 py-4 flex flex-col gap-2" style={{ maxHeight: "calc(85vh - 200px)" }}>
               {subjects.map((sub) => {
                 const isSelected = selected.has(sub);
                 return (
@@ -91,7 +105,7 @@ export function SubjectPackSheet({ open, onClose, subjects, onConfirm }: Subject
 
             {/* Sticky footer */}
             <div className="px-5 pb-8 pt-3 border-t border-border bg-background">
-              {/* Switch to all nudge */}
+              {/* Switch to all nudge — appears when total >= 1500 FCFA */}
               <AnimatePresence>
                 {switchToAll && (
                   <motion.div
@@ -101,13 +115,13 @@ export function SubjectPackSheet({ open, onClose, subjects, onConfirm }: Subject
                     className="overflow-hidden mb-3"
                   >
                     <button
-                      onClick={() => onConfirm(subjects)}
+                      onClick={() => onConfirm(subjects, ALL_SUBJECTS_PRICE)}
                       className="w-full rounded-xl bg-primary/10 border-2 border-primary/30 px-4 py-2.5 flex items-center gap-2 active:scale-[0.98] transition-transform"
                     >
                       <Zap className="h-4 w-4 text-primary shrink-0" />
                       <div className="text-left flex-1">
                         <p className="text-xs font-black text-primary">Switch to All Subjects Pass</p>
-                        <p className="text-[10px] font-semibold text-primary/70">Same price — get every subject instead</p>
+                        <p className="text-[10px] font-semibold text-primary/70">Same 1,500 FCFA — get every subject instead</p>
                       </div>
                       <ChevronRight className="h-4 w-4 text-primary shrink-0" />
                     </button>
@@ -116,7 +130,7 @@ export function SubjectPackSheet({ open, onClose, subjects, onConfirm }: Subject
               </AnimatePresence>
 
               <button
-                onClick={() => count > 0 && onConfirm(Array.from(selected))}
+                onClick={() => count > 0 && onConfirm(Array.from(selected), total)}
                 disabled={count === 0}
                 className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-between px-5"
               >

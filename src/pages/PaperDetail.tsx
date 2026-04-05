@@ -422,17 +422,18 @@ const PaperDetail = () => {
         onClose={() => setShowPlanSelect(false)}
         subjectName={paper?.subject}
         onSelectPack={() => { setShowPlanSelect(false); setPaymentPlan("single"); setShowPaywall(true); }}
-        onSelectAll={() => { setShowPlanSelect(false); setPaymentPlan("all"); setShowPaywall(true); }}
+        onSelectAll={() => { setShowPlanSelect(false); setPaymentPlan("all"); (window as any).__packAmount = undefined; setShowPaywall(true); }}
       />
 
       <PaymentSheet
         open={showPaywall}
         onClose={() => setShowPaywall(false)}
+        onBack={() => { setShowPaywall(false); setShowPlanSelect(true); }}
         onSuccess={() => { setShowPaywall(false); handleDownload(); }}
         subjectName={paymentPlan === "single" ? paper?.subject : undefined}
       />
 
-      {!showPDFViewer && <TaskBar showBack />}
+      {!showPDFViewer && !prepOpen && <TaskBar showBack />}
     </div>
   );
 };

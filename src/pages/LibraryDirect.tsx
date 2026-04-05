@@ -386,24 +386,33 @@ export default function LibraryDirect() {
       <PlanSelectSheet
         open={showPlanSelect}
         onClose={() => setShowPlanSelect(false)}
+        onBack={() => { setShowPlanSelect(false); setShowPremiumIntro(true); }}
         onSelectPack={() => { setShowPlanSelect(false); setShowSubjectPack(true); }}
         onSelectAll={() => { setShowPlanSelect(false); setShowPaymentSheet(true); }}
       />
       <SubjectPackSheet
         open={showSubjectPack}
         onClose={() => setShowSubjectPack(false)}
+        onBack={() => { setShowSubjectPack(false); setShowPlanSelect(true); }}
         subjects={uniqueSubjects}
-        onConfirm={(subs) => {
+        onConfirm={(subs, amount) => {
           setSelectedSubjects(subs);
           setShowSubjectPack(false);
+          (window as any).__packAmount = amount;
           setShowPaymentSheet(true);
         }}
       />
       <PaymentSheet
         open={showPaymentSheet}
         onClose={() => setShowPaymentSheet(false)}
+        onBack={() => {
+          setShowPaymentSheet(false);
+          if (selectedSubjects.length === 0) setShowPlanSelect(true);
+          else setShowSubjectPack(true);
+        }}
         onSuccess={() => setShowPaymentSheet(false)}
         subjectName={selectedSubjects.length === 1 ? selectedSubjects[0] : undefined}
+        amount={(window as any).__packAmount ?? undefined}
       />
 
       <TaskBar action={

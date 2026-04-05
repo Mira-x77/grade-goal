@@ -8,7 +8,9 @@ interface PaymentSheetProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  subjectName?: string;   // if set → single subject pack; if undefined → all subjects
+  onBack?: () => void;
+  subjectName?: string;   // if set → single subject pack label
+  amount?: number;        // explicit amount override; falls back to PRICES logic
 }
 
 type Tab = "mobile" | "code";
@@ -24,7 +26,7 @@ const PROVIDERS: { id: Provider; name: string; network: string; color: string }[
   { id: "mixx",  name: "Mixx by YAS", network: "YAS (ex-Togocom)", color: "bg-orange-500" },
 ];
 
-export function PaymentSheet({ open, onClose, onSuccess, subjectName }: PaymentSheetProps) {
+export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, amount }: PaymentSheetProps) {
   const [tab, setTab] = useState<Tab>("mobile");
   const [provider, setProvider] = useState<Provider>("flooz");
   const [phone, setPhone] = useState("");
@@ -32,7 +34,7 @@ export function PaymentSheet({ open, onClose, onSuccess, subjectName }: PaymentS
   const [loading, setLoading] = useState(false);
   const [mobileSent, setMobileSent] = useState(false);
 
-  const price = subjectName ? PRICES.single : PRICES.all;
+  const price = amount ?? (subjectName ? PRICES.single : PRICES.all);
   const planLabel = subjectName ? `${subjectName} Pack` : "All Subjects";
 
   const handleClose = () => {
@@ -102,14 +104,21 @@ export function PaymentSheet({ open, onClose, onSuccess, subjectName }: PaymentS
 
             {/* Header */}
             <div className="flex items-start justify-between px-5 pt-2 pb-4 border-b border-border">
-              <div>
-                <div className="flex items-center gap-2 mb-0.5">
-                  <Crown className="h-5 w-5 text-secondary" />
-                  <h2 className="text-lg font-black text-foreground">{planLabel}</h2>
+              <div className="flex items-center gap-3">
+                {onBack && (
+                  <button onClick={onBack} className="text-muted-foreground active:scale-95 transition-transform shrink-0">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12 15L7 10L12 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                )}
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <Crown className="h-5 w-5 text-secondary" />
+                    <h2 className="text-lg font-black text-foreground">{planLabel}</h2>
+                  </div>
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    3 months access · <span className="font-black text-foreground">{price.toLocaleString()} FCFA</span>
+                  </p>
                 </div>
-                <p className="text-xs font-semibold text-muted-foreground">
-                  3 months access · <span className="font-black text-foreground">{price.toLocaleString()} FCFA</span>
-                </p>
               </div>
               <button onClick={handleClose} className="text-muted-foreground mt-1">
                 <X className="h-5 w-5" />

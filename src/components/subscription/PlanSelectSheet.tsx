@@ -4,12 +4,13 @@ import { X, Crown, ChevronRight, BookOpen, Layers } from "lucide-react";
 interface PlanSelectSheetProps {
   open: boolean;
   onClose: () => void;
+  onBack?: () => void;
   subjectName?: string;
-  onSelectPack: () => void;   // subject pack(s) — opens subject picker
-  onSelectAll: () => void;    // all subjects pass
+  onSelectPack: () => void;
+  onSelectAll: () => void;
 }
 
-export function PlanSelectSheet({ open, onClose, subjectName, onSelectPack, onSelectAll }: PlanSelectSheetProps) {
+export function PlanSelectSheet({ open, onClose, onBack, subjectName, onSelectPack, onSelectAll }: PlanSelectSheetProps) {
   return (
     <AnimatePresence>
       {open && (
@@ -31,9 +32,16 @@ export function PlanSelectSheet({ open, onClose, subjectName, onSelectPack, onSe
 
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-2 pb-4 border-b border-border">
-              <div className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-secondary" />
-                <h2 className="text-lg font-black text-foreground">Choose a plan</h2>
+              <div className="flex items-center gap-3">
+                {onBack && (
+                  <button onClick={onBack} className="text-muted-foreground active:scale-95 transition-transform">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12 15L7 10L12 5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                )}
+                <div className="flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-secondary" />
+                  <h2 className="text-lg font-black text-foreground">Choose a plan</h2>
+                </div>
               </div>
               <button onClick={onClose} className="text-muted-foreground active:scale-95 transition-transform">
                 <X className="h-5 w-5" />
@@ -68,15 +76,15 @@ export function PlanSelectSheet({ open, onClose, subjectName, onSelectPack, onSe
                   <Layers className="h-6 w-6 text-foreground" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <p className="font-black text-foreground text-sm">All Subjects Pass</p>
-                    <span className="text-[10px] font-black text-foreground bg-foreground/15 px-1.5 py-0.5 rounded-full">Best value</span>
-                  </div>
-                  <p className="text-[10px] font-semibold text-foreground/70">
+                  <p className="font-black text-foreground text-sm">All Subjects Pass</p>
+                  <p className="text-[10px] font-semibold text-foreground/70 mt-0.5">
                     Every subject in your class · 3 months · <span className="font-black">1,500 FCFA</span>
                   </p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-foreground/60 shrink-0" />
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <span className="text-[10px] font-black text-foreground bg-foreground/20 px-2 py-0.5 rounded-full whitespace-nowrap">Best value</span>
+                  <ChevronRight className="h-4 w-4 text-foreground/60" />
+                </div>
               </button>
             </div>
           </motion.div>

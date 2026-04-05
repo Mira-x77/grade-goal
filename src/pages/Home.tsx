@@ -710,25 +710,38 @@ const Home = () => {
       <PlanSelectSheet
         open={showPlanSelect}
         onClose={() => setShowPlanSelect(false)}
+        onBack={() => { setShowPlanSelect(false); setShowPremiumIntro(true); }}
         onSelectPack={() => { setShowPlanSelect(false); setShowSubjectPack(true); }}
-        onSelectAll={() => { setShowPlanSelect(false); setPaymentPlan("all"); setShowPaymentSheet(true); }}
+        onSelectAll={() => { setShowPlanSelect(false); setPaymentPlan("all"); (window as any).__packAmount = undefined; setShowPaymentSheet(true); }}
       />
       <SubjectPackSheet
         open={showSubjectPack}
         onClose={() => setShowSubjectPack(false)}
+        onBack={() => { setShowSubjectPack(false); setShowPlanSelect(true); }}
         subjects={appState?.subjects?.map(s => s.name) ?? []}
-        onConfirm={(subs) => {
+        onConfirm={(subs, amount) => {
           setSelectedSubjects(subs);
-          setShowSubjectPack(false);
           setPaymentPlan(subs.length >= (appState?.subjects?.length ?? 99) ? "all" : "single");
+          setShowSubjectPack(false);
           setShowPaymentSheet(true);
+          // store amount for PaymentSheet
+          (window as any).__packAmount = amount;
         }}
       />
       <PaymentSheet
         open={showPaymentSheet}
         onClose={() => setShowPaymentSheet(false)}
+        onBack={() => {
+          setShowPaymentSheet(false);
+          if (paymentPlan === "all" && selectedSubjects.length === 0) {
+            setShowPlanSelect(true);
+          } else {
+            setShowSubjectPack(true);
+          }
+        }}
         onSuccess={() => setShowPaymentSheet(false)}
-        subjectName={paymentPlan === "single" && selectedSubjects.length === 1 ? selectedSubjects[0] : undefined}
+        subjectName={selectedSubjects.length === 1 ? selectedSubjects[0] : undefined}
+        amount={(window as any).__packAmount ?? undefined}
       />
 
       {/* Results bottom sheet */}
