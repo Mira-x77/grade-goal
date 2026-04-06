@@ -12,7 +12,16 @@ export default function AuthPage() {
   const [oauthLoading, setOauthLoading] = useState<"google" | "apple" | null>(null);
   const [error, setError] = useState("");
 
-  const getRedirectUrl = () => {
+  useEffect(() => {
+    // If user closes the browser without completing OAuth, reset the loading state
+    const handleBrowserFinished = () => {
+      setOauthLoading(null);
+    };
+    Browser.addListener("browserFinished", handleBrowserFinished);
+    return () => {
+      Browser.removeAllListeners();
+    };
+  }, []);
     if (Capacitor.getPlatform() !== 'web') {
       return "com.scoretarget.app://auth/callback";
     }
