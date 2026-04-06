@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Save, ChevronDown, Lock } from "lucide-react";
+import { Save, ChevronDown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
 import { simulateYearlyAverage } from "@/lib/exam-logic";
@@ -83,7 +83,7 @@ const Simulator = () => {
     saveState({ ...state, savedStrategy: strategy });
     setIsDirty(false);
     toast.success("Strategy saved!");
-    setTimeout(() => navigate("/"), 800);
+    setTimeout(() => navigate("/", { replace: true }), 800);
   };
 
   const simulatedAvg = simulateYearlyAverage(subjects, overrides);
@@ -110,7 +110,12 @@ const Simulator = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
+    <motion.div
+      className="min-h-screen bg-background max-w-md mx-auto pb-20"
+      initial={{ x: 0 }}
+      exit={{ x: "100%" }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+    >
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3 safe-area-top">
         <h1 className="text-lg font-black text-foreground">{t("whatIfSimulator")}</h1>
       </div>
@@ -142,7 +147,7 @@ const Simulator = () => {
 
         {/* Sliders grouped by subject */}
         <div className="flex flex-col gap-3">
-          <h3 className="font-black text-foreground text-sm">{t("adjustHypotheticalMarks")}</h3>
+          <h3 className="font-black text-foreground text-sm">Plan Your Scores</h3>
           {subjects.map((sub) => {
             const subSlots = emptySlots
               .map((slot, i) => ({ slot, i }))
@@ -230,7 +235,6 @@ const Simulator = () => {
       <TaskBar showBack action={
         isDirty ? (
           isOnTrack ? (
-            // Valid strategy — show Save
             <motion.button
               initial={{ opacity: 0, scale: 0.5, x: -16 }}
               animate={{ opacity: 1, scale: 1, x: 0 }}
@@ -242,20 +246,20 @@ const Simulator = () => {
               <Save className="h-5 w-5 text-foreground" />
             </motion.button>
           ) : (
-            // Not on target yet — locked Save with visual hint
-            <motion.div
+            <motion.button
               initial={{ opacity: 0, scale: 0.5, x: -16 }}
               animate={{ opacity: 1, scale: 1, x: 0 }}
               exit={{ opacity: 0, scale: 0.5, x: -16 }}
               transition={{ type: "spring", stiffness: 380, damping: 28 }}
-              className="h-12 w-12 rounded-full bg-muted border-2 border-border flex items-center justify-center opacity-50"
+              onClick={() => toast("Reach your target range first to save this strategy.")}
+              className="h-12 w-12 rounded-full bg-muted border-2 border-border flex items-center justify-center opacity-50 active:scale-95 transition-transform"
             >
-              <Lock className="h-5 w-5 text-muted-foreground" />
-            </motion.div>
+              <Save className="h-5 w-5 text-muted-foreground" />
+            </motion.button>
           )
         ) : undefined
       } />
-    </div>
+    </motion.div>
   );
 };
 
