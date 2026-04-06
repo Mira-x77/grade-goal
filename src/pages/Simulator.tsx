@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Save, ChevronDown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -34,6 +34,11 @@ const Simulator = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [activeSlider, setActiveSlider] = useState<number | null>(null);
+
+  // Refs for sticky compact bar (same pattern as Home avg card)
+  const heroRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [heroVisible, setHeroVisible] = useState(true);
 
   const emptySlots = useMemo(() => {
     const slots: { subjectId: string; subjectName: string; markType: "interro" | "dev" | "compo"; coefficient: number }[] = [];
@@ -98,6 +103,23 @@ const Simulator = () => {
     ? "Almost there. Push a bit more to hit your target and unlock Save."
     : "You're on track. Tap Save to lock in this strategy.";
 
+  // IntersectionObserver — same pattern as Home avg card
+  useEffect(() => {
+    if (!heroRef.current) return;
+    let observer: IntersectionObserver | null = null;
+    const setup = () => {
+      if (observer) observer.disconnect();
+      const headerH = headerRef.current?.getBoundingClientRect().height ?? 0;
+      observer = new IntersectionObserver(
+        ([entry]) => setHeroVisible(entry.isIntersecting),
+        { root: null, rootMargin: `-${headerH}px 0px 0px 0px`, threshold: 0 }
+      );
+      if (heroRef.current) observer.observe(heroRef.current);
+    };
+    const raf = requestAnimationFrame(setup);
+    return () => { cancelAnimationFrame(raf); observer?.disconnect(); };
+  }, [simulatedAvg]);
+
   if (subjects.length === 0) {
     return (
       <div className="min-h-screen bg-background max-w-md mx-auto flex flex-col items-center justify-center px-6 gap-4">
@@ -109,6 +131,8 @@ const Simulator = () => {
     );
   }
 
+  const compactBarColor = isOnTrack ? "bg-success" : isRisky ? "bg-warning" : "bg-danger";
+
   return (
     <motion.div
       className="min-h-screen bg-background max-w-md mx-auto pb-20"
@@ -116,34 +140,62 @@ const Simulator = () => {
       exit={{ x: "100%" }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3 safe-area-top">
-        <h1 className="text-lg font-black text-foreground">{t("whatIfSimulator")}</h1>
+      {/* Sticky header */}
+      <div ref={headerRef} className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 pb-3 safe-area-top">
+        <div className="pt-3">
+          <h1 className="text-lg font-black text-foreground">{t("whatIfSimulator")}</h1>
+        </div>
+
+        {/* Compact avg bar — appears when hero scrolls out */}
+        <AnimatePresence>
+          {!heroVisible && simulatedAvg !== null && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className={`mt-2 w-full flex items-center justify-between rounded-xl ${compactBarColor} px-4 py-2`}
+            >
+              <span className="text-xs font-black text-primary-foreground/80 uppercase tracking-widest">{t("simulatedAverage")}</span>
+              <div className="flex items-center gap-3">
+                <div className="w-20 h-1.5 rounded-full bg-black/20 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-white/70 transition-all"
+                    style={{ width: `${Math.min((simulatedAvg / targetAvg) * 100, 100)}%` }}
+                  />
+                </div>
+                <span className="text-sm font-black text-primary-foreground">{simulatedAvg.toFixed(1)}/20</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="flex flex-col gap-5 px-6 py-6">
         {/* Hero card */}
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className={`rounded-2xl p-5 ${statusBg} border-2 border-foreground/10`}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-xs font-bold text-primary-foreground/70 uppercase tracking-wider mb-0.5">{t("simulatedAverage")}</p>
-              <p className="text-5xl font-black text-primary-foreground">
-                {simulatedAvg !== null ? simulatedAvg.toFixed(1) : "—"}<span className="text-xl opacity-75">/20</span>
-              </p>
+        <div ref={heroRef}>
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={`rounded-2xl p-5 ${statusBg} border-2 border-foreground/10`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-xs font-bold text-primary-foreground/70 uppercase tracking-wider mb-0.5">{t("simulatedAverage")}</p>
+                <p className="text-5xl font-black text-primary-foreground">
+                  {simulatedAvg !== null ? simulatedAvg.toFixed(1) : "—"}<span className="text-xl opacity-75">/20</span>
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-bold text-primary-foreground/70 uppercase tracking-wider mb-0.5">{t("target")}</p>
+                <p className="text-2xl font-black text-primary-foreground">{targetAvg}–20</p>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-xs font-bold text-primary-foreground/70 uppercase tracking-wider mb-0.5">{t("target")}</p>
-              <p className="text-2xl font-black text-primary-foreground">{targetAvg}–20</p>
+            <div className="rounded-xl bg-black/15 px-3 py-2">
+              <p className="text-xs font-semibold text-primary-foreground/90">{statusHint}</p>
             </div>
-          </div>
-          {/* Guidance subtext */}
-          <div className="rounded-xl bg-black/15 px-3 py-2">
-            <p className="text-xs font-semibold text-primary-foreground/90">{statusHint}</p>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
 
         {/* Sliders grouped by subject */}
         <div className="flex flex-col gap-3">
@@ -161,13 +213,11 @@ const Simulator = () => {
                 animate={{ x: 0, opacity: 1 }}
                 className="rounded-2xl bg-card border-2 border-foreground overflow-hidden card-shadow"
               >
-                {/* Prominent subject header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b-2 border-foreground/10 bg-muted/30">
                   <span className="text-sm font-black text-foreground">{sub.name}</span>
                   <span className="text-xs font-black text-foreground bg-secondary/30 px-2 py-0.5 rounded-full">×{sub.coefficient}</span>
                 </div>
 
-                {/* Mark type rows */}
                 <div className="flex flex-col divide-y divide-border">
                   {subSlots.map(({ slot, i }) => {
                     const override = overrides[i];

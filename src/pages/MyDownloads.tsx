@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2, FileText, HardDrive, Search, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { downloadService } from "@/services/downloadService";
 import { cacheService } from "@/services/cacheService";
@@ -125,6 +125,15 @@ const MyDownloads = () => {
     }, 300);
   };
 
+  // Animated paper count
+  const countMotion = useMotionValue(downloadedPapers.length);
+  const countSpring = useSpring(countMotion, { stiffness: 100, damping: 20 });
+  const countRounded = useTransform(countSpring, v => Math.round(v));
+
+  useEffect(() => {
+    countMotion.set(downloadedPapers.length);
+  }, [downloadedPapers.length]);
+
   const usedPct = storageInfo && storageInfo.total > 0
     ? Math.min((storageInfo.used / storageInfo.total) * 100, 100)
     : 0;
@@ -182,7 +191,7 @@ const MyDownloads = () => {
               </div>
             </div>
             <div className="text-center shrink-0 pl-3 border-l border-border">
-              <p className="text-2xl font-black text-foreground leading-none">{downloadedPapers.length}</p>
+              <motion.p className="text-2xl font-black text-foreground leading-none">{countRounded}</motion.p>
               <p className="text-[10px] font-bold text-muted-foreground mt-0.5">
                 {downloadedPapers.length === 1 ? t("paper") : t("papers")}
               </p>
@@ -235,13 +244,16 @@ const MyDownloads = () => {
                 <motion.div
                   key={paper.id}
                   layout
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 1, x: 0 }}
                   animate={deletingId === paper.id
-                    ? { opacity: 0, x: -80, height: 0, marginBottom: 0 }
-                    : { opacity: 1, y: 0, x: 0 }
+                    ? { x: "-110%", opacity: 0 }
+                    : { x: 0, opacity: 1 }
                   }
-                  exit={{ opacity: 0, x: -80, height: 0 }}
-                  transition={{ duration: 0.28, ease: "easeInOut" }}
+                  exit={{ height: 0, opacity: 0, marginBottom: 0 }}
+                  transition={deletingId === paper.id
+                    ? { type: "spring", stiffness: 400, damping: 35 }
+                    : { duration: 0.22 }
+                  }
                   className="bg-card rounded-2xl overflow-hidden card-shadow select-none"
                   onContextMenu={(e) => { e.preventDefault(); setRevealedDelete(paper.id); }}
                   onTouchStart={() => startLongPress(paper.id)}
