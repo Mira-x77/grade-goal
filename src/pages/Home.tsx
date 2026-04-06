@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, Flame, AlertTriangle, ChevronRight, BookOpen, BarChart3, TrendingUp, Settings as SettingsIcon, User, Trophy, FileDown, PenLine, Zap, Plus, X, Check, Clock, ArrowUpRight, Trash2, Pencil, Crown, Bell } from "lucide-react";
+import { Target, Flame, AlertTriangle, ChevronRight, ChevronDown, BookOpen, BarChart3, TrendingUp, Settings as SettingsIcon, User, Trophy, FileDown, PenLine, Zap, Plus, X, Check, Clock, ArrowUpRight, Trash2, Pencil, Crown, Bell } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState, getStreak, getHistory, HistoryEntry } from "@/lib/storage";
 import { downloadService } from "@/services/downloadService";
@@ -24,6 +24,70 @@ const markTypeLabels: Record<string, string> = {
   dev: "Devoir",
   compo: "Compo",
 };
+
+function SubjectsGlanceCard({ subjects, title }: { subjects: Subject[]; title: string }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="rounded-2xl bg-card border-2 border-border flex-shrink-0 overflow-hidden" style={{ width: "calc(100vw - 4rem)" }}>
+      {/* Collapsible header — same pattern as Subject Comparison */}
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/50 transition-colors"
+      >
+        <h3 className="font-black text-foreground text-sm">{title}</h3>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        </motion.div>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-col gap-2 px-4 pb-4">
+              {subjects.map((sub) => {
+                const marks = [
+                  { label: "I", value: sub.marks.interro },
+                  { label: "D", value: sub.marks.dev },
+                  { label: "C", value: sub.marks.compo },
+                ];
+                const filled = marks.filter(m => m.value !== null).length;
+                const avg = filled > 0
+                  ? marks.filter(m => m.value !== null).reduce((a, m) => a + m.value!, 0) / filled
+                  : null;
+                return (
+                  <div key={sub.id} className="rounded-xl bg-muted/50 px-3 py-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-foreground">{sub.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-muted-foreground">×{sub.coefficient}</span>
+                        <span className="text-sm font-black text-foreground">
+                          {avg !== null ? avg.toFixed(1) : "—"}<span className="text-xs font-bold text-muted-foreground">/20</span>
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 mt-1.5">
+                      {marks.map((m) => (
+                        <div key={m.label} className={`flex-1 rounded-lg py-1 text-center text-[10px] font-black ${m.value !== null ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground/40"}`}>
+                          {m.value !== null ? m.value.toFixed(1) : m.label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 const Home = () => {
   const state = loadState();
@@ -434,43 +498,8 @@ const Home = () => {
         {hasData && (
           <div className="overflow-x-auto -mx-6 px-6 pb-2">
             <div className="flex gap-3 items-start" style={{ width: "max-content" }}>
-              {/* Card 1 — Subjects at a glance */}
-              <div className="rounded-2xl bg-card p-4 border-2 border-border flex-shrink-0" style={{ width: "calc(100vw - 4rem)" }}>
-                <h3 className="font-black text-foreground text-sm mb-3">{t("subjectsGlance")}</h3>
-                <div className="flex flex-col gap-2">
-                  {appState!.subjects.map((sub) => {
-                    const marks = [
-                      { label: "I", value: sub.marks.interro },
-                      { label: "D", value: sub.marks.dev },
-                      { label: "C", value: sub.marks.compo },
-                    ];
-                    const filled = marks.filter(m => m.value !== null).length;
-                    const avg = filled > 0
-                      ? marks.filter(m => m.value !== null).reduce((a, m) => a + m.value!, 0) / filled
-                      : null;
-                    return (
-                      <div key={sub.id} className="rounded-xl bg-muted/50 px-3 py-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-foreground">{sub.name}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-muted-foreground">×{sub.coefficient}</span>
-                            <span className="text-sm font-black text-foreground">
-                              {avg !== null ? avg.toFixed(1) : "—"}<span className="text-xs font-bold text-muted-foreground">/20</span>
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex gap-1.5 mt-1.5">
-                          {marks.map((m) => (
-                            <div key={m.label} className={`flex-1 rounded-lg py-1 text-center text-[10px] font-black ${m.value !== null ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground/40"}`}>
-                              {m.value !== null ? m.value.toFixed(1) : m.label}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              {/* Card 1 — Subjects at a glance (collapsible) */}
+              <SubjectsGlanceCard subjects={appState!.subjects} title={t("subjectsGlance")} />
 
               {/* Card 2 — Class ranking */}
               <div className="flex-shrink-0" style={{ width: "calc(100vw - 4rem)" }}>
