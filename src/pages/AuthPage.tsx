@@ -20,6 +20,11 @@ export default function AuthPage() {
   }, []);
 
   const getRedirectUrl = () => {
+    if (Capacitor.getPlatform() !== 'web') {
+      return "com.scoretarget.app://auth/callback";
+    }
+    return `${window.location.origin}/auth/callback`;
+  };
 
   const handleOAuth = async (provider: "google" | "apple") => {
     setError("");
