@@ -26,7 +26,7 @@ const markTypeLabels: Record<string, string> = {
 };
 
 function SubjectsGlanceCard({ subjects, title }: { subjects: Subject[]; title: string }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   return (
     <div className="rounded-2xl bg-card border-2 border-border flex-shrink-0 overflow-hidden" style={{ width: "calc(100vw - 4rem)" }}>
       {/* Collapsible header — same pattern as Subject Comparison */}

@@ -20,20 +20,16 @@ const MyDownloads = () => {
   const [downloadedPapers, setDownloadedPapers] = useState<CachedPaper[]>([]);
   const [loading, setLoading] = useState(true);
   const [storageInfo, setStorageInfo] = useState<{ available: number; used: number; total: number } | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [revealedDelete, setRevealedDelete] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showPDFViewer, setShowPDFViewer] = useState(false);
   const [currentPDF, setCurrentPDF] = useState<{ data: string; title: string } | null>(null);
-
-  // Ref to measure the fixed header height for padding
   const headerRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
-  useEffect(() => {
-    loadDownloads();
-  }, []);
+  useEffect(() => { loadDownloads(); }, []);
 
   useEffect(() => {
     if (!headerRef.current) return;
@@ -50,8 +46,19 @@ const MyDownloads = () => {
       const cachedPapers = await cacheService.getCachedPapers();
       const downloaded = cachedPapers.filter(p => p.isDownloaded);
       setDownloadedPapers(downloaded);
-      const info = await getAvailableSpace();
-      setStorageInfo(info);
+
+      // Calculate used storage from actual file sizes
+      const usedBytes = await downloadService.getTotalStorageUsed();
+
+      // Get device available space
+      const deviceInfo = await getAvailableSpace();
+
+      // On mobile, getAvailableSpace returns 0 used — use our calculated value instead
+      const used = usedBytes > 0 ? usedBytes : deviceInfo.used;
+      const available = deviceInfo.available > 0 ? deviceInfo.available : deviceInfo.total - used;
+      const total = deviceInfo.total > 0 ? deviceInfo.total : used + available;
+
+      setStorageInfo({ used, available, total });
     } catch (error) {
       console.error("Failed to load downloads:", error);
       toast.error("Failed to load downloads");
@@ -99,26 +106,34 @@ const MyDownloads = () => {
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   }, []);
 
-  const totalCapacity = storageInfo?.total ?? 0;
-  const usedPct = totalCapacity > 0 ? Math.min((storageInfo!.used / totalCapacity) * 100, 100) : 0;
+  // Tap delete → animate out → delete
+  const handleDelete = async (paperId: string) => {
+    setDeletingId(paperId);
+    // Wait for exit animation then delete
+    setTimeout(async () => {
+      try {
+        await downloadService.deletePaper(paperId);
+        toast.success("Paper deleted");
+        setRevealedDelete(null);
+        setDeletingId(null);
+        loadDownloads();
+      } catch (error) {
+        console.error("Failed to delete paper:", error);
+        toast.error("Failed to delete paper");
+        setDeletingId(null);
+      }
+    }, 300);
+  };
+
+  const usedPct = storageInfo && storageInfo.total > 0
+    ? Math.min((storageInfo.used / storageInfo.total) * 100, 100)
+    : 0;
   const storageWarning = usedPct > 80;
 
   const filteredPapers = downloadedPapers.filter((p) => {
     const q = search.toLowerCase();
     return p.title.toLowerCase().includes(q) || p.subject.toLowerCase().includes(q) || p.classLevel.toLowerCase().includes(q);
   });
-
-  const handleDeleteSingle = async (paperId: string) => {
-    try {
-      await downloadService.deletePaper(paperId);
-      toast.success("Paper deleted");
-      setShowDeleteConfirm(null);
-      loadDownloads();
-    } catch (error) {
-      console.error("Failed to delete paper:", error);
-      toast.error("Failed to delete paper");
-    }
-  };
 
   if (loading) {
     return (
@@ -127,9 +142,7 @@ const MyDownloads = () => {
           <div className="animate-pulse space-y-4">
             <div className="h-28 bg-muted rounded-2xl" />
             <div className="h-12 bg-muted rounded-2xl" />
-            <div className="space-y-3">
-              {[1,2,3].map(i => <div key={i} className="h-20 bg-muted rounded-2xl" />)}
-            </div>
+            {[1,2,3].map(i => <div key={i} className="h-20 bg-muted rounded-2xl" />)}
           </div>
         </div>
       </div>
@@ -138,20 +151,13 @@ const MyDownloads = () => {
 
   return (
     <div className="flex-1 bg-background min-h-screen">
-      {/* ── Fixed header: storage card + search ── */}
-      <div
-        ref={headerRef}
-        className="fixed top-0 left-0 right-0 z-20 max-w-md mx-auto bg-background/90 backdrop-blur-lg border-b border-border px-4 pb-3 safe-area-top"
-      >
-        {/* Storage card — compact, always visible */}
+      {/* Fixed header */}
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-20 max-w-md mx-auto bg-background/90 backdrop-blur-lg border-b border-border px-4 pb-3 safe-area-top">
         <div className="mt-3 rounded-2xl bg-card border-2 border-border px-4 py-3">
           <div className="flex items-center gap-3">
-            {/* Icon */}
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
               <HardDrive className="h-5 w-5 text-primary" />
             </div>
-
-            {/* Used / Free */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <div className="text-center">
@@ -170,13 +176,11 @@ const MyDownloads = () => {
                 <div className="text-center">
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Free</p>
                   <p className="text-base font-black text-foreground leading-tight">
-                    {storageInfo !== null ? formatBytes(storageInfo.available) : "—"}
+                    {storageInfo !== null && storageInfo.available > 0 ? formatBytes(storageInfo.available) : "—"}
                   </p>
                 </div>
               </div>
             </div>
-
-            {/* Paper count */}
             <div className="text-center shrink-0 pl-3 border-l border-border">
               <p className="text-2xl font-black text-foreground leading-none">{downloadedPapers.length}</p>
               <p className="text-[10px] font-bold text-muted-foreground mt-0.5">
@@ -186,7 +190,6 @@ const MyDownloads = () => {
           </div>
         </div>
 
-        {/* Search bar */}
         {downloadedPapers.length > 0 && (
           <div className="relative mt-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -206,7 +209,7 @@ const MyDownloads = () => {
         )}
       </div>
 
-      {/* ── Scrollable content — padded to clear fixed header ── */}
+      {/* Scrollable list */}
       <div
         className="w-full max-w-md mx-auto px-4 pb-24"
         style={{ paddingTop: headerHeight + 12 }}
@@ -217,10 +220,7 @@ const MyDownloads = () => {
             <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
             <p className="text-lg font-bold text-muted-foreground mb-2">{t("noDownloadsYet")}</p>
             <p className="text-sm text-muted-foreground mb-6">{t("papersDownloadAppear")}</p>
-            <button
-              onClick={() => navigate("/library")}
-              className="bg-primary text-primary-foreground rounded-xl px-6 py-3 font-bold"
-            >
+            <button onClick={() => navigate("/library")} className="bg-primary text-primary-foreground rounded-xl px-6 py-3 font-bold">
               {t("browseLibrary")}
             </button>
           </div>
@@ -230,84 +230,61 @@ const MyDownloads = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredPapers.map((paper) => (
-              <motion.div
-                key={paper.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-card rounded-2xl overflow-hidden card-shadow select-none"
-                onContextMenu={(e) => { e.preventDefault(); setRevealedDelete(paper.id); }}
-                onTouchStart={() => startLongPress(paper.id)}
-                onTouchEnd={cancelLongPress}
-                onTouchMove={cancelLongPress}
-              >
-                <div className="flex items-stretch">
-                  <div
-                    className="flex-1 p-4 cursor-pointer active:bg-muted/40 transition-colors"
-                    onClick={(e) => { e.stopPropagation(); handlePaperClick(paper); }}
-                  >
-                    <h3 className="font-black text-sm line-clamp-2 mb-1">{paper.title}</h3>
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">
-                      {paper.subject} · {paper.classLevel}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="font-bold text-muted-foreground">{paper.fileSizeFormatted}</span>
-                      <span className="text-muted-foreground">·</span>
-                      <span className="font-semibold text-muted-foreground">
-                        {t("downloadedOn")} {new Date(paper.downloadedAt!).toLocaleDateString()}
-                      </span>
+            <AnimatePresence>
+              {filteredPapers.map((paper) => (
+                <motion.div
+                  key={paper.id}
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={deletingId === paper.id
+                    ? { opacity: 0, x: -80, height: 0, marginBottom: 0 }
+                    : { opacity: 1, y: 0, x: 0 }
+                  }
+                  exit={{ opacity: 0, x: -80, height: 0 }}
+                  transition={{ duration: 0.28, ease: "easeInOut" }}
+                  className="bg-card rounded-2xl overflow-hidden card-shadow select-none"
+                  onContextMenu={(e) => { e.preventDefault(); setRevealedDelete(paper.id); }}
+                  onTouchStart={() => startLongPress(paper.id)}
+                  onTouchEnd={cancelLongPress}
+                  onTouchMove={cancelLongPress}
+                >
+                  <div className="flex items-stretch">
+                    <div
+                      className="flex-1 p-4 cursor-pointer active:bg-muted/40 transition-colors"
+                      onClick={(e) => { e.stopPropagation(); handlePaperClick(paper); }}
+                    >
+                      <h3 className="font-black text-sm line-clamp-2 mb-1">{paper.title}</h3>
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">
+                        {paper.subject} · {paper.classLevel}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="font-bold text-muted-foreground">{paper.fileSizeFormatted}</span>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="font-semibold text-muted-foreground">
+                          {t("downloadedOn")} {new Date(paper.downloadedAt!).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <AnimatePresence>
-                    {revealedDelete === paper.id && (
-                      <motion.div
-                        initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: 64, opacity: 1 }}
-                        exit={{ width: 0, opacity: 0 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                        className="flex items-center justify-center bg-destructive shrink-0 overflow-hidden"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          className="flex flex-col items-center justify-center gap-1 w-full h-full"
-                          onClick={() => setShowDeleteConfirm(paper.id)}
+                    {/* Delete panel — revealed on long press, tap to delete immediately */}
+                    <AnimatePresence>
+                      {revealedDelete === paper.id && (
+                        <motion.button
+                          initial={{ width: 0, opacity: 0 }}
+                          animate={{ width: 64, opacity: 1 }}
+                          exit={{ width: 0, opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                          className="flex items-center justify-center bg-destructive shrink-0 overflow-hidden active:brightness-90"
+                          onClick={(e) => { e.stopPropagation(); handleDelete(paper.id); }}
                         >
                           <Trash2 className="h-5 w-5 text-destructive-foreground" />
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                <AnimatePresence>
-                  {showDeleteConfirm === paper.id && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="px-4 pb-4 border-t border-border"
-                    >
-                      <p className="text-xs text-center my-3">{t("deleteThisPaper")}</p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => { setShowDeleteConfirm(null); setRevealedDelete(null); }}
-                          className="flex-1 bg-muted text-foreground rounded-lg py-2 text-sm font-semibold"
-                        >
-                          {t("cancel")}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteSingle(paper.id)}
-                          className="flex-1 bg-destructive text-destructive-foreground rounded-lg py-2 text-sm font-semibold"
-                        >
-                          {t("delete")}
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ))}
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </div>

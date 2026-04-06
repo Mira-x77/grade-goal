@@ -83,7 +83,7 @@ const Simulator = () => {
     saveState({ ...state, savedStrategy: strategy });
     setIsDirty(false);
     toast.success("Strategy saved!");
-    setTimeout(() => navigate("/home"), 800);
+    setTimeout(() => navigate("/"), 800);
   };
 
   const simulatedAvg = simulateYearlyAverage(subjects, overrides);

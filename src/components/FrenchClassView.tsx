@@ -24,7 +24,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
       >
         <div className="flex items-center gap-2">
           <ArrowUpDown className="h-4 w-4 text-secondary" />
-          <h3 className="font-black text-foreground text-sm">Class Ranking View</h3>
+          <h3 className="font-black text-foreground text-sm">How You Stack Up</h3>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {summary.studentAvg !== null && (
@@ -126,7 +126,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
               {/* Per-subject comparison */}
               {summary.subjectDetails.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Subject Comparison</p>
+                  <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Per Subject Breakdown</p>
                   {summary.subjectDetails.map((d) => (
                     <div key={d.subject.id} className="rounded-xl bg-muted/50 p-3">
                       <div className="flex items-center justify-between mb-1">
