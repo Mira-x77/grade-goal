@@ -1,16 +1,30 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
 import Mascot from "@/components/Mascot";
+import { CheckCircle2 } from "lucide-react";
 
 export default function AuthPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "apple" | null>(null);
   const [error, setError] = useState("");
+  const [signedIn, setSignedIn] = useState(false);
+
+  // Listen for auth state — show success screen when session arrives
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session && oauthLoading) {
+        setSignedIn(true);
+        setOauthLoading(null);
+        // AuthContext will handle navigation after a short delay
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [oauthLoading]);
 
   // Reset loading if user closes the browser without completing OAuth
   useEffect(() => {
@@ -98,6 +112,29 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-background max-w-md mx-auto flex flex-col">
+      {/* Success overlay */}
+      <AnimatePresence>
+        {signedIn && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center gap-5 px-8"
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              className="flex h-20 w-20 items-center justify-center rounded-full bg-success/15 border-2 border-success"
+            >
+              <CheckCircle2 className="h-10 w-10 text-success" />
+            </motion.div>
+            <div className="text-center">
+              <p className="text-2xl font-black text-foreground">Signed in!</p>
+              <p className="text-sm font-semibold text-muted-foreground mt-1">Setting up your experience...</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="flex justify-center pb-0 safe-area-top">
         <Mascot pose="pointing" size={120} animate />
       </div>
