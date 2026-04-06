@@ -222,6 +222,10 @@ const Home = () => {
   const range = hasData ? getPredictedRange(appState!.subjects) : null;
   const bounds = hasData ? getAbsoluteBounds(appState!.subjects) : null;
   const targetAvg = appState?.targetMin ?? appState?.targetAverage ?? 16;
+  const avgBarColor = currentAvg === null ? "bg-muted-foreground/30"
+    : currentAvg >= targetAvg ? "bg-success"
+    : currentAvg >= targetAvg - 2 ? "bg-warning"
+    : "bg-danger";
 
   useEffect(() => {
     if (!avgCardRef.current) return;
@@ -330,7 +334,7 @@ const Home = () => {
               <div className="flex items-center gap-3">
                 <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-secondary transition-all"
+                    className={`h-full rounded-full ${avgBarColor} transition-all`}
                     style={{ width: `${Math.min((currentAvg / targetAvg) * 100, 100)}%` }}
                   />
                 </div>
@@ -381,7 +385,7 @@ const Home = () => {
             </div>
             <div className="mt-3 h-2.5 rounded-full bg-muted border border-foreground/20 overflow-hidden">
               <div
-                className="h-full rounded-full bg-secondary transition-all"
+                className={`h-full rounded-full ${avgBarColor} transition-all`}
                 style={{ width: `${Math.min((currentAvg / targetAvg) * 100, 100)}%` }}
               />
             </div>

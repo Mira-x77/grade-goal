@@ -22,7 +22,7 @@ const Index = () => {
   
   const [state, setState] = useState<AppState>(() => {
     const saved = loadState();
-    const initial: AppState = saved || { step: "onboarding" as const, targetAverage: 16, targetMin: 16, subjects: [], settings: DEFAULT_SETTINGS };
+    const initial: AppState = saved || { step: "onboarding" as const, targetAverage: 20, targetMin: 20, subjects: [], settings: DEFAULT_SETTINGS };
     if (initial.targetMin === undefined || initial.targetMin === null) {
       initial.targetMin = initial.targetAverage ?? 16;
     }

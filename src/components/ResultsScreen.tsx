@@ -116,7 +116,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
               </span>
               <span className="text-xs font-bold text-muted-foreground">→ target {targetAverage}–20</span>
             </div>
-            <p className="text-xs font-semibold text-muted-foreground truncate">{config.sub}</p>
+            <p className="text-xs font-semibold text-muted-foreground mt-0.5 leading-snug">{config.sub}</p>
           </div>
           {/* Progress bar */}
           <div className="w-16 shrink-0">
