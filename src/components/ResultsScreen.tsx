@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { TrendingUp, AlertTriangle, XCircle, Pencil, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { TrendingUp, AlertTriangle, XCircle, Pencil, ChevronDown } from "lucide-react";
 import { Subject, FeedbackStatus } from "@/types/exam";
 import {
   calcYearlyAverage,
@@ -35,6 +36,7 @@ const statusConfig: Record<FeedbackStatus, { bg: string; icon: React.ReactNode; 
 const markLabels: Record<string, string> = { interro: "Interro", dev: "Devoir", compo: "Compo" };
 
 const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: ResultsScreenProps) => {
+  const [whatsNextOpen, setWhatsNextOpen] = useState(false);
   const currentAvg = calcYearlyAverage(subjects);
   const bounds = getAbsoluteBounds(subjects);
 
@@ -62,7 +64,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
 
   return (
     <div className="flex flex-col" style={{ minHeight: "60vh" }}>
-      <div className="flex flex-col gap-5 px-6 pt-4 pb-24">
+      <div className="flex flex-col gap-5 px-6 pt-4 pb-24 safe-area-top">
 
         {/* Status hero */}
         <motion.div
@@ -143,52 +145,74 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
           </motion.div>
         )}
 
-        {/* What's next — only when target is still reachable */}
+        {/* What's next — collapsible, only when target is still reachable */}
         {!targetUnreachable && missingItems.length > 0 && (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.35 }}
-            className="rounded-2xl bg-card p-5 border-2 border-border"
+            className="rounded-2xl bg-card border-2 border-border overflow-hidden"
           >
-            <h3 className="font-black text-foreground text-sm mb-3">What's next</h3>
-            <div className="flex flex-col gap-2">
-              {missingItems.map(({ sub, mt, needed }) => {
-                const isEasy = needed !== null && needed <= 10;
-                const isHard = needed !== null && needed > 16;
-                const isSafe = needed !== null && needed <= 0;
-                return (
-                  <div
-                    key={`${sub.id}-${mt}`}
-                    className="flex items-center justify-between rounded-xl bg-muted/50 px-3 py-2.5"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-foreground truncate">{sub.name}</p>
-                      <p className="text-[10px] font-semibold text-muted-foreground">
-                        {markLabels[mt]} · Coeff ×{sub.coefficient}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0 ml-3">
-                      {isSafe ? (
-                        <span className="text-xs font-black text-success">Already safe</span>
-                      ) : needed === null ? (
-                        <span className="text-xs font-black text-muted-foreground">—</span>
-                      ) : (
-                        <>
-                          <p className={`text-sm font-black ${isHard ? "text-danger" : isEasy ? "text-success" : "text-warning"}`}>
-                            {Math.min(20, Math.max(0, needed)).toFixed(1)}/20
-                          </p>
-                          <p className="text-[10px] font-semibold text-muted-foreground">needed</p>
-                        </>
-                      )}
-                    </div>
+            {/* Toggle header */}
+            <button
+              onClick={() => setWhatsNextOpen(v => !v)}
+              className="w-full flex items-center justify-between px-5 py-4 active:bg-muted/40 transition-colors"
+            >
+              <h3 className="font-black text-foreground text-sm">What's next</h3>
+              <motion.div animate={{ rotate: whatsNextOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </motion.div>
+            </button>
+
+            <AnimatePresence initial={false}>
+              {whatsNextOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-5 pb-5 flex flex-col gap-2 border-t border-border pt-3">
+                    {missingItems.map(({ sub, mt, needed }) => {
+                      const isEasy = needed !== null && needed <= 10;
+                      const isHard = needed !== null && needed > 16;
+                      const isSafe = needed !== null && needed <= 0;
+                      return (
+                        <div
+                          key={`${sub.id}-${mt}`}
+                          className="flex items-center justify-between rounded-xl bg-muted/50 px-3 py-2.5"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-foreground truncate">{sub.name}</p>
+                            <p className="text-[10px] font-semibold text-muted-foreground">
+                              {markLabels[mt]} · Coeff ×{sub.coefficient}
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0 ml-3">
+                            {isSafe ? (
+                              <span className="text-xs font-black text-success">Already safe</span>
+                            ) : needed === null ? (
+                              <span className="text-xs font-black text-muted-foreground">—</span>
+                            ) : (
+                              <>
+                                <p className={`text-sm font-black ${isHard ? "text-danger" : isEasy ? "text-success" : "text-warning"}`}>
+                                  {Math.min(20, Math.max(0, needed)).toFixed(1)}/20
+                                </p>
+                                <p className="text-[10px] font-semibold text-muted-foreground">needed</p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <p className="text-[10px] font-semibold text-muted-foreground mt-1 text-center">
+                      Scores needed to stay within your target range ({targetAverage}–20)
+                    </p>
                   </div>
-                );
-              })}
-            </div>
-            <p className="text-[10px] font-semibold text-muted-foreground mt-3 text-center">
-              Scores needed to stay within your target range ({targetAverage}–20)
-            </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
 

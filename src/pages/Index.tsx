@@ -127,7 +127,12 @@ const Index = () => {
             <MarksInput
               subjects={state.subjects}
               onSubjectsChange={setSubjects}
-              onContinue={() => setStep("results")}
+              onContinue={() => {
+                // Save state as "results" so home screen knows onboarding is done, then navigate home
+                const finalState = { ...state, step: "results" as const };
+                saveState(finalState);
+                navigate("/home");
+              }}
               onBack={() => setStep("subjects")}
               classLevel={state.classLevel}
               serie={state.serie}
