@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Save, ChevronDown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
 import { simulateYearlyAverage } from "@/lib/exam-logic";
 import { SavedStrategy, StrategyMark } from "@/types/exam";
@@ -32,6 +32,7 @@ const Simulator = () => {
   const subjects = state?.subjects ?? [];
   const targetAvg = state?.targetMin ?? state?.targetAverage ?? 16;
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [activeSlider, setActiveSlider] = useState<number | null>(null);
 
   const emptySlots = useMemo(() => {
@@ -82,6 +83,7 @@ const Simulator = () => {
     saveState({ ...state, savedStrategy: strategy });
     setIsDirty(false);
     toast.success("Strategy saved!");
+    setTimeout(() => navigate("/home"), 800);
   };
 
   const simulatedAvg = simulateYearlyAverage(subjects, overrides);
