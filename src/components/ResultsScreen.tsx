@@ -21,7 +21,7 @@ const statusConfig: Record<FeedbackStatus, { bg: string; border: string; icon: R
     bg: "bg-success/10", border: "border-success/30",
     icon: <TrendingUp className="h-5 w-5 text-success" />,
     text: "On track",
-    sub: "Your current average is within your target range.",
+    sub: "Your average is within your target range.",
   },
   risky: {
     bg: "bg-warning/10", border: "border-warning/30",
@@ -37,18 +37,20 @@ const statusConfig: Record<FeedbackStatus, { bg: string; border: string; icon: R
   },
 };
 
-function getSubjectStatus(needed: number | null): "safe" | "recoverable" | "critical" | "complete" {
+function getSubjectStatus(needed: number | null, hasAnyMark: boolean): "safe" | "recoverable" | "critical" | "complete" | "pending" {
   if (needed === null) return "complete";
+  if (!hasAnyMark) return "pending";  // no marks yet — don't judge
   if (needed <= 0) return "safe";
   if (needed <= 14) return "recoverable";
   return "critical";
 }
 
 const subjectStatusConfig = {
-  safe:        { dot: "bg-success",  label: "Safe",        labelColor: "text-success" },
-  recoverable: { dot: "bg-warning",  label: "Recoverable", labelColor: "text-warning" },
-  critical:    { dot: "bg-danger",   label: "Critical",    labelColor: "text-danger" },
-  complete:    { dot: "bg-primary",  label: "Complete",    labelColor: "text-primary" },
+  safe:        { dot: "bg-success",          label: "Safe",        labelColor: "text-success" },
+  recoverable: { dot: "bg-warning",          label: "Recoverable", labelColor: "text-warning" },
+  critical:    { dot: "bg-danger",           label: "Critical",    labelColor: "text-danger" },
+  complete:    { dot: "bg-primary",          label: "Complete",    labelColor: "text-primary" },
+  pending:     { dot: "bg-muted-foreground", label: "Pending",     labelColor: "text-muted-foreground" },
 };
 
 const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: ResultsScreenProps) => {
@@ -80,12 +82,12 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
       const needed = primaryMissing
         ? calcMinimumMarkNeeded(subjects, sub.id, primaryMissing, targetAverage)
         : null;
-      const status = getSubjectStatus(needed);
+      const hasAnyMark = sub.marks.interro !== null || sub.marks.dev !== null || sub.marks.compo !== null;
+      const status = getSubjectStatus(needed, hasAnyMark);
       return { sub, currentSubAvg, bestSubAvg, needed, primaryMissing, status };
     })
     .sort((a, b) => a.sub.name.localeCompare(b.sub.name));
 
-  // Only show focus subjects when NOT on track
   const focusSubjects = !isOnTrack
     ? subjectData
         .filter(d => d.status === "critical" || d.status === "recoverable")
@@ -208,9 +210,11 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                   <div className="border-t border-border">
 
                     {/* Summary card — context-aware */}
-                    <div className="mx-4 mt-4 mb-3 rounded-2xl bg-secondary/10 border border-secondary/20 p-4">
+                    <div className={`mx-4 mt-4 mb-3 rounded-2xl border p-4 ${
+                      isOnTrack ? "bg-success/10 border-success/20" : "bg-secondary/10 border-secondary/20"
+                    }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <Lightbulb className="h-4 w-4 text-secondary shrink-0" />
+                        <Lightbulb className={`h-4 w-4 shrink-0 ${isOnTrack ? "text-success" : "text-secondary"}`} />
                         <p className="text-xs font-semibold text-muted-foreground">
                           {isOnTrack
                             ? `You're already on track for ${targetAverage}–20. Keep your scores consistent.`
@@ -249,6 +253,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                         const markLabel = primaryMissing === "compo" ? "Compo" : primaryMissing === "dev" ? "Devoir" : "Interro";
                         const actionText = (() => {
                           if (status === "complete") return "All marks entered — nothing left to do here.";
+                          if (status === "pending") return "No marks entered yet — add your scores to see what you need.";
                           if (status === "safe") return "Already contributing to your target — don't let it slip.";
                           if (neededClamped !== null && needed !== null && needed > 20) return `Even 20/20 on ${markLabel} won't be enough — adjust your target.`;
                           if (neededClamped !== null) return `Score ≥ ${neededClamped.toFixed(1)} on ${markLabel} to stay on track.`;
@@ -272,7 +277,10 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                               <div className="absolute left-0 top-0 h-full rounded-full bg-success/30 transition-all duration-500" style={{ width: `${bestPct}%` }} />
                               <div
                                 className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ${
-                                  status === "critical" ? "bg-danger" : status === "recoverable" ? "bg-warning" : "bg-success"
+                                  status === "critical" ? "bg-danger"
+                                  : status === "recoverable" ? "bg-warning"
+                                  : status === "pending" ? "bg-muted-foreground/30"
+                                  : "bg-success"
                                 }`}
                                 style={{ width: `${currentPct}%` }}
                               />
