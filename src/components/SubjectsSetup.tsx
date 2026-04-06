@@ -214,7 +214,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
     <div className="flex flex-col h-screen bg-background max-w-md mx-auto overflow-hidden">
 
       {hasSubjects && (
-        <div className="pt-20 px-6 pb-2 flex-shrink-0">
+        <div className="pt-20 px-6 pb-2 flex-shrink-0 safe-area-top">
           <div className="flex items-center border-b border-border pb-1">
             <span className="flex-1 text-xs font-black text-muted-foreground uppercase tracking-wider">Subject</span>
             <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-10">Coefficient</span>
@@ -222,7 +222,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-6" style={{ paddingTop: hasSubjects ? 0 : '6rem' }}>
+      <div className={`flex-1 px-6 ${hasSubjects ? "overflow-y-auto" : "overflow-hidden flex flex-col items-center justify-center"}`} style={{ paddingTop: hasSubjects ? 0 : 0 }}>
         <AnimatePresence>
           {subjects.map((sub, i) => (
             <motion.div
@@ -247,8 +247,10 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
         </AnimatePresence>
 
         {!hasSubjects && (
-          <div className="py-16 text-center text-muted-foreground font-semibold text-sm">
-            No subjects yet — tap + to add one
+          <div className="text-center">
+            <p className="text-2xl mb-2">📚</p>
+            <p className="text-base font-black text-foreground mb-1">No subjects yet</p>
+            <p className="text-sm font-semibold text-muted-foreground">Tap + to add your first subject</p>
           </div>
         )}
       </div>
