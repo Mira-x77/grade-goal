@@ -105,10 +105,10 @@ export function SubscriptionDetailDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden bg-card border-border">
         {/* Header / Hero */}
-        <div className="bg-secondary/10 px-6 pt-8 pb-6 border-b border-secondary/20 text-center relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-secondary/20 rounded-full blur-3xl"></div>
+        <div className="bg-premium/10 px-6 pt-8 pb-6 border-b border-premium/20 text-center relative overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-premium/20 rounded-full blur-3xl"></div>
           
-          <Crown className="h-10 w-10 text-secondary mx-auto mb-3 relative z-10" />
+          <Crown className="h-10 w-10 text-premium mx-auto mb-3 relative z-10" />
           <h2 className="text-2xl font-black text-foreground leading-tight mb-2 relative z-10">
             Focus on what actually matters.
           </h2>
@@ -142,9 +142,9 @@ export function SubscriptionDetailDialog({
             {/* CTA 1 (Pack) */}
             <button 
               onClick={handlePackClick}
-              className="w-full relative overflow-hidden group rounded-2xl bg-secondary border-2 border-foreground transition-all p-4 flex flex-col items-center justify-center card-shadow active:translate-y-0.5 active:shadow-none active:scale-[0.98]"
+              className="w-full relative overflow-hidden group rounded-2xl bg-premium border-2 border-premium transition-all p-4 flex flex-col items-center justify-center card-shadow active:translate-y-0.5 active:shadow-none active:scale-[0.98]"
             >
-              <span className="relative z-10 text-lg font-black text-foreground flex items-center justify-center gap-2">
+              <span className="relative z-10 text-lg font-black text-premium-foreground flex items-center justify-center gap-2">
                 Unlock {currentSubject} Pack
                 <ArrowRight className="h-5 w-5" />
               </span>

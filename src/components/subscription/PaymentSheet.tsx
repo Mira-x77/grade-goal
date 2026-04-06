@@ -108,7 +108,7 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
                 )}
                 <div>
                   <div className="flex items-center gap-2 mb-0.5">
-                    <Crown className="h-5 w-5 text-secondary" />
+                    <Crown className="h-5 w-5 text-premium" />
                     <h2 className="text-lg font-black text-foreground">{planLabel}</h2>
                   </div>
                   <p className="text-xs font-semibold text-muted-foreground">

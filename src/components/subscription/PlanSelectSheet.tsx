@@ -42,7 +42,7 @@ export function PlanSelectSheet({ open, onClose, onBack, subjectName, onSelectPa
                   </button>
                 )}
                 <div className="flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-secondary" />
+                  <Crown className="h-5 w-5 text-premium" />
                   <h2 className="text-lg font-black text-foreground">{t("choosePlan")}</h2>
                 </div>
               </div>

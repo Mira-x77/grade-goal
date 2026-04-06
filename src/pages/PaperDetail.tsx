@@ -250,14 +250,14 @@ const PaperDetail = () => {
           {/* Prep */}
           <button
             onClick={() => setPrepOpen(true)}
-            className="w-full flex items-center gap-4 bg-secondary border-2 border-foreground py-4 px-5 rounded-2xl card-shadow active:translate-y-0.5 active:shadow-none transition-all"
+            className="w-full flex items-center gap-4 bg-premium border-2 border-premium py-4 px-5 rounded-2xl card-shadow active:translate-y-0.5 active:shadow-none transition-all"
           >
-            <Crown className="h-6 w-6 text-foreground shrink-0" />
+            <Crown className="h-6 w-6 text-premium-foreground shrink-0" />
             <div className="text-left flex-1">
-              <p className="font-black text-sm text-foreground">Prep for {paper.subject}</p>
-              <p className="text-xs font-semibold text-foreground/60">6 premium study tools · Exam-specific</p>
+              <p className="font-black text-sm text-premium-foreground">Prep for {paper.subject}</p>
+              <p className="text-xs font-semibold text-premium-foreground/60">6 premium study tools · Exam-specific</p>
             </div>
-            <ChevronDown className="h-5 w-5 text-foreground rotate-[-90deg]" />
+            <ChevronDown className="h-5 w-5 text-premium-foreground rotate-[-90deg]" />
           </button>
         </div>
       </div>

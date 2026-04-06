@@ -168,7 +168,7 @@ export default function LibraryDirect() {
             </div>
             <button
               onClick={() => setShowPremiumIntro(true)}
-              className="flex h-9 items-center gap-1.5 px-3 rounded-xl border-2 border-foreground bg-secondary text-foreground active:scale-95 transition-all card-shadow text-xs font-black shrink-0 mt-1"
+              className="flex h-9 items-center gap-1.5 px-3 rounded-xl border-2 border-premium bg-premium text-premium-foreground active:scale-95 transition-all card-shadow text-xs font-black shrink-0 mt-1"
             >
               <Crown className="h-4 w-4" />
               Unlock

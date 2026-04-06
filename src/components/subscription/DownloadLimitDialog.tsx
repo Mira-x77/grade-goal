@@ -32,7 +32,7 @@ export function DownloadLimitDialog({
         <div className="space-y-4 py-4">
           <div className="p-4 bg-muted rounded-lg">
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <Crown className="h-5 w-5 text-secondary" />
+              <Crown className="h-5 w-5 text-premium" />
               Upgrade to Premium
             </h4>
             <ul className="space-y-2 text-sm text-muted-foreground">

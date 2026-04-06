@@ -6,6 +6,9 @@
 
 @layer base {
   :root {
+    /* Premium gold — fixed, never changes with accent, universally luxury */
+    --premium: 43 74% 49%;           /* #C9960C — deep metallic gold */
+    --premium-foreground: 0 0% 100%;
     /* === UI Experiment: "Go Study!" icon-inspired design system ===
        Palette: warm off-white bg, pure ink black, yellow highlighter accent
        Vibe: hand-drawn, minimal, flat, sketch-like — no gradients, no heavy shadows

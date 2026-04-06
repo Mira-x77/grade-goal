@@ -53,7 +53,7 @@ export function PremiumIntroSheet({ open, onClose, onContinue, subjectName }: Pr
             {/* Header */}
             <div className="flex items-start justify-between px-5 pt-2 pb-4 border-b border-border">
               <div className="flex items-center gap-2">
-                <Crown className="h-6 w-6 text-secondary" />
+                <Crown className="h-6 w-6 text-premium" />
                 <div>
                   <h2 className="text-lg font-black text-foreground">{t("passSmarter")}</h2>
                   <p className="text-xs font-semibold text-muted-foreground">

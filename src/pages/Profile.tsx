@@ -83,16 +83,16 @@ const Profile = () => {
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           onClick={() => setShowPremiumIntro(true)}
-          className="w-full rounded-2xl bg-secondary border-2 border-foreground p-4 card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-4 text-left"
+          className="w-full rounded-2xl bg-premium border-2 border-premium p-4 card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-4 text-left"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-foreground/10 border-2 border-foreground/20 shrink-0">
-            <Crown className="h-6 w-6 text-foreground" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-premium-foreground/20 border-2 border-premium-foreground/30 shrink-0">
+            <Crown className="h-6 w-6 text-premium-foreground" />
           </div>
           <div className="flex-1">
-            <p className="font-black text-foreground text-sm">{t("unlockPremium")}</p>
-            <p className="text-[10px] font-semibold text-foreground/70 mt-0.5">{t("monthsAccess")} · {t("prepToolsEvery")}</p>
+            <p className="font-black text-premium-foreground text-sm">{t("unlockPremium")}</p>
+            <p className="text-[10px] font-semibold text-premium-foreground/70 mt-0.5">{t("monthsAccess")} · {t("prepToolsEvery")}</p>
           </div>
-          <ChevronRight className="h-5 w-5 text-foreground/60 shrink-0" />
+          <ChevronRight className="h-5 w-5 text-premium-foreground/60 shrink-0" />
         </motion.button>
         <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="rounded-2xl bg-card p-5 border-2 border-border">
           <div className="flex items-center justify-between mb-4">
