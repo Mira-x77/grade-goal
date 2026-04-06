@@ -97,7 +97,9 @@ const Simulator = () => {
   const isOnTrack = simulatedAvg !== null && simulatedAvg >= targetAvg;
 
   const statusBg = isOnTrack ? "bg-success" : isRisky ? "bg-warning" : "bg-danger";
-  const statusHint = isBelow
+  const statusHint = !isDirty
+    ? null  // no hint when nothing has been changed
+    : isBelow
     ? "Raise your scores — especially high-coefficient subjects — to unlock Save."
     : isRisky
     ? "Almost there. Push a bit more to hit your target and unlock Save."
@@ -191,9 +193,11 @@ const Simulator = () => {
                 <p className="text-2xl font-black text-primary-foreground">{targetAvg}–20</p>
               </div>
             </div>
-            <div className="rounded-xl bg-black/15 px-3 py-2">
-              <p className="text-xs font-semibold text-primary-foreground/90">{statusHint}</p>
-            </div>
+            {statusHint && (
+              <div className="rounded-xl bg-black/15 px-3 py-2 mt-3">
+                <p className="text-xs font-semibold text-primary-foreground/90">{statusHint}</p>
+              </div>
+            )}
           </motion.div>
         </div>
 
