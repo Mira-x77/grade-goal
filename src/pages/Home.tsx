@@ -557,7 +557,7 @@ const Home = () => {
         {/* Horizontal scroll: Subjects at a glance + Class ranking */}
         {hasData && (
           <div className="overflow-x-auto -mx-6 px-6 pb-2">
-            <div className="flex gap-3 items-start" style={{ width: "max-content" }}>
+            <div className="flex gap-3 items-stretch" style={{ width: "max-content" }}>
               {/* Card 1 — Subjects at a glance (collapsible) */}
               <SubjectsGlanceCard subjects={appState!.subjects} title={t("subjectsGlance")} />
 
