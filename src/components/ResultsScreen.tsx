@@ -202,12 +202,11 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                       <div className="mx-4 mt-4 mb-3 rounded-2xl bg-secondary/10 border border-secondary/20 p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Lightbulb className="h-4 w-4 text-secondary shrink-0" />
-                          <p className="font-black text-foreground text-sm">What to do next</p>
+                          <p className="text-xs font-semibold text-muted-foreground">
+                            Prioritize {focusSubjects.map(d => d.sub.name).join(" & ")} — {focusSubjects.length === 1 ? "this is your" : "these are your"} best lever{focusSubjects.length > 1 ? "s" : ""} to hit {targetAverage}.
+                          </p>
                         </div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-3">
-                          Prioritize {focusSubjects.map(d => d.sub.name).join(" & ")} — {focusSubjects.length === 1 ? "this is your" : "these are your"} best lever{focusSubjects.length > 1 ? "s" : ""} to hit {targetAverage}.
-                        </p>
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5 mt-2">
                           {focusSubjects.length > 0 && (
                             <div className="flex items-center gap-2">
                               <Target className="h-3.5 w-3.5 text-warning shrink-0" />
