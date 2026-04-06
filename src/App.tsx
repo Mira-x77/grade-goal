@@ -38,7 +38,7 @@ const App = () => (
         </defs>
       </svg>
       <Toaster />
-      <Sonner />
+      <Sonner position="top-center" />
       <BrowserRouter>
         <AuthProvider>
           <Routes>

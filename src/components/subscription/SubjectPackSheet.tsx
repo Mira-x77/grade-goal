@@ -104,43 +104,48 @@ export function SubjectPackSheet({ open, onClose, onBack, subjects, onConfirm }:
               })}
             </div>
 
-            {/* Sticky footer */}
+            {/* Sticky footer — Switch to All REPLACES continue when total >= 1500 */}
             <div className="px-5 pb-8 pt-3 border-t border-border bg-background">
-              <AnimatePresence>
-                {switchToAll && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden mb-3"
+              <AnimatePresence mode="wait">
+                {switchToAll ? (
+                  <motion.button
+                    key="switch-all"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.18 }}
+                    onClick={() => onConfirm(subjects, ALL_SUBJECTS_PRICE)}
+                    className="w-full rounded-2xl bg-primary border-2 border-foreground py-4 font-black text-primary-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-between px-5"
                   >
-                    <button
-                      onClick={() => onConfirm(subjects, ALL_SUBJECTS_PRICE)}
-                      className="w-full rounded-xl bg-primary/10 border-2 border-primary/30 px-4 py-2.5 flex items-center gap-2 active:scale-[0.98] transition-transform"
-                    >
-                      <Zap className="h-4 w-4 text-primary shrink-0" />
-                      <div className="text-left flex-1">
-                        <p className="text-xs font-black text-primary">{t("switchToAllPass")}</p>
-                        <p className="text-[10px] font-semibold text-primary/70">{t("switchToAllDesc")}</p>
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-5 w-5 shrink-0" />
+                      <div className="text-left">
+                        <p className="text-sm font-black">{t("switchToAllPass")}</p>
+                        <p className="text-[10px] font-semibold opacity-80">{t("switchToAllDesc")}</p>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-primary shrink-0" />
-                    </button>
-                  </motion.div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 shrink-0" />
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    key="continue"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.18 }}
+                    onClick={() => count > 0 && onConfirm(Array.from(selected), total)}
+                    disabled={count === 0}
+                    className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-between px-5"
+                  >
+                    <span>
+                      {count === 0
+                        ? t("selectSubjectsPrompt")
+                        : `${count} ${count > 1 ? t("subjectsSelectedPlural") : t("subjectsSelected")}`}
+                    </span>
+                    <span className="font-black">{count > 0 ? `${total.toLocaleString()} FCFA →` : ""}</span>
+                  </motion.button>
                 )}
               </AnimatePresence>
-
-              <button
-                onClick={() => count > 0 && onConfirm(Array.from(selected), total)}
-                disabled={count === 0}
-                className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-between px-5"
-              >
-                <span>
-                  {count === 0
-                    ? t("selectSubjectsPrompt")
-                    : `${count} ${count > 1 ? t("subjectsSelectedPlural") : t("subjectsSelected")}`}
-                </span>
-                <span className="font-black">{count > 0 ? `${total.toLocaleString()} FCFA →` : ""}</span>
-              </button>
             </div>
           </motion.div>
         </>

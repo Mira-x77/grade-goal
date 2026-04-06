@@ -53,7 +53,7 @@ export function PlanSelectSheet({ open, onClose, onBack, subjectName, onSelectPa
 
             {/* Options */}
             <div className="p-5 flex flex-col gap-3 pb-8">
-              {/* Subject Pack */}
+              {/* Subject Pack — or specific subject pack if context is provided */}
               <button
                 onClick={onSelectPack}
                 className="w-full rounded-2xl bg-card border-2 border-foreground p-4 text-left card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-4"
@@ -62,8 +62,14 @@ export function PlanSelectSheet({ open, onClose, onBack, subjectName, onSelectPa
                   <BookOpen className="h-6 w-6 text-foreground" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-black text-foreground text-sm">{t("subjectPack")}</p>
-                  <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">{t("subjectPackDesc")}</p>
+                  <p className="font-black text-foreground text-sm">
+                    {subjectName ? `${subjectName} Pack` : t("subjectPack")}
+                  </p>
+                  <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">
+                    {subjectName
+                      ? `Unlock all 6 study tools for ${subjectName} · 500 FCFA`
+                      : t("subjectPackDesc")}
+                  </p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </button>

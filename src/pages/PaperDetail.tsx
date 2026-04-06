@@ -335,7 +335,13 @@ const PaperDetail = () => {
         open={showPlanSelect}
         onClose={() => setShowPlanSelect(false)}
         subjectName={paper?.subject}
-        onSelectPack={() => { setShowPlanSelect(false); setPaymentPlan("single"); setShowPaywall(true); }}
+        onSelectPack={() => {
+          // Subject pack from paper context → go straight to payment for this subject
+          setShowPlanSelect(false);
+          setPaymentPlan("single");
+          (window as any).__packAmount = 500;
+          setShowPaywall(true);
+        }}
         onSelectAll={() => { setShowPlanSelect(false); setPaymentPlan("all"); (window as any).__packAmount = undefined; setShowPaywall(true); }}
       />
       <PaymentSheet
