@@ -101,34 +101,49 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
     <div className="flex flex-col" style={{ minHeight: "60vh" }}>
       <div className="flex flex-col gap-4 px-6 pt-4 pb-24 safe-area-top">
 
-        {/* Compact status bar — not the main event, just context */}
+        {/* Compact status card */}
         <motion.div
           initial={{ y: -8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className={`rounded-2xl px-4 py-3 border-2 ${config.bg} ${config.border} flex items-center gap-3`}
+          className={`rounded-2xl border-2 ${config.bg} ${config.border} overflow-hidden`}
         >
-          {config.icon}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-foreground">
-                {currentAvg !== null ? currentAvg.toFixed(1) : "—"}
-                <span className="text-sm font-bold text-muted-foreground">/20</span>
-              </span>
-              <span className="text-xs font-bold text-muted-foreground">→ target {targetAverage}–20</span>
-            </div>
-            <p className="text-xs font-semibold text-muted-foreground mt-0.5 leading-snug">{config.sub}</p>
+          {/* Top strip — context text */}
+          <div className="flex items-center gap-2 px-4 pt-3 pb-2 border-b border-border/30">
+            {config.icon}
+            <p className="text-xs font-semibold text-foreground">{config.sub}</p>
           </div>
-          {/* Progress bar */}
-          <div className="w-16 shrink-0">
-            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-              <motion.div
-                className={`h-full rounded-full ${isOnTrack ? "bg-success" : overallStatus === "risky" ? "bg-warning" : "bg-danger"}`}
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercent}%` }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 60 }}
-              />
+
+          {/* Bottom section: left 1/3 big number | right 2/3 target + progress */}
+          <div className="flex items-stretch px-4 py-3 gap-4">
+            {/* Left 1/3 — big current average */}
+            <div className="flex items-center justify-center shrink-0" style={{ width: "33%" }}>
+              <span className={`text-5xl font-black leading-none ${
+                isOnTrack ? "text-success" : overallStatus === "risky" ? "text-warning" : "text-danger"
+              }`}>
+                {currentAvg !== null ? currentAvg.toFixed(1) : "—"}
+              </span>
             </div>
-            <p className="text-[9px] font-bold text-muted-foreground text-right mt-0.5">{progressPercent.toFixed(0)}%</p>
+
+            {/* Right 2/3 — top: target | bottom: progress bar */}
+            <div className="flex flex-col justify-between flex-1 gap-2">
+              {/* Target range */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Target</span>
+                <span className="text-sm font-black text-foreground">{targetAverage}–20</span>
+              </div>
+              {/* Progress bar */}
+              <div>
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <motion.div
+                    className={`h-full rounded-full ${isOnTrack ? "bg-success" : overallStatus === "risky" ? "bg-warning" : "bg-danger"}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercent}%` }}
+                    transition={{ delay: 0.2, type: "spring", stiffness: 60 }}
+                  />
+                </div>
+                <p className="text-[9px] font-bold text-muted-foreground text-right mt-0.5">{progressPercent.toFixed(0)}%</p>
+              </div>
+            </div>
           </div>
         </motion.div>
 
