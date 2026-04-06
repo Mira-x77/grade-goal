@@ -401,6 +401,22 @@ const Home = () => {
           </motion.div>
         )}
 
+        {/* Average empty state — has subjects but no marks yet */}
+        {hasData && currentAvg === null && (
+          <motion.div
+            ref={avgCardRef}
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="tour-dashboard rounded-2xl p-5 bg-card border-2 border-border"
+          >
+            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{t("currentAverage")}</p>
+            <p className="text-3xl font-black text-muted-foreground/40 mb-1">—/20</p>
+            <p className="text-sm font-semibold text-muted-foreground">No marks yet — add your first score to see your average</p>
+            <div className="mt-3 h-2.5 rounded-full bg-muted border border-foreground/10" />
+          </motion.div>
+        )}
+
         {/* ═════════ SAVED STRATEGY CARD ═════════ */}
         {hasData && savedStrategy && savedStrategy.marks.length > 0 && (
           <motion.div
@@ -495,8 +511,29 @@ const Home = () => {
           </motion.div>
         )}
 
+        {/* Strategy empty state — has subjects but no strategy yet */}
+        {hasData && (!savedStrategy || savedStrategy.marks.length === 0) && (
+          <Link to="/simulator" className="block">
+            <motion.div
+              initial={{ y: 15, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="rounded-2xl bg-card border-2 border-border p-4 flex items-center gap-4 active:scale-[0.98] transition-transform"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/15 border-2 border-foreground/10 shrink-0">
+                <TrendingUp className="h-6 w-6 text-foreground" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-black text-foreground text-sm">Plan your strategy</h3>
+                <p className="text-xs font-semibold text-muted-foreground mt-0.5">Simulate scores and set targets for each test</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </motion.div>
+          </Link>
+        )}
+
         {/* Start Planning CTA — new users only */}
-        {(!hasData || filledMarks === 0) && (
+        {!hasData && (
           <Link to="/planner" className="block">
             <div className="rounded-2xl bg-secondary border-2 border-foreground p-4 card-shadow flex items-center gap-4 active:translate-y-0.5 active:shadow-none transition-all">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-foreground bg-card">
@@ -504,7 +541,7 @@ const Home = () => {
               </div>
               <div className="flex-1">
                 <h3 className="font-black text-foreground">
-                  {hasData ? t("continuePlanning") : t("startPlanningAction")}
+                  {t("startPlanningAction")}
                 </h3>
                 <p className="text-xs font-semibold text-foreground/60">{t("setTargetAddSubjects")}</p>
               </div>

@@ -326,9 +326,10 @@ class CacheService {
     if (!this.db) await this.init();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORES.PAPERS, STORES.METADATA], 'readwrite');
+      const transaction = this.db!.transaction([STORES.PAPERS, STORES.DOWNLOADS, STORES.METADATA], 'readwrite');
 
       transaction.objectStore(STORES.PAPERS).clear();
+      transaction.objectStore(STORES.DOWNLOADS).clear();
       transaction.objectStore(STORES.METADATA).clear();
 
       transaction.oncomplete = () => resolve();

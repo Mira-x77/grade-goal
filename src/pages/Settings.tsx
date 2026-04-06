@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, RotateCcw, Mail, LogOut, Pencil, Check, Sun, Moon, Monitor, Zap, ChevronDown } from "lucide-react";
+import { Trash2, RotateCcw, Mail, LogOut, Pencil, Check, Sun, Moon, Monitor, Zap, ChevronDown, AlertTriangle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppTheme, AccentColor } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -9,6 +9,8 @@ import { AppSettings, DEFAULT_SETTINGS, AppState, RoundingMode } from "@/types/e
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import TaskBar from "@/components/TaskBar";
+import { cacheService } from "@/services/cacheService";
+import { downloadService } from "@/services/downloadService";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -18,6 +20,7 @@ const Settings = () => {
   const [accentOpen, setAccentOpen] = useState(false);
   const [state, setState] = useState<AppState | null>(null);
   const [editingWeights, setEditingWeights] = useState(false);
+  const [showWipeConfirm, setShowWipeConfirm] = useState(false);
 
   useEffect(() => {
     const loaded = loadState();
@@ -87,17 +90,34 @@ const Settings = () => {
     toast.success("All marks cleared. Subjects & coefficients kept.");
   };
 
-  const wipeAll = () => {
+  const wipeAll = async () => {
+    try {
+      // Delete actual downloaded files from filesystem
+      const downloaded = await downloadService.getDownloadedPapers();
+      if (downloaded.length > 0) {
+        await downloadService.deleteMultiplePapers(downloaded.map(d => d.paperId));
+      }
+    } catch (e) {
+      console.warn("Failed to delete downloaded files:", e);
+    }
+    try {
+      await cacheService.clearAll();
+    } catch (e) {
+      console.warn("Failed to clear cache:", e);
+    }
     localStorage.removeItem("scoretarget_state");
     localStorage.removeItem("scoretarget_history");
     localStorage.removeItem("scoretarget_streak");
+    localStorage.removeItem("scoretarget_tour_seen");
     setState({
       step: "onboarding",
       targetAverage: 16,
       subjects: [],
       settings: DEFAULT_SETTINGS,
     });
+    setShowWipeConfirm(false);
     toast.success("All data wiped.");
+    navigate("/auth");
   };
 
   return (
@@ -443,9 +463,7 @@ const Settings = () => {
               <p className="text-xs text-muted-foreground font-semibold">{t("allDataStoredDevice")}</p>
             </div>
             <button
-              onClick={() => {
-                if (confirm(t("wipeConfirm"))) wipeAll();
-              }}
+              onClick={() => setShowWipeConfirm(true)}
               className="flex items-center gap-2 rounded-xl bg-danger/15 px-4 py-3 font-bold text-danger active:scale-[0.98] transition-transform"
             >
               <Trash2 className="h-4 w-4" />
@@ -471,6 +489,58 @@ const Settings = () => {
       </div>
 
       <TaskBar showBack />
+
+      {/* Wipe confirmation bottom sheet */}
+      <AnimatePresence>
+        {showWipeConfirm && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowWipeConfirm(false)}
+              className="fixed inset-0 z-50 bg-black/50"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground p-6 pb-10"
+            >
+              {/* Handle */}
+              <div className="w-10 h-1 rounded-full bg-foreground/20 mx-auto mb-6" />
+
+              {/* Warning icon */}
+              <div className="flex justify-center mb-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-danger/15 border-2 border-danger/30">
+                  <AlertTriangle className="h-8 w-8 text-danger" />
+                </div>
+              </div>
+
+              <h2 className="text-xl font-black text-foreground text-center mb-2">Wipe all data?</h2>
+              <p className="text-sm font-semibold text-muted-foreground text-center leading-relaxed mb-8">
+                This will permanently delete all your marks, subjects, strategy, and downloaded papers. This cannot be undone.
+              </p>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => wipeAll()}
+                  className="w-full rounded-2xl bg-danger px-4 py-4 font-black text-white active:scale-[0.98] transition-transform"
+                >
+                  Wipe Everything
+                </button>
+                <button
+                  onClick={() => setShowWipeConfirm(false)}
+                  className="w-full rounded-2xl bg-muted px-4 py-4 font-bold text-muted-foreground active:scale-[0.98] transition-transform"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

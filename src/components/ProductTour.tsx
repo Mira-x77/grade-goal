@@ -42,7 +42,7 @@ export default function ProductTour() {
   useEffect(() => {
     const seen = localStorage.getItem("scoretarget_tour_seen");
     if (seen) return;
-    // Small delay to let the home screen render fully
+    // Delay to let the home screen render fully, then check for subjects
     const t = setTimeout(() => {
       const raw = localStorage.getItem("scoretarget_state");
       let hasData = false;
@@ -50,7 +50,7 @@ export default function ProductTour() {
         try { hasData = JSON.parse(raw)?.subjects?.length > 0; } catch {}
       }
       if (hasData) setRun(true);
-    }, 1200);
+    }, 2000);
     return () => clearTimeout(t);
   }, []);
 
