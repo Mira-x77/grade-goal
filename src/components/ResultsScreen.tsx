@@ -31,10 +31,10 @@ function getSubjectStatus(needed: number | null, currentAvg: number | null): "sa
 }
 
 const subjectStatusConfig = {
-  safe:        { dot: "bg-success",  label: "Safe",        labelColor: "text-success",  border: "border-l-success" },
-  recoverable: { dot: "bg-warning",  label: "Recoverable", labelColor: "text-warning",  border: "border-l-warning" },
-  critical:    { dot: "bg-danger",   label: "Critical",    labelColor: "text-danger",   border: "border-l-danger" },
-  complete:    { dot: "bg-primary",  label: "Complete",    labelColor: "text-primary",  border: "border-l-primary" },
+  safe:        { dot: "bg-success",  label: "Safe",        labelColor: "text-success" },
+  recoverable: { dot: "bg-warning",  label: "Recoverable", labelColor: "text-warning" },
+  critical:    { dot: "bg-danger",   label: "Critical",    labelColor: "text-danger" },
+  complete:    { dot: "bg-primary",  label: "Complete",    labelColor: "text-primary" },
 };
 
 const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: ResultsScreenProps) => {
@@ -234,68 +234,56 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                         const sc = subjectStatusConfig[status];
                         const neededClamped = needed !== null ? Math.min(20, Math.max(0, needed)) : null;
 
+                        // Plain-English action sentence
+                        const markLabel = primaryMissing === "compo" ? "Compo" : primaryMissing === "dev" ? "Devoir" : "Interro";
+                        const actionText = (() => {
+                          if (status === "complete") return "All marks entered — nothing left to do here.";
+                          if (status === "safe") return `Already contributing to your target — don't let it slip.`;
+                          if (neededClamped !== null && neededClamped > 20) return `Even 20/20 on ${markLabel} won't be enough — adjust your target.`;
+                          if (neededClamped !== null) return `Score ≥ ${neededClamped.toFixed(1)} on ${markLabel} to stay on track.`;
+                          return "Keep it up.";
+                        })();
+
+                        // Progress bar: current → best case, range 0–20
+                        const currentPct = currentSubAvg !== null ? (currentSubAvg / 20) * 100 : 0;
+                        const bestPct = (bestSubAvg / 20) * 100;
+
                         return (
-                          <div
-                            key={sub.id}
-                            className={`rounded-2xl bg-card border-2 border-border overflow-hidden border-l-4 ${sc.border}`}
-                          >
-                            {/* Subject header */}
-                            <div className="flex items-center justify-between px-4 pt-3 pb-2">
+                          <div key={sub.id} className="rounded-2xl bg-card border-2 border-border px-4 py-3">
+                            {/* Row 1: dot + name + coeff + status */}
+                            <div className="flex items-center justify-between mb-1.5">
                               <div className="flex items-center gap-2">
-                                <div className={`h-3 w-3 rounded-full ${sc.dot} shrink-0`} />
+                                <div className={`h-2.5 w-2.5 rounded-full ${sc.dot} shrink-0`} />
                                 <span className="font-black text-sm text-foreground">{sub.name}</span>
+                                <span className="text-[10px] font-bold text-muted-foreground">×{sub.coefficient}</span>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className={`text-[10px] font-black ${sc.labelColor}`}>{sc.label}</span>
-                                <span className="text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">Coeff {sub.coefficient}</span>
-                              </div>
+                              <span className={`text-[10px] font-black ${sc.labelColor}`}>{sc.label}</span>
                             </div>
 
-                            {/* Three columns */}
-                            <div className="grid grid-cols-3 gap-0 px-4 pb-3">
-                              <div className="text-center">
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Current</p>
-                                <p className={`text-lg font-black ${currentSubAvg !== null ? "text-foreground" : "text-muted-foreground/40"}`}>
-                                  {currentSubAvg !== null ? currentSubAvg.toFixed(1) : "—"}
-                                  <span className="text-[10px] font-bold text-muted-foreground">/20</span>
-                                </p>
-                              </div>
-                              <div className="text-center border-x border-border">
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Need</p>
-                                <p className={`text-lg font-black ${
-                                  neededClamped === null ? "text-muted-foreground/40"
-                                  : neededClamped > 16 ? "text-danger"
-                                  : neededClamped > 10 ? "text-warning"
-                                  : "text-success"
-                                }`}>
-                                  {neededClamped !== null ? neededClamped.toFixed(1) : "—"}
-                                  {neededClamped !== null && <span className="text-[10px] font-bold text-muted-foreground">/20</span>}
-                                </p>
-                                {primaryMissing && (
-                                  <p className="text-[9px] font-semibold text-muted-foreground">{primaryMissing === "compo" ? "Compo" : primaryMissing === "dev" ? "Devoir" : "Interro"}</p>
-                                )}
-                              </div>
-                              <div className="text-center">
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Best case</p>
-                                <p className="text-lg font-black text-success">
-                                  {bestSubAvg.toFixed(1)}
-                                  <span className="text-[10px] font-bold text-muted-foreground">/20</span>
-                                </p>
-                              </div>
-                            </div>
+                            {/* Row 2: action sentence */}
+                            <p className="text-xs font-semibold text-muted-foreground mb-2">{actionText}</p>
 
-                            {/* Impact line */}
-                            {needed !== null && needed <= 20 && (
-                              <div className="px-4 pb-3">
-                                <p className="text-[10px] font-semibold text-muted-foreground">
-                                  {needed <= 0
-                                    ? "✓ Already contributing to your target"
-                                    : needed > 20
-                                    ? "⚠ Even 20/20 won't be enough here"
-                                    : `↑ Score ${neededClamped?.toFixed(1)} on ${primaryMissing === "compo" ? "Compo" : primaryMissing === "dev" ? "Devoir" : "Interro"} to stay on track`}
-                                </p>
-                              </div>
-                            )}
+                            {/* Row 3: progress bar current → best case */}
+                            <div className="relative h-2 rounded-full bg-muted overflow-hidden">
+                              {/* Best case fill */}
+                              <div
+                                className="absolute left-0 top-0 h-full rounded-full bg-success/30 transition-all duration-500"
+                                style={{ width: `${bestPct}%` }}
+                              />
+                              {/* Current fill */}
+                              <div
+                                className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ${
+                                  status === "critical" ? "bg-danger" : status === "recoverable" ? "bg-warning" : "bg-success"
+                                }`}
+                                style={{ width: `${currentPct}%` }}
+                              />
+                            </div>
+                            <div className="flex justify-between mt-1">
+                              <span className="text-[9px] font-bold text-muted-foreground">
+                                {currentSubAvg !== null ? `${currentSubAvg.toFixed(1)} now` : "No marks yet"}
+                              </span>
+                              <span className="text-[9px] font-bold text-success">{bestSubAvg.toFixed(1)} best case</span>
+                            </div>
                           </div>
                         );
                       })}
