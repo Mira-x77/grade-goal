@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Save, ChevronDown } from "lucide-react";
+import { Save, ChevronDown, Lock } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
 import { simulateYearlyAverage } from "@/lib/exam-logic";
@@ -93,10 +93,10 @@ const Simulator = () => {
 
   const statusBg = isOnTrack ? "bg-success" : isRisky ? "bg-warning" : "bg-danger";
   const statusHint = isBelow
-    ? "Raise your target scores — especially in high-coefficient subjects."
+    ? "Raise your scores — especially high-coefficient subjects — to unlock Save."
     : isRisky
-    ? "You're close. A small push on remaining tests could get you there."
-    : "You're on track to hit your target range.";
+    ? "Almost there. Push a bit more to hit your target and unlock Save."
+    : "You're on track. Tap Save to lock in this strategy.";
 
   if (subjects.length === 0) {
     return (
@@ -229,16 +229,30 @@ const Simulator = () => {
 
       <TaskBar showBack action={
         isDirty ? (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.5, x: -16 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            exit={{ opacity: 0, scale: 0.5, x: -16 }}
-            transition={{ type: "spring", stiffness: 380, damping: 28 }}
-            onClick={handleSaveStrategy}
-            className="h-12 w-12 rounded-full bg-secondary border-2 border-foreground card-shadow flex items-center justify-center active:scale-95 transition-transform"
-          >
-            <Save className="h-5 w-5 text-foreground" />
-          </motion.button>
+          isOnTrack ? (
+            // Valid strategy — show Save
+            <motion.button
+              initial={{ opacity: 0, scale: 0.5, x: -16 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.5, x: -16 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28 }}
+              onClick={handleSaveStrategy}
+              className="h-12 w-12 rounded-full bg-secondary border-2 border-foreground card-shadow flex items-center justify-center active:scale-95 transition-transform"
+            >
+              <Save className="h-5 w-5 text-foreground" />
+            </motion.button>
+          ) : (
+            // Not on target yet — locked Save with visual hint
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5, x: -16 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.5, x: -16 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28 }}
+              className="h-12 w-12 rounded-full bg-muted border-2 border-border flex items-center justify-center opacity-50"
+            >
+              <Lock className="h-5 w-5 text-muted-foreground" />
+            </motion.div>
+          )
         ) : undefined
       } />
     </div>
