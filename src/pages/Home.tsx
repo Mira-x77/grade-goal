@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, Flame, AlertTriangle, ChevronRight, ChevronDown, BookOpen, BarChart3, TrendingUp, Settings as SettingsIcon, User, Trophy, FileDown, PenLine, Zap, Plus, X, Check, Clock, ArrowUpRight, Trash2, Pencil, Crown, Bell } from "lucide-react";
+import { Target, Flame, AlertTriangle, ChevronRight, BookOpen, BarChart3, TrendingUp, Settings as SettingsIcon, User, Trophy, FileDown, PenLine, Zap, Plus, X, Check, Clock, ArrowUpRight, Trash2, Pencil, Crown, Bell } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState, getStreak, getHistory, HistoryEntry } from "@/lib/storage";
 import { downloadService } from "@/services/downloadService";
@@ -24,98 +24,6 @@ const markTypeLabels: Record<string, string> = {
   dev: "Devoir",
   compo: "Compo",
 };
-
-// ── Subjects at a glance card with collapsible rows ──────────────────────────
-function SubjectsGlanceCard({ subjects, title }: { subjects: Subject[]; title: string }) {
-  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
-
-  const toggle = (id: string) => {
-    setOpenIds(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  return (
-    <div className="rounded-2xl bg-card border-2 border-border flex-shrink-0 overflow-hidden" style={{ width: "calc(100vw - 4rem)" }}>
-      {/* Card header */}
-      <div className="px-4 pt-4 pb-2 border-b border-border">
-        <h3 className="font-black text-foreground text-sm">{title}</h3>
-      </div>
-
-      <div className="flex flex-col divide-y divide-border">
-        {subjects.map((sub) => {
-          const marks = [
-            { label: "Interro", short: "I", value: sub.marks.interro },
-            { label: "Devoir", short: "D", value: sub.marks.dev },
-            { label: "Compo", short: "C", value: sub.marks.compo },
-          ];
-          const filled = marks.filter(m => m.value !== null).length;
-          const avg = filled > 0
-            ? marks.filter(m => m.value !== null).reduce((a, m) => a + m.value!, 0) / filled
-            : null;
-          const isOpen = openIds.has(sub.id);
-
-          return (
-            <div key={sub.id}>
-              {/* Row header — always visible, tappable */}
-              <button
-                onClick={() => toggle(sub.id)}
-                className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/40 transition-colors"
-              >
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <span className="text-sm font-black text-foreground truncate">{sub.name}</span>
-                  <span className="text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full shrink-0">×{sub.coefficient}</span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-sm font-black text-foreground">
-                    {avg !== null ? avg.toFixed(1) : "—"}
-                    <span className="text-xs font-bold text-muted-foreground">/20</span>
-                  </span>
-                  <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.18 }}>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  </motion.div>
-                </div>
-              </button>
-
-              {/* Expandable mark pills */}
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="flex gap-2 px-4 pb-3">
-                      {marks.map((m) => (
-                        <div
-                          key={m.short}
-                          className={`flex-1 rounded-xl py-2 text-center border-2 ${
-                            m.value !== null
-                              ? "bg-primary/10 border-primary/30 text-primary"
-                              : "bg-muted border-border text-muted-foreground/50"
-                          }`}
-                        >
-                          <p className="text-[9px] font-black uppercase tracking-wide">{m.label}</p>
-                          <p className="text-sm font-black mt-0.5">
-                            {m.value !== null ? m.value.toFixed(1) : "—"}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 const Home = () => {
   const state = loadState();
@@ -527,7 +435,42 @@ const Home = () => {
           <div className="overflow-x-auto -mx-6 px-6 pb-2">
             <div className="flex gap-3 items-start" style={{ width: "max-content" }}>
               {/* Card 1 — Subjects at a glance */}
-              <SubjectsGlanceCard subjects={appState!.subjects} title={t("subjectsGlance")} />
+              <div className="rounded-2xl bg-card p-4 border-2 border-border flex-shrink-0" style={{ width: "calc(100vw - 4rem)" }}>
+                <h3 className="font-black text-foreground text-sm mb-3">{t("subjectsGlance")}</h3>
+                <div className="flex flex-col gap-2">
+                  {appState!.subjects.map((sub) => {
+                    const marks = [
+                      { label: "I", value: sub.marks.interro },
+                      { label: "D", value: sub.marks.dev },
+                      { label: "C", value: sub.marks.compo },
+                    ];
+                    const filled = marks.filter(m => m.value !== null).length;
+                    const avg = filled > 0
+                      ? marks.filter(m => m.value !== null).reduce((a, m) => a + m.value!, 0) / filled
+                      : null;
+                    return (
+                      <div key={sub.id} className="rounded-xl bg-muted/50 px-3 py-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-foreground">{sub.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-muted-foreground">×{sub.coefficient}</span>
+                            <span className="text-sm font-black text-foreground">
+                              {avg !== null ? avg.toFixed(1) : "—"}<span className="text-xs font-bold text-muted-foreground">/20</span>
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-1.5 mt-1.5">
+                          {marks.map((m) => (
+                            <div key={m.label} className={`flex-1 rounded-lg py-1 text-center text-[10px] font-black ${m.value !== null ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground/40"}`}>
+                              {m.value !== null ? m.value.toFixed(1) : m.label}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Card 2 — Class ranking */}
               <div className="flex-shrink-0" style={{ width: "calc(100vw - 4rem)" }}>
