@@ -131,7 +131,7 @@ const Index = () => {
                 // Save state as "results" so home screen knows onboarding is done, then navigate home
                 const finalState = { ...state, step: "results" as const };
                 saveState(finalState);
-                navigate("/home");
+                navigate("/");
               }}
               onBack={() => setStep("subjects")}
               classLevel={state.classLevel}

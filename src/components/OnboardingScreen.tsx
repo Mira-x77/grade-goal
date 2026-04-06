@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, Zap, BookOpen, Globe } from "lucide-react";
+import { Target, BookOpen, Globe } from "lucide-react";
 import { GradingSystem } from "@/types/exam";
 import { CLASS_LEVELS, LYCEE_SERIES } from "@/lib/subjects-data";
 import Mascot from "@/components/Mascot";
@@ -177,7 +177,7 @@ const OnboardingScreen = ({
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -50 }}
-          className="flex flex-col items-center gap-8 px-6 pt-28 pb-36"
+          className="flex flex-col items-center gap-6 px-6 pt-28 pb-36 overflow-y-auto min-h-screen"
         >
           <motion.div
             initial={{ scale: 0.3, opacity: 0 }}
@@ -335,19 +335,6 @@ const OnboardingScreen = ({
               </div>
             </div>
 
-            <div className="mt-4 rounded-2xl bg-card p-4 border-2 border-border">
-              <div className="flex items-center gap-3 text-sm">
-                <Zap className="h-5 w-5 text-accent" />
-                <div>
-                  <p className="font-bold text-foreground">
-                    {gradingSystem === "apc" ? t("apcSystem") : t("frenchTraditional")}
-                  </p>
-                  <p className="text-muted-foreground">
-                    {classLevel}{serie ? ` · Série ${serie}` : ""}
-                  </p>
-                </div>
-              </div>
-            </div>
           </motion.div>
 
           <FixedNextButton onClick={onContinue} label={language === "fr" ? "Commencer" : "Let's go"} />

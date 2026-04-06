@@ -56,15 +56,23 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
   const addCustom = () => {
     const name = (customName || search).trim();
     if (!name || existingNames.has(name.toLowerCase())) return;
-    const newSubject: Subject = {
+    // Add custom subject AND any currently selected ones together
+    const customSubject: Subject = {
       id: crypto.randomUUID(),
       name,
       coefficient: 1,
       marks: { interro: null, dev: null, compo: null },
     };
-    onSubjectsChange([...subjects, newSubject]);
+    const selectedSubjects = Array.from(selected).map((n) => ({
+      id: crypto.randomUUID(),
+      name: n,
+      coefficient: 1,
+      marks: { interro: null, dev: null, compo: null },
+    }));
+    onSubjectsChange([...subjects, customSubject, ...selectedSubjects]);
     setSearch("");
     setCustomName("");
+    setSelected(new Set());
     setShowAddModal(false);
   };
 
@@ -214,7 +222,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
     <div className="flex flex-col h-screen bg-background max-w-md mx-auto overflow-hidden">
 
       {hasSubjects && (
-        <div className="pt-20 px-6 pb-2 flex-shrink-0 safe-area-top">
+        <div className="px-6 pb-2 flex-shrink-0 safe-area-top" style={{ paddingTop: "calc(5rem + env(safe-area-inset-top))" }}>
           <div className="flex items-center border-b border-border pb-1">
             <span className="flex-1 text-xs font-black text-muted-foreground uppercase tracking-wider">Subject</span>
             <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-10">Coefficient</span>
