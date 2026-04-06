@@ -113,6 +113,7 @@ const Home = () => {
   const [showResultsSheet, setShowResultsSheet] = useState(false);
   const [showAllActivity, setShowAllActivity] = useState(false);
   const [showEditMarksSheet, setShowEditMarksSheet] = useState(false);
+  const [strategyOpen, setStrategyOpen] = useState(false);
   const [showPlanSelect, setShowPlanSelect] = useState(false);
   const [showPaymentSheet, setShowPaymentSheet] = useState(false);
   const [showPremiumIntro, setShowPremiumIntro] = useState(false);
@@ -406,17 +407,21 @@ const Home = () => {
             initial={{ y: 15, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="rounded-2xl bg-card border-2 border-secondary/40 p-4 relative overflow-hidden"
+            className="rounded-2xl bg-card border-2 border-secondary/40 overflow-hidden relative"
           >
-            {/* Subtle accent stripe */}
+            {/* Accent stripe */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary via-secondary/60 to-transparent" />
 
-            <div className="flex items-center justify-between mb-3">
+            {/* Collapsible header */}
+            <button
+              onClick={() => setStrategyOpen(v => !v)}
+              className="w-full flex items-center justify-between px-4 pt-4 pb-3 active:bg-muted/30 transition-colors"
+            >
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary/15">
                   <Target className="h-4 w-4 text-secondary" />
                 </div>
-                <div>
+                <div className="text-left">
                   <h3 className="font-black text-foreground text-sm">{t("myStrategy")}</h3>
                   <p className="text-[10px] font-bold text-muted-foreground">
                     {t("projectedAverage")}: {savedStrategy.simulatedAverage.toFixed(1)}/20
@@ -426,53 +431,67 @@ const Home = () => {
               <div className="flex items-center gap-1.5">
                 <Link
                   to="/simulator"
+                  onClick={(e) => e.stopPropagation()}
                   className="flex items-center justify-center rounded-lg bg-secondary/15 h-7 w-7 active:scale-95 transition-transform"
                 >
                   <Pencil className="h-3.5 w-3.5 text-secondary" />
                 </Link>
                 <button
-                  onClick={handleClearStrategy}
+                  onClick={(e) => { e.stopPropagation(); handleClearStrategy(); }}
                   className="flex items-center justify-center rounded-lg bg-muted h-7 w-7 text-[10px] font-black text-muted-foreground active:scale-95 transition-transform"
                 >
                   <Trash2 className="h-3 w-3" />
                 </button>
+                <motion.div animate={{ rotate: strategyOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </motion.div>
               </div>
-            </div>
+            </button>
 
-            <div className="flex flex-col gap-1.5">
-              {savedStrategy.marks.map((sm) => {
-                // Check if the actual mark has been entered
-                const sub = appState!.subjects.find((s) => s.id === sm.subjectId);
-                const actualMark = sub ? sub.marks[sm.markType] : null;
-                const isFulfilled = actualMark !== null;
-
-                return (
-                  <div
-                    key={`${sm.subjectId}-${sm.markType}`}
-                    className={`flex items-center justify-between rounded-lg px-3 py-2 ${
-                      isFulfilled ? "bg-success/10" : "bg-muted/50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {isFulfilled ? (
-                        <Check className="h-3.5 w-3.5 text-success flex-shrink-0" />
-                      ) : (
-                        <div className="h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                      )}
-                      <span className={`text-xs font-bold ${isFulfilled ? "text-success line-through" : "text-foreground"}`}>
-                        {sm.subjectName}
-                      </span>
-                      <span className="text-[10px] font-semibold text-muted-foreground">
-                        {markTypeLabels[sm.markType]}
-                      </span>
-                    </div>
-                    <span className={`text-xs font-black ${isFulfilled ? "text-success" : "text-foreground"}`}>
-                      {isFulfilled ? `${actualMark!.toFixed(1)}` : `${sm.targetValue.toFixed(1)}`}/20
-                    </span>
+            <AnimatePresence initial={false}>
+              {strategyOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex flex-col gap-1.5 px-4 pb-4 border-t border-secondary/20 pt-3">
+                    {savedStrategy.marks.map((sm) => {
+                      const sub = appState!.subjects.find((s) => s.id === sm.subjectId);
+                      const actualMark = sub ? sub.marks[sm.markType] : null;
+                      const isFulfilled = actualMark !== null;
+                      return (
+                        <div
+                          key={`${sm.subjectId}-${sm.markType}`}
+                          className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                            isFulfilled ? "bg-success/10" : "bg-muted/50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            {isFulfilled ? (
+                              <Check className="h-3.5 w-3.5 text-success flex-shrink-0" />
+                            ) : (
+                              <div className="h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
+                            )}
+                            <span className={`text-xs font-bold ${isFulfilled ? "text-success line-through" : "text-foreground"}`}>
+                              {sm.subjectName}
+                            </span>
+                            <span className="text-[10px] font-semibold text-muted-foreground">
+                              {markTypeLabels[sm.markType]}
+                            </span>
+                          </div>
+                          <span className={`text-xs font-black ${isFulfilled ? "text-success" : "text-foreground"}`}>
+                            {isFulfilled ? `${actualMark!.toFixed(1)}` : `${sm.targetValue.toFixed(1)}`}/20
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
 

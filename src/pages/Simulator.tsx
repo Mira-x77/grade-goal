@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, Check, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -56,8 +56,15 @@ const Simulator = () => {
     });
   });
 
-  // Auto-save strategy whenever overrides change
-  useEffect(() => {
+  // Track whether user has made any changes since last save
+  const [isDirty, setIsDirty] = useState(false);
+
+  const updateOverride = (index: number, value: number) => {
+    setOverrides((prev) => prev.map((o, i) => (i === index ? { ...o, value } : o)));
+    setIsDirty(true);
+  };
+
+  const handleSaveStrategy = () => {
     if (!state || subjects.length === 0) return;
     const strategyMarks: StrategyMark[] = emptySlots.map((slot, i) => ({
       subjectId: slot.subjectId,
@@ -74,10 +81,7 @@ const Simulator = () => {
       marks: strategyMarks,
     };
     saveState({ ...state, savedStrategy: strategy });
-  }, [overrides]);
-
-  const updateOverride = (index: number, value: number) => {
-    setOverrides((prev) => prev.map((o, i) => (i === index ? { ...o, value } : o)));
+    setIsDirty(false);
   };
 
   const simulatedAvg = simulateYearlyAverage(subjects, overrides);
@@ -205,7 +209,17 @@ const Simulator = () => {
           </div>
         )}
       </div>
-      <TaskBar showBack />
+      <TaskBar showBack action={
+        isDirty ? (
+          <button
+            onClick={handleSaveStrategy}
+            className="h-12 px-5 rounded-full bg-secondary border-2 border-foreground card-shadow flex items-center gap-2 font-black text-sm text-foreground active:scale-95 transition-transform"
+          >
+            <Check className="h-4 w-4" />
+            Save
+          </button>
+        ) : undefined
+      } />
     </div>
   );
 };
