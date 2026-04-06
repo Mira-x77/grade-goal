@@ -41,15 +41,17 @@ export default function ProductTour() {
 
   useEffect(() => {
     const seen = localStorage.getItem("scoretarget_tour_seen");
-    const raw = localStorage.getItem("scoretarget_state");
-    let hasData = false;
-    if (raw) {
-      try { hasData = JSON.parse(raw)?.subjects?.length > 0; } catch {}
-    }
-    if (!seen && hasData) {
-      const t = setTimeout(() => setRun(true), 800);
-      return () => clearTimeout(t);
-    }
+    if (seen) return;
+    // Small delay to let the home screen render fully
+    const t = setTimeout(() => {
+      const raw = localStorage.getItem("scoretarget_state");
+      let hasData = false;
+      if (raw) {
+        try { hasData = JSON.parse(raw)?.subjects?.length > 0; } catch {}
+      }
+      if (hasData) setRun(true);
+    }, 1200);
+    return () => clearTimeout(t);
   }, []);
 
   const updateRect = useCallback(() => {
