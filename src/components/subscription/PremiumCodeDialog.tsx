@@ -80,7 +80,7 @@ export function PremiumCodeDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Crown className="h-5 w-5 text-yellow-500" />
+            <Crown className="h-5 w-5 text-secondary" />
             Enter Access Code
           </DialogTitle>
           <DialogDescription>
@@ -90,9 +90,9 @@ export function PremiumCodeDialog({
 
         <div className="space-y-4 py-4">
           {/* Premium Pricing Info */}
-          <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
+          <div className="bg-secondary/10 rounded-xl p-4 border border-secondary/20">
             <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
-              <Crown className="h-4 w-4 text-yellow-600" />
+              <Crown className="h-4 w-4 text-secondary" />
               Pass Smarter Plans (Full Access)
             </h3>
             <div className="space-y-2 text-sm">

@@ -105,14 +105,14 @@ export function SubscriptionDetailDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden bg-card border-border">
         {/* Header / Hero */}
-        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 px-6 pt-8 pb-6 border-b border-yellow-200 dark:border-yellow-800 text-center relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-yellow-200/50 dark:bg-yellow-600/20 rounded-full blur-3xl"></div>
+        <div className="bg-secondary/10 px-6 pt-8 pb-6 border-b border-secondary/20 text-center relative overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-secondary/20 rounded-full blur-3xl"></div>
           
-          <Crown className="h-10 w-10 text-yellow-500 mx-auto mb-3 relative z-10" />
-          <h2 className="text-2xl font-black text-yellow-950 dark:text-yellow-500 leading-tight mb-2 relative z-10">
+          <Crown className="h-10 w-10 text-secondary mx-auto mb-3 relative z-10" />
+          <h2 className="text-2xl font-black text-foreground leading-tight mb-2 relative z-10">
             Focus on what actually matters.
           </h2>
-          <p className="text-sm font-semibold text-yellow-800/80 dark:text-yellow-500/80 relative z-10">
+          <p className="text-sm font-semibold text-muted-foreground relative z-10">
             These questions cover ~70% of past exams.
           </p>
         </div>
@@ -142,14 +142,13 @@ export function SubscriptionDetailDialog({
             {/* CTA 1 (Pack) */}
             <button 
               onClick={handlePackClick}
-              className="w-full relative overflow-hidden group rounded-2xl bg-yellow-400 hover:bg-yellow-500 transition-all p-4 flex flex-col items-center justify-center border-2 border-yellow-500 card-shadow shadow-yellow-500/20 active:scale-[0.98]"
+              className="w-full relative overflow-hidden group rounded-2xl bg-secondary border-2 border-foreground transition-all p-4 flex flex-col items-center justify-center card-shadow active:translate-y-0.5 active:shadow-none active:scale-[0.98]"
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
-              <span className="relative z-10 text-lg font-black text-yellow-950 flex items-center justify-center gap-2">
+              <span className="relative z-10 text-lg font-black text-foreground flex items-center justify-center gap-2">
                 Unlock {currentSubject} Pack
                 <ArrowRight className="h-5 w-5" />
               </span>
-              <span className="relative z-10 text-sm font-bold text-yellow-900 mt-1">
+              <span className="relative z-10 text-sm font-bold text-foreground/70 mt-1">
                 {packPrice}
               </span>
             </button>

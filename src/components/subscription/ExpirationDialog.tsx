@@ -24,7 +24,7 @@ export function ExpirationDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-orange-500" />
+            <Calendar className="h-5 w-5 text-secondary" />
             Premium Expired
           </DialogTitle>
           <DialogDescription>

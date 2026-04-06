@@ -33,10 +33,10 @@ export function SubscriptionBadge({ onClick }: SubscriptionBadgeProps) {
     return (
       <button
         onClick={onClick}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 hover:bg-yellow-500/25 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/20 border border-secondary/40 active:bg-secondary/30 transition-colors"
       >
-        <Crown className="h-4 w-4 text-yellow-500" />
-        <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400">Full Access</span>
+        <Crown className="h-4 w-4 text-secondary" />
+        <span className="text-sm font-bold text-foreground">Full Access</span>
       </button>
     );
   }
