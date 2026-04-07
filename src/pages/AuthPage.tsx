@@ -151,16 +151,17 @@ export default function AuthPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="flex justify-center pb-0 safe-area-top relative pt-12">
-        <div className="absolute top-4 right-6 z-10">
-          <button 
-            onClick={() => setLang(language === 'fr' ? 'en' : 'fr')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-foreground bg-card font-black text-xs text-foreground card-shadow active:translate-y-[2px] active:shadow-none transition-all"
-          >
-            <Globe className="h-3.5 w-3.5" />
-            {language === 'fr' ? 'FR' : 'EN'}
-          </button>
-        </div>
+      <div className="w-full flex justify-end px-6 pt-4 safe-area-top relative z-10">
+        <button 
+          onClick={() => setLang(language === 'fr' ? 'en' : 'fr')}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-foreground bg-card font-black text-xs text-foreground card-shadow active:translate-y-[2px] active:shadow-none transition-all"
+        >
+          <Globe className="h-3.5 w-3.5" />
+          {language === 'fr' ? 'FR' : 'EN'}
+        </button>
+      </div>
+      
+      <div className="flex justify-center pb-0 -mt-4 relative z-0">
         <Mascot pose="pointing" size={120} animate />
       </div>
 
