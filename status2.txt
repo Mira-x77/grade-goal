@@ -1,0 +1,43 @@
+﻿ M android/app/capacitor.build.gradle
+ M android/capacitor.settings.gradle
+ M package-lock.json
+ M package.json
+ M src/components/FrenchClassView.tsx
+ M src/components/HistoryTimeline.tsx
+ M src/components/MarksInput.tsx
+ M src/components/OnboardingScreen.tsx
+ M src/components/ProductTour.tsx
+ M src/components/ResultsScreen.tsx
+ M src/components/SubjectBreakdown.tsx
+ M src/components/SubjectsSetup.tsx
+ M src/components/exam/InAppPDFViewer.tsx
+ M src/components/exam/PDFViewer.tsx
+ M src/components/exam/PaperFilters.tsx
+ M src/components/subscription/DownloadLimitDialog.tsx
+ M src/components/subscription/ExpirationDialog.tsx
+ M src/components/subscription/PremiumCodeDialog.tsx
+ M src/components/subscription/PremiumIntroSheet.tsx
+ M src/components/subscription/SubscriptionBadge.tsx
+ M src/components/subscription/SubscriptionDetailDialog.tsx
+ M src/lib/exam-logic.ts
+ M src/lib/filesystem.ts
+ M src/lib/i18n.ts
+ M src/pages/AuthCallback.tsx
+ M src/pages/AuthPage.tsx
+ M src/pages/ExamPrep.tsx
+ M src/pages/Home.tsx
+ M src/pages/Index.tsx
+ M src/pages/Library.tsx
+ M src/pages/LibraryDirect.tsx
+ M src/pages/MyDownloads.tsx
+ M src/pages/NotFound.tsx
+ M src/pages/PaperDetail.tsx
+ M src/pages/Profile.tsx
+ M src/pages/Settings.tsx
+ M src/pages/Simulator.tsx
+ M src/pages/SubjectDashboard.tsx
+?? .kiro/hooks/
+?? src/components/OnboardingChecklist.tsx
+?? src/components/ScreenIntro.tsx
+?? status.txt
+?? status2.txt

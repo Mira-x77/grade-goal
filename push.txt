@@ -1,0 +1,14 @@
+﻿git : Everything up-to-date
+At line:1 char:1
++ git push origin VAEG 
+2>&1 | Out-File -Encoding 
+utf8 push.txt
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (Eve  
+  rything up-to-date:Str   
+ ing) [], RemoteExcepti    
+on
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 

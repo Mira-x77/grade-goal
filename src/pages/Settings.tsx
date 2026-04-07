@@ -109,6 +109,13 @@ const Settings = () => {
     localStorage.removeItem("scoretarget_history");
     localStorage.removeItem("scoretarget_streak");
     localStorage.removeItem("scoretarget_tour_seen");
+    
+    // Clear all per-screen intro seen states
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith("scoretarget_intro_seen_")) {
+        localStorage.removeItem(key);
+      }
+    });
     setState({
       step: "onboarding",
       targetAverage: 16,
