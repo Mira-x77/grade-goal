@@ -11,7 +11,7 @@ import FrenchClassView from "@/components/FrenchClassView";
 import TaskBar from "@/components/TaskBar";
 import Mascot from "@/components/Mascot";
 import ProductTour from "@/components/ProductTour";
-import ScreenIntro from "@/components/ScreenIntro";
+
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import ResultsScreen from "@/components/ResultsScreen";
 import { PaymentSheet } from "@/components/subscription/PaymentSheet";
@@ -819,13 +819,7 @@ const Home = () => {
 
       <ProductTour />
 
-      <ScreenIntro
-        screenKey="home"
-        title={t("homeIntroTitle")}
-        description={t("homeIntroDesc")}
-        mascotPose="pointing"
-        ctaLabel={t("homeIntroCta")}
-      />
+
 
       {/* Premium intro → plan select → payment */}
       <PremiumIntroSheet

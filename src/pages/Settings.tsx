@@ -40,6 +40,7 @@ const Settings = () => {
       setState({
         step: "onboarding",
         targetAverage: 16,
+        targetMin: 16,
         subjects: [],
         settings: DEFAULT_SETTINGS,
       });
@@ -119,6 +120,7 @@ const Settings = () => {
     setState({
       step: "onboarding",
       targetAverage: 16,
+      targetMin: 16,
       subjects: [],
       settings: DEFAULT_SETTINGS,
     });
