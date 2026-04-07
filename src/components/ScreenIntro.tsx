@@ -81,14 +81,6 @@ export default function ScreenIntro({
                 <p className="text-sm font-semibold text-muted-foreground leading-relaxed">{description}</p>
               </div>
             </div>
-
-            {/* CTA */}
-            <button
-              onClick={dismiss}
-              className="w-full rounded-2xl bg-secondary border-2 border-foreground py-3.5 font-extrabold text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
-            >
-              {ctaLabel}
-            </button>
           </motion.div>
         </>
       )}
