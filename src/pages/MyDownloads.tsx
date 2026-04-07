@@ -259,19 +259,29 @@ const MyDownloads = () => {
                 >
                   <div className="flex items-stretch">
                     <div
-                      className="flex-1 p-4 cursor-pointer active:bg-muted/40 transition-colors"
+                      className="flex-1 flex items-center gap-4 p-4 cursor-pointer active:bg-muted/40 transition-colors"
                       onClick={(e) => { e.stopPropagation(); handlePaperClick(paper); }}
                     >
-                      <h3 className="font-black text-sm line-clamp-2 mb-1">{paper.title}</h3>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2">
-                        {paper.subject} · {paper.classLevel}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="font-bold text-muted-foreground">{paper.fileSizeFormatted}</span>
-                        <span className="text-muted-foreground">·</span>
-                        <span className="font-semibold text-muted-foreground">
-                          {t("downloadedOn")} {new Date(paper.downloadedAt!).toLocaleDateString()}
-                        </span>
+                      {/* Image Thumbnail (Fallback to FileText since offline cached papers don't store preview_url) */}
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0 border border-primary/20 overflow-hidden">
+                        {(paper as any).preview_url ? (
+                          <img src={(paper as any).preview_url} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <FileText className="h-6 w-6 text-primary" />
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-black text-foreground text-sm truncate">
+                          {paper.title || `${paper.subject} ${paper.year}`}
+                        </h3>
+                        <p className="text-xs font-bold text-muted-foreground mt-0.5 truncate flex items-center gap-1.5">
+                          <span className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{paper.classLevel}</span>
+                          <span>{paper.examType}</span>
+                        </p>
+                        <p className="text-[10px] font-bold text-muted-foreground mt-1 text-primary">
+                          {paper.fileSizeFormatted} · {t("downloadedOn")} {new Date(paper.downloadedAt!).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
 
