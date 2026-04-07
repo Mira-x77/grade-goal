@@ -248,54 +248,9 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                     {/* Per-subject breakdown */}
                     <div className="px-4 pb-4 flex flex-col gap-2">
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{t("perSubjectBreakdown")}</p>
-                      {subjectData.map(({ sub, currentSubAvg, bestSubAvg, needed, primaryMissing, status }) => {
-                        const sc = subjectStatusConfig[status];
-                        const neededClamped = needed !== null ? Math.min(20, Math.max(0, needed)) : null;
-                        const ml = markLabel(primaryMissing);
-                        const actionText = (() => {
-                          if (status === "complete") return t("allMarksEnteredNothing");
-                          if (status === "pending") return t("noMarksYetAdd");
-                          if (status === "safe") return t("alreadyContributing");
-                          if (bestSubAvg < targetAverage) return t("evenPerfectNotEnough").replace("{mark}", ml);
-                          if (neededClamped !== null && needed !== null && needed >= 20) return t("evenPerfectNotEnough").replace("{mark}", ml);
-                          if (neededClamped !== null) return t("scoreToStayOnTrack").replace("{score}", neededClamped.toFixed(1)).replace("{mark}", ml);
-                          return t("keepItUp");
-                        })();
-                        const currentPct = currentSubAvg !== null ? (currentSubAvg / 20) * 100 : 0;
-                        const bestPct = (bestSubAvg / 20) * 100;
-
-                        return (
-                          <div key={sub.id} className="rounded-2xl bg-card border-2 border-border px-4 py-3">
-                            <div className="flex items-center justify-between mb-1.5">
-                              <div className="flex items-center gap-2">
-                                <div className={`h-2.5 w-2.5 rounded-full ${sc.dot} shrink-0`} />
-                                <span className="font-black text-sm text-foreground">{sub.name}</span>
-                                <span className="text-[10px] font-bold text-muted-foreground">×{sub.coefficient}</span>
-                              </div>
-                              <span className={`text-[10px] font-black ${sc.labelColor}`}>{t(sc.labelKey)}</span>
-                            </div>
-                            <p className="text-xs font-semibold text-muted-foreground mb-2">{actionText}</p>
-                            <div className="relative h-2 rounded-full bg-muted overflow-hidden">
-                              <div className="absolute left-0 top-0 h-full rounded-full bg-success/30 transition-all duration-500" style={{ width: `${bestPct}%` }} />
-                              <div
-                                className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ${
-                                  status === "critical" ? "bg-danger"
-                                  : status === "recoverable" ? "bg-warning"
-                                  : status === "pending" ? "bg-muted-foreground/30"
-                                  : "bg-success"
-                                }`}
-                                style={{ width: `${currentPct}%` }}
-                              />
-                            </div>
-                            <div className="flex justify-between mt-1">
-                              <span className="text-[9px] font-bold text-muted-foreground">
-                                {currentSubAvg !== null ? `${currentSubAvg.toFixed(1)} ${t("nowLabel")}` : t("noMarksYet")}
-                              </span>
-                              <span className="text-[9px] font-bold text-success">{bestSubAvg.toFixed(1)} {t("bestCase")}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
+                      {subjectData.map((d) => (
+                        <SubjectBreakdownItem key={d.sub.id} data={d} targetAverage={targetAverage} t={t} markLabel={markLabel} />
+                      ))}
                     </div>
                   </div>
                 </motion.div>
@@ -317,6 +272,88 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
         )}
 
       </div>
+    </div>
+  );
+};
+
+const SubjectBreakdownItem = ({ data, targetAverage, t, markLabel }: { data: any; targetAverage: number; t: any; markLabel: (m: any) => string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const { sub, currentSubAvg, bestSubAvg, needed, primaryMissing, status } = data;
+  const sc = subjectStatusConfig[status as keyof typeof subjectStatusConfig];
+  const neededClamped = needed !== null ? Math.min(20, Math.max(0, needed)) : null;
+  const ml = markLabel(primaryMissing);
+  const actionText = (() => {
+    if (status === "complete") return t("allMarksEnteredNothing");
+    if (status === "pending") return t("noMarksYetAdd");
+    if (status === "safe") return t("alreadyContributing");
+    if (bestSubAvg < targetAverage) return t("evenPerfectNotEnough").replace("{mark}", ml);
+    if (neededClamped !== null && needed !== null && needed >= 20) return t("evenPerfectNotEnough").replace("{mark}", ml);
+    if (neededClamped !== null) return t("scoreToStayOnTrack").replace("{score}", neededClamped.toFixed(1)).replace("{mark}", ml);
+    return t("keepItUp");
+  })();
+  const currentPct = currentSubAvg !== null ? (currentSubAvg / 20) * 100 : 0;
+  const bestPct = (bestSubAvg / 20) * 100;
+
+  return (
+    <div className="rounded-2xl bg-card border-2 border-border overflow-hidden">
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="w-full px-4 py-3 flex items-center justify-between active:bg-muted/40 transition-colors"
+      >
+        <div className="flex flex-col gap-1.5 items-start">
+          <div className="flex items-center gap-2">
+            <div className={`h-2.5 w-2.5 rounded-full ${sc.dot} shrink-0`} />
+            <span className="font-black text-sm text-foreground text-left">{sub.name}</span>
+            <span className="text-[10px] font-bold text-muted-foreground shrink-0">×{sub.coefficient}</span>
+          </div>
+          <span className={`text-[10px] font-black ${sc.labelColor}`}>{t(sc.labelKey)}</span>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-xs font-black text-foreground">
+              {currentSubAvg !== null ? currentSubAvg.toFixed(1) : "—"} <span className="opacity-60 font-semibold text-[10px]">/20</span>
+            </span>
+            <span className={`text-[9px] font-bold ${bestSubAvg >= targetAverage ? "text-success/80" : "text-muted-foreground"}`}>{bestSubAvg.toFixed(1)} max</span>
+          </div>
+          <motion.div animate={{ rotate: isOpen ? 180 : 0 }}>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </motion.div>
+        </div>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 pt-1 border-t border-border/50">
+              <p className="text-xs font-semibold text-muted-foreground mb-2 mt-2">{actionText}</p>
+              <div className="relative h-2 rounded-full bg-muted overflow-hidden">
+                <div className="absolute left-0 top-0 h-full rounded-full bg-success/30 transition-all duration-500" style={{ width: `${bestPct}%` }} />
+                <div
+                  className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ${
+                    status === "critical" ? "bg-danger"
+                    : status === "recoverable" ? "bg-warning"
+                    : status === "pending" ? "bg-muted-foreground/30"
+                    : "bg-success"
+                  }`}
+                  style={{ width: `${currentPct}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-[9px] font-bold text-muted-foreground">
+                  {currentSubAvg !== null ? `${currentSubAvg.toFixed(1)} ${t("nowLabel")}` : t("noMarksYet")}
+                </span>
+                <span className="text-[9px] font-bold text-success">{bestSubAvg.toFixed(1)} {t("bestCase")}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

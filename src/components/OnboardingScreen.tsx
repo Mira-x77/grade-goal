@@ -274,32 +274,34 @@ const OnboardingScreen = ({
               </motion.div>
             )}
 
-            <div>
-              <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("semester")}</label>
-              <div className={`grid gap-2 ${isLycee(classLevel) ? "grid-cols-2" : "grid-cols-3"}`}>
-                {(isLycee(classLevel)
-                  ? [
-                      { key: "1st Semester", label: t("firstSemester") },
-                      { key: "2nd Semester", label: t("secondSemester") },
-                    ]
-                  : [
-                      { key: "1st Semester", label: t("firstSemester") },
-                      { key: "2nd Semester", label: t("secondSemester") },
-                      { key: "3rd Semester", label: t("thirdSemester") || "3rd Semester" },
-                    ]
-                ).map(({ key, label }) => (
-                  <button
-                    key={key}
-                    onClick={() => onSemesterChange(key)}
-                    className={`rounded-xl px-3 py-2.5 text-xs font-black transition-all active:scale-95 border-2 border-foreground ${
-                      semester === key ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {classLevel && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-2">
+                <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("semester")}</label>
+                <div className={`grid gap-2 ${isLycee(classLevel) ? "grid-cols-2" : "grid-cols-3"}`}>
+                  {(isLycee(classLevel)
+                    ? [
+                        { key: "1st Semester", label: t("firstSemester") },
+                        { key: "2nd Semester", label: t("secondSemester") },
+                      ]
+                    : [
+                        { key: "1st Semester", label: t("firstSemester") },
+                        { key: "2nd Semester", label: t("secondSemester") },
+                        { key: "3rd Semester", label: t("thirdSemester") || "3rd Semester" },
+                      ]
+                  ).map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => onSemesterChange(key)}
+                      className={`rounded-xl px-3 py-2.5 text-xs font-black transition-all active:scale-95 border-2 border-foreground ${
+                        semester === key ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </div>
 
           {/* Show what's still missing */}
