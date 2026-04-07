@@ -117,6 +117,10 @@ const Settings = () => {
         localStorage.removeItem(key);
       }
     });
+
+    localStorage.removeItem("gostudy_accent");
+    setAccent("yellow");
+
     setState({
       step: "onboarding",
       targetAverage: 16,

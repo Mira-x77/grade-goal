@@ -272,14 +272,10 @@ const MyDownloads = () => {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-black text-foreground text-sm truncate">
+                        <h3 className="font-black text-foreground text-sm leading-snug">
                           {paper.title || `${paper.subject} ${paper.year}`}
                         </h3>
-                        <p className="text-xs font-bold text-muted-foreground mt-0.5 truncate flex items-center gap-1.5">
-                          <span className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{paper.classLevel}</span>
-                          <span>{paper.examType}</span>
-                        </p>
-                        <p className="text-[10px] font-bold text-muted-foreground mt-1 text-primary">
+                        <p className="text-[10px] font-bold text-muted-foreground mt-2 text-primary">
                           {paper.fileSizeFormatted} · {t("downloadedOn")} {new Date(paper.downloadedAt!).toLocaleDateString()}
                         </p>
                       </div>
