@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, BookOpen, Sun, Moon, Scroll } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Loader } from '@/components/ui/loader';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
@@ -24,6 +25,7 @@ interface InAppPDFViewerProps {
 }
 
 export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerProps) {
+  const { t } = useLanguage();
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [baseScale, setBaseScale] = useState(1.0);
@@ -352,14 +354,14 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
         onTouchEnd={handleTouchEnd}>
         {loading && (
           <div className="flex items-center justify-center h-full w-full">
-            <Loader size="lg" text="Loading PDF..." />
+            <Loader size="lg" text={t("loadingPDF")} />
           </div>
         )}
         {error && (
           <div className="flex flex-col items-center justify-center h-full gap-4 px-6 text-center">
             <BookOpen className="h-12 w-12 text-danger" />
             <p className="text-danger text-sm font-bold">{error}</p>
-            <button onClick={onClose} className="px-4 py-2 bg-muted border-2 border-foreground rounded-xl text-foreground text-sm font-bold card-shadow active:scale-95">Close</button>
+            <button onClick={onClose} className="px-4 py-2 bg-muted border-2 border-foreground rounded-xl text-foreground text-sm font-bold card-shadow active:scale-95">{t("close")}</button>
           </div>
         )}
         {!loading && !error && (
@@ -409,7 +411,7 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
       {!loading && !error && currentPage === 1 && showControls && numPages > 1 && (
         <div className="absolute bottom-32 left-0 right-0 flex justify-center pointer-events-none z-30">
           <div className="bg-card/90 border-2 border-foreground text-foreground text-xs px-4 py-1.5 rounded-full backdrop-blur-sm flex items-center gap-1.5 font-bold">
-            Swipe · Pinch zoom · Double-tap
+            {t("swipeHint")}
           </div>
         </div>
       )}

@@ -13,6 +13,7 @@ import { PremiumIntroSheet } from '@/components/subscription/PremiumIntroSheet';
 import { SubjectPackSheet } from '@/components/subscription/SubjectPackSheet';
 import { Loader } from '@/components/ui/loader';
 import TaskBar from '@/components/TaskBar';
+import ScreenIntro from '@/components/ScreenIntro';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const supabaseUrl = 'https://aaayzhvqgqptgqaxxbdh.supabase.co';
@@ -162,16 +163,13 @@ export default function LibraryDirect() {
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-2xl font-black text-foreground">{t("library")}</h1>
-              <p className="text-sm font-semibold text-muted-foreground">
-                {t("browseDownloadPapers")}
-              </p>
             </div>
-            <button
+              <button
               onClick={() => setShowPremiumIntro(true)}
               className="flex h-9 items-center gap-1.5 px-3 rounded-xl border-2 border-premium bg-premium text-premium-foreground active:scale-95 transition-all card-shadow text-xs font-black shrink-0 mt-1"
             >
               <Crown className="h-4 w-4" />
-              Unlock
+              {t("unlock")}
             </button>
           </div>
 
@@ -245,13 +243,15 @@ export default function LibraryDirect() {
               <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
               <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
             </div>
-            <p className="text-sm font-bold text-muted-foreground">Loading papers...</p>
+            <p className="text-lg font-bold text-foreground mb-2">{t("loadingPapers")}</p>
           </div>
         )}
 
         {!loading && !error && filteredPapers.length > 0 && (
           <div className="px-4 pt-3">
-
+            <p className="text-xs text-muted-foreground font-bold mb-3">
+              {filteredPapers.length} {filteredPapers.length === 1 ? t("paper") : t("papersFound")}
+            </p>
             <div className={viewLayout === 'grid' ? 'grid grid-cols-3 gap-2' : 'flex flex-col gap-3'}>
               {filteredPapers.map((paper) => {
                 const isSaved = downloadedPaperIds.has(paper.id);
@@ -275,11 +275,10 @@ export default function LibraryDirect() {
                           <Eye className="h-6 w-6 text-muted-foreground/50" />
                         </div>
                       )}
-                      {/* Overlay tags on image — Downloaded only */}
-                      {isSaved && (
+              {isSaved && (
                         <div className="absolute top-1.5 right-1.5">
                           <span className="px-1.5 py-0.5 bg-secondary border border-foreground/30 text-foreground rounded text-[8px] font-black">
-                            Downloaded
+                            {t("downloaded")}
                           </span>
                         </div>
                       )}
@@ -318,17 +317,12 @@ export default function LibraryDirect() {
                     <div className="flex flex-col items-end gap-1.5 shrink-0">
                       <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full">{paper.year}</span>
                       {downloadedPaperIds.has(paper.id) && (
-                        <span className="text-[10px] font-black bg-secondary border border-foreground/20 text-foreground px-2 py-0.5 rounded-full">Downloaded</span>
+                        <span className="text-[10px] font-black bg-secondary border border-foreground/20 text-foreground px-2 py-0.5 rounded-full">{t("downloaded")}</span>
                       )}
                     </div>
                   </div>
                 );
               })}
-            </div>
-            <div className="text-center py-4">
-              <p className="text-xs text-muted-foreground font-medium">
-                {filteredPapers.length} {t("of")} {papers.length} {t("papersFound")}
-              </p>
             </div>
           </div>
         )}
@@ -337,9 +331,9 @@ export default function LibraryDirect() {
         {!loading && !error && papers.length === 0 && (
           <div className="px-4 py-12 text-center">
             <div className="bg-muted/50 rounded-2xl p-8">
-              <p className="text-lg font-bold text-foreground mb-2">No papers yet</p>
+              <p className="text-lg font-bold text-foreground mb-2">{t("noPapersYet")}</p>
               <p className="text-sm text-muted-foreground">
-                Upload papers from the admin panel to get started
+                {t("uploadFromAdmin")}
               </p>
             </div>
           </div>
@@ -349,9 +343,9 @@ export default function LibraryDirect() {
         {!loading && !error && papers.length > 0 && classPapers.length === 0 && effectivePapers === papers && (
           <div className="px-4 py-12 text-center">
             <div className="bg-muted/50 rounded-2xl p-8">
-              <p className="text-lg font-bold text-foreground mb-2">No papers for your class yet</p>
+              <p className="text-lg font-bold text-foreground mb-2">{t("noPapersForClass")}</p>
               <p className="text-sm text-muted-foreground">
-                Papers for {userClassLevel ?? "your class"} will appear here once they're added
+                {t("papersWillAppear").replace("{class}", userClassLevel ?? "your class")}
               </p>
             </div>
           </div>
@@ -361,9 +355,9 @@ export default function LibraryDirect() {
         {!loading && !error && classPapers.length > 0 && filteredPapers.length === 0 && (
           <div className="px-4 py-12 text-center">
             <div className="bg-muted/50 rounded-2xl p-8">
-              <p className="text-lg font-bold text-foreground mb-2">No papers match your filters</p>
+              <p className="text-lg font-bold text-foreground mb-2">{t("noMatchFilters")}</p>
               <p className="text-sm text-muted-foreground">
-                Try adjusting or clearing your filters
+                {t("tryAdjustFilters")}
               </p>
             </div>
           </div>
@@ -420,6 +414,14 @@ export default function LibraryDirect() {
           </button>
         ) : undefined
       } />
+
+      <ScreenIntro
+        screenKey="library"
+        title={t("examLibrary")}
+        description={t("browseDownloadPapers")}
+        mascotPose="reading"
+        ctaLabel={t("browseLibrary")}
+      />
     </div>
   );
 }

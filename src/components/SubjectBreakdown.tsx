@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { BookOpen, CheckCircle2 } from "lucide-react";
 import { Subject, FeedbackStatus } from "@/types/exam";
 import { calcSubjectAverage, calcAllRequiredMarks, calcSubjectBounds, getMarkLabel } from "@/lib/exam-logic";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SubjectBreakdownProps {
   subjects: Subject[];
@@ -9,6 +10,7 @@ interface SubjectBreakdownProps {
 }
 
 const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) => {
+  const { t } = useLanguage();
   return (
     <motion.div
       initial={{ y: 20, opacity: 0 }}
@@ -18,7 +20,7 @@ const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) =>
     >
       <div className="flex items-center gap-2 mb-4">
         <BookOpen className="h-5 w-5 text-secondary" />
-        <h3 className="font-black text-foreground">Per-subject breakdown</h3>
+        <h3 className="font-black text-foreground">{t("perSubjectBreakdownTitle")}</h3>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -46,7 +48,7 @@ const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) =>
               {/* Show bounds if multiple unknowns */}
               {bounds && !allFilled && (
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[10px] font-bold text-muted-foreground">Range:</span>
+                  <span className="text-[10px] font-bold text-muted-foreground">{t("range")}:</span>
                   <div className="flex-1 h-1.5 rounded-full bg-muted relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-danger via-warning to-success rounded-full" />
                   </div>

@@ -272,35 +272,34 @@ const Library = () => {
             />
           </motion.div>
 
-          {/* Results Count */}
-          {!loading && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-muted-foreground">
-                {filteredPapers.length} {filteredPapers.length === 1 ? t("paperFound") : t("papersFound")}
-                {showPagination && (
-                  <span className="text-xs ml-2">
-                    ({t("page")} {currentPage} {t("of")} {totalPages})
-                  </span>
-                )}
-              </p>
-              {!isOnline && (
-                <button
-                  onClick={handleRetry}
-                  className="flex items-center gap-1 text-xs font-bold text-primary active:scale-95 transition-transform"
-                >
-                  <RefreshCw className="h-3 w-3" />
-                  {t("retry")}
-                </button>
-              )}
-            </div>
-          )}
-
           {/* Papers Grid */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
+            {/* Results Count */}
+            {!loading && (
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-muted-foreground/70 tracking-wide">
+                  About {filteredPapers.length.toLocaleString()} {filteredPapers.length === 1 ? t("paperFound") : t("papersFound")}
+                  {showPagination && (
+                    <span className="ml-1">
+                      &middot; {t("page")} {currentPage} {t("of")} {totalPages}
+                    </span>
+                  )}
+                </p>
+                {!isOnline && (
+                  <button
+                    onClick={handleRetry}
+                    className="flex items-center gap-1 text-xs font-bold text-primary active:scale-95 transition-transform"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    {t("retry")}
+                  </button>
+                )}
+              </div>
+            )}
             <PaperGrid
               papers={displayedPapers}
               onPaperClick={handlePaperClick}

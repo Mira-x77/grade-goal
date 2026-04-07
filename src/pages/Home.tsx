@@ -11,6 +11,8 @@ import FrenchClassView from "@/components/FrenchClassView";
 import TaskBar from "@/components/TaskBar";
 import Mascot from "@/components/Mascot";
 import ProductTour from "@/components/ProductTour";
+import ScreenIntro from "@/components/ScreenIntro";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
 import ResultsScreen from "@/components/ResultsScreen";
 import { PaymentSheet } from "@/components/subscription/PaymentSheet";
 import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
@@ -359,7 +361,7 @@ const Home = () => {
             </div>
             {alerts.map((a) => (
               <p key={a.subject.id} className="text-xs font-bold text-danger/80 flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3 flex-shrink-0" /> {a.subject.name} (Coeff {a.subject.coefficient}): {a.avg.toFixed(1)}/20 — {t("belowThreshold")}
+                <AlertTriangle className="h-3 w-3 flex-shrink-0" /> {a.subject.name} ({t("coeff")} {a.subject.coefficient}): {a.avg.toFixed(1)}/20 — {t("belowThreshold")}
               </p>
             ))}
           </motion.div>
@@ -401,7 +403,7 @@ const Home = () => {
             className="flex flex-col items-center gap-2 py-6"
           >
             <Mascot pose="pointing" size={100} animate />
-            <p className="text-sm font-black text-foreground">Start by setting up your subjects!</p>
+            <p className="text-sm font-black text-foreground">{t("startBySettingUp")}</p>
           </motion.div>
         )}
 
@@ -416,9 +418,52 @@ const Home = () => {
           >
             <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{t("currentAverage")}</p>
             <p className="text-3xl font-black text-muted-foreground/40 mb-1">—/20</p>
-            <p className="text-sm font-semibold text-muted-foreground">No marks yet — add your first score to see your average</p>
+            <p className="text-sm font-semibold text-muted-foreground">{t("noMarksYet")}</p>
             <div className="mt-3 h-2.5 rounded-full bg-muted border border-foreground/10" />
           </motion.div>
+        )}
+
+        {/* Onboarding checklist — shown until all steps done */}
+        {hasData && (
+          <OnboardingChecklist
+            steps={[
+              {
+                key: "target",
+                label: t("checklistSetTarget"),
+                description: t("checklistSetTargetDesc"),
+                done: !!(appState?.targetMin && appState.targetMin > 0),
+                href: "/profile",
+              },
+              {
+                key: "subjects",
+                label: t("checklistAddSubjects"),
+                description: t("checklistAddSubjectsDesc"),
+                done: (appState?.subjects?.length ?? 0) > 0,
+                href: "/planner",
+              },
+              {
+                key: "mark",
+                label: t("checklistLogMark"),
+                description: t("checklistLogMarkDesc"),
+                done: filledMarks > 0,
+                onClick: openMarkSheet,
+              },
+              {
+                key: "simulator",
+                label: t("checklistSimulator"),
+                description: t("checklistSimulatorDesc"),
+                done: !!(appState?.savedStrategy && appState.savedStrategy.marks.length > 0),
+                href: "/simulator",
+              },
+              {
+                key: "library",
+                label: t("checklistLibrary"),
+                description: t("checklistLibraryDesc"),
+                done: downloadedCount > 0,
+                href: "/library",
+              },
+            ]}
+          />
         )}
 
         {/* ═════════ SAVED STRATEGY CARD ═════════ */}
@@ -478,33 +523,38 @@ const Home = () => {
                   className="overflow-hidden"
                 >
                   <div className="flex flex-col gap-1.5 px-4 pb-4 border-t border-secondary/20 pt-3">
-                    {savedStrategy.marks.map((sm) => {
-                      const sub = appState!.subjects.find((s) => s.id === sm.subjectId);
-                      const actualMark = sub ? sub.marks[sm.markType] : null;
-                      const isFulfilled = actualMark !== null;
+                    {/* Group marks by subject */}
+                    {Array.from(new Map(savedStrategy.marks.map(sm => [sm.subjectId, sm.subjectName]))).map(([subjectId, subjectName]) => {
+                      const subMarks = savedStrategy.marks.filter(sm => sm.subjectId === subjectId);
+                      const sub = appState!.subjects.find(s => s.id === subjectId);
+                      const allFulfilled = subMarks.every(sm => sub?.marks[sm.markType] !== null);
+                      const anyFulfilled = subMarks.some(sm => sub?.marks[sm.markType] !== null);
                       return (
                         <div
-                          key={`${sm.subjectId}-${sm.markType}`}
-                          className={`flex items-center justify-between rounded-lg px-3 py-2 ${
-                            isFulfilled ? "bg-success/10" : "bg-muted/50"
-                          }`}
+                          key={subjectId}
+                          className={`flex items-center justify-between rounded-lg px-3 py-2 ${allFulfilled ? "bg-success/10" : anyFulfilled ? "bg-secondary/10" : "bg-muted/50"}`}
                         >
                           <div className="flex items-center gap-2">
-                            {isFulfilled ? (
+                            {allFulfilled ? (
                               <Check className="h-3.5 w-3.5 text-success flex-shrink-0" />
                             ) : (
                               <div className="h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
                             )}
-                            <span className={`text-xs font-bold ${isFulfilled ? "text-success line-through" : "text-foreground"}`}>
-                              {sm.subjectName}
-                            </span>
-                            <span className="text-[10px] font-semibold text-muted-foreground">
-                              {markTypeLabels[sm.markType]}
+                            <span className={`text-xs font-bold ${allFulfilled ? "text-success line-through" : "text-foreground"}`}>
+                              {subjectName}
                             </span>
                           </div>
-                          <span className={`text-xs font-black ${isFulfilled ? "text-success" : "text-foreground"}`}>
-                            {isFulfilled ? `${actualMark!.toFixed(1)}` : `${sm.targetValue.toFixed(1)}`}/20
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            {subMarks.map(sm => {
+                              const actual = sub?.marks[sm.markType] ?? null;
+                              const done = actual !== null;
+                              return (
+                                <span key={sm.markType} className={`text-[10px] font-black px-1.5 py-0.5 rounded ${done ? "bg-success/20 text-success" : "bg-muted text-foreground"}`}>
+                                  {done ? actual!.toFixed(1) : sm.targetValue.toFixed(1)}
+                                </span>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })}
@@ -513,27 +563,6 @@ const Home = () => {
               )}
             </AnimatePresence>
           </motion.div>
-        )}
-
-        {/* Strategy empty state — has subjects but no strategy yet */}
-        {hasData && (!savedStrategy || savedStrategy.marks.length === 0) && (
-          <Link to="/simulator" className="block">
-            <motion.div
-              initial={{ y: 15, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="rounded-2xl bg-card border-2 border-border p-4 flex items-center gap-4 active:scale-[0.98] transition-transform"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/15 border-2 border-foreground/10 shrink-0">
-                <TrendingUp className="h-6 w-6 text-foreground" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-black text-foreground text-sm">Plan your strategy</h3>
-                <p className="text-xs font-semibold text-muted-foreground mt-0.5">Simulate scores and set targets for each test</p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </motion.div>
-          </Link>
         )}
 
         {/* Start Planning CTA — new users only */}
@@ -584,7 +613,7 @@ const Home = () => {
                   onClick={() => setShowAllActivity(v => !v)}
                   className="text-[10px] font-black text-primary active:scale-95 transition-transform"
                 >
-                  {showAllActivity ? "Show less" : `See all ${history.length}`}
+                  {showAllActivity ? t("showLess") : `${t("seeAll")} ${history.length}`}
                 </button>
               )}
             </div>
@@ -684,7 +713,7 @@ const Home = () => {
               {markStep === "subject" ? (
                 <>
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-xl font-black">Which subject?</h2>
+                    <h2 className="text-xl font-black">{t("whichSubject")}</h2>
                     <button onClick={() => setShowMarkSheet(false)}>
                       <X className="h-5 w-5 text-muted-foreground" />
                     </button>
@@ -708,7 +737,7 @@ const Home = () => {
                                 {[0,1,2].map(i => <div key={i} className="h-1.5 w-1.5 rounded-full bg-success" />)}
                               </div>
                             )}
-                            <span className="text-xs font-bold text-muted-foreground">Coeff {sub.coefficient}</span>
+                            <span className="text-xs font-bold text-muted-foreground">{t("coeff")} {sub.coefficient}</span>
                           </div>
                         </button>
                       );
@@ -789,6 +818,14 @@ const Home = () => {
       </AnimatePresence>
 
       <ProductTour />
+
+      <ScreenIntro
+        screenKey="home"
+        title={t("homeIntroTitle")}
+        description={t("homeIntroDesc")}
+        mascotPose="pointing"
+        ctaLabel={t("homeIntroCta")}
+      />
 
       {/* Premium intro → plan select → payment */}
       <PremiumIntroSheet
@@ -928,7 +965,7 @@ const Home = () => {
                 <button onClick={() => setShowEditMarksSheet(false)}>
                   <X className="h-5 w-5 text-muted-foreground" />
                 </button>
-                <h2 className="text-lg font-black text-foreground">Edit Marks</h2>
+                <h2 className="text-lg font-black text-foreground">{t("editMarks")}</h2>
                 <button
                   onClick={handleSaveEditMarks}
                   className="rounded-xl bg-secondary border-2 border-foreground px-4 py-1.5 text-sm font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
@@ -942,15 +979,15 @@ const Home = () => {
                 {appState?.subjects.map((sub) => {
                   const vals = editMarksState[sub.id] ?? { interro: "", dev: "", compo: "" };
                   const rows: { key: "interro" | "dev" | "compo"; label: string }[] = [
-                    { key: "interro", label: "Interro" },
-                    { key: "dev", label: "Devoir" },
-                    { key: "compo", label: "Compo" },
+                    { key: "interro", label: t("interro") },
+                    { key: "dev", label: t("devoir") },
+                    { key: "compo", label: t("composition") },
                   ];
                   return (
                     <div key={sub.id} className="rounded-2xl bg-card border-2 border-foreground card-shadow p-4">
                       <div className="flex items-center justify-between mb-3">
                         <span className="font-black text-foreground">{sub.name}</span>
-                        <span className="text-xs font-bold text-muted-foreground">Coeff {sub.coefficient}</span>
+                        <span className="text-xs font-bold text-muted-foreground">{t("coeff")} {sub.coefficient}</span>
                       </div>
                       <div className="flex flex-col gap-2">
                         {rows.map(({ key, label }) => (

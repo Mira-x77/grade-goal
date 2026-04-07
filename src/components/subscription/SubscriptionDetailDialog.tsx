@@ -1,14 +1,9 @@
 import { useEffect, useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Crown, CheckCircle2, Lock, ArrowRight, Zap } from 'lucide-react';
+import { Crown, CheckCircle2, ArrowRight, Zap } from 'lucide-react';
 import { subscriptionService } from '@/services/subscriptionService';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SubscriptionDetailDialogProps {
   open: boolean;
@@ -17,12 +12,8 @@ interface SubscriptionDetailDialogProps {
   subjectName?: string;
 }
 
-export function SubscriptionDetailDialog({
-  open,
-  onClose,
-  onUpgrade,
-  subjectName,
-}: SubscriptionDetailDialogProps) {
+export function SubscriptionDetailDialog({ open, onClose, onUpgrade, subjectName }: SubscriptionDetailDialogProps) {
+  const { t } = useLanguage();
   const [status, setStatus] = useState<{
     tier: string;
     downloads: string;
@@ -87,11 +78,11 @@ export function SubscriptionDetailDialog({
           <div className="mx-auto w-12 h-12 bg-success/20 rounded-full flex items-center justify-center mb-4">
             <CheckCircle2 className="h-6 w-6 text-success" />
           </div>
-          <DialogTitle className="text-xl font-black mb-2">You already own this!</DialogTitle>
+          <DialogTitle className="text-xl font-black mb-2">{t("youAlreadyOwn")}</DialogTitle>
           <DialogDescription className="text-base">
-            You have full access to {currentSubject} Intelligence.
+            {t("fullAccessTo").replace("{subject}", currentSubject)}
           </DialogDescription>
-          <Button onClick={handleClose} className="mt-6 w-full font-bold">Close</Button>
+          <Button onClick={handleClose} className="mt-6 w-full font-bold">{t("close")}</Button>
         </DialogContent>
       </Dialog>
     );
@@ -110,32 +101,20 @@ export function SubscriptionDetailDialog({
           
           <Crown className="h-10 w-10 text-premium mx-auto mb-3 relative z-10" />
           <h2 className="text-2xl font-black text-foreground leading-tight mb-2 relative z-10">
-            Focus on what actually matters.
+            {t("focusOnWhatMatters")}
           </h2>
           <p className="text-sm font-semibold text-muted-foreground relative z-10">
-            These questions cover ~70% of past exams.
+            {t("questionsRepeat")}
           </p>
         </div>
 
         <div className="px-6 py-6 space-y-6">
           {/* Value Preview list */}
           <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
-              <span className="text-sm font-bold text-foreground">Top 30 most repeated questions</span>
-            </div>
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
-              <span className="text-sm font-bold text-foreground">Topics most likely to appear</span>
-            </div>
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
-              <span className="text-sm font-bold text-foreground">Step-by-step solutions</span>
-            </div>
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
-              <span className="text-sm font-bold text-foreground">"What to study to pass" guide</span>
-            </div>
+            <div className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" /><span className="text-sm font-bold text-foreground">{t("top30Questions")}</span></div>
+            <div className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" /><span className="text-sm font-bold text-foreground">{t("topicsLikelyAppear")}</span></div>
+            <div className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" /><span className="text-sm font-bold text-foreground">{t("stepByStepSolutions")}</span></div>
+            <div className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" /><span className="text-sm font-bold text-foreground">{t("whatToStudyGuide")}</span></div>
           </div>
 
           <div className="space-y-4">
@@ -145,7 +124,7 @@ export function SubscriptionDetailDialog({
               className="w-full relative overflow-hidden group rounded-2xl bg-premium border-2 border-premium transition-all p-4 flex flex-col items-center justify-center card-shadow active:translate-y-0.5 active:shadow-none active:scale-[0.98]"
             >
               <span className="relative z-10 text-lg font-black text-premium-foreground flex items-center justify-center gap-2">
-                Unlock {currentSubject} Pack
+                {t("unlockSubjectPack").replace("{subject}", currentSubject)}
                 <ArrowRight className="h-5 w-5" />
               </span>
               <span className="relative z-10 text-sm font-bold text-foreground/70 mt-1">
@@ -157,7 +136,7 @@ export function SubscriptionDetailDialog({
             <div className="flex items-center gap-3 w-full">
               <div className="h-px bg-border flex-1"></div>
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-2">
-                Preparing multiple subjects?
+                {t("preparingMultiple")}
               </span>
               <div className="h-px bg-border flex-1"></div>
             </div>
@@ -168,14 +147,12 @@ export function SubscriptionDetailDialog({
                 <div className="text-center mb-3">
                   <p className="text-xs font-bold text-primary mb-1">
                     <Zap className="h-3 w-3 inline mr-1" />
-                    You've unlocked {numOwnedPacks} subject{numOwnedPacks > 1 ? 's' : ''}
+                    {t("youveUnlocked").replace("{n}", String(numOwnedPacks))}{numOwnedPacks > 1 ? "s" : ""}
                   </p>
                 </div>
               ) : (
                 <div className="text-center mb-3">
-                  <p className="text-xs font-bold text-muted-foreground mb-1">
-                    Most students start with one subject
-                  </p>
+                  <p className="text-xs font-bold text-muted-foreground mb-1">{t("mostStudentsStart")}</p>
                 </div>
               )}
               
@@ -184,14 +161,14 @@ export function SubscriptionDetailDialog({
                 className="w-full rounded-xl bg-card hover:bg-muted border border-border transition-all py-3 flex flex-col items-center justify-center active:scale-[0.98]"
               >
                 <span className="text-sm font-black text-foreground">
-                  {numOwnedPacks > 0 ? "Unlock all remaining subjects" : "Unlock All Subjects (3 months)"}
+                  {numOwnedPacks > 0 ? t("unlockAllRemaining") : t("unlockAllSubjects")}
                 </span>
                 <span className="text-sm font-bold text-primary mt-0.5">
                   {passPrice}
                 </span>
               </button>
               <p className="text-[10px] font-bold text-center text-muted-foreground mt-2 opacity-70">
-                Best for serious exam prep
+                {t("bestForExamPrep")}
               </p>
             </div>
           </div>

@@ -9,10 +9,12 @@ import OnboardingScreen, { OnboardingStep } from "@/components/OnboardingScreen"
 import SubjectsSetup from "@/components/SubjectsSetup";
 import MarksInput from "@/components/MarksInput";
 import ResultsScreen from "@/components/ResultsScreen";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const stepParam = searchParams.get("step");
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>("language");
 
@@ -66,10 +68,10 @@ const Index = () => {
   };
 
   const stepTitles: Record<AppState["step"], string> = {
-    onboarding: onboardingStep === "language" ? "Language" : onboardingStep === "system" ? "Grading System" : onboardingStep === "profile" ? "Your Profile" : "Set Target",
-    subjects: "Add Subject",
-    marks: "Enter Marks",
-    results: "Your Results",
+    onboarding: onboardingStep === "language" ? "" : onboardingStep === "system" ? t("gradingSystem") : onboardingStep === "profile" ? t("basicInfo") : t("targetAverage"),
+    subjects: t("addSubjects"),
+    marks: t("enterYourMarks"),
+    results: t("yourProfile"),
   };
 
   const stepNumbers: Record<AppState["step"], number> = {

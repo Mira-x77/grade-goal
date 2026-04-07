@@ -4,9 +4,11 @@ import { Target, Lock, Lightbulb, CheckCircle2, Crown, ChevronRight } from 'luci
 import { motion } from 'framer-motion';
 import TaskBar from '@/components/TaskBar';
 import { loadState } from '@/lib/storage';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function ExamPrep() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const state = loadState();
   const userSubjects = state?.subjects.map(s => s.name) ?? [];
 
@@ -19,10 +21,10 @@ export default function ExamPrep() {
           
           <Crown className="h-10 w-10 text-yellow-500 mx-auto mb-3 relative z-10" />
           <h1 className="text-2xl font-black text-yellow-950 dark:text-yellow-500 leading-tight mb-2 relative z-10">
-            Pass smarter, not harder.
+            {t("passNotHarder")}
           </h1>
           <p className="text-sm font-semibold text-yellow-800/80 dark:text-yellow-500/80 relative z-10 max-w-[280px] mx-auto">
-            Focus on what actually matters. Get the exact questions that repeat every year.
+            {t("focusWhatMatters")}
           </p>
         </div>
 
@@ -31,28 +33,28 @@ export default function ExamPrep() {
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-card p-4 rounded-2xl border border-border flex flex-col items-center text-center">
               <Target className="h-6 w-6 text-primary mb-2" />
-              <span className="text-xs font-black text-foreground">Top 30 Questions</span>
+              <span className="text-xs font-black text-foreground">{t("top30QuestionsLabel")}</span>
             </div>
             <div className="bg-card p-4 rounded-2xl border border-border flex flex-col items-center text-center">
               <Lightbulb className="h-6 w-6 text-primary mb-2" />
-              <span className="text-xs font-black text-foreground">What to Study</span>
+              <span className="text-xs font-black text-foreground">{t("whatToStudyLabel")}</span>
             </div>
             <div className="bg-card p-4 rounded-2xl border border-border flex flex-col items-center text-center">
               <CheckCircle2 className="h-6 w-6 text-primary mb-2" />
-              <span className="text-xs font-black text-foreground">Step-by-step Solutions</span>
+              <span className="text-xs font-black text-foreground">{t("stepBySolutions")}</span>
             </div>
             <div className="bg-card p-4 rounded-2xl border border-border flex flex-col items-center text-center opacity-50 relative overflow-hidden">
               <Lock className="absolute inset-0 m-auto h-6 w-6 text-muted-foreground z-10" />
-              <span className="text-xs font-black text-foreground blur-[2px]">Secret Sauce</span>
+              <span className="text-xs font-black text-foreground blur-[2px]">{t("secretSauce")}</span>
             </div>
           </div>
 
-          <h2 className="text-lg font-black text-foreground mt-8 mb-4">Select a subject to unlock:</h2>
+          <h2 className="text-lg font-black text-foreground mt-8 mb-4">{t("selectSubjectUnlock")}</h2>
 
           {userSubjects.length === 0 ? (
             <div className="py-10 text-center rounded-2xl bg-muted/50">
-              <p className="text-sm font-bold text-muted-foreground">No subjects found.</p>
-              <p className="text-xs text-muted-foreground mt-1">Complete onboarding to add your subjects.</p>
+              <p className="text-sm font-bold text-muted-foreground">{t("noSubjectsFound")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("completeOnboarding")}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -71,7 +73,7 @@ export default function ExamPrep() {
                     </div>
                     <div>
                       <h3 className="font-black text-base text-foreground">{subject}</h3>
-                      <p className="text-xs font-bold text-muted-foreground mt-0.5">Unlock specific prep plan</p>
+                      <p className="text-xs font-bold text-muted-foreground mt-0.5">{t("unlockSpecificPrep")}</p>
                     </div>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />

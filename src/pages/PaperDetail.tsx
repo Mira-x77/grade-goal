@@ -12,10 +12,12 @@ import { InAppPDFViewer } from "@/components/exam/InAppPDFViewer";
 import { readFileAsBase64 } from "@/lib/filesystem";
 import { toast } from "sonner";
 import TaskBar from "@/components/TaskBar";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PaperDetail = () => {
   const { paperId } = useParams<{ paperId: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [paper, setPaper] = useState<ExamPaper | null>(null);
   const [isDownloaded, setIsDownloaded] = useState(false);
@@ -43,7 +45,7 @@ const PaperDetail = () => {
       setHasAnyDownload(allDownloaded.length > 0);
     } catch (err) {
       console.error("Failed to load paper:", err);
-      setError("Failed to load paper details. Please try again.");
+      setError(t("failedLoadPaper"));
     } finally {
       setLoading(false);
     }
@@ -60,7 +62,7 @@ const PaperDetail = () => {
       if (isDownloaded && !isWeb) {
         const downloadInfo = await downloadService.getDownloadInfo(paper.id);
         if (!downloadInfo) {
-          setError("File not found. Please download again.");
+          setError(t("fileNotFoundRedownload"));
           setIsDownloaded(false);
           return;
         }
@@ -83,7 +85,7 @@ const PaperDetail = () => {
       }
     } catch (err) {
       console.error("Failed to open PDF:", err);
-      setError("Failed to open PDF.");
+      setError(t("failedOpenPDFDesc"));
       setShowPDFViewer(false);
       setPdfData('');
     }
@@ -105,12 +107,12 @@ const PaperDetail = () => {
           setHasAnyDownload(true);
           setDownloadProgress(null);
           subscriptionService.incrementDownload();
-          toast.success("Saved to downloads");
+        toast.success(t("savedToDownloads"));
         }
       });
     } catch (err) {
       console.error("Download failed:", err);
-      setError(err instanceof Error ? err.message : "Download failed. Please try again.");
+      setError(err instanceof Error ? err.message : t("downloadFailedRetry"));
       setDownloadProgress(null);
     }
   };
@@ -143,8 +145,8 @@ const PaperDetail = () => {
       <div className="flex-1 bg-background min-h-screen">
         <div className="max-w-md mx-auto p-4 safe-area-top text-center py-20">
           <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground mb-6">Paper not found</p>
-          <button onClick={() => navigate("/library")} className="text-primary font-bold">Back to Library</button>
+          <p className="text-muted-foreground mb-6">{t("paperNotFoundDesc")}</p>
+          <button onClick={() => navigate("/library")} className="text-primary font-bold">{t("backToLibrary")}</button>
         </div>
       </div>
     );
@@ -182,15 +184,15 @@ const PaperDetail = () => {
           <div className="p-6">
             <h1 className="text-2xl font-black mb-4 leading-tight">{paper.title}</h1>
             <div className="grid grid-cols-2 gap-y-3 text-sm">
-              <div className="text-muted-foreground">Subject</div>
+              <div className="text-muted-foreground">{t("subject")}</div>
               <div className="font-bold text-right">{paper.subject}</div>
-              <div className="text-muted-foreground">Class</div>
+              <div className="text-muted-foreground">{t("classLevel")}</div>
               <div className="font-bold text-right">{paper.classLevel}</div>
-              <div className="text-muted-foreground">Year</div>
+              <div className="text-muted-foreground">{t("year")}</div>
               <div className="font-bold text-right">{paper.year}</div>
-              <div className="text-muted-foreground">Type</div>
+              <div className="text-muted-foreground">{t("examType")}</div>
               <div className="font-bold text-right">{paper.examType}</div>
-              <div className="text-muted-foreground">Size</div>
+              <div className="text-muted-foreground">{t("fileSize")}</div>
               <div className="font-bold text-right">{paper.fileSizeFormatted}</div>
             </div>
           </div>
@@ -211,13 +213,13 @@ const PaperDetail = () => {
               className="flex flex-col items-center justify-center gap-2 bg-card border-2 border-foreground py-4 rounded-2xl font-black text-sm text-foreground active:scale-[0.98] transition-all card-shadow"
             >
               {isDownloaded ? <FolderOpen className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              {isDownloaded ? "Open" : "View"}
+              {isDownloaded ? t("open") : t("view")}
             </button>
 
             {isDownloaded ? (
               <button disabled className="flex flex-col items-center justify-center gap-2 bg-muted border-2 border-border py-4 rounded-2xl font-black text-sm text-muted-foreground opacity-60 cursor-default">
                 <Check className="h-5 w-5" />
-                Downloaded
+                {t("downloaded")}
               </button>
             ) : downloadProgress ? (
               <button
@@ -242,7 +244,7 @@ const PaperDetail = () => {
                 className="flex flex-col items-center justify-center gap-2 bg-primary border-2 border-foreground py-4 rounded-2xl font-black text-sm text-primary-foreground active:scale-[0.98] transition-all card-shadow"
               >
                 <Download className="h-5 w-5" />
-                Download
+                {t("downloadPDF")}
               </button>
             )}
           </div>
@@ -254,8 +256,8 @@ const PaperDetail = () => {
           >
             <Crown className="h-6 w-6 text-premium-foreground shrink-0" />
             <div className="text-left flex-1">
-              <p className="font-black text-sm text-premium-foreground">Prep for {paper.subject}</p>
-              <p className="text-xs font-semibold text-premium-foreground/60">6 premium study tools · Exam-specific</p>
+              <p className="font-black text-sm text-premium-foreground">{t("prepFor")} {paper.subject}</p>
+              <p className="text-xs font-semibold text-premium-foreground/60">{t("premiumStudyTools")}</p>
             </div>
             <ChevronDown className="h-5 w-5 text-premium-foreground rotate-[-90deg]" />
           </button>
@@ -285,7 +287,7 @@ const PaperDetail = () => {
               </div>
               <div className="px-5 pt-2 pb-4">
                 <div className="flex items-start justify-between mb-1">
-                  <h2 className="text-xl font-black text-foreground">Prep — {paper.subject}</h2>
+                  <h2 className="text-xl font-black text-foreground">{t("prepFor")} — {paper.subject}</h2>
                   <button onClick={() => setPrepOpen(false)} className="text-muted-foreground mt-1">
                     <X className="h-5 w-5" />
                   </button>
@@ -295,8 +297,8 @@ const PaperDetail = () => {
                   className="w-full mt-3 rounded-2xl bg-secondary border-2 border-foreground py-3 px-4 flex items-center justify-between card-shadow active:translate-y-0.5 active:shadow-none transition-all"
                 >
                   <div className="text-left">
-                    <p className="font-black text-sm text-foreground">Unlock Now</p>
-                    <p className="text-[10px] font-semibold text-foreground/60">Get full access for {paper.subject}</p>
+                    <p className="font-black text-sm text-foreground">{t("unlockNowBtn")}</p>
+                    <p className="text-[10px] font-semibold text-foreground/60">{t("getFullAccessFor")} {paper.subject}</p>
                   </div>
                   <Crown className="h-5 w-5 text-foreground shrink-0" />
                 </button>
@@ -304,12 +306,12 @@ const PaperDetail = () => {
               <div className="px-5 pb-6">
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { icon: "🎯", title: "Top Questions", desc: "30 most repeated questions across past papers" },
-                    { icon: "🗺️", title: "Key Topics", desc: "Topics ranked by exam frequency" },
-                    { icon: "📋", title: "Cheat Sheet", desc: "Formulas, definitions and rules that appear most" },
-                    { icon: "✅", title: "Solutions", desc: "Step-by-step worked solutions with patterns" },
-                    { icon: "📊", title: "Score Predictor", desc: "Predicts your likely final score range" },
-                    { icon: "🔍", title: "Weak Spots", desc: "Your weakest areas vs what exams test most" },
+                    { icon: "🎯", title: t("topQuestions"), desc: t("topQuestionsDesc") },
+                    { icon: "🗺️", title: t("keyTopics"), desc: t("keyTopicsDesc") },
+                    { icon: "📋", title: t("cheatSheet"), desc: t("cheatSheetDesc") },
+                    { icon: "✅", title: t("solutions"), desc: t("solutionsDesc") },
+                    { icon: "📝", title: t("practiceTests"), desc: t("practiceTestsDesc") },
+                    { icon: "🔍", title: t("weakSpots"), desc: t("weakSpotsDesc") },
                   ].map(({ icon, title, desc }) => (
                     <button key={title}
                       onClick={() => { setPrepOpen(false); setShowPlanSelect(true); }}
@@ -320,7 +322,7 @@ const PaperDetail = () => {
                       <p className="text-[10px] font-semibold text-muted-foreground leading-relaxed">{desc}</p>
                       <div className="flex items-center gap-1 mt-auto pt-0.5">
                         <Lock className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-[10px] font-black text-muted-foreground">Premium</span>
+                        <span className="text-[10px] font-black text-muted-foreground">{t("unlockPremium")}</span>
                       </div>
                     </button>
                   ))}

@@ -6,6 +6,7 @@ import { loadState, saveState } from "@/lib/storage";
 import { simulateYearlyAverage } from "@/lib/exam-logic";
 import { SavedStrategy, StrategyMark } from "@/types/exam";
 import TaskBar from "@/components/TaskBar";
+import ScreenIntro from "@/components/ScreenIntro";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 
@@ -58,7 +59,7 @@ const Simulator = () => {
       const savedMark = saved?.marks.find(
         (m) => m.subjectId === s.subjectId && m.markType === s.markType
       );
-      return { subjectId: s.subjectId, markType: s.markType, value: savedMark?.targetValue ?? 10 };
+      return { subjectId: s.subjectId, markType: s.markType, value: savedMark?.targetValue ?? targetAvg };
     });
   });
 
@@ -75,7 +76,7 @@ const Simulator = () => {
       subjectId: slot.subjectId,
       subjectName: slot.subjectName,
       markType: slot.markType,
-      targetValue: overrides[i]?.value ?? 10,
+      targetValue: overrides[i]?.value ?? targetAvg,
     }));
     if (strategyMarks.length === 0) return;
     const simulatedAvgVal = simulateYearlyAverage(subjects, overrides);
@@ -87,7 +88,7 @@ const Simulator = () => {
     };
     saveState({ ...state, savedStrategy: strategy });
     setIsDirty(false);
-    toast.success("Strategy saved!");
+    toast.success(t("strategySavedNavigating"));
     setTimeout(() => navigate("/", { replace: true }), 800);
   };
 
@@ -98,12 +99,12 @@ const Simulator = () => {
 
   const statusBg = isOnTrack ? "bg-success" : isRisky ? "bg-warning" : "bg-danger";
   const statusHint = !isDirty
-    ? null  // no hint when nothing has been changed
+    ? null
     : isBelow
-    ? "Raise your scores — especially high-coefficient subjects — to unlock Save."
+    ? t("raiseScoresHint")
     : isRisky
-    ? "Almost there. Push a bit more to hit your target and unlock Save."
-    : "You're on track. Tap Save to lock in this strategy.";
+    ? t("almostThereHint")
+    : t("onTrackHint");
 
   // IntersectionObserver — same pattern as Home avg card
   useEffect(() => {
@@ -203,7 +204,7 @@ const Simulator = () => {
 
         {/* Sliders grouped by subject */}
         <div className="flex flex-col gap-3">
-          <h3 className="font-black text-foreground text-sm">Plan Your Scores</h3>
+          <h3 className="font-black text-foreground text-sm">{t("planYourScores")}</h3>
           {subjects.map((sub) => {
             const subSlots = emptySlots
               .map((slot, i) => ({ slot, i }))
@@ -286,6 +287,14 @@ const Simulator = () => {
         )}
       </div>
 
+      <ScreenIntro
+        screenKey="simulator"
+        title={t("simIntroTitle")}
+        description={t("simIntroDesc")}
+        mascotPose="thinking"
+        ctaLabel={t("simIntroCta")}
+      />
+
       <TaskBar showBack action={
         isDirty ? (
           isOnTrack ? (
@@ -305,7 +314,7 @@ const Simulator = () => {
               animate={{ opacity: 1, scale: 1, x: 0 }}
               exit={{ opacity: 0, scale: 0.5, x: -16 }}
               transition={{ type: "spring", stiffness: 380, damping: 28 }}
-              onClick={() => toast("Reach your target range first to save this strategy.")}
+              onClick={() => toast(t("reachTargetFirst"))}
               className="h-12 w-12 rounded-full bg-muted border-2 border-border flex items-center justify-center opacity-50 active:scale-95 transition-transform"
             >
               <Save className="h-5 w-5 text-muted-foreground" />

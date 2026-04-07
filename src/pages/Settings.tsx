@@ -87,7 +87,7 @@ const Settings = () => {
         })),
       } : s
     );
-    toast.success("All marks cleared. Subjects & coefficients kept.");
+    toast.success(t("allMarksCleared"));
   };
 
   const wipeAll = async () => {
@@ -116,7 +116,7 @@ const Settings = () => {
       settings: DEFAULT_SETTINGS,
     });
     setShowWipeConfirm(false);
-    toast.success("All data wiped.");
+    toast.success(t("allDataWiped"));
     navigate("/auth");
   };
 
@@ -153,7 +153,7 @@ const Settings = () => {
             ))}
           </div>
           <p className="text-xs text-muted-foreground font-semibold mt-3">
-            Midnight — navy blue · Ink — pure AMOLED black
+            {t("midnightThemeDesc")}
           </p>
         </Section>
 
@@ -518,9 +518,9 @@ const Settings = () => {
                 </div>
               </div>
 
-              <h2 className="text-xl font-black text-foreground text-center mb-2">Wipe all data?</h2>
+              <h2 className="text-xl font-black text-foreground text-center mb-2">{t("wipeAllDataTitle")}</h2>
               <p className="text-sm font-semibold text-muted-foreground text-center leading-relaxed mb-8">
-                This will permanently delete all your marks, subjects, strategy, and downloaded papers. This cannot be undone.
+                {t("wipeAllDataDesc")}
               </p>
 
               <div className="flex flex-col gap-3">
@@ -528,13 +528,13 @@ const Settings = () => {
                   onClick={() => wipeAll()}
                   className="w-full rounded-2xl bg-danger px-4 py-4 font-black text-white active:scale-[0.98] transition-transform"
                 >
-                  Wipe Everything
+                  {t("wipeEverything")}
                 </button>
                 <button
                   onClick={() => setShowWipeConfirm(false)}
                   className="w-full rounded-2xl bg-muted px-4 py-4 font-bold text-muted-foreground active:scale-[0.98] transition-transform"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
               </div>
             </motion.div>

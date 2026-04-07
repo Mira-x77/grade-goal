@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, BookOpen, Globe } from "lucide-react";
+import { Target, BookOpen, Globe, ChevronDown } from "lucide-react";
 import { GradingSystem } from "@/types/exam";
 import { CLASS_LEVELS, LYCEE_SERIES } from "@/lib/subjects-data";
 import Mascot from "@/components/Mascot";
@@ -75,14 +75,14 @@ const OnboardingScreen = ({
           </motion.div>
 
           <div className="text-center">
-            <h1 className="text-3xl font-black text-foreground">Language / Langue</h1>
-            <p className="mt-2 text-muted-foreground font-semibold">Choose your preferred language · Choisissez votre langue</p>
+            <h1 className="text-3xl font-black text-foreground">{t("languageTitle")}</h1>
+            <p className="mt-2 text-muted-foreground font-semibold">{t("languageSubtitle")}</p>
           </div>
 
           <div className="w-full max-w-xs flex flex-col gap-3">
             {([
-              { code: "en" as Language, label: "English", sub: "Continue in English" },
-              { code: "fr" as Language, label: "Français", sub: "Continuer en français" },
+              { code: "en" as Language, label: "English", sub: t("continueInEnglish") },
+              { code: "fr" as Language, label: "Français", sub: t("continueInFrench") },
             ]).map(({ code, label, sub }) => (
               <button
                 key={code}
@@ -104,7 +104,7 @@ const OnboardingScreen = ({
             ))}
           </div>
 
-          <FixedNextButton onClick={() => onStepChange("system")} label={language === "fr" ? "Suivant" : "Next"} />
+          <FixedNextButton onClick={() => onStepChange("system")} label={t("next")} />
         </motion.div>
       )}
 
@@ -189,7 +189,7 @@ const OnboardingScreen = ({
 
           <div className="text-center">
             <h1 className="text-3xl font-black text-foreground">{t("basicInfo")}</h1>
-            <p className="mt-2 text-muted-foreground font-semibold">{t("tellUsNameClass") || "Tell us your name and class"}</p>
+            <p className="mt-2 text-muted-foreground font-semibold">{t("tellUsNameClass")}</p>
           </div>
 
           <div className="w-full max-w-xs flex flex-col gap-4">
@@ -206,11 +206,28 @@ const OnboardingScreen = ({
 
             <div>
               <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("classLevel")}</label>
-              <div className="grid grid-cols-2 gap-2">
-                {allLevels.map((level) => (
+              {/* Collège group */}
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Collège</p>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {CLASS_LEVELS.college.map((level) => (
                   <button
                     key={level}
-                    onClick={() => { onClassLevelChange(level); if (!isLycee(level)) onSerieChange(""); }}
+                    onClick={() => { onClassLevelChange(level); onSerieChange(""); if (semester === "3rd Semester") onSemesterChange(""); }}
+                    className={`rounded-xl px-3 py-2.5 text-sm font-black transition-all active:scale-95 border-2 border-foreground ${
+                      classLevel === level ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+              {/* Lycée group */}
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Lycée</p>
+              <div className="grid grid-cols-2 gap-2">
+                {CLASS_LEVELS.lycee.map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => { onClassLevelChange(level); if (semester === "3rd Semester") onSemesterChange(""); }}
                     className={`rounded-xl px-3 py-2.5 text-sm font-black transition-all active:scale-95 border-2 border-foreground ${
                       classLevel === level ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
                     }`}
@@ -220,6 +237,23 @@ const OnboardingScreen = ({
                 ))}
               </div>
             </div>
+
+            {/* Scroll hint — nudges user to scroll down to see semester options */}
+            {classLevel && !semester && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center gap-1 py-1"
+              >
+                <p className="text-xs font-bold text-muted-foreground">More options below</p>
+                <motion.div
+                  animate={{ y: [0, 5, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+                >
+                  <ChevronDown className="h-5 w-5 text-secondary" />
+                </motion.div>
+              </motion.div>
+            )}
 
             {isLycee(classLevel) && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
@@ -242,12 +276,18 @@ const OnboardingScreen = ({
 
             <div>
               <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("semester")}</label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { key: "1st Semester", label: language === "fr" ? "1er Semestre" : "1st Semester" },
-                  { key: "2nd Semester", label: language === "fr" ? "2ème Semestre" : "2nd Semester" },
-                  { key: "Annual", label: language === "fr" ? "Annuel" : "Annual" },
-                ].map(({ key, label }) => (
+              <div className={`grid gap-2 ${isLycee(classLevel) ? "grid-cols-2" : "grid-cols-3"}`}>
+                {(isLycee(classLevel)
+                  ? [
+                      { key: "1st Semester", label: t("firstSemester") },
+                      { key: "2nd Semester", label: t("secondSemester") },
+                    ]
+                  : [
+                      { key: "1st Semester", label: t("firstSemester") },
+                      { key: "2nd Semester", label: t("secondSemester") },
+                      { key: "3rd Semester", label: t("thirdSemester") || "3rd Semester" },
+                    ]
+                ).map(({ key, label }) => (
                   <button
                     key={key}
                     onClick={() => onSemesterChange(key)}
@@ -266,19 +306,19 @@ const OnboardingScreen = ({
           {!profileValid && (studentName.trim() || classLevel) && (
             <p className="text-xs font-bold text-muted-foreground text-center -mt-4">
               {!studentName.trim()
-                ? (language === "fr" ? "Entrez votre nom" : "Enter your name")
+                ? t("enterYourName")
                 : !classLevel
-                ? (language === "fr" ? "Choisissez votre classe" : "Choose your class")
+                ? t("chooseYourClass")
                 : (isLycee(classLevel) && !serie)
-                ? (language === "fr" ? "Choisissez votre série" : "Choose your série")
-                : (language === "fr" ? "Choisissez votre semestre" : "Choose your semester")}
+                ? t("chooseYourSerie")
+                : t("chooseYourSemester")}
             </p>
           )}
 
           <FixedNextButton
             onClick={() => onStepChange("target")}
             disabled={!profileValid}
-            label={t("next") || "Next"}
+            label={t("next")}
           />
         </motion.div>
       )}
@@ -302,10 +342,10 @@ const OnboardingScreen = ({
 
           <div className="text-center">
             <h1 className="text-3xl font-black text-foreground">
-              {language === "fr" ? "Votre objectif ?" : "What's your target?"}
+              {t("whatsYourTarget")}
             </h1>
             <p className="mt-2 text-muted-foreground font-semibold">
-              {language === "fr" ? "Définissez la moyenne annuelle que vous voulez atteindre" : "Set the yearly average you want to reach"}
+              {t("setYearlyAverage")}
             </p>
           </div>
 
@@ -337,7 +377,7 @@ const OnboardingScreen = ({
 
           </motion.div>
 
-          <FixedNextButton onClick={onContinue} label={language === "fr" ? "Commencer" : "Let's go"} />
+          <FixedNextButton onClick={onContinue} label={t("letsGo")} />
         </motion.div>
       )}
 

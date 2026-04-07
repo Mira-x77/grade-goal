@@ -1,5 +1,6 @@
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
+import { CommunityDevice } from '@capacitor-community/device';
 
 export const EXAM_PAPERS_DIR = 'exam-papers';
 
@@ -132,9 +133,16 @@ export async function getAvailableSpace(): Promise<{ available: number; used: nu
     return { available: total, used: 0, total };
   }
 
-  // Mobile: conservative estimate — no platform plugin available
-  const total = 1024 * 1024 * 1024;
-  return { available: total, used: 0, total };
+  // Mobile: use @capacitor-community/device for real disk info
+  try {
+    const info = await CommunityDevice.getInfo();
+    const available = (info as any).realDiskFree ?? (info as any).diskFree ?? 0;
+    const total = (info as any).realDiskTotal ?? (info as any).diskTotal ?? 0;
+    return { available, used: total - available, total };
+  } catch {
+    const total = 1024 * 1024 * 1024;
+    return { available: total, used: 0, total };
+  }
 }
 
 /**

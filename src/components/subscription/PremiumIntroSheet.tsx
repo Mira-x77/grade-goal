@@ -9,25 +9,16 @@ interface PremiumIntroSheetProps {
   subjectName?: string;
 }
 
-const FEATURES = [
-  { icon: "🎯", titleKey: "topQuestions" as const, descKey: "topQuestionsDesc" as const },
-  { icon: "🗺️", titleKey: "keyTopics" as const, descKey: "keyTopicsDesc" as const },
-  { icon: "📋", titleKey: "cheatSheet" as const, descKey: "cheatSheetDesc" as const },
-  { icon: "✅", titleKey: "solutions" as const, descKey: "solutionsDesc" as const },
-  { icon: "📊", titleKey: "scorePredictor" as const, descKey: "scorePredictorDesc" as const },
-  { icon: "🔍", titleKey: "weakSpots" as const, descKey: "weakSpotsDesc" as const },
-];
-
 export function PremiumIntroSheet({ open, onClose, onContinue, subjectName }: PremiumIntroSheetProps) {
   const { t } = useLanguage();
 
   const features = [
-    { icon: "🎯", title: "Top Questions", desc: "The 30 most repeated questions across all past papers for your subject and class" },
-    { icon: "🗺️", title: "Key Topics", desc: "Topics ranked by exam frequency so you know exactly what to focus on" },
-    { icon: "📋", title: "Cheat Sheet", desc: "One-page summary of formulas, definitions and rules that appear most in exams" },
-    { icon: "✅", title: "Solutions", desc: "Step-by-step worked solutions to past questions with pattern explanations" },
-    { icon: "📊", title: "Score Predictor", desc: "Predicts your likely final score range based on your marks and exam patterns" },
-    { icon: "🔍", title: "Weak Spots", desc: "Identifies your weakest areas by comparing your marks to what exams test most" },
+    { icon: "🎯", title: t("topQuestions"), desc: t("topQuestionsDesc") },
+    { icon: "🗺️", title: t("keyTopics"), desc: t("keyTopicsDesc") },
+    { icon: "📋", title: t("cheatSheet"), desc: t("cheatSheetDesc") },
+    { icon: "✅", title: t("solutions"), desc: t("solutionsDesc") },
+    { icon: "📝", title: t("practiceTests"), desc: t("practiceTestsDesc") },
+    { icon: "🔍", title: t("weakSpots"), desc: t("weakSpotsDesc") },
   ];
 
   return (

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, Check, X, Search } from "lucide-react";
 import { Subject } from "@/types/exam";
 import { getSubjectsForLevel } from "@/lib/subjects-data";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SubjectsSetupProps {
   subjects: Subject[];
@@ -19,6 +20,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [customName, setCustomName] = useState("");
+  const { t } = useLanguage();
 
   const allSuggested = classLevel ? getSubjectsForLevel(classLevel, serie) : [];
   const existingNames = new Set(subjects.map((s) => s.name.toLowerCase()));
@@ -121,9 +123,9 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
               {/* Header */}
               <div className="flex items-center justify-between px-5 pt-5 pb-3">
                 <div>
-                  <h2 className="text-base font-black text-foreground">Add Subjects</h2>
+                  <h2 className="text-base font-black text-foreground">{t("addSubjects")}</h2>
                   {selected.size > 0 && (
-                    <p className="text-xs font-semibold text-primary mt-0.5">{selected.size} selected</p>
+                    <p className="text-xs font-semibold text-primary mt-0.5">{selected.size} {t("selected")}</p>
                   )}
                 </div>
                 <button
@@ -140,7 +142,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input
                     type="text"
-                    placeholder="Search or type a custom subject..."
+                    placeholder={t("searchOrTypeSubject")}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full pl-9 pr-4 py-2.5 rounded-xl border-2 border-border bg-muted text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
@@ -159,15 +161,14 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
                       <Plus className="h-3.5 w-3.5 text-primary-foreground" />
                     </div>
-                    <span className="text-sm font-black">Add "{search.trim()}"</span>
+                    <span className="text-sm font-black">{t("addSubjectBtn")} "{search.trim()}"</span>
                   </button>
                 </div>
               )}
 
-              {/* Divider if both custom and list shown */}
               {showCustomOption && filtered.length > 0 && (
                 <div className="px-4 pb-1">
-                  <p className="text-xs font-bold text-muted-foreground">Suggestions</p>
+                  <p className="text-xs font-bold text-muted-foreground">{t("suggestions")}</p>
                 </div>
               )}
 
@@ -175,7 +176,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
               <div className="overflow-y-auto max-h-56 px-3 pb-2">
                 {filtered.length === 0 && !showCustomOption ? (
                   <p className="text-center text-sm text-muted-foreground py-8 font-semibold">
-                    {available.length === 0 ? "All subjects already added" : "No matches — type to add custom"}
+                    {available.length === 0 ? t("allSubjectsAdded") : t("noMatchesTypeCustom")}
                   </p>
                 ) : (
                   filtered.map((name) => {
@@ -207,7 +208,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
                     onClick={confirmAdd}
                     className="w-full rounded-2xl bg-primary py-3.5 text-sm font-extrabold text-primary-foreground active:translate-y-0.5 transition-all"
                   >
-                    Add {selected.size} Subject{selected.size > 1 ? "s" : ""}
+                    {t("addSubjectBtn")} {selected.size} {selected.size > 1 ? t("subjectsSelectedPlural") : t("subjectsSelected")}
                   </button>
                 </div>
               )}
@@ -224,8 +225,8 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
       {hasSubjects && (
         <div className="px-6 pb-2 flex-shrink-0 safe-area-top" style={{ paddingTop: "calc(5rem + env(safe-area-inset-top))" }}>
           <div className="flex items-center border-b border-border pb-1">
-            <span className="flex-1 text-xs font-black text-muted-foreground uppercase tracking-wider">Subject</span>
-            <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-10">Coefficient</span>
+            <span className="flex-1 text-xs font-black text-muted-foreground uppercase tracking-wider">{t("subject")}</span>
+            <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-10">{t("coefficient")}</span>
           </div>
         </div>
       )}
@@ -257,8 +258,8 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
         {!hasSubjects && (
           <div className="text-center">
             <p className="text-2xl mb-2">📚</p>
-            <p className="text-base font-black text-foreground mb-1">No subjects yet</p>
-            <p className="text-sm font-semibold text-muted-foreground">Tap + to add your first subject</p>
+            <p className="text-base font-black text-foreground mb-1">{t("noSubjectsAdded")}</p>
+            <p className="text-sm font-semibold text-muted-foreground">{t("tapToAddFirst")}</p>
           </div>
         )}
       </div>
@@ -285,7 +286,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
               onClick={onContinue}
               className="h-14 rounded-2xl bg-secondary border-2 border-foreground text-base font-extrabold text-foreground card-shadow active:translate-y-1 active:shadow-none overflow-hidden whitespace-nowrap"
             >
-              NEXT
+              {t("next")}
             </motion.button>
           )}
         </AnimatePresence>

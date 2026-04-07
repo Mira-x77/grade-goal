@@ -4,7 +4,7 @@ import { FileText, File, Clipboard, ChevronDown, Check } from "lucide-react";
 import { Subject } from "@/types/exam";
 import { calcSubjectAverage } from "@/lib/exam-logic";
 import { addHistoryEntry } from "@/lib/storage";
-import { getSubjectsForLevel } from "@/lib/subjects-data";
+import { useLanguage } from "@/contexts/LanguageContext";
 interface MarksInputProps {
   subjects: Subject[];
   onSubjectsChange: (subjects: Subject[]) => void;
@@ -24,6 +24,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
   const [expanded, setExpanded] = useState<string | null>(
     subjects.length > 0 ? subjects[0].id : null
   );
+  const { t } = useLanguage();
 
   const updateMark = (subjectId: string, markType: keyof Subject["marks"], value: string) => {
     const numValue = value === "" ? null : Math.min(20, Math.max(0, parseFloat(value)));
@@ -52,8 +53,8 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
 
       {/* Static header content below fixed nav */}
       <div className="pt-20 px-6 pb-3 flex-shrink-0">
-        <h2 className="text-2xl font-black text-foreground">Enter your marks</h2>
-        <p className="text-sm text-muted-foreground font-semibold mb-3">Enter your current marks (leave blank if not yet taken)</p>
+        <h2 className="text-2xl font-black text-foreground">{t("enterYourMarks")}</h2>
+        <p className="text-sm text-muted-foreground font-semibold mb-3">{t("enterCurrentMarks")}</p>
 
         {/* Progress bar */}
         <div className="rounded-full bg-muted h-2.5 overflow-hidden">
@@ -65,7 +66,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
           />
         </div>
         <p className="text-xs font-bold text-muted-foreground text-center mt-1">
-          {filledCount}/{totalMarks} marks entered
+          {filledCount}/{totalMarks} {t("marksEntered")}
         </p>
       </div>
 
@@ -159,7 +160,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
           onClick={onContinue}
           className="w-full rounded-2xl bg-primary py-4 text-base font-extrabold text-primary-foreground card-shadow-primary active:translate-y-1 active:shadow-none transition-all"
         >
-          {filledCount > 0 ? "CONTINUE" : "SKIP FOR NOW"}
+          {filledCount > 0 ? t("continueBtn") : t("skipForNow")}
         </button>
       </motion.div>
     </div>

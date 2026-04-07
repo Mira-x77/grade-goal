@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Download, AlertCircle, Smartphone } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PDFViewerProps {
   fileUrl: string;
@@ -9,6 +10,7 @@ interface PDFViewerProps {
 }
 
 export function PDFViewer({ fileUrl, fileName, onClose, onDownload }: PDFViewerProps) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -37,7 +39,7 @@ export function PDFViewer({ fileUrl, fileName, onClose, onDownload }: PDFViewerP
         <div className="flex-1 min-w-0 mr-4">
           <h3 className="font-bold text-sm truncate">{fileName}</h3>
           <p className="text-xs text-muted-foreground">
-            Preview Mode - Not saved to device
+            {t("previewMode")}
           </p>
         </div>
         
@@ -72,8 +74,8 @@ export function PDFViewer({ fileUrl, fileName, onClose, onDownload }: PDFViewerP
           <div className="absolute inset-0 flex items-center justify-center bg-background/95 z-10">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-sm text-muted-foreground font-medium">Loading PDF preview...</p>
-              <p className="text-xs text-muted-foreground mt-2">This may take a moment</p>
+              <p className="text-sm text-muted-foreground font-medium">{t("loadingPDF")}</p>
+              <p className="text-xs text-muted-foreground mt-2">{t("loadingMoment")}</p>
             </div>
           </div>
         )}
@@ -88,7 +90,7 @@ export function PDFViewer({ fileUrl, fileName, onClose, onDownload }: PDFViewerP
                   onClick={onDownload}
                   className="mt-4 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-bold hover:opacity-90 transition-opacity"
                 >
-                  Download PDF Instead
+                  {t("downloadPDFInstead")}
                 </button>
               )}
             </div>

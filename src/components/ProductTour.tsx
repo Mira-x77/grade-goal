@@ -86,21 +86,45 @@ export default function ProductTour() {
   const current = steps[step];
   const isCenter = current.target === "body" || !rect;
 
-  // Tooltip placement — always outside the spotlight
+  // Safe area insets — keep tooltip away from status bar and home indicator
+  const SAFE_TOP = 56;    // below status bar
+  const SAFE_BOTTOM = 100; // above home indicator / taskbar
+  const SIDE_PAD = 16;
+
+  // Tooltip placement — always within safe viewport bounds
   const tooltipStyle: React.CSSProperties = (() => {
-    if (isCenter) return {
-      position: "fixed", top: "50%", left: "50%",
-      transform: "translate(-50%, -50%)",
+    // Always center horizontally
+    const horizontalStyle = {
+      left: SIDE_PAD,
+      right: SIDE_PAD,
     };
-    const spaceBelow = window.innerHeight - rect!.bottom;
-    const spaceAbove = rect!.top;
-    const useBelow = spaceBelow >= 160 || spaceBelow >= spaceAbove;
-    return {
-      position: "fixed" as const,
-      top: useBelow ? rect!.bottom + PADDING + 8 : undefined,
-      bottom: !useBelow ? window.innerHeight - rect!.top + PADDING + 8 : undefined,
-      left: Math.max(16, Math.min(rect!.left, window.innerWidth - 316)),
-    };
+
+    if (isCenter) {
+      return {
+        position: "fixed" as const,
+        ...horizontalStyle,
+        top: "50%",
+        transform: "translateY(-50%)",
+      };
+    }
+
+    const spaceBelow = window.innerHeight - rect!.bottom - SAFE_BOTTOM;
+    const spaceAbove = rect!.top - SAFE_TOP;
+    const useBelow = spaceBelow >= 140 || spaceBelow >= spaceAbove;
+
+    if (useBelow) {
+      return {
+        position: "fixed" as const,
+        ...horizontalStyle,
+        top: Math.min(rect!.bottom + PADDING + 8, window.innerHeight - SAFE_BOTTOM - 160),
+      };
+    } else {
+      return {
+        position: "fixed" as const,
+        ...horizontalStyle,
+        bottom: Math.min(window.innerHeight - rect!.top + PADDING + 8, window.innerHeight - SAFE_TOP - 160),
+      };
+    }
   })();
 
   return (
@@ -158,7 +182,7 @@ export default function ProductTour() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
             onClick={e => e.stopPropagation()}
-            style={{ ...tooltipStyle, zIndex: 10000, maxWidth: 300, width: "calc(100vw - 32px)" }}
+            style={{ ...tooltipStyle, zIndex: 10000 }}
           >
             <div className="bg-card border-2 border-foreground rounded-2xl p-5 card-shadow">
               <p className="font-black text-foreground text-sm mb-1">{current.title}</p>

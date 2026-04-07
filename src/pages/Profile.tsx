@@ -6,6 +6,7 @@ import { loadState, saveState } from "@/lib/storage";
 import { AppState } from "@/types/exam";
 import { CLASS_LEVELS, LYCEE_SERIES } from "@/lib/subjects-data";
 import TaskBar from "@/components/TaskBar";
+import ScreenIntro from "@/components/ScreenIntro";
 import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
 import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
 import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
@@ -151,8 +152,11 @@ const Profile = () => {
                 )}
                 <div>
                   <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("semester")}</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {["1st Semester", "2nd Semester", "Annual"].map((s) => (
+                  <div className={`grid gap-2 ${isLycee(draft.classLevel) ? "grid-cols-2" : "grid-cols-3"}`}>
+                    {(isLycee(draft.classLevel)
+                      ? ["1st Semester", "2nd Semester"]
+                      : ["1st Semester", "2nd Semester", "3rd Semester"]
+                    ).map((s) => (
                       <button
                         key={s}
                         onClick={() => setDraft((d) => ({ ...d, semester: s }))}
@@ -278,6 +282,14 @@ const Profile = () => {
       </div>
 
       <TaskBar showBack />
+
+      <ScreenIntro
+        screenKey="profile"
+        title={t("profileIntroTitle")}
+        description={t("profileIntroDesc")}
+        mascotPose="idle"
+        ctaLabel={t("profileIntroCta")}
+      />
 
       <PremiumIntroSheet
         open={showPremiumIntro}

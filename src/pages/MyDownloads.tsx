@@ -61,7 +61,7 @@ const MyDownloads = () => {
       setStorageInfo({ used, available, total });
     } catch (error) {
       console.error("Failed to load downloads:", error);
-      toast.error("Failed to load downloads");
+      toast.error(t("failedLoadDownloads"));
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ const MyDownloads = () => {
       }
     } catch (error) {
       console.error("Failed to open PDF:", error);
-      toast.error("Failed to open PDF");
+      toast.error(t("failedOpenPDF"));
       setShowPDFViewer(false);
       setCurrentPDF(null);
     }
@@ -113,13 +113,13 @@ const MyDownloads = () => {
     setTimeout(async () => {
       try {
         await downloadService.deletePaper(paperId);
-        toast.success("Paper deleted");
+        toast.success(t("paperDeleted"));
         setRevealedDelete(null);
         setDeletingId(null);
         loadDownloads();
       } catch (error) {
         console.error("Failed to delete paper:", error);
-        toast.error("Failed to delete paper");
+        toast.error(t("failedDeletePaper"));
         setDeletingId(null);
       }
     }, 300);
@@ -134,8 +134,8 @@ const MyDownloads = () => {
     countMotion.set(downloadedPapers.length);
   }, [downloadedPapers.length]);
 
-  const usedPct = storageInfo && storageInfo.total > 0
-    ? Math.min((storageInfo.used / storageInfo.total) * 100, 100)
+  const usedPct = storageInfo && (storageInfo.used + storageInfo.available) > 0
+    ? Math.min((storageInfo.used / (storageInfo.used + storageInfo.available)) * 100, 100)
     : 0;
   const storageWarning = usedPct > 80;
 
@@ -162,40 +162,37 @@ const MyDownloads = () => {
     <div className="flex-1 bg-background min-h-screen">
       {/* Fixed header */}
       <div ref={headerRef} className="fixed top-0 left-0 right-0 z-20 max-w-md mx-auto bg-background/90 backdrop-blur-lg border-b border-border px-4 pb-3 safe-area-top">
-        <div className="mt-3 rounded-2xl bg-card border-2 border-border px-4 py-3">
-          <div className="flex items-center gap-3">
+        <div className="mt-3 rounded-2xl bg-card border-2 border-border overflow-hidden">
+          {/* Top row: icon + used + free + papers count */}
+          <div className="flex items-center gap-3 px-4 pt-3 pb-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
               <HardDrive className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <div className="text-center">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Used</p>
-                  <p className="text-base font-black text-foreground leading-tight">{formatBytes(storageInfo?.used ?? 0)}</p>
-                </div>
-                <div className="flex-1 mx-2">
-                  <div className="h-2 rounded-full bg-muted overflow-hidden border border-border">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${storageWarning ? "bg-destructive" : "bg-primary"}`}
-                      style={{ width: `${usedPct}%` }}
-                    />
-                  </div>
-                  <p className="text-[9px] font-bold text-muted-foreground text-center mt-0.5">{usedPct.toFixed(0)}%</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Free</p>
-                  <p className="text-base font-black text-foreground leading-tight">
-                    {storageInfo !== null && storageInfo.available > 0 ? formatBytes(storageInfo.available) : "—"}
-                  </p>
-                </div>
-              </div>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("usedStorage")}</p>
+              <p className="text-base font-black text-foreground leading-tight">{formatBytes(storageInfo?.used ?? 0)}</p>
             </div>
-            <div className="text-center shrink-0 pl-3 border-l border-border">
+            <div className="h-8 w-px bg-border mx-1" />
+            <div className="flex-1 min-w-0 text-right">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("freeStorage")}</p>
+              <p className="text-base font-black text-foreground leading-tight">
+                {storageInfo && storageInfo.available > 0 ? formatBytes(storageInfo.available) : "—"}
+              </p>
+            </div>
+            <div className="h-8 w-px bg-border mx-1" />
+            <div className="text-center shrink-0 px-2">
               <motion.p className="text-2xl font-black text-foreground leading-none">{countRounded}</motion.p>
               <p className="text-[10px] font-bold text-muted-foreground mt-0.5">
                 {downloadedPapers.length === 1 ? t("paper") : t("papers")}
               </p>
             </div>
+          </div>
+          {/* Progress bar flush to bottom edge */}
+          <div className="h-2 w-full bg-muted">
+            <div
+              className={`h-full transition-all duration-500 ${storageWarning ? "bg-destructive" : "bg-primary"}`}
+              style={{ width: `${usedPct}%` }}
+            />
           </div>
         </div>
 
@@ -235,7 +232,7 @@ const MyDownloads = () => {
           </div>
         ) : filteredPapers.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-sm font-bold text-muted-foreground">No results for "{search}"</p>
+            <p className="text-sm font-bold text-muted-foreground">{t("noResultsFor")} "{search}"</p>
           </div>
         ) : (
           <div className="space-y-3">

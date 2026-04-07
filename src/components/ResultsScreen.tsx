@@ -8,6 +8,7 @@ import {
   getAbsoluteBounds,
   calcMinimumMarkNeeded,
 } from "@/lib/exam-logic";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ResultsScreenProps {
   subjects: Subject[];
@@ -16,45 +17,26 @@ interface ResultsScreenProps {
   onEditMarks: () => void;
 }
 
-const statusConfig: Record<FeedbackStatus, { bg: string; border: string; icon: React.ReactNode; text: string; sub: string }> = {
-  possible: {
-    bg: "bg-success/10", border: "border-success/30",
-    icon: <TrendingUp className="h-5 w-5 text-success" />,
-    text: "On track",
-    sub: "Your average is within your target range.",
-  },
-  risky: {
-    bg: "bg-warning/10", border: "border-warning/30",
-    icon: <AlertTriangle className="h-5 w-5 text-warning" />,
-    text: "Getting close",
-    sub: "A few more good scores will get you there.",
-  },
-  impossible: {
-    bg: "bg-danger/10", border: "border-danger/30",
-    icon: <XCircle className="h-5 w-5 text-danger" />,
-    text: "Below target",
-    sub: "Focus on high-coefficient subjects to close the gap.",
-  },
-};
-
-function getSubjectStatus(needed: number | null, hasAnyMark: boolean): "safe" | "recoverable" | "critical" | "complete" | "pending" {
+function getSubjectStatus(needed: number | null, hasAnyMark: boolean, bestSubAvg: number, minTarget: number): "safe" | "recoverable" | "critical" | "complete" | "pending" {
   if (needed === null) return "complete";
-  if (!hasAnyMark) return "pending";  // no marks yet — don't judge
+  if (!hasAnyMark) return "pending";
   if (needed <= 0) return "safe";
-  if (needed <= 14) return "recoverable";
-  return "critical";
+  if (bestSubAvg < minTarget) return "critical";
+  if (needed >= 20) return "critical";
+  return "recoverable";
 }
 
 const subjectStatusConfig = {
-  safe:        { dot: "bg-success",          label: "Safe",        labelColor: "text-success" },
-  recoverable: { dot: "bg-warning",          label: "Recoverable", labelColor: "text-warning" },
-  critical:    { dot: "bg-danger",           label: "Critical",    labelColor: "text-danger" },
-  complete:    { dot: "bg-primary",          label: "Complete",    labelColor: "text-primary" },
-  pending:     { dot: "bg-muted-foreground", label: "Pending",     labelColor: "text-muted-foreground" },
+  safe:        { dot: "bg-success",          labelKey: "subjectSafe" as const,        labelColor: "text-success" },
+  recoverable: { dot: "bg-warning",          labelKey: "subjectRecoverable" as const, labelColor: "text-warning" },
+  critical:    { dot: "bg-danger",           labelKey: "subjectCritical" as const,    labelColor: "text-danger" },
+  complete:    { dot: "bg-primary",          labelKey: "subjectComplete" as const,    labelColor: "text-primary" },
+  pending:     { dot: "bg-muted-foreground", labelKey: "subjectPending" as const,     labelColor: "text-muted-foreground" },
 };
 
 const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: ResultsScreenProps) => {
   const [whatsNextOpen, setWhatsNextOpen] = useState(false);
+  const { t } = useLanguage();
   const currentAvg = calcYearlyAverage(subjects);
   const bounds = getAbsoluteBounds(subjects);
 
@@ -62,12 +44,17 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
     : currentAvg !== null && currentAvg >= targetAverage - 2 ? "risky"
     : "impossible";
 
+  const statusConfig = {
+    possible: { bg: "bg-success/10", border: "border-success/30", icon: <TrendingUp className="h-5 w-5 text-success" />, sub: t("onTrackSub") },
+    risky:    { bg: "bg-warning/10", border: "border-warning/30", icon: <AlertTriangle className="h-5 w-5 text-warning" />, sub: t("gettingCloseSub") },
+    impossible: { bg: "bg-danger/10", border: "border-danger/30", icon: <XCircle className="h-5 w-5 text-danger" />, sub: t("belowTargetSub") },
+  };
+
   const config = statusConfig[overallStatus];
   const progressPercent = currentAvg !== null ? Math.min(100, (currentAvg / targetAverage) * 100) : 0;
   const targetUnreachable = bounds !== null && bounds.max < targetAverage;
   const isOnTrack = overallStatus === "possible";
 
-  // Build per-subject data — sorted alphabetically
   const subjectData = subjects
     .map((sub) => {
       const currentSubAvg = calcSubjectAverage(sub.marks);
@@ -83,7 +70,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
         ? calcMinimumMarkNeeded(subjects, sub.id, primaryMissing, targetAverage)
         : null;
       const hasAnyMark = sub.marks.interro !== null || sub.marks.dev !== null || sub.marks.compo !== null;
-      const status = getSubjectStatus(needed, hasAnyMark);
+      const status = getSubjectStatus(needed, hasAnyMark, bestSubAvg, targetAverage);
       return { sub, currentSubAvg, bestSubAvg, needed, primaryMissing, status };
     })
     .sort((a, b) => a.sub.name.localeCompare(b.sub.name));
@@ -97,25 +84,24 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
   const safeSubjects = subjectData.filter(d => d.status === "safe" || d.status === "complete");
   const hasMissingMarks = subjectData.some(d => d.primaryMissing !== null);
 
+  const markLabel = (type: string | null) =>
+    type === "compo" ? t("composition") : type === "dev" ? t("devoir") : t("interro");
+
   return (
     <div className="flex flex-col" style={{ minHeight: "60vh" }}>
       <div className="flex flex-col gap-4 px-6 pt-4 pb-24 safe-area-top">
 
-        {/* Compact status card */}
+        {/* Status card */}
         <motion.div
           initial={{ y: -8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className={`rounded-2xl border-2 ${config.bg} ${config.border} overflow-hidden`}
         >
-          {/* Top strip — context text */}
           <div className="flex items-center gap-2 px-4 pt-3 pb-2 border-b border-border/30">
             {config.icon}
             <p className="text-xs font-semibold text-foreground">{config.sub}</p>
           </div>
-
-          {/* Bottom section: left 1/3 big number | right 2/3 target + progress */}
           <div className="flex items-stretch px-4 py-3 gap-4">
-            {/* Left 1/3 — big current average */}
             <div className="flex items-center justify-center shrink-0" style={{ width: "33%" }}>
               <span className={`text-5xl font-black leading-none ${
                 isOnTrack ? "text-success" : overallStatus === "risky" ? "text-warning" : "text-danger"
@@ -123,15 +109,11 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                 {currentAvg !== null ? currentAvg.toFixed(1) : "—"}
               </span>
             </div>
-
-            {/* Right 2/3 — top: target | bottom: progress bar */}
             <div className="flex flex-col justify-between flex-1 gap-2">
-              {/* Target range */}
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Target</span>
+                <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t("targetLabel")}</span>
                 <span className="text-sm font-black text-foreground">{targetAverage}–20</span>
               </div>
-              {/* Progress bar */}
               <div>
                 <div className="h-2 rounded-full bg-muted overflow-hidden">
                   <motion.div
@@ -156,7 +138,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
           className="w-full flex items-center justify-center gap-2 rounded-2xl bg-card border-2 border-foreground py-3 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
         >
           <Pencil className="h-4 w-4" />
-          Edit Marks
+          {t("editMarks")}
         </motion.button>
 
         {/* Best possible */}
@@ -168,14 +150,14 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
             className="rounded-2xl bg-card p-4 border-2 border-border flex items-center justify-between"
           >
             <div>
-              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Best possible final</p>
-              <p className="text-xs font-semibold text-muted-foreground mt-0.5">If you score 20/20 on everything remaining</p>
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t("bestPossibleFinal")}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-0.5">{t("bestPossibleFinalDesc")}</p>
             </div>
             <p className="text-3xl font-black text-success shrink-0">{bounds.max.toFixed(1)}<span className="text-sm opacity-60">/20</span></p>
           </motion.div>
         )}
 
-        {/* Reality Check */}
+        {/* Target out of reach */}
         {targetUnreachable && bounds && (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
@@ -183,19 +165,21 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
             transition={{ delay: 0.3 }}
             className="rounded-2xl bg-danger/10 border-2 border-danger/30 p-4"
           >
-            <h3 className="font-black text-danger text-sm mb-1">Target out of reach</h3>
+            <h3 className="font-black text-danger text-sm mb-1">{t("targetOutOfReach")}</h3>
             <p className="text-xs font-semibold text-danger/80 mb-3">
-              Even scoring 20/20 on everything remaining, the highest you can reach is <span className="font-black">{bounds.max.toFixed(1)}/20</span> — below your target of {targetAverage}–20.
+              {t("targetOutOfReachDesc")
+                .replace("{max}", bounds.max.toFixed(1))
+                .replace("{target}", String(targetAverage))}
             </p>
             <div className="rounded-xl bg-card border-2 border-border p-3">
               <p className="text-xs font-semibold text-muted-foreground">
-                Consider adjusting your target to <span className="font-black text-foreground">{Math.floor(bounds.max * 2) / 2}–20</span>.
+                {t("considerAdjusting").replace("{target}", String(Math.floor(bounds.max * 2) / 2))}
               </p>
             </div>
           </motion.div>
         )}
 
-        {/* What to do next — collapsible */}
+        {/* What to do next */}
         {!targetUnreachable && hasMissingMarks && (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
@@ -207,7 +191,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
               onClick={() => setWhatsNextOpen(v => !v)}
               className="w-full flex items-center justify-between px-5 py-4 active:bg-muted/40 transition-colors"
             >
-              <h3 className="font-black text-foreground text-sm">What to do next</h3>
+              <h3 className="font-black text-foreground text-sm">{t("whatToDoNext")}</h3>
               <motion.div animate={{ rotate: whatsNextOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </motion.div>
@@ -223,8 +207,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                   className="overflow-hidden"
                 >
                   <div className="border-t border-border">
-
-                    {/* Summary card — context-aware */}
+                    {/* Summary */}
                     <div className={`mx-4 mt-4 mb-3 rounded-2xl border p-4 ${
                       isOnTrack ? "bg-success/10 border-success/20" : "bg-secondary/10 border-secondary/20"
                     }`}>
@@ -232,10 +215,13 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                         <Lightbulb className={`h-4 w-4 shrink-0 ${isOnTrack ? "text-success" : "text-secondary"}`} />
                         <p className="text-xs font-semibold text-muted-foreground">
                           {isOnTrack
-                            ? `You're already on track for ${targetAverage}–20. Keep your scores consistent.`
+                            ? t("youreOnTrackKeep").replace("{target}", String(targetAverage))
                             : focusSubjects.length > 0
-                            ? `Prioritize ${focusSubjects.map(d => d.sub.name).join(" & ")} — ${focusSubjects.length === 1 ? "this is your" : "these are your"} best lever${focusSubjects.length > 1 ? "s" : ""} to hit ${targetAverage}.`
-                            : `Keep your scores up across all subjects to stay on track.`}
+                            ? t("prioritizeSubjects")
+                                .replace("{subjects}", focusSubjects.map(d => d.sub.name).join(" & "))
+                                .replace("{count}", focusSubjects.length === 1 ? t("focusOn") : t("focusOn"))
+                                .replace("{target}", String(targetAverage))
+                            : t("keepScoresUp")}
                         </p>
                       </div>
                       <div className="flex flex-col gap-1.5 mt-2">
@@ -243,7 +229,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                           <div className="flex items-center gap-2">
                             <Target className="h-3.5 w-3.5 text-warning shrink-0" />
                             <p className="text-xs font-bold text-foreground">
-                              Focus on: <span className="text-warning">{focusSubjects.map(d => d.sub.name).join(", ")}</span>
+                              {t("focusOn")} <span className="text-warning">{focusSubjects.map(d => d.sub.name).join(", ")}</span>
                             </p>
                           </div>
                         )}
@@ -251,8 +237,8 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                           <div className="flex items-center gap-2">
                             <ShieldCheck className="h-3.5 w-3.5 text-success shrink-0" />
                             <p className="text-xs font-bold text-foreground">
-                              {isOnTrack ? "Maintain: " : "Safe: "}
-                              <span className="text-muted-foreground">{safeSubjects.map(d => d.sub.name).join(", ")} — don't let these slip</span>
+                              {isOnTrack ? t("maintain") : t("safe")}
+                              {" "}<span className="text-muted-foreground">{safeSubjects.map(d => d.sub.name).join(", ")} — {t("dontLetSlip")}</span>
                             </p>
                           </div>
                         )}
@@ -261,18 +247,19 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
 
                     {/* Per-subject breakdown */}
                     <div className="px-4 pb-4 flex flex-col gap-2">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Per-subject breakdown</p>
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{t("perSubjectBreakdown")}</p>
                       {subjectData.map(({ sub, currentSubAvg, bestSubAvg, needed, primaryMissing, status }) => {
                         const sc = subjectStatusConfig[status];
                         const neededClamped = needed !== null ? Math.min(20, Math.max(0, needed)) : null;
-                        const markLabel = primaryMissing === "compo" ? "Compo" : primaryMissing === "dev" ? "Devoir" : "Interro";
+                        const ml = markLabel(primaryMissing);
                         const actionText = (() => {
-                          if (status === "complete") return "All marks entered — nothing left to do here.";
-                          if (status === "pending") return "No marks entered yet — add your scores to see what you need.";
-                          if (status === "safe") return "Already contributing to your target — don't let it slip.";
-                          if (neededClamped !== null && needed !== null && needed > 20) return `Even 20/20 on ${markLabel} won't be enough — adjust your target.`;
-                          if (neededClamped !== null) return `Score ≥ ${neededClamped.toFixed(1)} on ${markLabel} to stay on track.`;
-                          return "Keep it up.";
+                          if (status === "complete") return t("allMarksEnteredNothing");
+                          if (status === "pending") return t("noMarksYetAdd");
+                          if (status === "safe") return t("alreadyContributing");
+                          if (bestSubAvg < targetAverage) return t("evenPerfectNotEnough").replace("{mark}", ml);
+                          if (neededClamped !== null && needed !== null && needed >= 20) return t("evenPerfectNotEnough").replace("{mark}", ml);
+                          if (neededClamped !== null) return t("scoreToStayOnTrack").replace("{score}", neededClamped.toFixed(1)).replace("{mark}", ml);
+                          return t("keepItUp");
                         })();
                         const currentPct = currentSubAvg !== null ? (currentSubAvg / 20) * 100 : 0;
                         const bestPct = (bestSubAvg / 20) * 100;
@@ -285,7 +272,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                                 <span className="font-black text-sm text-foreground">{sub.name}</span>
                                 <span className="text-[10px] font-bold text-muted-foreground">×{sub.coefficient}</span>
                               </div>
-                              <span className={`text-[10px] font-black ${sc.labelColor}`}>{sc.label}</span>
+                              <span className={`text-[10px] font-black ${sc.labelColor}`}>{t(sc.labelKey)}</span>
                             </div>
                             <p className="text-xs font-semibold text-muted-foreground mb-2">{actionText}</p>
                             <div className="relative h-2 rounded-full bg-muted overflow-hidden">
@@ -302,9 +289,9 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                             </div>
                             <div className="flex justify-between mt-1">
                               <span className="text-[9px] font-bold text-muted-foreground">
-                                {currentSubAvg !== null ? `${currentSubAvg.toFixed(1)} now` : "No marks yet"}
+                                {currentSubAvg !== null ? `${currentSubAvg.toFixed(1)} ${t("nowLabel")}` : t("noMarksYet")}
                               </span>
-                              <span className="text-[9px] font-bold text-success">{bestSubAvg.toFixed(1)} best case</span>
+                              <span className="text-[9px] font-bold text-success">{bestSubAvg.toFixed(1)} {t("bestCase")}</span>
                             </div>
                           </div>
                         );
@@ -324,8 +311,8 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
             transition={{ delay: 0.3 }}
             className="rounded-2xl bg-success/10 border-2 border-success/20 p-5 text-center"
           >
-            <p className="font-black text-success text-sm">All marks entered</p>
-            <p className="text-[10px] font-semibold text-success/70 mt-1">Your final average is calculated above</p>
+            <p className="font-black text-success text-sm">{t("allMarksEnteredFinal")}</p>
+            <p className="text-[10px] font-semibold text-success/70 mt-1">{t("finalAverageCalculated")}</p>
           </motion.div>
         )}
 

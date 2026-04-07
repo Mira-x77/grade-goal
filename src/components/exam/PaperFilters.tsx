@@ -1,7 +1,7 @@
 import { FilterCriteria, ExamType } from "@/types/exam-library";
 import { X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PaperFiltersProps {
   filters: FilterCriteria;
@@ -14,12 +14,13 @@ interface PaperFiltersProps {
 const EXAM_TYPES: ExamType[] = ["Baccalauréat", "Composition", "Devoir", "Interro", "midterm", "Practice", "Revision"];
 
 export function PaperFilters({ filters, onFilterChange, onClear, subjects, years }: PaperFiltersProps) {
+  const { t } = useLanguage();
   const hasActiveFilters = filters.subject || filters.year || filters.examType;
 
   return (
     <div className="rounded-2xl bg-card p-4 card-shadow">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-black text-foreground text-sm">Filters</h3>
+        <h3 className="font-black text-foreground text-sm">{t("filters")}</h3>
         {hasActiveFilters && (
           <button
             onClick={onClear}

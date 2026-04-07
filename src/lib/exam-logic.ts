@@ -59,17 +59,20 @@ export function calcMinimumMarkNeeded(
   if (targetSubject.marks[targetMarkType] !== null) return null; // already filled
 
   // Sum of known points from other subjects
+  // Only count subjects that have at least one mark entered
   let knownPoints = 0;
   let totalCoeff = 0;
 
   for (const sub of subjects) {
-    totalCoeff += sub.coefficient;
     if (sub.id === targetSubjectId) continue;
     const avg = calcSubjectAverage(sub.marks);
     if (avg !== null) {
       knownPoints += avg * sub.coefficient;
+      totalCoeff += sub.coefficient;
     }
   }
+  // Always include the target subject's coefficient
+  totalCoeff += targetSubject.coefficient;
 
   // For the target subject, calculate partial known marks
   const marks = { ...targetSubject.marks };

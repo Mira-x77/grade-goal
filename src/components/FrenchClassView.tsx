@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpDown, TrendingUp, TrendingDown, Minus, Star, ChevronDown } from "lucide-react";
 import { Subject } from "@/types/exam";
 import { calcFrenchSummary, getAppreciationTrend } from "@/lib/grading-french";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FrenchClassViewProps {
   subjects: Subject[];
@@ -14,6 +15,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
   const summary = calcFrenchSummary(subjects);
   const trend = getAppreciationTrend(subjects);
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <div className="rounded-2xl bg-card border-2 border-border overflow-hidden flex-shrink-0" style={{ width: "calc(100vw - 4rem)" }}>
@@ -24,7 +26,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
       >
         <div className="flex items-center gap-2">
           <ArrowUpDown className="h-4 w-4 text-secondary" />
-          <h3 className="font-black text-foreground text-sm">How You Stack Up</h3>
+          <h3 className="font-black text-foreground text-sm">{t("classRanking")}</h3>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {summary.studentAvg !== null && (
@@ -52,13 +54,13 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
               {/* Avg comparison */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-muted/50 p-3 text-center">
-                  <p className="text-xs font-bold text-muted-foreground">Your Average</p>
+                  <p className="text-xs font-bold text-muted-foreground">{t("currentAverage")}</p>
                   <p className="text-2xl font-black text-foreground">
                     {summary.studentAvg?.toFixed(1) ?? "—"}
                   </p>
                 </div>
                 <div className="rounded-xl bg-muted/50 p-3 text-center">
-                  <p className="text-xs font-bold text-muted-foreground">Class Average</p>
+                  <p className="text-xs font-bold text-muted-foreground">{t("classAvg")}</p>
                   <p className="text-2xl font-black text-muted-foreground">
                     {summary.classAvg?.toFixed(1) ?? "—"}
                   </p>
@@ -81,9 +83,9 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
               {summary.overallPercentile !== null && (
                 <div>
                   <div className="flex justify-between text-xs font-bold text-muted-foreground mb-1">
-                    <span>Class Min</span>
+                    <span>{t("min")}</span>
                     <span>Percentile: {summary.overallPercentile}%</span>
-                    <span>Class Max</span>
+                    <span>{t("max")}</span>
                   </div>
                   <div className="h-3 rounded-full bg-muted relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-danger via-warning to-success rounded-full" />
@@ -103,7 +105,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
                 <div className="rounded-xl bg-muted/50 p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Star className="h-3.5 w-3.5 text-accent" />
-                    <span className="font-black text-foreground text-xs">Appreciation Trend</span>
+                    <span className="font-black text-foreground text-xs">{t("appreciation")}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex gap-0.5">
@@ -114,7 +116,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
                       ))}
                     </div>
                     <span className="text-xs font-bold text-muted-foreground">
-                      {trend.average !== null ? sentimentLabels[Math.round(trend.average)] : "No data"}
+                      {trend.average !== null ? sentimentLabels[Math.round(trend.average)] : t("noActivityYet")}
                     </span>
                     {trend.improving
                       ? <TrendingUp className="h-3.5 w-3.5 text-success ml-auto" />
@@ -126,7 +128,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
               {/* Per-subject comparison */}
               {summary.subjectDetails.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">Per Subject Breakdown</p>
+                  <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">{t("perSubjectBreakdown")}</p>
                   {summary.subjectDetails.map((d) => (
                     <div key={d.subject.id} className="rounded-xl bg-muted/50 p-3">
                       <div className="flex items-center justify-between mb-1">
@@ -150,7 +152,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
                             Δ {d.delta > 0 ? "+" : ""}{d.delta.toFixed(1)}
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold text-muted-foreground">No class data</span>
+                        <span className="text-[10px] font-bold text-muted-foreground">{t("noClassData")}</span>
                         )}
                         {d.subject.french?.appreciation && (
                           <span className="text-[10px] font-bold text-accent">
