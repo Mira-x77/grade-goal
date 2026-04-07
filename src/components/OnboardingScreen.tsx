@@ -6,7 +6,7 @@ import Mascot from "@/components/Mascot";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Language } from "@/lib/i18n";
 
-export type OnboardingStep = "language" | "system" | "profile" | "target";
+export type OnboardingStep = "system" | "profile" | "target";
 
 interface OnboardingScreenProps {
   targetAverage: number;
@@ -29,8 +29,9 @@ interface OnboardingScreenProps {
 const allLevels = [...CLASS_LEVELS.college, ...CLASS_LEVELS.lycee];
 const isLycee = (level: string) => (CLASS_LEVELS.lycee as readonly string[]).includes(level);
 
-const FixedNextButton = ({ onClick, disabled = false, label }: { onClick: () => void; disabled?: boolean; label: string }) => (
-  <div className="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto px-6 pb-10 pt-4 bg-background">
+const FixedNextButton = ({ onClick, disabled = false, label, hint }: { onClick: () => void; disabled?: boolean; label: string; hint?: React.ReactNode }) => (
+  <div className="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto px-6 pb-10 pt-2 bg-gradient-to-t from-background via-background to-transparent">
+    {hint && <div className="mb-3 w-full flex justify-center">{hint}</div>}
     <button
       onClick={onClick}
       disabled={disabled}
@@ -57,56 +58,6 @@ const OnboardingScreen = ({
   return (
     <AnimatePresence mode="wait">
 
-      {/* ── STEP 0: Language ── */}
-      {step === "language" && (
-        <motion.div
-          key="language"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, x: -50 }}
-          className="flex flex-col items-center gap-8 px-6 pt-28 pb-36"
-        >
-          <motion.div
-            initial={{ scale: 0.3, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          >
-            <Mascot pose="thinking" size={110} animate />
-          </motion.div>
-
-          <div className="text-center">
-            <h1 className="text-3xl font-black text-foreground">{t("languageTitle")}</h1>
-            <p className="mt-2 text-muted-foreground font-semibold">{t("languageSubtitle")}</p>
-          </div>
-
-          <div className="w-full max-w-xs flex flex-col gap-3">
-            {([
-              { code: "en" as Language, label: "English", sub: t("continueInEnglish") },
-              { code: "fr" as Language, label: "Français", sub: t("continueInFrench") },
-            ]).map(({ code, label, sub }) => (
-              <button
-                key={code}
-                onClick={() => setLang(code)}
-                className={`rounded-2xl p-5 text-left transition-all active:scale-[0.98] border-2 border-foreground card-shadow ${
-                  language === code ? "bg-secondary" : "bg-card"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-foreground bg-background">
-                    <Globe className="h-5 w-5 text-foreground" />
-                  </div>
-                  <div>
-                    <p className="font-black text-foreground">{label}</p>
-                    <p className="text-xs font-semibold text-muted-foreground">{sub}</p>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          <FixedNextButton onClick={() => onStepChange("system")} label={t("next")} />
-        </motion.div>
-      )}
 
       {/* ── STEP 1: Grading System ── */}
       {step === "system" && (
@@ -304,23 +255,23 @@ const OnboardingScreen = ({
             )}
           </div>
 
-          {/* Show what's still missing */}
-          {!profileValid && (studentName.trim() || classLevel) && (
-            <p className="text-xs font-bold text-muted-foreground text-center -mt-4">
-              {!studentName.trim()
-                ? t("enterYourName")
-                : !classLevel
-                ? t("chooseYourClass")
-                : (isLycee(classLevel) && !serie)
-                ? t("chooseYourSerie")
-                : t("chooseYourSemester")}
-            </p>
-          )}
-
           <FixedNextButton
             onClick={() => onStepChange("target")}
             disabled={!profileValid}
             label={t("next")}
+            hint={
+              !profileValid && (studentName.trim() || classLevel) ? (
+                <p className="text-xs font-bold text-muted-foreground text-center">
+                  {!studentName.trim()
+                    ? t("enterYourName")
+                    : !classLevel
+                    ? t("chooseYourClass")
+                    : (isLycee(classLevel) && !serie)
+                    ? t("chooseYourSerie")
+                    : t("chooseYourSemester")}
+                </p>
+              ) : undefined
+            }
           />
         </motion.div>
       )}

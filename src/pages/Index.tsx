@@ -16,7 +16,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const stepParam = searchParams.get("step");
-  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>("language");
+  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>("system");
 
   const handleOnboardingStepChange = (step: OnboardingStep) => {
     setOnboardingStep(step);
@@ -55,7 +55,6 @@ const Index = () => {
     if (state.step === "onboarding") {
       if (onboardingStep === "target") handleOnboardingStepChange("profile");
       else if (onboardingStep === "profile") handleOnboardingStepChange("system");
-      else if (onboardingStep === "system") handleOnboardingStepChange("language");
       else navigate("/");
     } else if (state.step === "subjects") {
       setStep("onboarding");
@@ -68,20 +67,20 @@ const Index = () => {
   };
 
   const stepTitles: Record<AppState["step"], string> = {
-    onboarding: onboardingStep === "language" ? "" : onboardingStep === "system" ? t("gradingSystem") : onboardingStep === "profile" ? t("basicInfo") : t("targetAverage"),
+    onboarding: onboardingStep === "system" ? t("gradingSystem") : onboardingStep === "profile" ? t("basicInfo") : t("targetAverage"),
     subjects: t("addSubjects"),
     marks: t("enterYourMarks"),
     results: t("yourProfile"),
   };
 
   const stepNumbers: Record<AppState["step"], number> = {
-    onboarding: onboardingStep === "language" ? 1 : onboardingStep === "system" ? 2 : onboardingStep === "profile" ? 3 : 4,
-    subjects: 5,
-    marks: 6,
-    results: 6,
+    onboarding: onboardingStep === "system" ? 1 : onboardingStep === "profile" ? 2 : 3,
+    subjects: 4,
+    marks: 5,
+    results: 5,
   };
 
-  const TOTAL_STEPS = 6;
+  const TOTAL_STEPS = 5;
 
   return (
     <div className="min-h-screen bg-background max-w-md mx-auto pb-20">

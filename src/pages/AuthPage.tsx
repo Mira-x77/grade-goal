@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
 import Mascot from "@/components/Mascot";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AuthPage() {
@@ -151,7 +151,16 @@ export default function AuthPage() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="flex justify-center pb-0 safe-area-top">
+      <div className="flex justify-center pb-0 safe-area-top relative pt-12">
+        <div className="absolute top-4 right-6 z-10">
+          <button 
+            onClick={() => setLang(language === 'fr' ? 'en' : 'fr')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-foreground bg-card font-black text-xs text-foreground card-shadow active:translate-y-[2px] active:shadow-none transition-all"
+          >
+            <Globe className="h-3.5 w-3.5" />
+            {language === 'fr' ? 'FR' : 'EN'}
+          </button>
+        </div>
         <Mascot pose="pointing" size={120} animate />
       </div>
 
