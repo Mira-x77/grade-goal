@@ -262,10 +262,9 @@ const MyDownloads = () => {
                       className="flex-1 flex items-center gap-4 p-4 cursor-pointer active:bg-muted/40 transition-colors"
                       onClick={(e) => { e.stopPropagation(); handlePaperClick(paper); }}
                     >
-                      {/* Image Thumbnail (Fallback to FileText since offline cached papers don't store preview_url) */}
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0 border border-primary/20 overflow-hidden">
-                        {(paper as any).preview_url ? (
-                          <img src={(paper as any).preview_url} className="w-full h-full object-cover" alt="" />
+                        {paper.preview_url ? (
+                          <img src={paper.preview_url} className="w-full h-full object-cover" alt="" />
                         ) : (
                           <FileText className="h-6 w-6 text-primary" />
                         )}

@@ -91,6 +91,7 @@ class CacheService {
         downloads: paper.downloads,
         tags: paper.tags,
         description: paper.description,
+        preview_url: paper.preview_url,
         isDownloaded: false,
         lastFetched: now
       };
