@@ -9,7 +9,7 @@ import { CheckCircle2, Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AuthPage() {
-  const { t } = useLanguage();
+  const { t, language, setLang } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "apple" | null>(null);

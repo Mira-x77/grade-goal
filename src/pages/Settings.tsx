@@ -130,7 +130,7 @@ const Settings = () => {
     });
     setShowWipeConfirm(false);
     toast.success(t("allDataWiped"));
-    navigate("/auth");
+    navigate("/onboarding");
   };
 
   return (

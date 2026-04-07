@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, BookOpen, Globe, ChevronDown } from "lucide-react";
+import { Target, BookOpen, ChevronDown } from "lucide-react";
 import { GradingSystem } from "@/types/exam";
 import { CLASS_LEVELS, LYCEE_SERIES } from "@/lib/subjects-data";
 import Mascot from "@/components/Mascot";
