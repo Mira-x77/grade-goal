@@ -20,6 +20,52 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 type LibraryTab = 'papers' | 'prep';
 
+const PREP_SUBTEXTS = [
+  "focusWhatMatters",
+  "premiumStudyTools",
+  "top30Questions",
+  "topicsLikelyAppear",
+  "stepByStepSolutions",
+  "whatToStudyGuide",
+] as const;
+
+function CyclingSubtext() {
+  const { t } = useLanguage();
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIndex(i => (i + 1) % PREP_SUBTEXTS.length);
+        setVisible(true);
+      }, 350);
+    }, 3200);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="overflow-hidden relative h-4">
+      <motion.p
+        key={index}
+        initial={{ x: -24, opacity: 0 }}
+        animate={visible ? { x: 0, opacity: 1 } : { x: 24, opacity: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="text-xs font-semibold text-muted-foreground/60 absolute inset-0 whitespace-nowrap overflow-hidden text-ellipsis"
+        style={{
+          background: "linear-gradient(90deg, transparent 0%, hsl(var(--muted-foreground)/0.55) 20%, hsl(var(--muted-foreground)/0.55) 80%, transparent 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
+        {t(PREP_SUBTEXTS[index] as any)}
+      </motion.p>
+    </div>
+  );
+}
+
 export default function LibraryDirect() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -306,9 +352,9 @@ export default function LibraryDirect() {
                 {/* Hero */}
                 <div className="rounded-2xl bg-premium/10 border-2 border-premium/30 px-4 py-4 mb-4 flex items-center gap-3">
                   <Crown className="h-6 w-6 text-premium shrink-0" />
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="font-black text-foreground text-sm">{t("passNotHarder")}</p>
-                    <p className="text-xs font-semibold text-muted-foreground mt-0.5">{t("focusWhatMatters")}</p>
+                    <CyclingSubtext />
                   </div>
                 </div>
 

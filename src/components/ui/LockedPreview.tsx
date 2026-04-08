@@ -7,6 +7,7 @@ interface LockedPreviewProps {
   onUnlockClick: () => void;
   unlockText?: string;
   className?: string;
+  expanded?: boolean;
 }
 
 export function LockedPreview({
@@ -15,15 +16,19 @@ export function LockedPreview({
   onUnlockClick,
   unlockText,
   className = "",
+  expanded = false,
 }: LockedPreviewProps) {
   return (
     <motion.div
+      layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-2xl bg-card border-2 border-foreground overflow-hidden card-shadow ${className}`}
+      className={`rounded-2xl bg-card border-2 border-foreground overflow-hidden card-shadow flex flex-col ${
+        expanded ? "flex-1" : ""
+      } ${className}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
           <Crown className="h-4 w-4 text-premium" />
           <h3 className="font-black text-foreground text-sm">{title}</h3>
@@ -32,23 +37,23 @@ export function LockedPreview({
       </div>
 
       {/* Blurred content placeholder */}
-      <div className="relative px-4 py-4 space-y-2 select-none">
+      <div className="relative px-4 py-4 space-y-2 select-none flex-1">
         {[85, 70, 90, 60].map((w, i) => (
           <div
             key={i}
             className="flex items-start gap-3 rounded-xl bg-muted/60 px-3 py-2.5"
-            style={{ filter: i === 0 ? "none" : "blur(4px)", opacity: i === 0 ? 1 : 0.5 }}
+            style={{ filter: "blur(4px)", opacity: 0.5 }}
           >
             <span className="text-xs font-black text-primary shrink-0">{i + 1}.</span>
             <div className="flex-1 space-y-1.5">
               <div className="h-2.5 rounded-full bg-foreground/20" style={{ width: `${w}%` }} />
-              {i === 0 && <div className="h-2 rounded-full bg-foreground/10" style={{ width: "55%" }} />}
+              <div className="h-2 rounded-full bg-foreground/10" style={{ width: "55%" }} />
             </div>
           </div>
         ))}
 
         {/* Gradient + CTA overlay */}
-        <div className="absolute inset-0 top-12 flex flex-col items-center justify-end bg-gradient-to-t from-card via-card/80 to-transparent pb-4 px-4">
+        <div className="absolute inset-0 top-8 flex flex-col items-center justify-end bg-gradient-to-t from-card via-card/80 to-transparent pb-4 px-4">
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={onUnlockClick}

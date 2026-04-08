@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, X, Lightbulb, Loader2, Send, CheckCircle2, MessageSquare } from "lucide-react";
+import { Plus, Search, X, Lightbulb, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -9,7 +9,6 @@ import TaskBar from "@/components/TaskBar";
 import { toast } from "sonner";
 
 type Status = "under_review" | "planned" | "in_progress" | "completed";
-type Tab = "board" | "feedback";
 
 interface FeedbackItem {
   id: string;
@@ -29,16 +28,11 @@ const STATUS_META: Record<Status, { label: string; labelFr: string; color: strin
   completed:    { label: "Completed",    labelFr: "Terminé",    color: "bg-success/15 text-success border-success/30" },
 };
 
-const EMOJIS = ["😞", "😕", "😐", "🙂", "😍"];
-
 export default function FeedbackBoard() {
   const { user } = useAuth();
   const { language } = useLanguage();
   const fr = language === "fr";
 
-  const [tab, setTab] = useState<Tab>("board");
-
-  // ── Board state ──────────────────────────────────────────────
   const [items, setItems] = useState<FeedbackItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -50,13 +44,6 @@ export default function FeedbackBoard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // ── Feedback state ───────────────────────────────────────────
-  const [rating, setRating] = useState<number | null>(null);
-  const [fbMessage, setFbMessage] = useState("");
-  const [fbSubmitted, setFbSubmitted] = useState(false);
-  const [fbSubmitting, setFbSubmitting] = useState(false);
-
-  // ── Board fetch ──────────────────────────────────────────────
   const fetchItems = useCallback(async () => {
     setLoading(true);
     setFetchError(null);
@@ -83,7 +70,6 @@ export default function FeedbackBoard() {
       )
     : items;
 
-  // ── Submit feature request ───────────────────────────────────
   const handleSubmitRequest = async () => {
     if (!user || reqTitle.trim().length < 3 || reqDesc.trim().length < 10) return;
     setSubmitting(true);
@@ -104,250 +90,113 @@ export default function FeedbackBoard() {
     }
   };
 
-  // ── Submit general feedback ──────────────────────────────────
-  const handleSubmitFeedback = async () => {
-    if (rating === null || !fbMessage.trim()) return;
-    setFbSubmitting(true);
-    try {
-      const entry = { rating, message: fbMessage.trim(), timestamp: new Date().toISOString() };
-      const existing = JSON.parse(localStorage.getItem("scoretarget_feedback") || "[]");
-      localStorage.setItem("scoretarget_feedback", JSON.stringify([...existing, entry]));
-      setFbSubmitted(true);
-    } finally {
-      setFbSubmitting(false);
-    }
-  };
-
   const canSubmitRequest = reqTitle.trim().length >= 3 && reqDesc.trim().length >= 10;
-  const canSendFeedback = rating !== null && fbMessage.trim().length > 0 && !fbSubmitting && !fbSubmitted;
 
-  // Shared action button for TaskBar — Plus on board, Send on feedback
   const actionBtn = (
     <motion.button
-      key={tab}
-      onClick={tab === "board" ? () => setShowForm(true) : handleSubmitFeedback}
-      disabled={tab === "feedback" && !canSendFeedback}
+      onClick={() => setShowForm(true)}
       initial={{ opacity: 0, scale: 0.5, x: -16 }}
-      animate={{ opacity: tab === "feedback" && !canSendFeedback ? 0.35 : 1, scale: 1, x: 0 }}
+      animate={{ opacity: 1, scale: 1, x: 0 }}
       exit={{ opacity: 0, scale: 0.5, x: -16 }}
       transition={{ type: "spring", stiffness: 380, damping: 28 }}
-      className="h-12 w-12 rounded-full bg-secondary border-2 border-foreground card-shadow flex items-center justify-center active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+      className="h-12 w-12 rounded-full bg-secondary border-2 border-foreground card-shadow flex items-center justify-center active:scale-95"
     >
-      {tab === "board"
-        ? <Plus className="h-5 w-5 text-foreground" />
-        : fbSubmitting
-          ? <Loader2 className="h-5 w-5 text-foreground animate-spin" />
-          : <Send className="h-5 w-5 text-foreground" />
-      }
+      <Plus className="h-5 w-5 text-foreground" />
     </motion.button>
   );
 
   return (
     <div className="min-h-screen bg-background max-w-md mx-auto pb-24">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-lg border-b border-border safe-area-top">
-        {/* Title row */}
-        <div className="flex items-center px-4 pt-3 pb-2">
+        <div className="flex items-center px-4 pt-3 pb-3">
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-black text-foreground">
-              {fr ? "Idées & Avis" : "Ideas & Feedback"}
+              {fr ? "Idées & Fonctionnalités" : "Ideas & Feature Requests"}
             </h1>
             <p className="text-[10px] font-semibold text-muted-foreground">
-              {fr ? "Votez, proposez, ou donnez un avis" : "Vote, suggest, or share your thoughts"}
+              {fr ? "Votez ou proposez une idée" : "Vote on ideas or suggest your own"}
             </p>
-          </div>
-        </div>
-
-        {/* Segmented control — pill slides via translateX percentage */}
-        <div className="px-4 pb-3">
-          <div className="relative flex bg-muted rounded-xl p-1 overflow-hidden">
-            {/* Sliding indicator */}
-            <motion.div
-              className="absolute top-1 bottom-1 w-[calc(50%-2px)] rounded-lg bg-card border-2 border-foreground card-shadow"
-              animate={{ x: tab === "board" ? 0 : "calc(100% + 4px)" }}
-              initial={false}
-              transition={{ type: "spring", stiffness: 400, damping: 35 }}
-              style={{ left: "4px" }}
-            />
-            {(["board", "feedback"] as Tab[]).map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className="relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-black transition-colors duration-150"
-                style={{ color: tab === t ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))" }}
-              >
-                {t === "board"
-                  ? <><Lightbulb className="h-3.5 w-3.5" />{fr ? "Idées" : "Feature Requests"}</>
-                  : <><MessageSquare className="h-3.5 w-3.5" />{fr ? "Avis" : "Feedback"}</>
-                }
-              </button>
-            ))}
           </div>
         </div>
       </div>
 
-      {/* ── Board tab ── */}
-      <AnimatePresence mode="wait" initial={false}>
-        {tab === "board" && (
-          <motion.div
-            key="board"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-          >
-            {/* Search + sort */}
-            <div className="flex gap-2 px-4 pt-4 pb-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder={fr ? "Rechercher..." : "Search..."}
-                  className="w-full pl-9 pr-3 py-2 rounded-xl border-2 border-border bg-muted text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                />
-              </div>
-              <div className="flex rounded-xl border-2 border-border overflow-hidden bg-muted">
-                {(["votes", "newest"] as const).map(s => (
-                  <button key={s} onClick={() => setSort(s)}
-                    className={`px-3 py-2 text-xs font-black transition-colors ${sort === s ? "bg-secondary text-foreground" : "text-muted-foreground"}`}
-                  >
-                    {s === "votes" ? (fr ? "Votes" : "Top") : (fr ? "Récent" : "New")}
-                  </button>
-                ))}
-              </div>
-            </div>
+      {/* Search + sort */}
+      <div className="flex gap-2 px-4 pt-4 pb-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={fr ? "Rechercher..." : "Search..."}
+            className="w-full pl-9 pr-3 py-2 rounded-xl border-2 border-border bg-muted text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+          />
+        </div>
+        <div className="flex rounded-xl border-2 border-border overflow-hidden bg-muted">
+          {(["votes", "newest"] as const).map(s => (
+            <button key={s} onClick={() => setSort(s)}
+              className={`px-3 py-2 text-xs font-black transition-colors ${sort === s ? "bg-secondary text-foreground" : "text-muted-foreground"}`}
+            >
+              {s === "votes" ? (fr ? "Votes" : "Top") : (fr ? "Récent" : "New")}
+            </button>
+          ))}
+        </div>
+      </div>
 
-            <div className="px-4 pb-4 flex flex-col gap-3">
-              {loading ? (
-                <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-              ) : fetchError ? (
-                <div className="text-center py-16">
-                  <p className="text-sm font-bold text-danger">{fetchError}</p>
-                  <button onClick={fetchItems} className="mt-3 text-xs font-black text-primary">{fr ? "Réessayer" : "Retry"}</button>
+      {/* List */}
+      <div className="px-4 pb-4 flex flex-col gap-3">
+        {loading ? (
+          <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+        ) : fetchError ? (
+          <div className="text-center py-16">
+            <p className="text-sm font-bold text-danger">{fetchError}</p>
+            <button onClick={fetchItems} className="mt-3 text-xs font-black text-primary">{fr ? "Réessayer" : "Retry"}</button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-4 py-20 text-center px-8"
+          >
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary/30 border-2 border-foreground/10">
+              <Lightbulb className="h-8 w-8 text-secondary" />
+            </div>
+            <p className="text-lg font-black text-foreground">{fr ? "Aucune idée pour l'instant" : "No ideas yet"}</p>
+            <p className="text-sm font-semibold text-muted-foreground leading-relaxed">
+              {fr ? "Soyez le premier à proposer une fonctionnalité." : "Be the first to suggest a feature."}
+            </p>
+            <button onClick={() => setShowForm(true)}
+              className="mt-2 rounded-2xl bg-secondary border-2 border-foreground px-6 py-3 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
+            >
+              {fr ? "Proposer une idée" : "Submit an idea"}
+            </button>
+          </motion.div>
+        ) : (
+          filtered.map((item, i) => {
+            const meta = STATUS_META[item.status] ?? STATUS_META.under_review;
+            return (
+              <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+                className="flex gap-3 bg-card border-2 border-border rounded-2xl p-4"
+              >
+                <VoteButton feedbackId={item.id} initialCount={item.vote_count} initialVoted={item.user_voted} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <p className="font-black text-foreground text-sm leading-snug">{item.title}</p>
+                    <span className={`shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full border ${meta.color}`}>
+                      {fr ? meta.labelFr : meta.label}
+                    </span>
+                  </div>
+                  <p className="text-xs font-semibold text-muted-foreground leading-relaxed line-clamp-2">{item.description}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground/60 mt-1.5">
+                    {new Date(item.created_at).toLocaleDateString(fr ? "fr-FR" : "en-GB", { day: "numeric", month: "short" })}
+                  </p>
                 </div>
-              ) : filtered.length === 0 ? (
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                  className="flex flex-col items-center gap-4 py-20 text-center px-8"
-                >
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary/30 border-2 border-foreground/10">
-                    <Lightbulb className="h-8 w-8 text-secondary" />
-                  </div>
-                  <p className="text-lg font-black text-foreground">{fr ? "Aucune idée pour l'instant" : "No ideas yet"}</p>
-                  <p className="text-sm font-semibold text-muted-foreground leading-relaxed">
-                    {fr ? "Soyez le premier à proposer une fonctionnalité." : "Be the first to suggest a feature."}
-                  </p>
-                  <button onClick={() => setShowForm(true)}
-                    className="mt-2 rounded-2xl bg-secondary border-2 border-foreground px-6 py-3 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
-                  >
-                    {fr ? "Proposer une idée" : "Submit an idea"}
-                  </button>
-                </motion.div>
-              ) : (
-                filtered.map((item, i) => {
-                  const meta = STATUS_META[item.status] ?? STATUS_META.under_review;
-                  return (
-                    <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                      className="flex gap-3 bg-card border-2 border-border rounded-2xl p-4"
-                    >
-                      <VoteButton feedbackId={item.id} initialCount={item.vote_count} initialVoted={item.user_voted} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <p className="font-black text-foreground text-sm leading-snug">{item.title}</p>
-                          <span className={`shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full border ${meta.color}`}>
-                            {fr ? meta.labelFr : meta.label}
-                          </span>
-                        </div>
-                        <p className="text-xs font-semibold text-muted-foreground leading-relaxed line-clamp-2">{item.description}</p>
-                        <p className="text-[10px] font-bold text-muted-foreground/60 mt-1.5">
-                          {new Date(item.created_at).toLocaleDateString(fr ? "fr-FR" : "en-GB", { day: "numeric", month: "short" })}
-                        </p>
-                      </div>
-                    </motion.div>
-                  );
-                })
-              )}
-            </div>
-          </motion.div>
+              </motion.div>
+            );
+          })
         )}
+      </div>
 
-        {/* ── Feedback tab ── */}
-        {tab === "feedback" && (
-          <motion.div
-            key="feedback"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-          >
-            <AnimatePresence mode="wait">
-              {fbSubmitted ? (
-                <motion.div key="done" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center gap-5 px-8 pt-20 text-center"
-                >
-                  <CheckCircle2 className="h-16 w-16 text-success" />
-                  <p className="text-2xl font-black text-foreground">{fr ? "Merci !" : "Thanks!"}</p>
-                  <p className="text-sm font-semibold text-muted-foreground leading-relaxed">
-                    {fr ? "Votre avis a été enregistré. Ça nous aide vraiment." : "Your feedback was saved. It genuinely helps us improve."}
-                  </p>
-                  <button onClick={() => { setFbSubmitted(false); setRating(null); setFbMessage(""); }}
-                    className="mt-2 rounded-2xl bg-secondary border-2 border-foreground px-8 py-3 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
-                  >
-                    {fr ? "Donner un autre avis" : "Send another"}
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.div key="form" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                  className="flex flex-col gap-6 px-5 py-6"
-                >
-                  {/* Rating */}
-                  <div>
-                    <p className="text-sm font-black text-foreground mb-3">
-                      {fr ? "Comment ça se passe ?" : "How's your experience?"}
-                    </p>
-                    <div className="flex justify-between gap-2">
-                      {EMOJIS.map((emoji, i) => (
-                        <button key={i} onClick={() => setRating(i + 1)}
-                          className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-2xl border-2 transition-all active:scale-95 ${
-                            rating === i + 1 ? "border-foreground bg-secondary card-shadow" : "border-border bg-card"
-                          }`}
-                        >
-                          <span className="text-2xl">{emoji}</span>
-                          <span className="text-[10px] font-bold text-muted-foreground">{i + 1}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Message */}
-                  <div>
-                    <p className="text-sm font-black text-foreground mb-3">
-                      {fr ? "Votre message" : "Your message"}<span className="text-danger ml-1">*</span>
-                    </p>
-                    <textarea
-                      value={fbMessage}
-                      onChange={e => setFbMessage(e.target.value)}
-                      placeholder={fr
-                        ? "Dites-nous ce qui se passe, ce qui manque, ou ce que vous aimez..."
-                        : "Tell us what's happening, what's missing, or what you love..."}
-                      rows={5}
-                      className="w-full rounded-2xl border-2 border-border bg-card px-4 py-3 text-sm font-semibold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors resize-none"
-                    />
-                    <p className="text-[10px] font-bold text-muted-foreground mt-1 text-right">
-                      {fbMessage.trim().length} {fr ? "caractères" : "chars"}
-                    </p>
-                  </div>
-                  {/* spacer so content isn't hidden behind taskbar */}
-                  <div className="h-4" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Submit request bottom sheet — z-[60] covers the TaskBar (z-50) ── */}
+      {/* Submit request bottom sheet */}
       <AnimatePresence>
         {showForm && (
           <>
