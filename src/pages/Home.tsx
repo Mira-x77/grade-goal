@@ -21,6 +21,7 @@ import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
 import { Subject } from "@/types/exam";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsTablet } from "@/hooks/useIsTablet";
+import { usePremiumNudge, nudgeSubtext, NudgeTrigger } from "@/hooks/usePremiumNudge";
 
 const markTypeLabels: Record<string, string> = {
   interro: "Interro",
