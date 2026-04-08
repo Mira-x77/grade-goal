@@ -291,10 +291,17 @@
 /* ═══════════════════════════════════════════════════════════════
    GLOBAL EDGE-TO-EDGE & RESPONSIVE SCALING
    ─────────────────────────────────────────────────────────────
-   • All screens fill 100% width — no max-width centering column
-   • Text containers use relative units so system font-scale is safe
-   • Horizontal filter rows scroll instead of wrapping/clipping
+   • All screens fill 100% width — backgrounds bleed to edges
+   • Content is constrained to a readable column on wide screens
+   • Bottom sheets become centered dialogs on tablet/iPad
+   • Carousel cards cap at a sensible width on wide screens
    ═══════════════════════════════════════════════════════════════ */
+
+/* Tablet breakpoint: 768px (md) and above */
+:root {
+  --app-content-max: 680px;   /* max readable column width */
+  --app-sheet-max: 560px;     /* max bottom-sheet width on tablet */
+}
 
 /* Root fills the full viewport */
 html, body, #root {
@@ -303,53 +310,52 @@ html, body, #root {
   overflow-x: hidden;
 }
 
-/* Every page root div should be full-width */
-.page-root {
-  width: 100%;
-  min-height: 100dvh;
-}
-
-/* Page header — always bleeds edge-to-edge */
-.page-header {
+/* ── Content column ──────────────────────────────────────────
+   Wrap page content (not the background) in this class.
+   On mobile: full width with safe-area padding.
+   On tablet (md+): centered column capped at --app-content-max.
+   ─────────────────────────────────────────────────────────── */
+.content-col {
   width: 100%;
   padding-left: max(1rem, env(safe-area-inset-left));
   padding-right: max(1rem, env(safe-area-inset-right));
 }
 
-/* Content area — standard 16px side padding, no max-width cap */
-.page-content {
+@media (min-width: 768px) {
+  .content-col {
+    max-width: var(--app-content-max);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* ── Sticky / fixed page headers ────────────────────────────
+   The header bar itself bleeds edge-to-edge (background color).
+   The inner content is constrained to the content column.
+   ─────────────────────────────────────────────────────────── */
+.header-inner {
   width: 100%;
   padding-left: max(1rem, env(safe-area-inset-left));
   padding-right: max(1rem, env(safe-area-inset-right));
 }
 
-/* Prevent fixed-height text containers from clipping on large font scales */
-.text-container-auto {
-  height: auto !important;
-  min-height: unset !important;
+@media (min-width: 768px) {
+  .header-inner {
+    max-width: var(--app-content-max);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
 }
 
-/* Horizontal scroll row — filter chips, tag rows, etc. */
-.h-scroll-row {
-  display: flex;
-  flex-direction: row;
-  overflow-x: auto;
-  overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  gap: 0.5rem;
-  padding-bottom: 2px; /* prevent shadow clipping */
-}
-.h-scroll-row::-webkit-scrollbar { display: none; }
-
-/* Hide scrollbar utility (already used in some places) */
-.hide-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.hide-scrollbar::-webkit-scrollbar { display: none; }
-
-/* Bottom sheet — full width, no max-w-md cap */
+/* ── Bottom sheets ───────────────────────────────────────────
+   Mobile: full-width sheet sliding up from bottom.
+   Tablet (md+): centered dialog with rounded corners all around,
+   floating above the content with a backdrop.
+   ─────────────────────────────────────────────────────────── */
 .bottom-sheet {
   position: fixed;
   bottom: 0;
@@ -364,3 +370,62 @@ html, body, #root {
   padding-left: max(1.5rem, env(safe-area-inset-left));
   padding-right: max(1.5rem, env(safe-area-inset-right));
 }
+
+@media (min-width: 768px) {
+  .bottom-sheet {
+    bottom: auto;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    max-width: var(--app-sheet-max);
+    border-radius: 1.5rem;
+    border: 2px solid hsl(var(--foreground));
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* ── Carousel cards ──────────────────────────────────────────
+   Mobile: nearly full viewport width.
+   Tablet: fixed comfortable card width.
+   ─────────────────────────────────────────────────────────── */
+.carousel-card {
+  flex-shrink: 0;
+  width: calc(100vw - 4rem);
+}
+
+@media (min-width: 768px) {
+  .carousel-card {
+    width: 380px;
+  }
+}
+
+/* ── Prevent fixed-height text containers from clipping ─────── */
+.text-container-auto {
+  height: auto !important;
+  min-height: unset !important;
+}
+
+/* ── Horizontal scroll row ───────────────────────────────────── */
+.h-scroll-row {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 0.5rem;
+  padding-bottom: 2px;
+}
+.h-scroll-row::-webkit-scrollbar { display: none; }
+
+/* ── Hide scrollbar ──────────────────────────────────────────── */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar { display: none; }

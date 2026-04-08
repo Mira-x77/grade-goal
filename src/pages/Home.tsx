@@ -30,7 +30,7 @@ const markTypeLabels: Record<string, string> = {
 function SubjectsGlanceCard({ subjects, title }: { subjects: Subject[]; title: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-2xl bg-card border-2 border-border flex-shrink-0 overflow-hidden" style={{ width: "calc(100vw - 4rem)" }}>
+    <div className="carousel-card rounded-2xl bg-card border-2 border-border flex-shrink-0 overflow-hidden">
       {/* Collapsible header — same pattern as Subject Comparison */}
       <button
         onClick={() => setOpen(v => !v)}
@@ -295,8 +295,9 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background w-full pb-20">
-      {/* Header */}
-      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border px-4 pb-4 safe-area-top" style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
+      {/* Header — bleeds edge-to-edge, inner content constrained */}
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top pb-4">
+        <div className="header-inner">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -360,9 +361,10 @@ const Home = () => {
             </motion.button>
           )}
         </AnimatePresence>
+        </div>{/* /header-inner */}
       </div>
 
-      <div className="flex flex-col gap-4 pb-8 pt-[calc(7rem+env(safe-area-inset-top))]" style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
+      <div className="content-col flex flex-col gap-4 pb-8 pt-[calc(7rem+env(safe-area-inset-top))]">
         {/* Performance Alerts */}
         {alerts.length > 0 && (
           <motion.div
@@ -606,7 +608,7 @@ const Home = () => {
               <SubjectsGlanceCard subjects={appState!.subjects} title={t("subjectsGlance")} />
 
               {/* Card 2 — Class ranking */}
-              <div className="flex-shrink-0" style={{ width: "calc(100vw - 4rem)" }}>
+              <div className="carousel-card flex-shrink-0">
                 <FrenchClassView subjects={appState!.subjects} />
               </div>
             </div>
@@ -743,7 +745,7 @@ const Home = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground p-6 pb-10"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground p-6 pb-10 md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
             >
               {/* Handle */}
               <div className="w-10 h-1 rounded-full bg-foreground/20 mx-auto mb-5" />
@@ -921,7 +923,7 @@ const Home = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground overflow-hidden"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground overflow-hidden md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
               style={{ maxHeight: "92vh" }}
               id="results-sheet"
             >
@@ -987,7 +989,7 @@ const Home = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground overflow-hidden"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground overflow-hidden md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
               style={{ maxHeight: "92vh" }}
             >
               {/* Handle */}
@@ -1073,7 +1075,7 @@ const Home = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
               style={{ maxHeight: "75vh" }}
             >
               <div className="flex justify-center pt-3 pb-1">

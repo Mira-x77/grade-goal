@@ -56,7 +56,7 @@ export default function ScreenIntro({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
-            className="fixed bottom-0 left-0 right-0 z-[9991] bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground px-6 pt-5 pb-[max(2rem,env(safe-area-inset-bottom))]"
+            className="fixed bottom-0 left-0 right-0 z-[9991] bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground px-6 pt-5 md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg pb-[max(2rem,env(safe-area-inset-bottom))]"
           >
             {/* Handle */}
             <div className="w-10 h-1.5 rounded-full bg-foreground/20 mx-auto mb-5" />

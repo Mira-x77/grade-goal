@@ -53,7 +53,7 @@ export function SubjectPackSheet({ open, onClose, onBack, subjects, onConfirm }:
           <motion.div
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 32 }}
-            className="fixed bottom-0 left-0 right-0 z-[70] bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-[70] bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground overflow-hidden md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
             style={{ maxHeight: "85vh" }}
           >
             {/* Handle */}

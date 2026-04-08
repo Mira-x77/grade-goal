@@ -380,7 +380,8 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 px-6 pb-10 pt-4 bg-background flex items-center gap-3">
+      <div className="fixed bottom-0 left-0 right-0 z-30 pb-10 pt-4 bg-background">
+        <div className="content-col flex items-center gap-3">
         <motion.button
           layout
           onClick={openModal}
@@ -406,6 +407,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
             </motion.button>
           )}
         </AnimatePresence>
+        </div>{/* /content-col */}
       </div>
 
       {createPortal(modal, document.body)}

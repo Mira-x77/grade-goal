@@ -9,7 +9,8 @@ interface OnboardingHeaderProps {
 
 export function OnboardingHeader({ title, onBack, currentStep, totalSteps }: OnboardingHeaderProps) {
   return (
-    <div className="fixed top-0 left-0 right-0 z-30 bg-background flex items-center justify-between px-6 pb-4 safe-area-top pt-3">
+    <div className="fixed top-0 left-0 right-0 z-30 bg-background safe-area-top pb-4 pt-3">
+      <div className="header-inner flex items-center justify-between">
       {currentStep > 1 ? (
         <button
           onClick={onBack}
@@ -33,6 +34,7 @@ export function OnboardingHeader({ title, onBack, currentStep, totalSteps }: Onb
           />
         ))}
       </div>
+      </div>{/* /header-inner */}
     </div>
   );
 }

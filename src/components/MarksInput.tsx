@@ -153,15 +153,17 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 28, delay: 0.3 }}
-        className="fixed bottom-0 left-0 right-0 z-30 px-6 pb-10 pt-8"
+        className="fixed bottom-0 left-0 right-0 z-30 pb-10 pt-8"
       >
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background to-transparent z-[-1]" />
+        <div className="content-col">
         <button
           onClick={onContinue}
           className="w-full rounded-2xl bg-primary py-4 text-base font-extrabold text-primary-foreground card-shadow-primary active:translate-y-1 active:shadow-none transition-all"
         >
           {filledCount > 0 ? t("continueBtn") : t("skipForNow")}
         </button>
+        </div>
       </motion.div>
     </div>
   );

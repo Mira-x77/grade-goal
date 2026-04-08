@@ -158,14 +158,16 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background w-full pb-20">
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-4 py-3 flex items-center justify-between safe-area-top">
-        <h1 className="text-lg font-black text-primary">{t("yourProfile")}</h1>
-        <Link to="/settings" className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow">
-          <Settings className="h-4 w-4" />
-        </Link>
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top py-3">
+        <div className="header-inner flex items-center justify-between">
+          <h1 className="text-lg font-black text-primary">{t("yourProfile")}</h1>
+          <Link to="/settings" className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow">
+            <Settings className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-6 px-6 py-6">
+      <div className="content-col flex flex-col gap-6 py-6">
 
         {/* Premium banner */}
         <motion.button

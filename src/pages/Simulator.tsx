@@ -144,8 +144,8 @@ const Simulator = () => {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       {/* Sticky header */}
-      <div ref={headerRef} className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 pb-3 safe-area-top">
-        <div className="pt-3">
+      <div ref={headerRef} className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border pb-3 safe-area-top">
+        <div className="header-inner pt-3">
           <h1 className="text-lg font-black text-foreground">{t("whatIfSimulator")}</h1>
         </div>
 
@@ -172,9 +172,10 @@ const Simulator = () => {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>{/* /header-inner */}
       </div>
 
-      <div className="flex flex-col gap-5 px-6 py-6">
+      <div className="content-col flex flex-col gap-5 py-6">
         {/* Hero card */}
         <div ref={heroRef}>
           <motion.div

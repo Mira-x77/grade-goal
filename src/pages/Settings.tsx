@@ -136,14 +136,16 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background w-full pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-4 py-3 safe-area-top">
-        <h1 className="text-lg font-black text-primary">{t("settings")}</h1>
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top py-3">
+        <div className="header-inner">
+          <h1 className="text-lg font-black text-primary">{t("settings")}</h1>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-5 px-6 py-6">
+      <div className="content-col flex flex-col gap-5 py-6">
         {/* Appearance */}
         <Section title={t("appearance")}>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {([
               { value: "light",    label: "Light",    icon: Sun },
               { value: "dark",     label: "Dark",     icon: Moon },
@@ -222,7 +224,7 @@ const Settings = () => {
 
         {/* Language */}
         <Section title={t("language")}>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {([
               { value: "en" as const, label: "English", flag: "🇬🇧" },
               { value: "fr" as const, label: "Français", flag: "🇫🇷" },
@@ -532,7 +534,7 @@ const Settings = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground p-6 pb-10"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground p-6 pb-10 md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
             >
               {/* Handle */}
               <div className="w-10 h-1 rounded-full bg-foreground/20 mx-auto mb-6" />

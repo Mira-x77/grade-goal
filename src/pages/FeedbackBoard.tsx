@@ -110,7 +110,7 @@ export default function FeedbackBoard() {
 
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-lg border-b border-border safe-area-top">
-        <div className="flex items-center px-4 pt-3 pb-3">
+        <div className="header-inner flex items-center pt-3 pb-3">
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-black text-foreground">
               {fr ? "Idées & Fonctionnalités" : "Ideas & Feature Requests"}
@@ -123,7 +123,7 @@ export default function FeedbackBoard() {
       </div>
 
       {/* Search + sort */}
-      <div className="flex gap-2 px-4 pt-4 pb-2">
+      <div className="content-col flex gap-2 pt-4 pb-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
@@ -145,7 +145,7 @@ export default function FeedbackBoard() {
       </div>
 
       {/* List */}
-      <div className="px-4 pb-4 flex flex-col gap-3">
+      <div className="content-col pb-4 flex flex-col gap-3">
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
         ) : fetchError ? (
@@ -207,7 +207,7 @@ export default function FeedbackBoard() {
             <motion.div
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 z-[61] bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground p-6 pb-10"
+              className="fixed bottom-0 left-0 right-0 z-[61] bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground p-6 pb-10 md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
             >
               <div className="w-10 h-1 rounded-full bg-foreground/20 mx-auto mb-5" />
               <div className="flex items-center justify-between mb-5">

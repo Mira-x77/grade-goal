@@ -192,7 +192,7 @@ export default function SubjectDashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <div className="w-full px-4 safe-area-top">
+      <div className="content-col safe-area-top">
 
         {/* Page header */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="pt-4 mb-5">
@@ -278,7 +278,7 @@ export default function SubjectDashboard() {
             <motion.div
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 34 }}
-              className="fixed bottom-0 left-0 right-0 z-[66] bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground overflow-hidden flex flex-col"
+              className="fixed bottom-0 left-0 right-0 z-[66] bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground overflow-hidden flex flex-col md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
               style={{ maxHeight: "88vh" }}
             >
               {/* Handle */}

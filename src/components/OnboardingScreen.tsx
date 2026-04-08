@@ -30,15 +30,17 @@ const allLevels = [...CLASS_LEVELS.college, ...CLASS_LEVELS.lycee];
 const isLycee = (level: string) => (CLASS_LEVELS.lycee as readonly string[]).includes(level);
 
 const FixedNextButton = ({ onClick, disabled = false, label, hint }: { onClick: () => void; disabled?: boolean; label: string; hint?: React.ReactNode }) => (
-  <div className="fixed bottom-0 left-0 right-0 z-30 px-6 pb-10 pt-2 bg-gradient-to-t from-background via-background to-transparent">
-    {hint && <div className="mb-3 w-full flex justify-center">{hint}</div>}
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 text-base font-black text-foreground card-shadow active:translate-y-1 active:shadow-none transition-all disabled:opacity-30 disabled:pointer-events-none"
-    >
-      {label}
-    </button>
+  <div className="fixed bottom-0 left-0 right-0 z-30 pb-10 pt-2 bg-gradient-to-t from-background via-background to-transparent">
+    <div className="content-col">
+      {hint && <div className="mb-3 w-full flex justify-center">{hint}</div>}
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 text-base font-black text-foreground card-shadow active:translate-y-1 active:shadow-none transition-all disabled:opacity-30 disabled:pointer-events-none"
+      >
+        {label}
+      </button>
+    </div>
   </div>
 );
 
