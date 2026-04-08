@@ -134,16 +134,17 @@ const Home = () => {
   const avgCardRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   // Local editable marks state for the edit sheet
-  const [editMarksState, setEditMarksState] = useState<Record<string, { interro: string; dev: string; compo: string }>>({});
+  const [editMarksState, setEditMarksState] = useState<Record<string, { interro: string; dev: string; compo: string; coefficient: string }>>({});
 
   const openEditMarksSheet = () => {
     if (!appState) return;
-    const initial: Record<string, { interro: string; dev: string; compo: string }> = {};
+    const initial: Record<string, { interro: string; dev: string; compo: string; coefficient: string }> = {};
     appState.subjects.forEach((s) => {
       initial[s.id] = {
         interro: s.marks.interro !== null ? String(s.marks.interro) : "",
         dev: s.marks.dev !== null ? String(s.marks.dev) : "",
         compo: s.marks.compo !== null ? String(s.marks.compo) : "",
+        coefficient: String(s.coefficient),
       };
     });
     setEditMarksState(initial);
@@ -161,8 +162,10 @@ const Home = () => {
           const n = parseFloat(v);
           return !isNaN(n) && n >= 0 && n <= 20 ? n : null;
         };
+        const coeff = parseInt(vals.coefficient);
         return {
           ...s,
+          coefficient: !isNaN(coeff) && coeff >= 1 ? coeff : s.coefficient,
           marks: {
             interro: parse(vals.interro),
             dev: parse(vals.dev),
@@ -218,6 +221,9 @@ const Home = () => {
       setMarkType(nextUnfilled);
       setMarkValue("");
     } else {
+      // All 3 marks filled — go back to subject picker
+      setMarkStep("subject");
+      setSelectedSubject(null);
       setMarkValue("");
     }
     // Fire bad_score nudge if the mark is low (below 10 or below the target avg)

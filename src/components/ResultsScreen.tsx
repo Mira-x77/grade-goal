@@ -89,7 +89,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
 
   return (
     <div className="flex flex-col" style={{ minHeight: "60vh" }}>
-      <div className="flex flex-col gap-4 px-6 pt-4 pb-24 safe-area-top">
+      <div className="flex flex-col gap-4 px-6 pt-2 pb-24">
 
         {/* Status card */}
         <motion.div
