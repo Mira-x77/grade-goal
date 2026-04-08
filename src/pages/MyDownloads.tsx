@@ -28,7 +28,7 @@ const MyDownloads = () => {
   const [showPDFViewer, setShowPDFViewer] = useState(false);
   const [currentPDF, setCurrentPDF] = useState<{ data: string; title: string } | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(80);
 
   useEffect(() => { loadDownloads(); }, []);
 

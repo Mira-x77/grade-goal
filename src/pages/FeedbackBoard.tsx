@@ -52,7 +52,7 @@ export default function FeedbackBoard() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const headerRef = useRef<HTMLDivElement>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(80);
   useEffect(() => {
     if (!headerRef.current) return;
     const ro = new ResizeObserver(() => {

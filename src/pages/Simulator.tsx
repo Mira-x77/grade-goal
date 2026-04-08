@@ -41,7 +41,7 @@ const Simulator = () => {
   const heroRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const [heroVisible, setHeroVisible] = useState(true);
-  const [headerHeight, setHeaderHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(80);
 
   useEffect(() => {
     if (!headerRef.current) return;

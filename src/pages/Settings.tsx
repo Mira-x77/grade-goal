@@ -30,7 +30,7 @@ const Settings = () => {
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
 
   const headerRef = useRef<HTMLDivElement>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(80);
   useEffect(() => {
     if (!headerRef.current) return;
     const ro = new ResizeObserver(() => {
