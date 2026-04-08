@@ -266,8 +266,8 @@ const MyDownloads = () => {
                       onClick={(e) => { e.stopPropagation(); handlePaperClick(paper); }}
                     >
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0 border border-primary/20 overflow-hidden">
-                        {paper.preview_url ? (
-                          <img src={paper.preview_url} className="w-full h-full object-cover" alt="" />
+                        {paper.localThumbnailPath || paper.preview_url ? (
+                          <img src={paper.localThumbnailPath || paper.preview_url} className="w-full h-full object-cover object-top" alt="" />
                         ) : (
                           <FileText className="h-6 w-6 text-primary" />
                         )}

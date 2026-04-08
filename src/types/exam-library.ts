@@ -51,6 +51,7 @@ export interface CachedPaper {
   preview_url?: string;
   isDownloaded: boolean;
   localPath?: string;
+  localThumbnailPath?: string;
   downloadedAt?: string;
   lastFetched: string;
 }

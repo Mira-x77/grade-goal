@@ -187,7 +187,7 @@ const Simulator = () => {
               )}
               {isOnTrack && isDirty && (
                 <p className="text-[10px] font-bold text-primary-foreground/80 leading-tight">
-                  {t("onTrackHint")} — {t("saveStrategy")} ↑
+                  {t("onTrackHint")}
                 </p>
               )}
             </motion.div>

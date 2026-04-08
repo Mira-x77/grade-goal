@@ -88,6 +88,25 @@ class DownloadService {
           }
           await cacheService.updateDownloadStatus(paper.id, true, localPath);
 
+          // Download thumbnail if available
+          if (paper.preview_url) {
+            try {
+              const thumbResponse = await fetch(paper.preview_url);
+              if (thumbResponse.ok) {
+                const thumbBlob = await thumbResponse.blob();
+                const thumbDataUrl = await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(thumbBlob);
+                });
+                await cacheService.updateThumbnailPath(paper.id, thumbDataUrl);
+              }
+            } catch (thumbErr) {
+              console.warn('Thumbnail download failed (non-critical):', thumbErr);
+            }
+          }
+
           onProgress({ paperId: paper.id, progress: 100, bytesDownloaded: paper.fileSize, totalBytes: paper.fileSize, status: 'completed' });
 
           return localPath;
