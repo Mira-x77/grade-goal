@@ -166,18 +166,30 @@ const Simulator = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className={`mt-2 w-full flex items-center justify-between rounded-xl ${compactBarColor} px-4 py-2`}
+              className={`mt-2 w-full flex flex-col gap-1 rounded-xl ${compactBarColor} px-4 py-2`}
             >
-              <span className="text-xs font-black text-primary-foreground/80 uppercase tracking-widest">{t("simulatedAverage")}</span>
-              <div className="flex items-center gap-3">
-                <div className="w-20 h-1.5 rounded-full bg-black/20 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-white/70 transition-all"
-                    style={{ width: `${Math.min((simulatedAvg / targetAvg) * 100, 100)}%` }}
-                  />
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-primary-foreground/80 uppercase tracking-widest">{t("simulatedAverage")}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-20 h-1.5 rounded-full bg-black/20 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-white/70 transition-all"
+                      style={{ width: `${Math.min((simulatedAvg / targetAvg) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-black text-primary-foreground">{simulatedAvg.toFixed(1)}/20</span>
                 </div>
-                <span className="text-sm font-black text-primary-foreground">{simulatedAvg.toFixed(1)}/20</span>
               </div>
+              {!isOnTrack && isDirty && (
+                <p className="text-[10px] font-bold text-primary-foreground/80 leading-tight">
+                  {isRisky ? t("almostThereHint") : t("raiseScoresHint")}
+                </p>
+              )}
+              {isOnTrack && isDirty && (
+                <p className="text-[10px] font-bold text-primary-foreground/80 leading-tight">
+                  {t("onTrackHint")} — {t("saveStrategy")} ↑
+                </p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

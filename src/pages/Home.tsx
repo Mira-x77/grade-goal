@@ -545,7 +545,9 @@ const Home = () => {
                 >
                   <div className="flex flex-col gap-1.5 px-4 pb-4 border-t border-secondary/20 pt-3">
                     {/* Group marks by subject */}
-                    {Array.from(new Map(savedStrategy.marks.map(sm => [sm.subjectId, sm.subjectName]))).map(([subjectId, subjectName]) => {
+                    {Array.from(new Map(savedStrategy.marks.map(sm => [sm.subjectId, sm.subjectName])))
+                      .sort(([, a], [, b]) => (a as string).localeCompare(b as string))
+                      .map(([subjectId, subjectName]) => {
                       const subMarks = savedStrategy.marks.filter(sm => sm.subjectId === subjectId);
                       const sub = appState!.subjects.find(s => s.id === subjectId);
                       const anyFulfilled = subMarks.some(sm => sub?.marks[sm.markType] !== null);

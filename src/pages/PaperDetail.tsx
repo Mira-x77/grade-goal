@@ -172,16 +172,6 @@ const PaperDetail = () => {
       <div className="content-col p-4 safe-area-top">
         {/* Paper Details Card */}
         <div className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border mb-6">
-          {(paper as any).preview_url && (
-            <div className="h-64 bg-muted flex items-center justify-center overflow-hidden">
-              <img
-                src={(paper as any).preview_url}
-                className="w-full h-full object-cover"
-                alt="Preview"
-                onError={(e) => (e.currentTarget.style.display = 'none')}
-              />
-            </div>
-          )}
           <div className="p-6">
             <h1 className="text-2xl font-black mb-4 leading-tight">{paper.title}</h1>
             <div className="grid grid-cols-2 gap-y-3 text-sm">
