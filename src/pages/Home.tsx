@@ -232,9 +232,11 @@ const Home = () => {
     }
   };
 
+  const [showDeleteStrategyConfirm, setShowDeleteStrategyConfirm] = useState(false);
+
   const handleClearStrategy = () => {
     if (!appState) return;
-    const updated = { ...appState, savedStrategy: undefined };
+    const updated = { ...appState, savedStrategy: undefined, strategyDeleted: true };
     saveState(updated);
     setAppState(updated);
   };
@@ -497,7 +499,7 @@ const Home = () => {
                 key: "simulator",
                 label: t("checklistSimulator"),
                 description: t("checklistSimulatorDesc"),
-                done: !!(appState?.savedStrategy && appState.savedStrategy.marks.length > 0),
+                done: !!(appState?.savedStrategy && appState.savedStrategy.marks.length > 0) || !!(appState as any)?.strategyDeleted,
                 href: "/simulator",
               },
               {
@@ -548,7 +550,7 @@ const Home = () => {
                   <Pencil className="h-3.5 w-3.5 text-secondary" />
                 </Link>
                 <button
-                  onClick={(e) => { e.stopPropagation(); handleClearStrategy(); }}
+                  onClick={(e) => { e.stopPropagation(); setShowDeleteStrategyConfirm(true); }}
                   className="flex items-center justify-center rounded-lg bg-muted h-7 w-7 text-[10px] font-black text-muted-foreground active:scale-95 transition-transform"
                 >
                   <Trash2 className="h-3 w-3" />
