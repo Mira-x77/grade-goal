@@ -179,7 +179,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <div className="content-col flex flex-col gap-6 py-6" style={{ paddingTop: headerHeight + 24 }}>
+      <div className="content-col flex flex-col gap-6 py-6" style={{ paddingTop: headerHeight + 32 }}>
 
         {/* Premium banner */}
         <motion.button
@@ -430,7 +430,7 @@ const Profile = () => {
                       <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-8">{t("coefficient")}</span>
                     </div>
                     <AnimatePresence>
-                      {subjects.map((sub) => (
+                      {[...subjects].sort((a, b) => a.name.localeCompare(b.name)).map((sub) => (
                         <motion.div
                           key={sub.id}
                           initial={{ opacity: 0, y: 6 }}

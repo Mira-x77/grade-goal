@@ -117,22 +117,21 @@ const Simulator = () => {
     ? t("almostThereHint")
     : t("onTrackHint");
 
-  // IntersectionObserver — same pattern as Home avg card
+  // IntersectionObserver — re-runs whenever header height changes (compact bar toggling)
   useEffect(() => {
     if (!heroRef.current) return;
     let observer: IntersectionObserver | null = null;
     const setup = () => {
       if (observer) observer.disconnect();
-      const headerH = headerRef.current?.getBoundingClientRect().height ?? 0;
       observer = new IntersectionObserver(
         ([entry]) => setHeroVisible(entry.isIntersecting),
-        { root: null, rootMargin: `-${headerH}px 0px 0px 0px`, threshold: 0 }
+        { root: null, rootMargin: `-${headerHeight}px 0px 0px 0px`, threshold: 0 }
       );
       if (heroRef.current) observer.observe(heroRef.current);
     };
     const raf = requestAnimationFrame(setup);
     return () => { cancelAnimationFrame(raf); observer?.disconnect(); };
-  }, [simulatedAvg]);
+  }, [headerHeight]);
 
   if (subjects.length === 0) {
     return (
@@ -216,7 +215,7 @@ const Simulator = () => {
         {/* Sliders grouped by subject */}
         <div className="tour-simulator-sliders flex flex-col gap-3">
           <h3 className="font-black text-foreground text-sm">{t("planYourScores")}</h3>
-          {subjects.map((sub) => {
+          {[...subjects].sort((a, b) => a.name.localeCompare(b.name)).map((sub) => {
             const subSlots = emptySlots
               .map((slot, i) => ({ slot, i }))
               .filter(({ slot }) => slot.subjectId === sub.id);
@@ -239,7 +238,7 @@ const Simulator = () => {
                     const override = overrides[i];
                     if (!override) return null;
                     const isActive = activeSlider === i;
-                    const scoreColor = override.value >= 14 ? "text-success" : override.value >= 10 ? "text-warning" : "text-danger";
+                    const scoreColor = override.value >= targetAvg ? "text-success" : override.value >= 10 ? "text-warning" : "text-danger";
 
                     return (
                       <div key={slot.markType}>

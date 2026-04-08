@@ -89,7 +89,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
       <div className="flex-1 overflow-y-auto pb-32 content-col">
         {/* Subject cards */}
         <div className="flex flex-col gap-3">
-          {subjects.map((sub, i) => {
+          {[...subjects].sort((a, b) => a.name.localeCompare(b.name)).map((sub, i) => {
             const avg = calcSubjectAverage(sub.marks);
             const isOpen = expanded === sub.id;
             const subFilled = (sub.marks.interro !== null ? 1 : 0) + (sub.marks.dev !== null ? 1 : 0) + (sub.marks.compo !== null ? 1 : 0);

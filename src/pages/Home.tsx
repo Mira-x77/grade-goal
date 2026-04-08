@@ -53,7 +53,7 @@ function SubjectsGlanceCard({ subjects, title }: { subjects: Subject[]; title: s
             className="overflow-hidden"
           >
             <div className="flex flex-col gap-2 px-4 pb-4">
-              {subjects.map((sub) => {
+              {[...subjects].sort((a, b) => a.name.localeCompare(b.name)).map((sub) => {
                 const marks = [
                   { label: "I", value: sub.marks.interro },
                   { label: "D", value: sub.marks.dev },
@@ -554,7 +554,7 @@ const Home = () => {
                         const allFulfilled = subMarks.every(sm => sub?.marks[sm.markType] !== null);
                         const anyFulfilled = subMarks.some(sm => sub?.marks[sm.markType] !== null);
                         return { subjectId, subjectName, subMarks, sub, allFulfilled, anyFulfilled };
-                      });
+                      }).sort((a, b) => a.subjectName.localeCompare(b.subjectName));
                       const pendingSubjects = subjectEntries.filter(e => !e.allFulfilled);
                       const allDone = pendingSubjects.length === 0;
 
@@ -581,7 +581,7 @@ const Home = () => {
                                 ? "bg-muted text-foreground/60"
                                 : actual >= sm.targetValue
                                   ? "bg-success/20 text-success"
-                                  : "bg-warning/20 text-warning";
+                                  : "bg-danger/20 text-danger";
                               return (
                                 <span key={sm.markType} className={`text-[10px] font-black px-1.5 py-0.5 rounded ${pillStyle}`}>
                                   {sm.targetValue.toFixed(1)}
@@ -776,7 +776,7 @@ const Home = () => {
                     </button>
                   </div>
                   <div className="flex flex-col gap-2 max-h-72 overflow-y-auto">
-                    {appState?.subjects.map((sub) => {
+                    {[...(appState?.subjects ?? [])].sort((a, b) => a.name.localeCompare(b.name)).map((sub) => {
                       const allFilled =
                         sub.marks.interro !== null &&
                         sub.marks.dev !== null &&

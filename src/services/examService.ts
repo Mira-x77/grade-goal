@@ -22,6 +22,7 @@ interface SupabasePaper {
   content_hash: string;
   tags: string[];
   description?: string;
+  preview_url?: string;
   downloads: number;
   created_at: string;
 }
@@ -52,7 +53,8 @@ class ExamService {
       } as any,
       downloads: paper.downloads,
       tags: paper.tags,
-      description: paper.description
+      description: paper.description,
+      preview_url: paper.preview_url,
     };
   }
 
