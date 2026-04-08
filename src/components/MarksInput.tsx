@@ -31,13 +31,28 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
     const finalValue = isNaN(numValue as number) ? null : numValue;
     const oldSubject = subjects.find((s) => s.id === subjectId);
     const oldValue = oldSubject?.marks[markType];
-    onSubjectsChange(
-      subjects.map((s) =>
-        s.id === subjectId ? { ...s, marks: { ...s.marks, [markType]: finalValue } } : s
-      )
+    const updatedSubjects = subjects.map((s) =>
+      s.id === subjectId ? { ...s, marks: { ...s.marks, [markType]: finalValue } } : s
     );
+    onSubjectsChange(updatedSubjects);
     if (finalValue !== null && oldValue === null && oldSubject) {
       addHistoryEntry({ date: new Date().toISOString(), subjectName: oldSubject.name, markType, value: finalValue });
+    }
+    // Auto-collapse and move to next subject when all 3 marks are filled
+    const updatedSub = updatedSubjects.find(s => s.id === subjectId);
+    if (updatedSub) {
+      const allFilled = updatedSub.marks.interro !== null && updatedSub.marks.dev !== null && updatedSub.marks.compo !== null;
+      if (allFilled) {
+        const currentIdx = updatedSubjects.findIndex(s => s.id === subjectId);
+        const nextIncomplete = updatedSubjects.slice(currentIdx + 1).find(
+          s => s.marks.interro === null || s.marks.dev === null || s.marks.compo === null
+        );
+        if (nextIncomplete) {
+          setExpanded(nextIncomplete.id);
+        } else {
+          setExpanded(null);
+        }
+      }
     }
   };
 

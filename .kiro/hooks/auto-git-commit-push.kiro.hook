@@ -8,7 +8,7 @@
   },
   "then": {
     "type": "runCommand",
-    "command": "git add -A && git diff --cached --quiet && echo 'nothing to commit' || (git commit -m \"chore: auto-commit\" && git push origin VAEG)",
+    "command": "git add -A && git diff --cached --quiet && echo nothing to commit || git commit -m \"chore: update $(git diff --cached --name-only | tr \"\\n\" \",\" | sed \"s/,$//\")\" && git push origin VAEG",
     "timeout": 60
   }
 }
