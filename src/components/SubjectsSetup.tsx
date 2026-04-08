@@ -43,6 +43,22 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
   const { t } = useLanguage();
   const kbHeight = useKeyboardHeight();
 
+  // Pre-populate with preset subjects when first arriving at this step
+  useEffect(() => {
+    if (subjects.length === 0 && classLevel) {
+      const presets = getSubjectsForLevel(classLevel, serie);
+      const prePopulated: Subject[] = presets.map((name) => ({
+        id: crypto.randomUUID(),
+        name,
+        coefficient: 1,
+        marks: { interro: null, dev: null, compo: null },
+      }));
+      if (prePopulated.length > 0) onSubjectsChange(prePopulated);
+    }
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const allSuggested = classLevel ? getSubjectsForLevel(classLevel, serie) : [];
   const existingNames = new Set(subjects.map((s) => s.name.toLowerCase()));
   const available = allSuggested

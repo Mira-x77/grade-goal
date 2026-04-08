@@ -44,57 +44,75 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /**
-   * Background sync — never blocks the UI.
-   * Used on session restore (app resume) so the user sees their local data
-   * immediately while the cloud quietly reconciles in the background.
+   * Background sync — pushes local data up to the cloud silently.
+   * Never reads from cloud, never touches localStorage.
+   * Local storage is always the source of truth while the app is in use.
    */
   const syncInBackground = (userId: string) => {
-    const sync = async () => {
-      try {
-        const cloudData = await restoreUserDataFromCloud(userId);
-        if (!cloudData.appState) {
-          await pushLocalDataToCloud(userId);
-        }
-      } catch (err) {
-        console.warn("Cloud sync failed, continuing with local data:", err);
-      }
-    };
-    // Fire and forget — no loading state shown
-    void sync();
+    void pushLocalDataToCloud(userId).catch((err) =>
+      console.warn("Background cloud push failed:", err)
+    );
   };
 
   /**
-   * Foreground sync — shows the "Restoring…" spinner.
-   * Only used on an explicit fresh login (SIGNED_IN event) so the user
-   * gets their data before seeing the app for the first time on a new device.
+   * Foreground sync — only on fresh login.
+   * If the device has no local data, pull from cloud (new device scenario).
+   * If the device already has local data, push it up to cloud instead.
+   * Shows the spinner only in the new-device case where the user is waiting for their data.
    */
   const syncOnLogin = async (userId: string) => {
+    const hasLocalData = !!localStorage.getItem('scoretarget_state');
+
+    if (hasLocalData) {
+      // Device already has data — just push it up silently, no spinner needed
+      void pushLocalDataToCloud(userId).catch((err) =>
+        console.warn("Login cloud push failed:", err)
+      );
+      return;
+    }
+
+    // No local data — this is a new device, pull from cloud and show spinner
     setSyncing(true);
     const timeout = new Promise<void>((resolve) => setTimeout(resolve, 5000));
-    const sync = async () => {
+    const restore = async () => {
       try {
-        const cloudData = await restoreUserDataFromCloud(userId);
-        if (!cloudData.appState) {
-          await pushLocalDataToCloud(userId);
-        }
+        await restoreUserDataFromCloud(userId);
       } catch (err) {
-        console.warn("Cloud sync failed, continuing with local data:", err);
+        console.warn("Cloud restore failed, continuing with empty state:", err);
       }
     };
-    await Promise.race([sync(), timeout]);
+    await Promise.race([restore(), timeout]);
     setSyncing(false);
   };
 
   useEffect(() => {
-    // Restore existing session on mount — sync silently in background
+    // Restore existing session on mount — push local data to cloud silently
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        syncInBackground(session.user.id); // non-blocking
+        syncInBackground(session.user.id);
       }
       setLoading(false);
       initialSessionRestoredRef.current = true;
     });
+
+    // Periodic background push every 30 seconds
+    const periodicSync = setInterval(() => {
+      const currentSession = supabase.auth.getSession();
+      currentSession.then(({ data: { session } }) => {
+        if (session?.user) syncInBackground(session.user.id);
+      });
+    }, 30 * 1000);
+
+    // Also push when the app comes back to the foreground
+    let appStateListener: { remove: () => void } | null = null;
+    App.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.user) syncInBackground(session.user.id);
+        });
+      }
+    }).then((handle) => { appStateListener = handle; });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
@@ -147,6 +165,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       subscription.unsubscribe();
       deepLinkListener?.remove();
+      appStateListener?.remove();
+      clearInterval(periodicSync);
     };
   }, []);
 

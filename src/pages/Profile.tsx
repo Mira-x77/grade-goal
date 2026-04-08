@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, User, Target, BookOpen, Pencil, Check, Settings, Crown, ChevronRight } from "lucide-react";
+import { createPortal } from "react-dom";
+import { ArrowLeft, User, Target, BookOpen, Pencil, Check, Settings, Crown, ChevronRight, Plus, Trash2, Search, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
-import { AppState } from "@/types/exam";
-import { CLASS_LEVELS, LYCEE_SERIES } from "@/lib/subjects-data";
+import { AppState, Subject } from "@/types/exam";
+import { CLASS_LEVELS, LYCEE_SERIES, getSubjectsForLevel } from "@/lib/subjects-data";
 import TaskBar from "@/components/TaskBar";
 import ScreenIntro from "@/components/ScreenIntro";
 import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
@@ -23,6 +24,10 @@ const Profile = () => {
   const [editingBasic, setEditingBasic] = useState(false);
   const [editingTarget, setEditingTarget] = useState(false);
   const [editingGrading, setEditingGrading] = useState(false);
+  const [editingSubjects, setEditingSubjects] = useState(false);
+  const [subjectSearch, setSubjectSearch] = useState("");
+  const [subjectSelected, setSubjectSelected] = useState<Set<string>>(new Set());
+  const [showSubjectModal, setShowSubjectModal] = useState(false);
   const [draft, setDraft] = useState({ studentName: "", classLevel: "", serie: "", semester: "" });
   const [draftTarget, setDraftTarget] = useState(16);
 
@@ -66,6 +71,69 @@ const Profile = () => {
   const startEditTarget = () => {
     setDraftTarget(state.targetMin ?? state.targetAverage);
     setEditingTarget(true);
+  };
+
+  // ── Subject editing helpers ──────────────────────────────────────────────
+  const subjects = state.subjects ?? [];
+  const allSuggestedForProfile = getSubjectsForLevel(state.classLevel || "", state.serie || "");
+  const existingSubjectNames = new Set(subjects.map((s) => s.name.toLowerCase()));
+  const availableToAdd = allSuggestedForProfile
+    .filter((s) => !existingSubjectNames.has(s.toLowerCase()))
+    .sort((a, b) => a.localeCompare(b));
+  const filteredSubjects = subjectSearch.trim()
+    ? availableToAdd.filter((s) => s.toLowerCase().includes(subjectSearch.toLowerCase()))
+    : availableToAdd;
+  const showCustomSubjectOption =
+    subjectSearch.trim().length > 0 &&
+    !availableToAdd.some((s) => s.toLowerCase() === subjectSearch.toLowerCase()) &&
+    !existingSubjectNames.has(subjectSearch.toLowerCase());
+
+  const openSubjectModal = () => {
+    setSubjectSelected(new Set());
+    setSubjectSearch("");
+    setShowSubjectModal(true);
+  };
+
+  const toggleSubjectSelect = (name: string) => {
+    setSubjectSelected((prev) => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
+  };
+
+  const confirmAddSubjects = () => {
+    const newSubs: Subject[] = Array.from(subjectSelected).map((name) => ({
+      id: crypto.randomUUID(),
+      name,
+      coefficient: 1,
+      marks: { interro: null, dev: null, compo: null },
+    }));
+    updateState({ subjects: [...subjects, ...newSubs] });
+    setSubjectSelected(new Set());
+    setSubjectSearch("");
+    setShowSubjectModal(false);
+  };
+
+  const addCustomSubject = () => {
+    const name = subjectSearch.trim();
+    if (!name || existingSubjectNames.has(name.toLowerCase())) return;
+    const newSub: Subject = { id: crypto.randomUUID(), name, coefficient: 1, marks: { interro: null, dev: null, compo: null } };
+    const selectedSubs: Subject[] = Array.from(subjectSelected).map((n) => ({
+      id: crypto.randomUUID(), name: n, coefficient: 1, marks: { interro: null, dev: null, compo: null },
+    }));
+    updateState({ subjects: [...subjects, newSub, ...selectedSubs] });
+    setSubjectSearch("");
+    setSubjectSelected(new Set());
+    setShowSubjectModal(false);
+  };
+
+  const updateSubjectCoeff = (id: string, coeff: number) => {
+    updateState({ subjects: subjects.map((s) => s.id === id ? { ...s, coefficient: Math.max(1, coeff) } : s) });
+  };
+
+  const removeSubject = (id: string) => {
+    updateState({ subjects: subjects.filter((s) => s.id !== id) });
   };
 
   return (
@@ -237,7 +305,7 @@ const Profile = () => {
         </motion.div>
 
         {/* Grading System */}
-        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="rounded-2xl bg-card p-5 border-2 border-border mb-4">
+        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="rounded-2xl bg-card p-5 border-2 border-border">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
@@ -279,7 +347,142 @@ const Profile = () => {
             )}
           </AnimatePresence>
         </motion.div>
+
+        {/* Subjects */}
+        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="rounded-2xl bg-card p-5 border-2 border-border mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <BookOpen className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-black text-foreground">{t("addSubjects")}</h3>
+                <p className="text-xs text-muted-foreground font-semibold">{subjects.length} {subjects.length === 1 ? t("subjectsSelected") : t("subjectsSelectedPlural")}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={openSubjectModal}
+                className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground active:scale-95 transition-transform"
+              >
+                <Plus className="h-3.5 w-3.5" /> {t("addSubjects")}
+              </button>
+            </div>
+          </div>
+
+          {subjects.length === 0 ? (
+            <p className="text-sm text-muted-foreground font-semibold text-center py-4">{t("noSubjectsAdded")}</p>
+          ) : (
+            <div className="flex flex-col">
+              <div className="flex items-center border-b border-border pb-1 mb-1">
+                <span className="flex-1 text-xs font-black text-muted-foreground uppercase tracking-wider">{t("subject")}</span>
+                <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-8">{t("coefficient")}</span>
+              </div>
+              <AnimatePresence>
+                {subjects.map((sub) => (
+                  <motion.div
+                    key={sub.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -60 }}
+                    className="flex items-center py-3 border-b border-border/50"
+                  >
+                    <span className="flex-1 font-bold text-foreground text-sm">{sub.name}</span>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => updateSubjectCoeff(sub.id, sub.coefficient - 1)} className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95">−</button>
+                      <span className="w-6 text-center font-black text-foreground text-sm">{sub.coefficient}</span>
+                      <button onClick={() => updateSubjectCoeff(sub.id, sub.coefficient + 1)} className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95">+</button>
+                      <button onClick={() => removeSubject(sub.id)} className="ml-1 text-destructive/50 active:text-destructive transition-colors">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
+        </motion.div>
       </div>
+
+      {/* Add Subject Modal */}
+      {createPortal(
+        <AnimatePresence>
+          {showSubjectModal && (
+            <>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/50" onClick={() => setShowSubjectModal(false)} />
+              <motion.div
+                initial={{ scale: 0.92, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.92, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                className="fixed inset-0 z-[101] flex items-end justify-center pointer-events-none px-4 pb-4"
+              >
+                <div className="pointer-events-auto w-full max-w-sm bg-card rounded-3xl card-shadow overflow-hidden">
+                  <div className="flex items-center justify-between px-5 pt-5 pb-3">
+                    <div>
+                      <h2 className="text-base font-black text-foreground">{t("addSubjects")}</h2>
+                      {subjectSelected.size > 0 && <p className="text-xs font-semibold text-primary mt-0.5">{subjectSelected.size} {t("selected")}</p>}
+                    </div>
+                    <button onClick={() => setShowSubjectModal(false)} className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground active:scale-95">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="px-4 pb-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <input
+                        type="text"
+                        placeholder={t("searchOrTypeSubject")}
+                        value={subjectSearch}
+                        onChange={(e) => setSubjectSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2.5 rounded-xl border-2 border-border bg-muted text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  {showCustomSubjectOption && (
+                    <div className="px-4 pb-2">
+                      <button onClick={addCustomSubject} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 border-dashed border-primary/50 bg-primary/5 text-primary active:scale-[0.98] transition-all">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
+                          <Plus className="h-3.5 w-3.5 text-primary-foreground" />
+                        </div>
+                        <span className="text-sm font-black">{t("addSubjectBtn")} "{subjectSearch.trim()}"</span>
+                      </button>
+                    </div>
+                  )}
+                  <div className="overflow-y-auto max-h-56 px-3 pb-2">
+                    {filteredSubjects.length === 0 && !showCustomSubjectOption ? (
+                      <p className="text-center text-sm text-muted-foreground py-8 font-semibold">
+                        {availableToAdd.length === 0 ? t("allSubjectsAdded") : t("noMatchesTypeCustom")}
+                      </p>
+                    ) : (
+                      filteredSubjects.map((name) => {
+                        const isSel = subjectSelected.has(name);
+                        return (
+                          <button key={name} onClick={() => toggleSubjectSelect(name)} className={`w-full flex items-center justify-between px-3 py-3 rounded-xl mb-1 transition-all active:scale-[0.98] ${isSel ? "bg-primary/15 text-primary" : "hover:bg-muted/60 text-foreground"}`}>
+                            <span className="text-sm font-bold">{name}</span>
+                            <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${isSel ? "bg-primary border-primary" : "border-border"}`}>
+                              {isSel && <Check className="h-3 w-3 text-primary-foreground" />}
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                  {subjectSelected.size > 0 && (
+                    <div className="px-5 pb-5 pt-3 border-t border-border">
+                      <button onClick={confirmAddSubjects} className="w-full rounded-2xl bg-primary py-3.5 text-sm font-extrabold text-primary-foreground active:translate-y-0.5 transition-all">
+                        {t("addSubjectBtn")} {subjectSelected.size} {subjectSelected.size > 1 ? t("subjectsSelectedPlural") : t("subjectsSelected")}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       <TaskBar showBack />
 
