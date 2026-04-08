@@ -895,6 +895,50 @@ const Home = () => {
 
       <ProductTour />
 
+      {/* ── Delete strategy confirm dialog ── */}
+      <AnimatePresence>
+        {showDeleteStrategyConfirm && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[80] bg-black/50"
+              onClick={() => setShowDeleteStrategyConfirm(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              className="fixed inset-x-6 z-[81] top-1/2 -translate-y-1/2 max-w-sm mx-auto bg-card border-2 border-foreground rounded-2xl p-5 card-shadow"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-danger/10 shrink-0">
+                  <Trash2 className="h-5 w-5 text-danger" />
+                </div>
+                <div>
+                  <h3 className="font-black text-foreground text-sm">Delete strategy?</h3>
+                  <p className="text-xs font-semibold text-muted-foreground mt-0.5">This can't be undone.</p>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setShowDeleteStrategyConfirm(false)}
+                  className="flex-1 rounded-xl bg-muted border-2 border-foreground/20 py-2.5 text-sm font-black text-foreground active:scale-95 transition-transform"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => { handleClearStrategy(); setShowDeleteStrategyConfirm(false); }}
+                  className="flex-1 rounded-xl bg-danger border-2 border-foreground py-2.5 text-sm font-black text-danger-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
 
 
       {/* Premium intro → plan select → payment */}
