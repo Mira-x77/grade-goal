@@ -15,8 +15,8 @@ export function DownloadLimitDialog({ open, onClose, onUpgrade }: DownloadLimitD
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("downloadLimitReached")}</DialogTitle>
-          <DialogDescription>{t("usedAllFreeDownloads")}</DialogDescription>
+          <DialogTitle>{t("unlockPremiumStudyTools")}</DialogTitle>
+          <DialogDescription>{t("unlockPremiumStudyToolsDesc")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="p-4 bg-muted rounded-lg">
@@ -25,9 +25,9 @@ export function DownloadLimitDialog({ open, onClose, onUpgrade }: DownloadLimitD
               {t("upgradeToPremium")}
             </h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">✓</span><span>{t("unlimitedDownloads")}</span></li>
-              <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">✓</span><span>{t("accessAllPapers")}</span></li>
-              <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">✓</span><span>{t("noWaitingReset")}</span></li>
+              <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">✓</span><span>{t("top30Questions")}</span></li>
+              <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">✓</span><span>{t("topicsLikelyAppear")}</span></li>
+              <li className="flex items-start gap-2"><span className="text-green-500 mt-0.5">✓</span><span>{t("stepByStepSolutions")}</span></li>
             </ul>
           </div>
           <div className="flex gap-2">
@@ -35,7 +35,7 @@ export function DownloadLimitDialog({ open, onClose, onUpgrade }: DownloadLimitD
               <X className="h-4 w-4 mr-2" />{t("cancel")}
             </Button>
             <Button onClick={onUpgrade} className="flex-1">
-              <Crown className="h-4 w-4 mr-2" />{t("enterPremiumCode")}
+              <Crown className="h-4 w-4 mr-2" />{t("unlock")}
             </Button>
           </div>
         </div>

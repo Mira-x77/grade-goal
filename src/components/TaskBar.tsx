@@ -5,7 +5,7 @@ import { ReactNode } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // Routes that belong to the Home tab
-const HOME_ROUTES = ["/", "/profile", "/settings", "/simulator", "/planner", "/exam-prep", "/subject"];
+const HOME_ROUTES = ["/", "/profile", "/settings", "/simulator", "/planner", "/subject"];
 
 interface TaskBarProps {
   action?: ReactNode;

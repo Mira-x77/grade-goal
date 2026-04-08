@@ -16,12 +16,9 @@ export function SubscriptionDetailDialog({ open, onClose, onUpgrade, subjectName
   const { t } = useLanguage();
   const [status, setStatus] = useState<{
     tier: string;
-    downloads: string;
-    expires?: string;
-    daysRemaining?: number;
-    isUnlimited: boolean;
-    // Mocking owned packs for v1.2 UI functionality
-    ownedPacks?: string[]; 
+    hasPremiumAccess: boolean;
+    unlockedSubjects: string[];
+    ownedPacks?: string[];
   } | null>(null);
 
   const trackEvent = (eventName: string) => {
@@ -40,8 +37,7 @@ export function SubscriptionDetailDialog({ open, onClose, onUpgrade, subjectName
       const statusData = await subscriptionService.getStatus();
       setStatus({
         ...statusData,
-        // Mock data: user doesn't own any packs yet
-        ownedPacks: []
+        ownedPacks: statusData.unlockedSubjects.includes('all') ? ['all'] : statusData.unlockedSubjects
       });
     } catch (error) {
       console.error('Failed to load subscription status:', error);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, Check, X, Search } from "lucide-react";
@@ -15,12 +15,33 @@ interface SubjectsSetupProps {
   serie?: string;
 }
 
+/** Returns how many px the visual viewport is shorter than the layout viewport (i.e. keyboard height) */
+function useKeyboardHeight() {
+  const [kbHeight, setKbHeight] = useState(0);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => {
+      const diff = window.innerHeight - vv.height - vv.offsetTop;
+      setKbHeight(Math.max(0, diff));
+    };
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
+  return kbHeight;
+}
+
 const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, classLevel, serie }: SubjectsSetupProps) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [customName, setCustomName] = useState("");
   const { t } = useLanguage();
+  const kbHeight = useKeyboardHeight();
 
   const allSuggested = classLevel ? getSubjectsForLevel(classLevel, serie) : [];
   const existingNames = new Set(subjects.map((s) => s.name.toLowerCase()));
@@ -117,9 +138,10 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.92, opacity: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
-            className="fixed inset-0 z-[101] flex items-center justify-center pointer-events-none px-4"
+            className="fixed inset-0 z-[101] flex items-end justify-center pointer-events-none px-4"
+            style={{ paddingBottom: kbHeight > 0 ? kbHeight + 8 : undefined }}
           >
-            <div className="pointer-events-auto w-full max-w-sm bg-card rounded-3xl card-shadow overflow-hidden">
+            <div className="pointer-events-auto w-full max-w-sm bg-card rounded-3xl card-shadow overflow-hidden mb-2">
               {/* Header */}
               <div className="flex items-center justify-between px-5 pt-5 pb-3">
                 <div>

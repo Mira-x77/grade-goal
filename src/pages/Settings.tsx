@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, RotateCcw, Mail, LogOut, Pencil, Check, Sun, Moon, Monitor, Zap, ChevronDown, AlertTriangle } from "lucide-react";
+import { Trash2, RotateCcw, Mail, LogOut, Pencil, Check, Sun, Moon, Monitor, Zap, ChevronDown, AlertTriangle, Lightbulb } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppTheme, AccentColor } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -119,7 +119,7 @@ const Settings = () => {
     });
 
     localStorage.removeItem("gostudy_accent");
-    setAccent("yellow");
+    setAccent("orange");
 
     setState({
       step: "onboarding",
@@ -210,6 +210,7 @@ const Settings = () => {
                     >
                       <span className="h-5 w-5 rounded-full border-2 border-foreground/20 shrink-0" style={{ backgroundColor: hex }} />
                       <span className="font-bold text-sm text-foreground">{label}</span>
+                      {key === "orange" && <span className="text-[10px] font-black text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md ml-1">DEFAULT</span>}
                       {accent === key && <Check className="h-4 w-4 text-foreground ml-auto" />}
                     </button>
                   ))}
@@ -491,6 +492,18 @@ const Settings = () => {
               <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
               <p className="text-sm font-bold text-foreground truncate">{user?.email}</p>
             </div>
+            <Link
+              to="/feedback-board"
+              className="flex items-center gap-3 rounded-xl bg-secondary/10 border border-secondary/30 px-4 py-3 font-bold text-foreground active:scale-[0.98] transition-transform"
+            >
+              <Lightbulb className="h-4 w-4 text-secondary shrink-0" />
+              <div>
+                <p className="text-sm font-black">{language === "fr" ? "Idées & Avis" : "Ideas & Feedback"}</p>
+                <p className="text-[10px] font-semibold text-muted-foreground">
+                  {language === "fr" ? "Votez ou proposez une fonctionnalité" : "Vote, suggest, or share your thoughts"}
+                </p>
+              </div>
+            </Link>
             <button
               onClick={async () => { await signOut(); navigate("/auth"); }}
               className="flex items-center justify-center gap-2 rounded-xl bg-danger/10 px-4 py-3 font-bold text-danger active:scale-[0.98] transition-transform"

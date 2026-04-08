@@ -8,13 +8,17 @@ const THEME_KEY = "gostudy_theme";
 const ACCENT_KEY = "gostudy_accent";
 
 // HSL values for --secondary and --accent CSS vars
+// Hues are chosen to avoid clashing with semantic signal colors:
+//   warning = ~48° (yellow), success = ~120° (green), danger = ~0°/360° (red)
+// Safe zones: ~180–240° (cyan/blue), ~255–300° (purple/violet), ~300–340° (magenta)
+// "Yellow" kept but shifted warmer/deeper so it reads as amber, not warning-yellow
 const ACCENT_MAP: Record<AccentColor, { hsl: string; label: string; hex: string }> = {
-  yellow:  { hsl: "48 95% 60%",  label: "Yellow",  hex: "#F5C842" },
-  blue:    { hsl: "217 91% 60%", label: "Blue",     hex: "#3B82F6" },
-  green:   { hsl: "142 71% 45%", label: "Green",    hex: "#22C55E" },
-  pink:    { hsl: "330 81% 60%", label: "Pink",     hex: "#EC4899" },
-  orange:  { hsl: "25 95% 55%",  label: "Orange",   hex: "#F97316" },
-  purple:  { hsl: "262 83% 65%", label: "Purple",   hex: "#A855F7" },
+  yellow:  { hsl: "35 90% 52%",  label: "Amber",   hex: "#E8920D" }, // warm amber, not warning-yellow
+  blue:    { hsl: "212 75% 50%", label: "Blue",     hex: "#1E7BC4" }, // clear sky blue
+  green:   { hsl: "172 55% 38%", label: "Teal",     hex: "#2A9980" }, // teal, not success-green
+  pink:    { hsl: "310 60% 55%", label: "Magenta",  hex: "#C040A8" }, // magenta, away from danger-red
+  orange:  { hsl: "195 70% 46%", label: "Cyan",     hex: "#22A0C0" }, // cyan replaces orange (too close to danger)
+  purple:  { hsl: "262 52% 56%", label: "Purple",   hex: "#7050C4" }, // violet, unchanged territory
 };
 
 interface ThemeContextType {
@@ -27,7 +31,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: "system", setTheme: () => {},
-  accent: "yellow", setAccent: () => {},
+  accent: "orange", setAccent: () => {},
   accentMap: ACCENT_MAP,
 });
 
@@ -79,7 +83,7 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
     (localStorage.getItem(THEME_KEY) as AppTheme) ?? "system"
   );
   const [accent, setAccentState] = useState<AccentColor>(() =>
-    (localStorage.getItem(ACCENT_KEY) as AccentColor) ?? "yellow"
+    (localStorage.getItem(ACCENT_KEY) as AccentColor) ?? "orange"
   );
 
   useEffect(() => {

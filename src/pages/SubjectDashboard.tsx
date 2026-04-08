@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Lock, BookOpen, Target, Lightbulb, FileText, CheckCircle2 } from "lucide-react";
+import { BookOpen, Lock, Lightbulb, CheckCircle2, FileText } from "lucide-react";
 import TaskBar from "@/components/TaskBar";
 import { SubscriptionDetailDialog } from "@/components/subscription/SubscriptionDetailDialog";
 import { PremiumCodeDialog } from "@/components/subscription/PremiumCodeDialog";
@@ -15,92 +15,86 @@ export default function SubjectDashboard() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [showCodeDialog, setShowCodeDialog] = useState(false);
 
-  // Hardcode subject name if undefined
-  const title = subjectName || "Subject Dashboard";
-
-  const handlePremiumClick = () => {
-    setShowPaywall(true);
-  };
+  const title = subjectName || "Subject";
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 safe-area-top">
+    <div className="min-h-screen bg-background pb-24">
+      <div className="w-full max-w-md mx-auto px-4 safe-area-top">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="pt-4 mb-6"
         >
           <h1 className="text-3xl font-black text-foreground">{title}</h1>
-          <p className="text-sm font-semibold text-muted-foreground">
+          <p className="text-sm font-semibold text-muted-foreground mt-0.5">
             {t("masterSubjectFaster")}
           </p>
         </motion.div>
 
-        <div className="flex flex-col gap-6">
-          
+        <div className="flex flex-col gap-4">
+
           {/* FREE: Past Papers */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden"
+            transition={{ delay: 0.05 }}
+            className="rounded-2xl bg-card border-2 border-foreground overflow-hidden card-shadow"
           >
-            <div className="p-4 bg-muted/30 border-b border-border flex justify-between items-center">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                <h2 className="font-bold text-lg">{t("pastPapers")}</h2>
+                <BookOpen className="h-4 w-4 text-primary" />
+                <h2 className="font-black text-foreground text-sm">{t("pastPapers")}</h2>
               </div>
-              <span className="text-xs font-bold bg-success/20 text-success px-2 py-1 rounded-md">{t("free")}</span>
+              <span className="text-[10px] font-black bg-success/15 text-success px-2 py-0.5 rounded-full border border-success/30">
+                {t("free")}
+              </span>
             </div>
-            <div className="p-4 flex flex-col items-center justify-center p-8 text-center bg-card">
-              <FileText className="h-10 w-10 text-muted-foreground mb-2 opacity-50" />
+            <div className="flex flex-col items-center justify-center px-4 py-6 text-center">
+              <FileText className="h-8 w-8 text-muted-foreground mb-2 opacity-40" />
               <p className="text-sm font-semibold text-muted-foreground mb-4">
                 {t("accessPastExams")}
               </p>
-              <button 
-                onClick={() => navigate("/library?subject=" + subjectName)}
-                className="bg-primary/10 text-primary font-bold px-4 py-2 rounded-xl"
+              <button
+                onClick={() => navigate(`/library?subject=${encodeURIComponent(title)}`)}
+                className="rounded-xl bg-primary/10 text-primary font-black text-sm px-5 py-2.5 active:scale-95 transition-transform border border-primary/20"
               >
                 {t("browseSubjectPapers").replace("{subject}", title)}
               </button>
             </div>
           </motion.div>
 
-          {/* PREMIUM: Top Questions (using LockedPreview) */}
-          <div className="mt-4">
-            <LockedPreview 
+          {/* PREMIUM: Top Questions */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <LockedPreview
               title={t("topQuestionsSubject")}
-              items={[
-                "Calculate the derivative and deduce the variation table.",
-                "Find the limits at the boundaries of the domain.",
-                "Demonstrate using mathematical induction.",
-                "Determine the complex roots of the polynomial.",
-              ]}
+              subtitle={t("topQuestionsDesc")}
               onUnlockClick={() => setShowPaywall(true)}
-              unlockText="Unlock all 30 high-probability questions"
+              unlockText={t("unlockNowBtn")}
             />
-          </div>
+          </motion.div>
 
           {/* PREMIUM: What to Study */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            onClick={handlePremiumClick}
-            className="rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 shadow-sm cursor-pointer card-shadow transition-transform active:scale-[0.98]"
+            transition={{ delay: 0.15 }}
+            onClick={() => setShowPaywall(true)}
+            className="rounded-2xl bg-card border-2 border-foreground overflow-hidden card-shadow cursor-pointer active:scale-[0.98] transition-transform"
           >
-            <div className="p-4 border-b border-blue-200 dark:border-blue-800 flex justify-between items-center bg-white/50 dark:bg-black/20">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-blue-600 dark:text-blue-500" />
-                <h2 className="font-bold text-lg text-blue-900 dark:text-blue-500">{t("whatToStudy")}</h2>
+                <Lightbulb className="h-4 w-4 text-primary" />
+                <h3 className="font-black text-foreground text-sm">{t("whatToStudy")}</h3>
               </div>
-              <Lock className="h-4 w-4 text-blue-600 dark:text-blue-500" />
+              <Lock className="h-4 w-4 text-muted-foreground" />
             </div>
-            <div className="p-6">
-              <p className="text-sm font-bold text-blue-800 dark:text-blue-400 mb-2">{t("highProbabilityTopics")}</p>
-              <p className="text-xs text-blue-700/80 dark:text-blue-500/80 font-medium">
-                {t("passSmartNotHard")}
-              </p>
+            <div className="px-4 py-4">
+              <p className="text-sm font-bold text-foreground mb-1">{t("highProbabilityTopics")}</p>
+              <p className="text-xs font-semibold text-muted-foreground">{t("keyTopicsDesc")}</p>
             </div>
           </motion.div>
 
@@ -108,22 +102,20 @@ export default function SubjectDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            onClick={handlePremiumClick}
-            className="rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 border border-emerald-200 dark:border-emerald-800 shadow-sm cursor-pointer card-shadow transition-transform active:scale-[0.98]"
+            transition={{ delay: 0.2 }}
+            onClick={() => setShowPaywall(true)}
+            className="rounded-2xl bg-card border-2 border-foreground overflow-hidden card-shadow cursor-pointer active:scale-[0.98] transition-transform"
           >
-            <div className="p-4 border-b border-emerald-200 dark:border-emerald-800 flex justify-between items-center bg-white/50 dark:bg-black/20">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-500" />
-                <h2 className="font-bold text-lg text-emerald-900 dark:text-emerald-500">{t("solutions")}</h2>
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                <h3 className="font-black text-foreground text-sm">{t("solutions")}</h3>
               </div>
-              <Lock className="h-4 w-4 text-emerald-600 dark:text-emerald-500" />
+              <Lock className="h-4 w-4 text-muted-foreground" />
             </div>
-            <div className="p-6">
-              <p className="text-sm font-bold text-emerald-800 dark:text-emerald-400 mb-2">{t("stepByStepBreakdowns")}</p>
-              <p className="text-xs text-emerald-700/80 dark:text-emerald-500/80 font-medium">
-                {t("dontJustSeeAnswer")}
-              </p>
+            <div className="px-4 py-4">
+              <p className="text-sm font-bold text-foreground mb-1">{t("stepByStepBreakdowns")}</p>
+              <p className="text-xs font-semibold text-muted-foreground">{t("dontJustSeeAnswer")}</p>
             </div>
           </motion.div>
 

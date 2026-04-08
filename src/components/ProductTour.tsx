@@ -1,48 +1,76 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Lightbulb } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TourStep {
+  titleKey: string;
+  contentKey: string;
+  durationKey?: string;
   target: string;
-  title: string;
-  content: string;
+  duration: number;
+  actionKey?: string;
 }
 
 const steps: TourStep[] = [
   {
     target: "body",
-    title: "Welcome to Go Study! 👋",
-    content: "Your personal exam planner. Let's take a 30-second tour so you know where everything is.",
+    titleKey: "tourWelcomeTitle",
+    contentKey: "tourWelcomeContent",
+    duration: 4000,
   },
   {
     target: ".tour-dashboard",
-    title: "Your Average",
-    content: "This card tracks your current average vs your target. Tap it anytime to see a full breakdown.",
+    titleKey: "tourDashboardTitle",
+    contentKey: "tourDashboardContent",
+    duration: 4500,
+    actionKey: "tourDashboardAction",
   },
   {
     target: ".tour-add-mark",
-    title: "Log a Mark",
-    content: "Got a new test score? Tap the + button to log it instantly. Your average updates in real time.",
+    titleKey: "tourAddMarkTitle",
+    contentKey: "tourAddMarkContent",
+    duration: 4000,
+    actionKey: "tourAddMarkAction",
+  },
+  {
+    target: ".tour-strategizer",
+    titleKey: "tourStrategizerTitle",
+    contentKey: "tourStrategizerContent",
+    duration: 4500,
+    actionKey: "tourStrategizerAction",
   },
   {
     target: ".tour-library",
-    title: "Past Papers",
-    content: "Browse and download past exam papers filtered to your class and subjects.",
+    titleKey: "tourLibraryTitle",
+    contentKey: "tourLibraryContent",
+    duration: 4000,
+    actionKey: "tourLibraryAction",
   },
 ];
 
 const PADDING = 10;
 
 export default function ProductTour() {
+  const { t, language } = useLanguage();
+  const navigate = useNavigate();
   const [run, setRun] = useState(false);
   const [step, setStep] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rafRef = useRef<number | null>(null);
+  // how many ms already elapsed on this step when we last (re)started
+  const elapsedRef = useRef(0);
+  // when the current run segment started
+  const segmentStartRef = useRef(0);
 
   useEffect(() => {
     const seen = localStorage.getItem("scoretarget_tour_seen");
     if (seen) return;
-    // Delay to let the home screen render fully, then check for subjects
     const t = setTimeout(() => {
       const raw = localStorage.getItem("scoretarget_state");
       let hasData = false;
@@ -50,7 +78,7 @@ export default function ProductTour() {
         try { hasData = JSON.parse(raw)?.subjects?.length > 0; } catch {}
       }
       if (hasData) setRun(true);
-    }, 2000);
+    }, 1500);
     return () => clearTimeout(t);
   }, []);
 
@@ -66,6 +94,63 @@ export default function ProductTour() {
     }
   }, [step]);
 
+  const finish = useCallback(() => {
+    setRun(false);
+    localStorage.setItem("scoretarget_tour_seen", "true");
+  }, []);
+
+  const advance = useCallback(() => {
+    elapsedRef.current = 0;
+    if (step < steps.length - 1) {
+      setStep(s => s + 1);
+    } else {
+      finish();
+    }
+  }, [step, finish]);
+
+  const stopTimer = useCallback(() => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+  }, []);
+
+  const startTimer = useCallback((alreadyElapsed: number) => {
+    const duration = steps[step].duration;
+    const remaining = duration - alreadyElapsed;
+    if (remaining <= 0) { advance(); return; }
+
+    segmentStartRef.current = performance.now();
+
+    const tick = () => {
+      const segElapsed = performance.now() - segmentStartRef.current;
+      const totalElapsed = alreadyElapsed + segElapsed;
+      const p = Math.min(totalElapsed / duration, 1);
+      setProgress(p);
+      if (p < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    timerRef.current = setTimeout(advance, remaining);
+  }, [step, advance]);
+
+  // Lock body scroll while tour is active
+  useEffect(() => {
+    if (!run) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [run]);
+
+  // Start/restart timer when step changes or run starts
+  useEffect(() => {
+    if (!run) return;
+    elapsedRef.current = 0;
+    setProgress(0);
+    setPaused(false);
+    startTimer(0);
+    return stopTimer;
+  }, [run, step]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!run) return;
     updateRect();
@@ -73,69 +158,63 @@ export default function ProductTour() {
     return () => window.removeEventListener("resize", updateRect);
   }, [run, step, updateRect]);
 
-  const finish = () => {
-    setRun(false);
-    localStorage.setItem("scoretarget_tour_seen", "true");
-  };
+  const handlePressStart = useCallback(() => {
+    if (!run) return;
+    // snapshot how much has elapsed so far
+    const segElapsed = performance.now() - segmentStartRef.current;
+    elapsedRef.current = elapsedRef.current + segElapsed;
+    stopTimer();
+    setPaused(true);
+  }, [run, stopTimer]);
 
-  const next = () => step < steps.length - 1 ? setStep(s => s + 1) : finish();
-  const back = () => step > 0 && setStep(s => s - 1);
+  const handlePressEnd = useCallback(() => {
+    if (!run || !paused) return;
+    setPaused(false);
+    startTimer(elapsedRef.current);
+  }, [run, paused, startTimer]);
 
   if (!run) return null;
 
   const current = steps[step];
+  const title = t(current.titleKey as Parameters<typeof t>[0]);
+  const content = t(current.contentKey as Parameters<typeof t>[0]);
+  const action = current.actionKey ? t(current.actionKey as Parameters<typeof t>[0]) : undefined;
   const isCenter = current.target === "body" || !rect;
 
-  // Safe area insets — keep tooltip away from status bar and home indicator
-  const SAFE_TOP = 56;    // below status bar
-  const SAFE_BOTTOM = 100; // above home indicator / taskbar
+  const SAFE_TOP = 56;
+  const SAFE_BOTTOM = 100;
   const SIDE_PAD = 16;
 
-  // Tooltip placement — always within safe viewport bounds
   const tooltipStyle: React.CSSProperties = (() => {
-    // Always center horizontally
-    const horizontalStyle = {
-      left: SIDE_PAD,
-      right: SIDE_PAD,
-    };
-
-    if (isCenter) {
-      return {
-        position: "fixed" as const,
-        ...horizontalStyle,
-        top: "50%",
-        transform: "translateY(-50%)",
-      };
-    }
-
+    const h = { left: SIDE_PAD, right: SIDE_PAD };
+    if (isCenter) return { position: "fixed" as const, ...h, top: "50%", transform: "translateY(-50%)" };
     const spaceBelow = window.innerHeight - rect!.bottom - SAFE_BOTTOM;
     const spaceAbove = rect!.top - SAFE_TOP;
-    const useBelow = spaceBelow >= 140 || spaceBelow >= spaceAbove;
-
-    if (useBelow) {
-      return {
-        position: "fixed" as const,
-        ...horizontalStyle,
-        top: Math.min(rect!.bottom + PADDING + 8, window.innerHeight - SAFE_BOTTOM - 160),
-      };
-    } else {
-      return {
-        position: "fixed" as const,
-        ...horizontalStyle,
-        bottom: Math.min(window.innerHeight - rect!.top + PADDING + 8, window.innerHeight - SAFE_TOP - 160),
-      };
+    if (spaceBelow >= 140 || spaceBelow >= spaceAbove) {
+      return { position: "fixed" as const, ...h, top: Math.min(rect!.bottom + PADDING + 8, window.innerHeight - SAFE_BOTTOM - 180) };
     }
+    return { position: "fixed" as const, ...h, bottom: Math.min(window.innerHeight - rect!.top + PADDING + 8, window.innerHeight - SAFE_TOP - 180) };
   })();
 
   return (
     <AnimatePresence>
       {run && (
         <>
-          {/* Dimmed overlay — click to skip */}
+          {/* Full-screen hold-to-pause capture layer */}
+          <div
+            className="fixed inset-0 z-[9997]"
+            onMouseDown={handlePressStart}
+            onMouseUp={handlePressEnd}
+            onMouseLeave={handlePressEnd}
+            onTouchStart={handlePressStart}
+            onTouchEnd={handlePressEnd}
+            onTouchCancel={handlePressEnd}
+          />
+
+          {/* Dimmed overlay */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9998]"
-            onClick={finish}
+            className="fixed inset-0 z-[9998] pointer-events-none"
           >
             <svg width="100%" height="100%" style={{ position: "absolute", inset: 0 }}>
               <defs>
@@ -150,23 +229,24 @@ export default function ProductTour() {
                   )}
                 </mask>
               </defs>
-              <rect width="100%" height="100%" fill="rgba(0,0,0,0.6)" mask="url(#tour-mask)" />
+              <rect width="100%" height="100%" fill="rgba(0,0,0,0.65)" mask="url(#tour-mask)" />
             </svg>
           </motion.div>
 
-          {/* Spotlight ring — pointer-events none so element is still tappable */}
+          {/* Spotlight ring */}
           {rect && (
             <motion.div
               key={`ring-${step}`}
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 24 }}
               style={{
                 position: "fixed",
                 left: rect.left - PADDING, top: rect.top - PADDING,
                 width: rect.width + PADDING * 2, height: rect.height + PADDING * 2,
                 borderRadius: 14,
                 border: "2.5px solid hsl(var(--secondary))",
-                boxShadow: "0 0 0 4px hsl(var(--secondary) / 0.2)",
+                boxShadow: "0 0 0 4px hsl(var(--secondary) / 0.25)",
                 zIndex: 9999,
                 pointerEvents: "none",
               }}
@@ -175,50 +255,74 @@ export default function ProductTour() {
 
           {/* Tooltip */}
           <motion.div
-            ref={tooltipRef}
             key={`tip-${step}`}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            onClick={e => e.stopPropagation()}
-            style={{ ...tooltipStyle, zIndex: 10000 }}
+            transition={{ duration: 0.2 }}
+            style={{ ...tooltipStyle, zIndex: 10000, position: "fixed", pointerEvents: "none" }}
           >
             <div className="bg-card border-2 border-foreground rounded-2xl p-5 card-shadow">
-              <p className="font-black text-foreground text-sm mb-1">{current.title}</p>
-              <p className="text-sm text-muted-foreground font-semibold leading-relaxed">{current.content}</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-black text-foreground text-sm">{title}</p>
+                <span className="text-[10px] font-bold text-muted-foreground">
+                  {step + 1} / {steps.length}
+                </span>
+              </div>
 
-              <div className="flex items-center justify-between mt-4">
-                <button onClick={finish} className="text-xs font-bold text-muted-foreground px-2 py-1">
-                  Skip tour
+              <p className="text-sm text-muted-foreground font-semibold leading-relaxed">
+                {content}
+              </p>
+
+              {action && (
+                <p className="text-xs font-black text-secondary mt-2">→ {action}</p>
+              )}
+
+              {/* Feedback board shortcut — only on welcome step */}
+              {step === 0 && (
+                <button
+                  onPointerDown={e => e.stopPropagation()}
+                  onClick={() => {
+                    finish();
+                    navigate("/feedback-board");
+                  }}
+                  className="mt-3 w-full flex items-center gap-2 rounded-xl bg-secondary/20 border border-secondary/40 px-3 py-2.5 active:scale-[0.98] transition-all"
+                >
+                  <Lightbulb className="h-4 w-4 text-secondary shrink-0" />
+                  <div className="text-left">
+                    <p className="text-xs font-black text-foreground leading-none">
+                      {language === "fr" ? "Tableau des idées" : "Feature Requests"}
+                    </p>
+                    <p className="text-[10px] font-semibold text-muted-foreground mt-0.5 leading-tight">
+                      {t("tourFeedbackHint")}
+                    </p>
+                  </div>
                 </button>
+              )}
 
-                {/* Step dots */}
-                <div className="flex gap-1 items-center">
-                  {steps.map((_, i) => (
-                    <div key={i} className="rounded-full transition-all duration-200"
-                      style={{
-                        width: i === step ? 18 : 6, height: 6,
-                        background: i === step ? "hsl(var(--secondary))" : "hsl(var(--muted-foreground) / 0.3)",
-                      }}
-                    />
-                  ))}
-                </div>
+              {/* Progress bar */}
+              <div className="mt-4 h-1 rounded-full bg-muted-foreground/20 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-secondary transition-none"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              </div>
 
-                <div className="flex gap-2">
-                  {step > 0 && (
-                    <button onClick={back} className="text-xs font-bold text-muted-foreground px-2 py-1">
-                      Back
-                    </button>
-                  )}
-                  <button
-                    onClick={next}
-                    className="flex items-center gap-1 bg-secondary border-2 border-foreground rounded-xl px-3 py-1.5 text-xs font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
-                  >
-                    {step === steps.length - 1 ? "Done" : "Next"}
-                    {step < steps.length - 1 && <ChevronRight className="h-3 w-3" />}
-                  </button>
-                </div>
+              {/* Hold hint — always visible, text swaps on pause */}
+              <p className="text-[10px] font-bold text-muted-foreground text-center mt-2">
+                {paused ? t("tourPaused") : t("tourHoldToPause")}
+              </p>
+
+              {/* Step dots */}
+              <div className="flex gap-1 items-center justify-center mt-3">
+                {steps.map((_, i) => (
+                  <div key={i} className="rounded-full transition-all duration-200"
+                    style={{
+                      width: i === step ? 18 : 6, height: 6,
+                      background: i <= step ? "hsl(var(--secondary))" : "hsl(var(--muted-foreground) / 0.3)",
+                    }}
+                  />
+                ))}
               </div>
             </div>
           </motion.div>

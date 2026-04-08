@@ -2,16 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
-import { Download, Search, Eye, X, LayoutGrid, List, FileText, ChevronDown, Check, Crown } from 'lucide-react';
+import { Download, Search, Eye, X, LayoutGrid, List, FileText, ChevronDown, Check, Crown, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cacheService } from '@/services/cacheService';
 import { loadState } from '@/lib/storage';
-import { SubscriptionDetailDialog } from '@/components/subscription/SubscriptionDetailDialog';
-import { PremiumCodeDialog } from '@/components/subscription/PremiumCodeDialog';
 import { PaymentSheet } from '@/components/subscription/PaymentSheet';
 import { PlanSelectSheet } from '@/components/subscription/PlanSelectSheet';
 import { PremiumIntroSheet } from '@/components/subscription/PremiumIntroSheet';
 import { SubjectPackSheet } from '@/components/subscription/SubjectPackSheet';
-import { Loader } from '@/components/ui/loader';
 import TaskBar from '@/components/TaskBar';
 import ScreenIntro from '@/components/ScreenIntro';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -20,20 +18,21 @@ const supabaseUrl = 'https://aaayzhvqgqptgqaxxbdh.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhYXl6aHZxZ3FwdGdxYXh4YmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzAwNDksImV4cCI6MjA4ODA0NjA0OX0.NNKOn17jGZHEbBKBnX3oxVhSYJhKm28QSOkK76I0bgo';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+type LibraryTab = 'papers' | 'prep';
+
 export default function LibraryDirect() {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  // User profile — class level and subject names from onboarding
   const userState = loadState();
   const userClassLevel = userState?.classLevel ?? null;
   const userSubjectNames = userState?.subjects?.map(s => s.name) ?? [];
 
+  const [activeTab, setActiveTab] = useState<LibraryTab>('papers');
   const [papers, setPapers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
   const [downloadedPaperIds, setDownloadedPaperIds] = useState<Set<string>>(new Set());
   const queryParams = new URLSearchParams(window.location.search);
   const initialSubject = queryParams.get('subject') || '';
@@ -45,14 +44,12 @@ export default function LibraryDirect() {
     year: '',
     examType: ''
   });
-  const [showDetailDialog, setShowDetailDialog] = useState(false);
-  const [showCodeDialog, setShowCodeDialog] = useState(false);
+
   const [showPlanSelect, setShowPlanSelect] = useState(false);
   const [showPaymentSheet, setShowPaymentSheet] = useState(false);
   const [showPremiumIntro, setShowPremiumIntro] = useState(false);
   const [showSubjectPack, setShowSubjectPack] = useState(false);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-  const [paymentPlan, setPaymentPlan] = useState<"all">("all");
 
   useEffect(() => {
     loadPapers();
@@ -61,9 +58,7 @@ export default function LibraryDirect() {
 
   const loadDownloadedPapers = async () => {
     const cachedPapers = await cacheService.getCachedPapers();
-    const downloaded = new Set(
-      cachedPapers.filter(p => p.isDownloaded).map(p => p.id)
-    );
+    const downloaded = new Set(cachedPapers.filter(p => p.isDownloaded).map(p => p.id));
     setDownloadedPaperIds(downloaded);
   };
 
@@ -71,32 +66,14 @@ export default function LibraryDirect() {
     try {
       setLoading(true);
       setError('');
-
-      console.log('🔍 Fetching from Supabase...');
-
       const { data, error: fetchError } = await supabase
         .from('exam_papers')
         .select('*')
         .order('created_at', { ascending: false });
-
-      console.log('📊 Response:', { data, error: fetchError });
-
-      if (fetchError) {
-        setError(`Error: ${fetchError.message}`);
-        console.error('❌ Fetch error:', fetchError);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        setError('No papers found in database');
-        setPapers([]);
-        return;
-      }
-
-      console.log('✅ Loaded papers:', data);
+      if (fetchError) { setError(`Error: ${fetchError.message}`); return; }
+      if (!data || data.length === 0) { setError('No papers found in database'); setPapers([]); return; }
       setPapers(data);
     } catch (err) {
-      console.error('❌ Exception:', err);
       setError(`Exception: ${err instanceof Error ? err.message : 'Unknown'}`);
     } finally {
       setLoading(false);
@@ -104,266 +81,273 @@ export default function LibraryDirect() {
   };
 
   const filteredPapers = papers.filter(p => {
-    // Filter by selected class level
     if (filters.classLevel && p.class_level?.toLowerCase() !== filters.classLevel.toLowerCase()) return false;
-
-    // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       if (!p.title?.toLowerCase().includes(query) && !p.subject?.toLowerCase().includes(query)) return false;
     }
-
-    // Subject filter
     if (filters.subject && p.subject !== filters.subject) return false;
-
-    // Year filter
     if (filters.year && p.year.toString() !== filters.year) return false;
-
-    // Exam type filter
     if (filters.examType && p.exam_type !== filters.examType) return false;
-
     return true;
   });
 
-  // Papers matching selected class level (defaults to user's class)
   const activeClassLevel = filters.classLevel || null;
   const classPapers = activeClassLevel
     ? papers.filter(p => p.class_level?.toLowerCase() === activeClassLevel.toLowerCase())
     : papers;
-
-  // Use all papers as fallback if class filter yields nothing
   const effectivePapers = classPapers.length > 0 ? classPapers : papers;
 
-  // Subjects: user's own subjects that exist in the library
   const availableSubjectsInLib = new Set(effectivePapers.map((p: any) => p.subject));
   const availableSubjectsArr = Array.from(availableSubjectsInLib).sort() as string[];
   const userMatched = userSubjectNames.length > 0
-    ? userSubjectNames.filter(s =>
-        Array.from(availableSubjectsInLib).some(
-          (a: any) => a.toLowerCase() === s.toLowerCase()
-        )
-      )
+    ? userSubjectNames.filter(s => Array.from(availableSubjectsInLib).some((a: any) => a.toLowerCase() === s.toLowerCase()))
     : [];
   const uniqueSubjects = userMatched.length > 0 ? userMatched : availableSubjectsArr;
-
   const uniqueYears = Array.from(new Set(effectivePapers.map(p => p.year))).sort((a: number, b: number) => b - a);
   const uniqueExamTypes = Array.from(new Set(effectivePapers.map(p => p.exam_type))).sort();
 
   const hasActiveFilters = (filters.classLevel && filters.classLevel !== (userClassLevel ?? '')) || filters.subject || filters.year || filters.examType;
+  const clearFilters = () => setFilters({ classLevel: userClassLevel ?? '', subject: '', year: '', examType: '' });
 
-  const clearFilters = () => {
-    setFilters({ classLevel: userClassLevel ?? '', subject: '', year: '', examType: '' });
-  };
+  // Subjects to show in Prep tab — user's own subjects first, fallback to all in library
+  const prepSubjects = userSubjectNames.length > 0 ? userSubjectNames : availableSubjectsArr;
 
   return (
     <div className="flex-1 pb-20">
       <div className="max-w-md mx-auto">
-        {/* Sticky Header Section */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md px-6 pb-4 border-b border-border/50 overflow-visible safe-area-top">
+
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md px-6 pb-3 border-b border-border/50 overflow-visible safe-area-top">
           <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-2xl font-black text-foreground">{t("library")}</h1>
-            </div>
-              <button
-              onClick={() => setShowPremiumIntro(true)}
-              className="flex h-9 items-center gap-1.5 px-3 rounded-xl border-2 border-premium bg-premium text-premium-foreground active:scale-95 transition-all card-shadow text-xs font-black shrink-0 mt-1"
-            >
-              <Crown className="h-4 w-4" />
-              {t("unlock")}
-            </button>
+            <h1 className="text-2xl font-black text-foreground">{t("library")}</h1>
           </div>
 
+          {/* Tab Switcher */}
+          <div className="flex gap-1 mt-4 bg-muted rounded-xl p-1">
+            {(['papers', 'prep'] as LibraryTab[]).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 rounded-lg py-2 text-xs font-black transition-all ${
+                  activeTab === tab
+                    ? 'bg-card border border-border/60 text-foreground card-shadow'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                {tab === 'papers' ? t("pastPapers") : t("passSmarter")}
+              </button>
+            ))}
+          </div>
 
-          {/* Search and Filters moved inside sticky header */}
-          {!loading && papers.length > 0 && (
-            <div className="mt-6 space-y-3">
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t("searchByTitle")}
-                  className="w-full pl-9 pr-4 py-3 rounded-xl border border-border bg-card text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
-                />
-              </div>
-
-              {/* Filters row + layout toggle */}
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex gap-2 overflow-x-auto hide-scrollbar flex-1">
-                  <FilterPill
-                    label={t("classLevel")}
-                    value={filters.classLevel}
-                    options={Array.from(new Set(papers.map(p => p.class_level))).filter(Boolean).sort() as string[]}
-                    onSelect={(v) => setFilters({ ...filters, classLevel: v })}
-                  />
-                  <FilterPill
-                    label={t("subject")}
-                    value={filters.subject}
-                    options={uniqueSubjects}
-                    onSelect={(v) => setFilters({ ...filters, subject: v })}
-                  />
-                  <FilterPill
-                    label={t("year")}
-                    value={filters.year}
-                    options={uniqueYears.map(String)}
-                    onSelect={(v) => setFilters({ ...filters, year: v })}
-                  />
-                  <FilterPill
-                    label={t("examType")}
-                    value={filters.examType}
-                    options={uniqueExamTypes}
-                    onSelect={(v) => setFilters({ ...filters, examType: v })}
-                  />
-                  {hasActiveFilters && (
+          {/* Search + Filters — only on Papers tab */}
+          <AnimatePresence initial={false}>
+            {activeTab === 'papers' && !loading && papers.length > 0 && (
+              <motion.div
+                key="filters"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.18 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3 space-y-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder={t("searchByTitle")}
+                      className="w-full pl-9 pr-4 py-3 rounded-xl border border-border bg-card text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-2 overflow-x-auto hide-scrollbar flex-1">
+                      <FilterPill label={t("classLevel")} value={filters.classLevel} options={Array.from(new Set(papers.map(p => p.class_level))).filter(Boolean).sort() as string[]} onSelect={(v) => setFilters({ ...filters, classLevel: v })} />
+                      <FilterPill label={t("subject")} value={filters.subject} options={uniqueSubjects} onSelect={(v) => setFilters({ ...filters, subject: v })} />
+                      <FilterPill label={t("year")} value={filters.year} options={uniqueYears.map(String)} onSelect={(v) => setFilters({ ...filters, year: v })} />
+                      <FilterPill label={t("examType")} value={filters.examType} options={uniqueExamTypes} onSelect={(v) => setFilters({ ...filters, examType: v })} />
+                      {hasActiveFilters && (
+                        <button onClick={clearFilters} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold bg-danger/10 text-danger border-2 border-danger/30 active:scale-95 transition-transform">
+                          <X className="h-3 w-3" /> Clear
+                        </button>
+                      )}
+                    </div>
                     <button
-                      onClick={clearFilters}
-                      className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold bg-danger/10 text-danger border-2 border-danger/30 active:scale-95 transition-transform"
+                      onClick={() => setViewLayout(prev => prev === 'grid' ? 'list' : 'grid')}
+                      className="shrink-0 p-2 rounded-xl bg-muted border border-border text-muted-foreground active:scale-95 transition-all"
                     >
-                      <X className="h-3 w-3" /> Clear
+                      {viewLayout === 'grid' ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
                     </button>
-                  )}
+                  </div>
                 </div>
-                <button
-                  onClick={() => setViewLayout(prev => prev === 'grid' ? 'list' : 'grid')}
-                  className="shrink-0 p-2 rounded-xl bg-muted border border-border text-muted-foreground active:scale-95 transition-all"
-                >
-                  {viewLayout === 'grid' ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Loading */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="relative h-16 w-16">
-              <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
-              <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-            </div>
-            <p className="text-lg font-bold text-foreground mb-2">{t("loadingPapers")}</p>
-          </div>
-        )}
+        {/* ── PAPERS TAB ── */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'papers' && (
+            <motion.div key="papers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+              {loading && (
+                <div className="flex flex-col items-center justify-center py-24 gap-4">
+                  <div className="relative h-16 w-16">
+                    <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+                    <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                  </div>
+                  <p className="text-lg font-bold text-foreground">{t("loadingPapers")}</p>
+                </div>
+              )}
 
-        {!loading && !error && filteredPapers.length > 0 && (
-          <div className="px-4 pt-3">
-            <p className="text-xs text-muted-foreground font-bold mb-3">
-              {filteredPapers.length} {filteredPapers.length === 1 ? t("paper") : t("papersFound")}
-            </p>
-            <div className={viewLayout === 'grid' ? 'grid grid-cols-3 gap-2' : 'flex flex-col gap-3'}>
-              {filteredPapers.map((paper) => {
-                const isSaved = downloadedPaperIds.has(paper.id);
-                return viewLayout === 'grid' ? (
-                  // Grid View Item
-                  <div
-                    key={paper.id}
-                    className="bg-card rounded-xl border-2 border-foreground overflow-hidden cursor-pointer active:scale-95 transition-transform flex flex-col card-shadow"
-                    onClick={() => navigate(`/library/${paper.id}`)}
-                  >
-                    {/* Preview Image with overlay tags */}
-                    <div className="relative h-32 bg-muted/50 overflow-hidden shrink-0">
-                      {paper.preview_url ? (
-                        <img
-                          src={paper.preview_url}
-                          alt={`Preview of ${paper.title}`}
-                          className="w-full h-full object-cover"
-                        />
+              {!loading && !error && filteredPapers.length > 0 && (
+                <div className="px-4 pt-3">
+                  <p className="text-xs text-muted-foreground font-bold mb-3">
+                    {filteredPapers.length} {filteredPapers.length === 1 ? t("paper") : t("papersFound")}
+                  </p>
+                  <div className={viewLayout === 'grid' ? 'grid grid-cols-3 gap-2' : 'flex flex-col gap-3'}>
+                    {filteredPapers.map((paper) => {
+                      const isSaved = downloadedPaperIds.has(paper.id);
+                      return viewLayout === 'grid' ? (
+                        <div
+                          key={paper.id}
+                          className="bg-card rounded-xl border-2 border-foreground overflow-hidden cursor-pointer active:scale-95 transition-transform flex flex-col card-shadow"
+                          onClick={() => navigate(`/library/${paper.id}`)}
+                        >
+                          <div className="relative h-32 bg-muted/50 overflow-hidden shrink-0">
+                            {paper.preview_url ? (
+                              <img src={paper.preview_url} alt={`Preview of ${paper.title}`} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Eye className="h-6 w-6 text-muted-foreground/50" />
+                              </div>
+                            )}
+                            {isSaved && (
+                              <div className="absolute top-1.5 right-1.5">
+                                <span className="px-1.5 py-0.5 bg-secondary border border-foreground/30 text-foreground rounded text-[8px] font-black">{t("downloaded")}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-2">
+                            <h3 className="font-bold text-foreground text-[10px] leading-tight">
+                              {paper.title || `${paper.subject} ${paper.year}`}
+                            </h3>
+                          </div>
+                        </div>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Eye className="h-6 w-6 text-muted-foreground/50" />
+                        <div
+                          key={paper.id}
+                          className="bg-card rounded-2xl p-4 border border-border flex items-center gap-4 cursor-pointer card-shadow active:scale-[0.98] transition-all"
+                          onClick={() => navigate(`/library/${paper.id}`)}
+                        >
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0 border border-primary/20">
+                            {paper.preview_url ? (
+                              <img src={paper.preview_url} className="w-full h-full object-cover rounded-xl" alt="" />
+                            ) : (
+                              <FileText className="h-6 w-6 text-primary" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-black text-foreground text-sm truncate">
+                              {paper.title || `${paper.subject} ${paper.year}`}
+                            </h3>
+                            <p className="text-xs font-bold text-muted-foreground mt-0.5 truncate flex items-center gap-1.5">
+                              <span className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{paper.class_level}</span>
+                              <span>{paper.exam_type}{paper.serie ? ` · Série ${paper.serie}` : ''}</span>
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end gap-1.5 shrink-0">
+                            <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full">{paper.year}</span>
+                            {isSaved && (
+                              <span className="text-[10px] font-black bg-secondary border border-foreground/20 text-foreground px-2 py-0.5 rounded-full">{t("downloaded")}</span>
+                            )}
+                          </div>
                         </div>
-                      )}
-              {isSaved && (
-                        <div className="absolute top-1.5 right-1.5">
-                          <span className="px-1.5 py-0.5 bg-secondary border border-foreground/30 text-foreground rounded text-[8px] font-black">
-                            {t("downloaded")}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
-                    {/* Title only — no truncation limit */}
-                    <div className="p-2">
-                      <h3 className="font-bold text-foreground text-[10px] leading-tight">
-                        {paper.title || `${paper.subject} ${paper.year}`}
-                      </h3>
-                    </div>
+              {!loading && !error && papers.length === 0 && (
+                <div className="px-4 py-12 text-center">
+                  <div className="bg-muted/50 rounded-2xl p-8">
+                    <p className="text-lg font-bold text-foreground mb-2">{t("noPapersYet")}</p>
+                    <p className="text-sm text-muted-foreground">{t("uploadFromAdmin")}</p>
+                  </div>
+                </div>
+              )}
+
+              {!loading && !error && papers.length > 0 && classPapers.length === 0 && effectivePapers === papers && (
+                <div className="px-4 py-12 text-center">
+                  <div className="bg-muted/50 rounded-2xl p-8">
+                    <p className="text-lg font-bold text-foreground mb-2">{t("noPapersForClass")}</p>
+                    <p className="text-sm text-muted-foreground">{t("papersWillAppear").replace("{class}", userClassLevel ?? "your class")}</p>
+                  </div>
+                </div>
+              )}
+
+              {!loading && !error && classPapers.length > 0 && filteredPapers.length === 0 && (
+                <div className="px-4 py-12 text-center">
+                  <div className="bg-muted/50 rounded-2xl p-8">
+                    <p className="text-lg font-bold text-foreground mb-2">{t("noMatchFilters")}</p>
+                    <p className="text-sm text-muted-foreground">{t("tryAdjustFilters")}</p>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ── PREP TAB ── */}
+          {activeTab === 'prep' && (
+            <motion.div key="prep" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+              <div className="px-4 pt-4 pb-4">
+                {/* Hero */}
+                <div className="rounded-2xl bg-premium/10 border-2 border-premium/30 px-4 py-4 mb-4 flex items-center gap-3">
+                  <Crown className="h-6 w-6 text-premium shrink-0" />
+                  <div>
+                    <p className="font-black text-foreground text-sm">{t("passNotHarder")}</p>
+                    <p className="text-xs font-semibold text-muted-foreground mt-0.5">{t("focusWhatMatters")}</p>
+                  </div>
+                </div>
+
+                {prepSubjects.length === 0 ? (
+                  <div className="py-10 text-center rounded-2xl bg-muted/50">
+                    <p className="text-sm font-bold text-muted-foreground">{t("noSubjectsFound")}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("completeOnboarding")}</p>
                   </div>
                 ) : (
-                  // List View Item
-                  <div
-                    key={paper.id}
-                    className="bg-card rounded-2xl p-4 border border-border flex items-center gap-4 cursor-pointer card-shadow active:scale-[0.98] transition-all"
-                    onClick={() => navigate(`/library/${paper.id}`)}
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0 border border-primary/20">
-                      {paper.preview_url ? (
-                        <img src={paper.preview_url} className="w-full h-full object-cover rounded-xl" alt="" />
-                      ) : (
-                        <FileText className="h-6 w-6 text-primary" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-black text-foreground text-sm truncate">
-                        {paper.title || `${paper.subject} ${paper.year}`}
-                      </h3>
-                      <p className="text-xs font-bold text-muted-foreground mt-0.5 truncate flex items-center gap-1.5">
-                        <span className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{paper.class_level}</span>
-                        <span>{paper.exam_type} {paper.serie ? `· Série ${paper.serie}` : ''}</span>
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                      <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full">{paper.year}</span>
-                      {downloadedPaperIds.has(paper.id) && (
-                        <span className="text-[10px] font-black bg-secondary border border-foreground/20 text-foreground px-2 py-0.5 rounded-full">{t("downloaded")}</span>
-                      )}
-                    </div>
+                  <div className="space-y-3">
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">{t("selectSubjectUnlock")}</p>
+                    {prepSubjects.map((subject, i) => (
+                      <motion.div
+                        key={subject}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        onClick={() => navigate(`/subject/${encodeURIComponent(subject)}`)}
+                        className="bg-card border-2 border-foreground rounded-2xl p-4 flex items-center gap-4 cursor-pointer card-shadow active:scale-[0.98] active:translate-y-0.5 active:shadow-none transition-all"
+                      >
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-premium/10 border border-premium/20 shrink-0">
+                          <Crown className="h-5 w-5 text-premium" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-black text-foreground text-sm">{subject}</h3>
+                          <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">{t("unlockSpecificPrep")}</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </motion.div>
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!loading && !error && papers.length === 0 && (
-          <div className="px-4 py-12 text-center">
-            <div className="bg-muted/50 rounded-2xl p-8">
-              <p className="text-lg font-bold text-foreground mb-2">{t("noPapersYet")}</p>
-              <p className="text-sm text-muted-foreground">
-                {t("uploadFromAdmin")}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* No papers for this class yet */}
-        {!loading && !error && papers.length > 0 && classPapers.length === 0 && effectivePapers === papers && (
-          <div className="px-4 py-12 text-center">
-            <div className="bg-muted/50 rounded-2xl p-8">
-              <p className="text-lg font-bold text-foreground mb-2">{t("noPapersForClass")}</p>
-              <p className="text-sm text-muted-foreground">
-                {t("papersWillAppear").replace("{class}", userClassLevel ?? "your class")}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* No results from search/filter */}
-        {!loading && !error && classPapers.length > 0 && filteredPapers.length === 0 && (
-          <div className="px-4 py-12 text-center">
-            <div className="bg-muted/50 rounded-2xl p-8">
-              <p className="text-lg font-bold text-foreground mb-2">{t("noMatchFilters")}</p>
-              <p className="text-sm text-muted-foreground">
-                {t("tryAdjustFilters")}
-              </p>
-            </div>
-          </div>
-        )}
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
+      {/* Sheets */}
       <PremiumIntroSheet
         open={showPremiumIntro}
         onClose={() => setShowPremiumIntro(false)}
@@ -443,17 +427,12 @@ function FilterPill({ label, value, options, onSelect }: FilterPillProps) {
       <button
         onClick={() => setOpen(true)}
         className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold border-2 transition-all active:scale-95 shrink-0 ${
-          active
-            ? "bg-primary/10 border-primary text-primary"
-            : "bg-card border-border text-foreground"
+          active ? "bg-primary/10 border-primary text-primary" : "bg-card border-border text-foreground"
         }`}
       >
         {active ? value : label}
         {active ? (
-          <X
-            className="h-3 w-3 opacity-70"
-            onClick={(e) => { e.stopPropagation(); onSelect(""); }}
-          />
+          <X className="h-3 w-3 opacity-70" onClick={(e) => { e.stopPropagation(); onSelect(""); }} />
         ) : (
           <ChevronDown className="h-3 w-3 opacity-60" />
         )}
@@ -461,12 +440,7 @@ function FilterPill({ label, value, options, onSelect }: FilterPillProps) {
 
       {open && createPortal(
         <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-[200] bg-black/40"
-            onClick={() => setOpen(false)}
-          />
-          {/* Centered modal */}
+          <div className="fixed inset-0 z-[200] bg-black/40" onClick={() => setOpen(false)} />
           <div className="fixed inset-0 z-[201] flex items-center justify-center px-8 pointer-events-none">
             <div className="pointer-events-auto w-full max-w-xs rounded-2xl bg-card border border-border shadow-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-border">
@@ -475,9 +449,7 @@ function FilterPill({ label, value, options, onSelect }: FilterPillProps) {
               <div className="max-h-72 overflow-y-auto">
                 <button
                   onClick={() => { onSelect(""); setOpen(false); }}
-                  className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-colors hover:bg-muted/60 ${
-                    !value ? "text-primary" : "text-muted-foreground"
-                  }`}
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-colors hover:bg-muted/60 ${!value ? "text-primary" : "text-muted-foreground"}`}
                 >
                   All {label}s
                   {!value && <Check className="h-3.5 w-3.5" />}
@@ -487,9 +459,7 @@ function FilterPill({ label, value, options, onSelect }: FilterPillProps) {
                   <button
                     key={opt}
                     onClick={() => { onSelect(opt); setOpen(false); }}
-                    className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-colors hover:bg-muted/60 ${
-                      value === opt ? "text-primary bg-primary/5" : "text-foreground"
-                    }`}
+                    className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-colors hover:bg-muted/60 ${value === opt ? "text-primary bg-primary/5" : "text-foreground"}`}
                   >
                     {opt}
                     {value === opt && <Check className="h-3.5 w-3.5 text-primary" />}

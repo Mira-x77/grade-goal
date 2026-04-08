@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      user_app_state: {
+        Row: {
+          id: string
+          user_id: string
+          state_json: Record<string, unknown>
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          state_json: Record<string, unknown>
+          updated_at?: string
+        }
+        Update: {
+          state_json?: Record<string, unknown>
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_history: {
+        Row: {
+          id: string
+          user_id: string
+          subject_name: string
+          mark_type: string
+          value: number
+          date: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          subject_name: string
+          mark_type: string
+          value: number
+          date?: string
+        }
+        Update: {
+          subject_name?: string
+          mark_type?: string
+          value?: number
+          date?: string
+        }
+        Relationships: []
+      }
+      user_streak: {
+        Row: {
+          id: string
+          user_id: string
+          current_streak: number
+          best_streak: number
+          total_entries: number
+          last_entry_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          current_streak?: number
+          best_streak?: number
+          total_entries?: number
+          last_entry_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          current_streak?: number
+          best_streak?: number
+          total_entries?: number
+          last_entry_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       library_documents: {
         Row: {
           class_level: string
@@ -58,7 +130,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      upsert_user_app_state: {
+        Args: { p_user_id: string; p_state: Record<string, unknown> }
+        Returns: void
+      }
+      upsert_user_streak: {
+        Args: {
+          p_user_id: string
+          p_current: number
+          p_best: number
+          p_total: number
+          p_last_date: string | null
+        }
+        Returns: void
+      }
     }
     Enums: {
       [_ in never]: never

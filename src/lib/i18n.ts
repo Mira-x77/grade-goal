@@ -619,6 +619,25 @@ export const translations = {
     checklistLibraryDesc: "Download exam papers to practice with.",
     next: "Next",
     tellUsNameClass: "Tell us your name and class",
+
+    // Product Tour
+    tourWelcomeTitle: "Welcome to Go Study 👋",
+    tourWelcomeContent: "Your personal exam score tracker. Quick tour — no tapping needed, just watch.",
+    tourDashboardTitle: "Your Average",
+    tourDashboardContent: "This card shows your current average vs your target. It updates the moment you log a score.",
+    tourDashboardAction: "Tap the card anytime to see a full subject breakdown.",
+    tourAddMarkTitle: "Log a Score",
+    tourAddMarkContent: "This is the most important button. Tap it after every test to log your mark.",
+    tourAddMarkAction: "Try tapping it now — the tour will continue.",
+    tourStrategizerTitle: "What-If Simulator",
+    tourStrategizerContent: "Wondering what score you need to hit your target? This runs the numbers for you.",
+    tourStrategizerAction: "Tap to explore after the tour.",
+    tourLibraryTitle: "Past Papers",
+    tourLibraryContent: "Browse and download past exam papers filtered to your subjects. Great for revision.",
+    tourLibraryAction: "Tap to open the library.",
+    tourPaused: "⏸ paused — release to continue",
+    tourHoldToPause: "hold to pause",
+    tourFeedbackHint: "Vote for your favourite features or give an idea",
   },
   fr: {
     // Home
@@ -1238,6 +1257,25 @@ export const translations = {
     checklistLibraryDesc: "Téléchargez des sujets d’examen pour vous entraîner.",
     next: "Suivant",
     tellUsNameClass: "Dites-nous votre nom et votre classe",
+
+    // Product Tour
+    tourWelcomeTitle: "Bienvenue sur Go Study 👋",
+    tourWelcomeContent: "Votre suivi de notes personnalisé. Visite rapide — pas besoin de taper, regardez juste.",
+    tourDashboardTitle: "Votre Moyenne",
+    tourDashboardContent: "Cette carte affiche votre moyenne actuelle par rapport à votre objectif. Elle se met à jour dès que vous saisissez une note.",
+    tourDashboardAction: "Appuyez sur la carte pour voir le détail par matière.",
+    tourAddMarkTitle: "Saisir une Note",
+    tourAddMarkContent: "C'est le bouton le plus important. Appuyez dessus après chaque évaluation pour enregistrer votre note.",
+    tourAddMarkAction: "Essayez d'appuyer maintenant — la visite continuera.",
+    tourStrategizerTitle: "Simulateur de Notes",
+    tourStrategizerContent: "Vous voulez savoir quelle note il vous faut pour atteindre votre objectif ? Cet outil fait le calcul pour vous.",
+    tourStrategizerAction: "Appuyez pour explorer après la visite.",
+    tourLibraryTitle: "Anciens Sujets",
+    tourLibraryContent: "Parcourez et téléchargez des sujets d'examen filtrés selon vos matières. Idéal pour réviser.",
+    tourLibraryAction: "Appuyez pour ouvrir la bibliothèque.",
+    tourPaused: "⏸ en pause — relâchez pour continuer",
+    tourHoldToPause: "maintenir pour mettre en pause",
+    tourFeedbackHint: "Votez pour vos fonctionnalités préférées ou proposez une idée",
   },
 };
 

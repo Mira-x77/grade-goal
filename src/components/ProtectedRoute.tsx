@@ -8,12 +8,17 @@ export default function ProtectedRoute({
   children: React.ReactNode;
   requireOnboarding?: boolean;
 }) {
-  const { session, loading } = useAuth();
+  const { session, loading, syncing } = useAuth();
 
-  if (loading) {
+  if (loading || syncing) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
         <div className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+        {syncing && (
+          <p className="text-xs font-bold text-muted-foreground animate-pulse">
+            Restoring your data…
+          </p>
+        )}
       </div>
     );
   }
@@ -22,7 +27,6 @@ export default function ProtectedRoute({
 
   if (!session && !isDevBypass) return <Navigate to="/auth" replace />;
 
-  // requireOnboarding routes: redirect to onboarding if not set up
   if (requireOnboarding) {
     const raw = localStorage.getItem("scoretarget_state");
     let hasAppData = false;

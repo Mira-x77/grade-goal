@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, Flame, AlertTriangle, ChevronRight, ChevronDown, BookOpen, BarChart3, TrendingUp, Settings as SettingsIcon, User, Trophy, FileDown, PenLine, Zap, Plus, X, Check, Clock, ArrowUpRight, Trash2, Pencil, Crown, Bell } from "lucide-react";
+import { Target, Flame, AlertTriangle, ChevronRight, ChevronDown, BookOpen, BarChart3, TrendingUp, Settings as SettingsIcon, User, Trophy, FileDown, PenLine, Zap, Plus, X, Check, Clock, ArrowUpRight, Trash2, Pencil, Crown, Bell, ArrowLeft, Lightbulb } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState, getStreak, getHistory, HistoryEntry } from "@/lib/storage";
 import { downloadService } from "@/services/downloadService";
@@ -95,7 +95,7 @@ const Home = () => {
   const state = loadState();
   const streak = getStreak();
   const history = getHistory();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
 
   const [downloadedCount, setDownloadedCount] = useState(0);
@@ -202,7 +202,18 @@ const Home = () => {
     };
     saveState(updated);
     setAppState(updated);
-    setShowMarkSheet(false);
+    const updatedSubject = updated.subjects.find((s) => s.id === selectedSubject.id)!;
+    setSelectedSubject(updatedSubject);
+    // Auto-advance to the next unfilled mark type
+    const order: ("interro" | "dev" | "compo")[] = ["interro", "dev", "compo"];
+    const nextUnfilled = order.find(t => updatedSubject.marks[t] === null || updatedSubject.marks[t] === undefined);
+    if (nextUnfilled) {
+      setMarkType(nextUnfilled);
+      setMarkValue("");
+    } else {
+      // All filled — clear input and stay on current type
+      setMarkValue("");
+    }
   };
 
   const handleClearStrategy = () => {
@@ -309,15 +320,19 @@ const Home = () => {
             >
               <Crown className="h-5 w-5" />
             </button>
-            <button
-              onClick={() => setShowNotifications(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow"
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <Link to="/profile" className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow">
-              <User className="h-5 w-5" />
-            </Link>
+            {/* Bell + Profile grouped in a single pill — like the reference */}
+            <div className="flex items-center bg-card border-2 border-foreground rounded-2xl overflow-hidden card-shadow">
+              <button
+                onClick={() => setShowNotifications(true)}
+                className="flex h-9 w-9 items-center justify-center text-foreground active:bg-muted transition-colors"
+              >
+                <Bell className="h-5 w-5" />
+              </button>
+              <div className="w-px h-5 bg-foreground/20" />
+              <Link to="/profile" className="flex h-9 w-9 items-center justify-center text-foreground active:bg-muted transition-colors">
+                <User className="h-5 w-5" />
+              </Link>
+            </div>
           </div>
         </motion.div>
 
@@ -663,6 +678,29 @@ const Home = () => {
           </motion.div>
         )}
 
+        {/* ═══════════ IDEAS & FEEDBACK SHORTCUT ═══════════ */}
+        {hasData && (
+          <motion.div
+            initial={{ y: 12, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.45 }}
+          >
+            <Link
+              to="/feedback-board"
+              className="flex items-center gap-3 rounded-2xl bg-card border-2 border-border p-4 active:scale-[0.98] transition-transform"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/20 border border-secondary/30 shrink-0">
+                <Lightbulb className="h-5 w-5 text-secondary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-black text-foreground">{language === "fr" ? "Idées & Avis" : "Ideas & Feedback"}</p>
+                <p className="text-[10px] font-bold text-muted-foreground">{t("tourFeedbackHint")}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            </Link>
+          </motion.div>
+        )}
+
       </div>
 
       <TaskBar action={
@@ -748,9 +786,12 @@ const Home = () => {
                 <>
                   <div className="flex items-center gap-3 mb-5">
                     <button onClick={() => setMarkStep("subject")} className="text-muted-foreground">
+                      <ArrowLeft className="h-5 w-5" />
+                    </button>
+                    <h2 className="text-xl font-black flex-1">{selectedSubject?.name}</h2>
+                    <button onClick={() => setShowMarkSheet(false)} className="text-muted-foreground">
                       <X className="h-5 w-5" />
                     </button>
-                    <h2 className="text-xl font-black">{selectedSubject?.name}</h2>
                   </div>
 
                   {/* Mark type selector */}

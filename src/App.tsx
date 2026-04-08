@@ -17,9 +17,9 @@ import LibraryDirect from "./pages/LibraryDirect";
 import PaperDetail from "./pages/PaperDetail";
 import MyDownloads from "./pages/MyDownloads";
 import SubjectDashboard from "./pages/SubjectDashboard";
-import ExamPrep from "./pages/ExamPrep";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import FeedbackBoard from "./pages/FeedbackBoard";
 
 const queryClient = new QueryClient();
 
@@ -56,10 +56,11 @@ const App = () => (
             <Route path="/library" element={<ProtectedRoute requireOnboarding><LibraryDirect /></ProtectedRoute>} />
             <Route path="/library/:paperId" element={<ProtectedRoute requireOnboarding><PaperDetail /></ProtectedRoute>} />
             <Route path="/subject/:subjectName" element={<ProtectedRoute requireOnboarding><SubjectDashboard /></ProtectedRoute>} />
-            <Route path="/exam-prep" element={<ProtectedRoute requireOnboarding><ExamPrep /></ProtectedRoute>} />
             <Route path="/my-downloads" element={<ProtectedRoute requireOnboarding><MyDownloads /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute requireOnboarding><Settings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute requireOnboarding><Profile /></ProtectedRoute>} />
+            <Route path="/feedback" element={<ProtectedRoute requireOnboarding><FeedbackBoard /></ProtectedRoute>} />
+            <Route path="/feedback-board" element={<ProtectedRoute requireOnboarding><FeedbackBoard /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -95,19 +95,13 @@ const PaperDetail = () => {
     if (!paper) return;
     try {
       setError(null);
-      const subStatus = await subscriptionService.canDownload();
-      if (!subStatus.allowed && subStatus.reason === 'limit_reached') {
-        setShowPlanSelect(true);
-        return;
-      }
       await downloadService.downloadPaper(paper, (progress) => {
         setDownloadProgress(progress);
         if (progress.status === 'completed') {
           setIsDownloaded(true);
           setHasAnyDownload(true);
           setDownloadProgress(null);
-          subscriptionService.incrementDownload();
-        toast.success(t("savedToDownloads"));
+          toast.success(t("savedToDownloads"));
         }
       });
     } catch (err) {
