@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { ArrowLeft, User, Target, BookOpen, Pencil, Check, Settings, Crown, ChevronRight, ChevronDown, Plus, Trash2, Search, X, GraduationCap } from "lucide-react";
@@ -41,6 +41,17 @@ const Profile = () => {
   const [showSubjectPack, setShowSubjectPack] = useState(false);
   const [showPaymentSheet, setShowPaymentSheet] = useState(false);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      setHeaderHeight(headerRef.current?.getBoundingClientRect().height ?? 0);
+    });
+    ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const loaded = loadState();
@@ -159,7 +170,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background w-full pb-20">
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top py-3">
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top py-3">
         <div className="header-inner flex items-center justify-between">
           <h1 className="text-lg font-black text-primary">{t("yourProfile")}</h1>
           <Link to="/settings" className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow">
@@ -168,7 +179,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <div className="content-col flex flex-col gap-6 py-6">
+      <div className="content-col flex flex-col gap-6 py-6" style={{ paddingTop: headerHeight + 24 }}>
 
         {/* Premium banner */}
         <motion.button

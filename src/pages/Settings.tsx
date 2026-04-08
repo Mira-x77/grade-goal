@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, RotateCcw, Mail, LogOut, Pencil, Check, Sun, Moon, Monitor, Zap, ChevronDown, AlertTriangle, Lightbulb } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -28,6 +28,17 @@ const Settings = () => {
   const [state, setState] = useState<AppState | null>(null);
   const [editingWeights, setEditingWeights] = useState(false);
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
+
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      setHeaderHeight(headerRef.current?.getBoundingClientRect().height ?? 0);
+    });
+    ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const loaded = loadState();
@@ -143,13 +154,13 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background w-full pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top py-3">
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top py-3">
         <div className="header-inner">
           <h1 className="text-lg font-black text-primary">{t("settings")}</h1>
         </div>
       </div>
 
-      <div className="content-col flex flex-col gap-5 py-6">
+      <div className="content-col flex flex-col gap-5 py-6" style={{ paddingTop: headerHeight + 24 }}>
         {/* Appearance */}
         <Section title={t("appearance")}>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">

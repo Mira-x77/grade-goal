@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Search, X, Lightbulb, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +50,17 @@ export default function FeedbackBoard() {
   const [reqDesc, setReqDesc] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      setHeaderHeight(headerRef.current?.getBoundingClientRect().height ?? 0);
+    });
+    ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
@@ -115,8 +126,8 @@ export default function FeedbackBoard() {
   return (
     <div className="min-h-screen bg-background w-full pb-24">
 
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-lg border-b border-border safe-area-top">
+      {/* Fixed header + search/sort */}
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-10 bg-background/90 backdrop-blur-lg border-b border-border safe-area-top">
         <div className="header-inner flex items-center pt-3 pb-3">
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-black text-foreground">
@@ -127,32 +138,32 @@ export default function FeedbackBoard() {
             </p>
           </div>
         </div>
-      </div>
 
-      {/* Search + sort */}
-      <div className="content-col flex gap-2 pt-4 pb-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder={fr ? "Rechercher..." : "Search..."}
-            className="w-full pl-9 pr-3 py-2 rounded-xl border-2 border-border bg-muted text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-          />
-        </div>
-        <div className="flex rounded-xl border-2 border-border overflow-hidden bg-muted">
-          {(["votes", "newest"] as const).map(s => (
-            <button key={s} onClick={() => setSort(s)}
-              className={`px-3 py-2 text-xs font-black transition-colors ${sort === s ? "bg-secondary text-foreground" : "text-muted-foreground"}`}
-            >
-              {s === "votes" ? (fr ? "Votes" : "Top") : (fr ? "Récent" : "New")}
-            </button>
-          ))}
+        {/* Search + sort */}
+        <div className="header-inner flex gap-2 pb-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder={fr ? "Rechercher..." : "Search..."}
+              className="w-full pl-9 pr-3 py-2 rounded-xl border-2 border-border bg-muted text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+            />
+          </div>
+          <div className="flex rounded-xl border-2 border-border overflow-hidden bg-muted">
+            {(["votes", "newest"] as const).map(s => (
+              <button key={s} onClick={() => setSort(s)}
+                className={`px-3 py-2 text-xs font-black transition-colors ${sort === s ? "bg-secondary text-foreground" : "text-muted-foreground"}`}
+              >
+                {s === "votes" ? (fr ? "Votes" : "Top") : (fr ? "Récent" : "New")}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* List */}
-      <div className="content-col pb-4 flex flex-col gap-3">
+      <div className="content-col pb-4 flex flex-col gap-3" style={{ paddingTop: headerHeight + 16 }}>
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
         ) : fetchError ? (
