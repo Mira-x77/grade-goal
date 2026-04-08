@@ -10,6 +10,12 @@ import ScreenIntro from "@/components/ScreenIntro";
 import ScreenTour from "@/components/ScreenTour";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
+import { usePremiumNudge } from "@/hooks/usePremiumNudge";
+import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
+import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
+import { PaymentSheet } from "@/components/subscription/PaymentSheet";
+import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
+import { nudgeSubtext } from "@/hooks/usePremiumNudge";
 
 interface SliderOverride {
   subjectId: string;

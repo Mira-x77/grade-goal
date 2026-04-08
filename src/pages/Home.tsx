@@ -101,6 +101,10 @@ const Home = () => {
   const navigate = useNavigate();
   const isTablet = useIsTablet();
 
+  // ── Premium nudge ──────────────────────────────────────────────────────────
+  const [activeNudge, setActiveNudge] = useState<NudgeTrigger | null>(null);
+  const { fire: fireNudge } = usePremiumNudge((trigger) => setActiveNudge(trigger));
+
   const [downloadedCount, setDownloadedCount] = useState(0);
   const [appState, setAppState] = useState(state);
 
@@ -214,8 +218,11 @@ const Home = () => {
       setMarkType(nextUnfilled);
       setMarkValue("");
     } else {
-      // All filled — clear input and stay on current type
       setMarkValue("");
+    }
+    // Fire bad_score nudge if the mark is low (below 10 or below the target avg)
+    if (val < Math.min(10, targetAvg - 2)) {
+      setTimeout(() => fireNudge("bad_score"), 800);
     }
   };
 
@@ -229,6 +236,17 @@ const Home = () => {
   useEffect(() => {
     downloadService.getDownloadedPapers().then((papers) => setDownloadedCount(papers.length));
   }, []);
+
+  // Fire at_risk nudge on mount when avg is below target but recovery is possible
+  useEffect(() => {
+    if (!hasData || currentAvg === null) return;
+    const gap = targetAvg - currentAvg;
+    // Only nudge if behind by 0.5–4 points (still recoverable, not hopeless)
+    if (gap > 0.4 && gap <= 4) {
+      const timer = setTimeout(() => fireNudge("at_risk"), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentAvg = hasData
     ? gradingSystem === "apc"
@@ -872,10 +890,19 @@ const Home = () => {
 
 
       {/* Premium intro → plan select → payment */}
+      {/* Manual trigger (Crown button) */}
       <PremiumIntroSheet
-        open={showPremiumIntro ?? false}
+        open={showPremiumIntro && !activeNudge}
         onClose={() => setShowPremiumIntro(false)}
         onContinue={() => { setShowPremiumIntro(false); setShowPlanSelect(true); }}
+      />
+      {/* Contextual nudge trigger */}
+      <PremiumIntroSheet
+        open={!!activeNudge}
+        subjectName={undefined}
+        nudgeSubtext={activeNudge ? nudgeSubtext(activeNudge, language as "en" | "fr") : undefined}
+        onClose={() => setActiveNudge(null)}
+        onContinue={() => { setActiveNudge(null); setShowPlanSelect(true); }}
       />
       <PlanSelectSheet
         open={showPlanSelect}

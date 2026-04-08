@@ -7,9 +7,10 @@ interface PremiumIntroSheetProps {
   onClose: () => void;
   onContinue: () => void;
   subjectName?: string;
+  nudgeSubtext?: string; // contextual message for nudge-triggered opens
 }
 
-export function PremiumIntroSheet({ open, onClose, onContinue, subjectName }: PremiumIntroSheetProps) {
+export function PremiumIntroSheet({ open, onClose, onContinue, subjectName, nudgeSubtext }: PremiumIntroSheetProps) {
   const { t } = useLanguage();
 
   const features = [
@@ -35,7 +36,11 @@ export function PremiumIntroSheet({ open, onClose, onContinue, subjectName }: Pr
           <div>
             <h2 className="text-lg font-black text-foreground">{t("passSmarter")}</h2>
             <p className="text-xs font-semibold text-muted-foreground">
-              {subjectName ? `${t("prepToolsFor")} ${subjectName}` : t("prepToolsEvery")}
+              {nudgeSubtext
+                ? nudgeSubtext
+                : subjectName
+                  ? `${t("prepToolsFor")} ${subjectName}`
+                  : t("prepToolsEvery")}
             </p>
           </div>
         </div>
