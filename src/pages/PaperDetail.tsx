@@ -20,9 +20,9 @@ const PaperDetail = () => {
   const navigate = useNavigate();
   const isTablet = useIsTablet();
   const sheetVariants = {
-    hidden:  isTablet ? { scale: 0.94, opacity: 0 } : { y: "100%" },
-    visible: isTablet ? { scale: 1,    opacity: 1 } : { y: 0 },
-    exit:    isTablet ? { scale: 0.94, opacity: 0 } : { y: "100%" },
+    hidden:  isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" },
+    visible: isTablet ? { x: "-50%", y: "-50%", scale: 1,    opacity: 1 } : { y: 0 },
+    exit:    isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" },
   };
   const { t } = useLanguage();
 

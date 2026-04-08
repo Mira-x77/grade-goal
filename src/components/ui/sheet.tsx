@@ -28,10 +28,14 @@ export function Sheet({ open, onBackdropClick, children, className = "", zIndex 
     exit:    { y: "100%", opacity: 1 },
   };
 
+  // On tablet the sheet is positioned at left:50% top:50% (CSS).
+  // framer-motion owns the full transform, so we include the -50% offset
+  // here — this prevents the CSS transform + framer transform conflict
+  // that caused the off-center rendering.
   const tabletVariants = {
-    hidden:  { scale: 0.94, opacity: 0 },
-    visible: { scale: 1,    opacity: 1 },
-    exit:    { scale: 0.94, opacity: 0 },
+    hidden:  { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 },
+    visible: { x: "-50%", y: "-50%", scale: 1,    opacity: 1 },
+    exit:    { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 },
   };
 
   const variants = isTablet ? tabletVariants : mobileVariants;

@@ -411,12 +411,11 @@ html, body, #root {
 }
 @media (min-width: 768px) {
   .sheet {
-    /* Reset mobile positioning */
+    /* Reset mobile positioning — centering done via framer-motion x/y */
     left: 50%;
     right: auto;
     bottom: auto;
     top: 50%;
-    transform: translate(-50%, -50%);
     /* Dialog sizing */
     width: 100%;
     max-width: var(--sheet-max);
