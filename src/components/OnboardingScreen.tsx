@@ -1,10 +1,10 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, BookOpen, ChevronDown } from "lucide-react";
+import { Target, BookOpen } from "lucide-react";
 import { GradingSystem } from "@/types/exam";
 import { CLASS_LEVELS, LYCEE_SERIES } from "@/lib/subjects-data";
 import Mascot from "@/components/Mascot";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Language } from "@/lib/i18n";
 
 export type OnboardingStep = "system" | "profile" | "target";
 
@@ -54,6 +54,9 @@ const OnboardingScreen = ({
   step, onStepChange
 }: OnboardingScreenProps) => {
   const { t, language, setLang } = useLanguage();
+  const [schoolTab, setSchoolTab] = useState<"college" | "lycee">(
+    isLycee(classLevel) ? "lycee" : "college"
+  );
 
   const profileValid = !!studentName.trim() && !!classLevel && (!isLycee(classLevel) || !!serie) && !!semester;
 
@@ -158,55 +161,62 @@ const OnboardingScreen = ({
             </div>
 
             <div>
-              <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("classLevel")}</label>
-              {/* Collège group */}
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Collège</p>
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                {CLASS_LEVELS.college.map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => { onClassLevelChange(level); onSerieChange(""); if (semester === "3rd Semester") onSemesterChange(""); }}
-                    className={`rounded-xl px-3 py-2.5 text-sm font-black transition-all active:scale-95 border-2 border-foreground ${
-                      classLevel === level ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-              {/* Lycée group */}
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">Lycée</p>
-              <div className="grid grid-cols-2 gap-2">
-                {CLASS_LEVELS.lycee.map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => { onClassLevelChange(level); if (semester === "3rd Semester") onSemesterChange(""); }}
-                    className={`rounded-xl px-3 py-2.5 text-sm font-black transition-all active:scale-95 border-2 border-foreground ${
-                      classLevel === level ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-            </div>
+              <label className="text-sm font-bold text-muted-foreground mb-2 block">{t("classLevel")}</label>
 
-            {/* Scroll hint — nudges user to scroll down to see semester options */}
-            {classLevel && !semester && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center gap-1 py-1"
-              >
-                <p className="text-xs font-bold text-muted-foreground">More options below</p>
+              {/* Tab switcher */}
+              <div className="flex gap-1 bg-muted rounded-xl p-1 mb-3">
+                {(["college", "lycee"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => {
+                      setSchoolTab(tab);
+                      // Clear selection if switching away from the tab that owns the current level
+                      if (tab === "college" && isLycee(classLevel)) {
+                        onClassLevelChange(""); onSerieChange("");
+                      }
+                      if (tab === "lycee" && classLevel && !isLycee(classLevel)) {
+                        onClassLevelChange(""); if (semester === "3rd Semester") onSemesterChange("");
+                      }
+                    }}
+                    className={`flex-1 rounded-lg py-2 text-sm font-black transition-all ${
+                      schoolTab === tab
+                        ? "bg-card border-2 border-foreground text-foreground card-shadow"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {tab === "college" ? "Collège" : "Lycée"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Class buttons for active tab */}
+              <AnimatePresence mode="wait">
                 <motion.div
-                  animate={{ y: [0, 5, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+                  key={schoolTab}
+                  initial={{ opacity: 0, x: schoolTab === "lycee" ? 20 : -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: schoolTab === "lycee" ? -20 : 20 }}
+                  transition={{ duration: 0.15 }}
+                  className="grid grid-cols-2 gap-2"
                 >
-                  <ChevronDown className="h-5 w-5 text-secondary" />
+                  {(schoolTab === "college" ? CLASS_LEVELS.college : CLASS_LEVELS.lycee).map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => {
+                        onClassLevelChange(level);
+                        onSerieChange("");
+                        if (semester === "3rd Semester") onSemesterChange("");
+                      }}
+                      className={`rounded-xl px-3 py-2.5 text-sm font-black transition-all active:scale-95 border-2 border-foreground ${
+                        classLevel === level ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
                 </motion.div>
-              </motion.div>
-            )}
+              </AnimatePresence>
+            </div>
 
             {isLycee(classLevel) && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
