@@ -37,10 +37,20 @@ const Simulator = () => {
   const navigate = useNavigate();
   const [activeSlider, setActiveSlider] = useState<number | null>(null);
 
-  // Refs for sticky compact bar (same pattern as Home avg card)
+  // Refs for fixed header + dynamic padding (same fix as LibraryDirect)
   const heroRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const [heroVisible, setHeroVisible] = useState(true);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      setHeaderHeight(headerRef.current?.getBoundingClientRect().height ?? 0);
+    });
+    ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   const emptySlots = useMemo(() => {
     const slots: { subjectId: string; subjectName: string; markType: "interro" | "dev" | "compo"; coefficient: number }[] = [];
@@ -144,8 +154,8 @@ const Simulator = () => {
       exit={{ x: "100%" }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      {/* Sticky header */}
-      <div ref={headerRef} className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border pb-3 safe-area-top">
+      {/* Fixed header */}
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border pb-3 safe-area-top">
         <div className="header-inner pt-3">
           <h1 className="text-lg font-black text-foreground">{t("whatIfSimulator")}</h1>
 
@@ -175,7 +185,7 @@ const Simulator = () => {
         </div>{/* /header-inner */}
       </div>
 
-      <div className="content-col flex flex-col gap-5 py-6">
+      <div className="content-col flex flex-col gap-5 py-6" style={{ paddingTop: headerHeight + 24 }}>
         {/* Hero card */}
         <div ref={heroRef} className="tour-simulator-hero">
           <motion.div
