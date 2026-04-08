@@ -100,13 +100,6 @@ const Home = () => {
   const navigate = useNavigate();
   const isTablet = useIsTablet();
 
-  // Sheet animation variants — slide-up on mobile, scale-fade on tablet
-  const sheetVariants = {
-    hidden:  isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" },
-    visible: isTablet ? { x: "-50%", y: "-50%", scale: 1,    opacity: 1 } : { y: 0 },
-    exit:    isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" },
-  };
-
   const [downloadedCount, setDownloadedCount] = useState(0);
   const [appState, setAppState] = useState(state);
 
@@ -752,11 +745,10 @@ const Home = () => {
             />
             {/* Sheet */}
             <motion.div
-              variants={sheetVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              transition={sheetTransition}
+              initial={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              animate={isTablet ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="sheet z-50 p-6 pb-10"
             >
               {/* Handle */}
@@ -931,11 +923,10 @@ const Home = () => {
               className="fixed inset-0 z-50 bg-black/50"
             />
             <motion.div
-              variants={sheetVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              transition={sheetTransition}
+              initial={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              animate={isTablet ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="sheet z-50"
               id="results-sheet"
             >
@@ -997,11 +988,10 @@ const Home = () => {
               className="fixed inset-0 z-50 bg-black/50"
             />
             <motion.div
-              variants={sheetVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              transition={sheetTransition}
+              initial={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              animate={isTablet ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="sheet z-50"
             >
               {/* Handle */}
@@ -1083,11 +1073,10 @@ const Home = () => {
               className="fixed inset-0 z-50 bg-black/50"
             />
             <motion.div
-              variants={sheetVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              transition={sheetTransition}
+              initial={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              animate={isTablet ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="sheet z-50"
             >
               <div className="flex justify-center pt-3 pb-1">
