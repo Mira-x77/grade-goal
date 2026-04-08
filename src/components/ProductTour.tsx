@@ -167,8 +167,13 @@ export default function ProductTour() {
   useEffect(() => {
     if (!run) return;
     const prev = document.body.style.overflow;
+    const prevTouch = document.body.style.touchAction;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    document.body.style.touchAction = "none";
+    return () => {
+      document.body.style.overflow = prev;
+      document.body.style.touchAction = prevTouch;
+    };
   }, [run]);
 
   useEffect(() => {
@@ -240,15 +245,17 @@ export default function ProductTour() {
     <AnimatePresence>
       {run && (
         <>
-          {/* Full-screen hold-to-pause capture layer */}
+          {/* Full-screen hold-to-pause capture layer — blocks all interaction */}
           <div
             className="fixed inset-0 z-[9997]"
+            style={{ touchAction: "none" }}
             onMouseDown={handlePressStart}
             onMouseUp={handlePressEnd}
             onMouseLeave={handlePressEnd}
             onTouchStart={handlePressStart}
             onTouchEnd={handlePressEnd}
             onTouchCancel={handlePressEnd}
+            onContextMenu={(e) => e.preventDefault()}
           />
 
           {/* Dimmed overlay */}

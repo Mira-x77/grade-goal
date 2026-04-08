@@ -469,6 +469,7 @@ export default function LibraryDirect() {
 
       <ScreenTour
         storageKey="scoretarget_tour_library"
+        introKey="library"
         delay={1200}
         steps={[
           { target: ".tour-library-tabs", titleKey: "tourLibraryTabsTitle", contentKey: "tourLibraryTabsContent", duration: 4500, actionKey: "tourLibraryTabsAction" },

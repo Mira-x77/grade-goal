@@ -298,6 +298,7 @@ const Simulator = () => {
 
       <ScreenTour
         storageKey="scoretarget_tour_simulator"
+        introKey="simulator"
         delay={1000}
         steps={[
           { target: ".tour-simulator-hero", titleKey: "tourSimulatorHeroTitle", contentKey: "tourSimulatorHeroContent", duration: 4500 },

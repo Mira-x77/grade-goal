@@ -1,7 +1,8 @@
 /**
  * ScreenTour — lightweight per-screen tour overlay.
- * Works identically to ProductTour but is self-contained per screen,
- * keyed by a unique storageKey so each screen's tour is tracked separately.
+ * - Waits for the ScreenIntro overlay to be dismissed before starting
+ *   (pass introKey matching the ScreenIntro's screenKey).
+ * - Blocks all user interaction with the screen while running.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,13 +19,19 @@ export interface ScreenTourStep {
 interface ScreenTourProps {
   storageKey: string;
   steps: ScreenTourStep[];
-  /** Delay before tour starts (ms). Default 800. */
+  /**
+   * The screenKey used by the paired ScreenIntro.
+   * Tour will not start until that intro has been dismissed.
+   */
+  introKey?: string;
+  /** Delay after intro is dismissed before tour starts (ms). Default 600. */
   delay?: number;
 }
 
+const INTRO_PREFIX = "scoretarget_intro_seen_";
 const PADDING = 10;
 
-export default function ScreenTour({ storageKey, steps, delay = 800 }: ScreenTourProps) {
+export default function ScreenTour({ storageKey, steps, introKey, delay = 600 }: ScreenTourProps) {
   const { t } = useLanguage();
   const [run, setRun] = useState(false);
   const [step, setStep] = useState(0);
@@ -36,12 +43,35 @@ export default function ScreenTour({ storageKey, steps, delay = 800 }: ScreenTou
   const rafRef = useRef<number | null>(null);
   const elapsedRef = useRef(0);
   const segmentStartRef = useRef(0);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    // Already completed this tour
     if (localStorage.getItem(storageKey)) return;
-    const id = setTimeout(() => setRun(true), delay);
-    return () => clearTimeout(id);
-  }, [storageKey, delay]);
+
+    const tryStart = () => {
+      // If there's a paired intro, wait until it's been dismissed
+      if (introKey && !localStorage.getItem(INTRO_PREFIX + introKey)) return false;
+      return true;
+    };
+
+    if (tryStart()) {
+      const id = setTimeout(() => setRun(true), delay);
+      return () => clearTimeout(id);
+    }
+
+    // Poll every 300ms until the intro is dismissed
+    pollRef.current = setInterval(() => {
+      if (tryStart()) {
+        if (pollRef.current) clearInterval(pollRef.current);
+        setTimeout(() => setRun(true), delay);
+      }
+    }, 300);
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [storageKey, introKey, delay]);
 
   const updateRect = useCallback(() => {
     const s = steps[step];
@@ -86,11 +116,17 @@ export default function ScreenTour({ storageKey, steps, delay = 800 }: ScreenTou
     timerRef.current = setTimeout(advance, remaining);
   }, [step, steps, advance]);
 
+  // Lock body scroll + touch while tour is active
   useEffect(() => {
     if (!run) return;
     const prev = document.body.style.overflow;
+    const prevTouch = document.body.style.touchAction;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    document.body.style.touchAction = "none";
+    return () => {
+      document.body.style.overflow = prev;
+      document.body.style.touchAction = prevTouch;
+    };
   }, [run]);
 
   useEffect(() => {
@@ -109,16 +145,20 @@ export default function ScreenTour({ storageKey, steps, delay = 800 }: ScreenTou
     return () => window.removeEventListener("resize", updateRect);
   }, [run, step, updateRect]);
 
-  const handlePressStart = useCallback(() => {
+  const handlePressStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     if (!run) return;
+    e.preventDefault();
+    e.stopPropagation();
     const segElapsed = performance.now() - segmentStartRef.current;
     elapsedRef.current = elapsedRef.current + segElapsed;
     stopTimer();
     setPaused(true);
   }, [run, stopTimer]);
 
-  const handlePressEnd = useCallback(() => {
+  const handlePressEnd = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     if (!run) return;
+    e.preventDefault();
+    e.stopPropagation();
     if (!paused) return;
     setPaused(false);
     startTimer(elapsedRef.current);
@@ -151,16 +191,20 @@ export default function ScreenTour({ storageKey, steps, delay = 800 }: ScreenTou
     <AnimatePresence>
       {run && (
         <>
+          {/* Full-screen interaction blocker — captures all touch/mouse, holds to pause */}
           <div
             className="fixed inset-0 z-[9997]"
+            style={{ touchAction: "none" }}
             onMouseDown={handlePressStart}
             onMouseUp={handlePressEnd}
             onMouseLeave={handlePressEnd}
             onTouchStart={handlePressStart}
             onTouchEnd={handlePressEnd}
             onTouchCancel={handlePressEnd}
+            onContextMenu={(e) => e.preventDefault()}
           />
 
+          {/* Dimmed overlay */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[9998] pointer-events-none"
@@ -182,6 +226,7 @@ export default function ScreenTour({ storageKey, steps, delay = 800 }: ScreenTou
             </svg>
           </motion.div>
 
+          {/* Spotlight ring */}
           {rect && (
             <motion.div
               key={`ring-${step}`}
@@ -201,6 +246,7 @@ export default function ScreenTour({ storageKey, steps, delay = 800 }: ScreenTou
             />
           )}
 
+          {/* Tooltip — purely informational, no interactive elements */}
           <motion.div
             key={`tip-${step}`}
             initial={{ opacity: 0, y: 10 }}

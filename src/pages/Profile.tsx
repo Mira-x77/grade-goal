@@ -592,6 +592,7 @@ const Profile = () => {
 
       <ScreenTour
         storageKey="scoretarget_tour_profile"
+        introKey="profile"
         delay={1000}
         steps={[
           { target: ".tour-profile-info", titleKey: "tourProfileInfoTitle", contentKey: "tourProfileInfoContent", duration: 4500 },
