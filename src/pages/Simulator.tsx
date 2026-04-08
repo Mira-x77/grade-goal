@@ -147,7 +147,6 @@ const Simulator = () => {
       <div ref={headerRef} className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border pb-3 safe-area-top">
         <div className="header-inner pt-3">
           <h1 className="text-lg font-black text-foreground">{t("whatIfSimulator")}</h1>
-        </div>
 
         {/* Compact avg bar — appears when hero scrolls out */}
         <AnimatePresence>

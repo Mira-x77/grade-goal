@@ -13,10 +13,17 @@ import { readFileAsBase64 } from "@/lib/filesystem";
 import { toast } from "sonner";
 import TaskBar from "@/components/TaskBar";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsTablet } from "@/hooks/useIsTablet";
 
 const PaperDetail = () => {
   const { paperId } = useParams<{ paperId: string }>();
   const navigate = useNavigate();
+  const isTablet = useIsTablet();
+  const sheetVariants = {
+    hidden:  isTablet ? { scale: 0.94, opacity: 0 } : { y: "100%" },
+    visible: isTablet ? { scale: 1,    opacity: 1 } : { y: 0 },
+    exit:    isTablet ? { scale: 0.94, opacity: 0 } : { y: "100%" },
+  };
   const { t } = useLanguage();
 
   const [paper, setPaper] = useState<ExamPaper | null>(null);
@@ -188,6 +195,8 @@ const PaperDetail = () => {
               <div className="font-bold text-right">{paper.examType}</div>
               <div className="text-muted-foreground">{t("fileSize")}</div>
               <div className="font-bold text-right">{paper.fileSizeFormatted}</div>
+              <div className="text-muted-foreground">{t("downloads")}</div>
+              <div className="font-bold text-right">{paper.downloads ?? 0}</div>
             </div>
           </div>
         </div>
@@ -274,9 +283,10 @@ const PaperDetail = () => {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 bg-black/50" onClick={() => setPrepOpen(false)} />
-            <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+            <motion.div variants={sheetVariants}
+              initial="hidden" animate="visible" exit="exit"
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
+              className="sheet z-50"
             >
               <div className="flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1.5 rounded-full bg-foreground/30" />

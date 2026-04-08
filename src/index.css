@@ -289,21 +289,33 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   GLOBAL EDGE-TO-EDGE & RESPONSIVE SCALING
+   RESPONSIVE LAYOUT SYSTEM  v3
    ─────────────────────────────────────────────────────────────
-   • All screens fill 100% width — backgrounds bleed to edges
-   • Content is constrained to a readable column on wide screens
-   • Bottom sheets become centered dialogs on tablet/iPad
-   • Carousel cards cap at a sensible width on wide screens
+   Breakpoints (matching Tailwind defaults):
+     mobile   : < 768px
+     tablet   : 768px – 1024px   (md)
+     desktop  : > 1024px         (lg)
+
+   Rules:
+   • Backgrounds always bleed edge-to-edge
+   • Content is constrained to a readable column (680px max)
+   • Modals/sheets are bottom-sheets on mobile, centered dialogs
+     on tablet+ — animation handled in JS (useIsTablet hook)
+   • Carousel cards cap at 380px on tablet
+   • All padding uses safe-area-inset on mobile
    ═══════════════════════════════════════════════════════════════ */
 
-/* Tablet breakpoint: 768px (md) and above */
+/* ── Design tokens ───────────────────────────────────────────── */
 :root {
-  --app-content-max: 680px;   /* max readable column width */
-  --app-sheet-max: 560px;     /* max bottom-sheet width on tablet */
+  --content-max:  680px;   /* readable column max-width          */
+  --sheet-max:    540px;   /* modal/sheet max-width on tablet     */
+  --page-px:      1rem;    /* horizontal page padding — mobile    */
+  --page-px-md:   1.5rem;  /* horizontal page padding — tablet+   */
+  --carousel-w:   calc(100vw - 3rem); /* carousel card — mobile  */
+  --carousel-w-md: 380px;  /* carousel card — tablet+             */
 }
 
-/* Root fills the full viewport */
+/* ── Root ────────────────────────────────────────────────────── */
 html, body, #root {
   width: 100%;
   min-height: 100dvh;
@@ -311,103 +323,107 @@ html, body, #root {
 }
 
 /* ── Content column ──────────────────────────────────────────
-   Wrap page content (not the background) in this class.
-   On mobile: full width with safe-area padding.
-   On tablet (md+): centered column capped at --app-content-max.
+   Use on every scrollable page body.
+   Mobile  : full width, safe-area-aware padding
+   Tablet+ : centered, capped at --content-max
    ─────────────────────────────────────────────────────────── */
 .content-col {
   width: 100%;
-  padding-left: max(1rem, env(safe-area-inset-left));
-  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-left: max(var(--page-px), env(safe-area-inset-left));
+  padding-right: max(var(--page-px), env(safe-area-inset-right));
+  box-sizing: border-box;
 }
-
 @media (min-width: 768px) {
   .content-col {
-    max-width: var(--app-content-max);
+    max-width: var(--content-max);
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-left: var(--page-px-md);
+    padding-right: var(--page-px-md);
   }
 }
 
-/* ── Sticky / fixed page headers ────────────────────────────
-   The header bar itself bleeds edge-to-edge (background color).
-   The inner content is constrained to the content column.
+/* ── Header inner ────────────────────────────────────────────
+   Use inside sticky/fixed header bars.
+   The bar background bleeds edge-to-edge; this constrains
+   the inner content to the same column as page content.
    ─────────────────────────────────────────────────────────── */
 .header-inner {
   width: 100%;
-  padding-left: max(1rem, env(safe-area-inset-left));
-  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-left: max(var(--page-px), env(safe-area-inset-left));
+  padding-right: max(var(--page-px), env(safe-area-inset-right));
+  box-sizing: border-box;
 }
-
 @media (min-width: 768px) {
   .header-inner {
-    max-width: var(--app-content-max);
+    max-width: var(--content-max);
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-left: var(--page-px-md);
+    padding-right: var(--page-px-md);
   }
 }
 
-/* ── Bottom sheets ───────────────────────────────────────────
-   Mobile: full-width sheet sliding up from bottom.
-   Tablet (md+): centered dialog with rounded corners all around,
-   floating above the content with a backdrop.
+/* ── Carousel cards ──────────────────────────────────────────
+   Mobile  : nearly full viewport width
+   Tablet+ : fixed comfortable card width
    ─────────────────────────────────────────────────────────── */
-.bottom-sheet {
+.carousel-card {
+  flex-shrink: 0;
+  width: var(--carousel-w);
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  .carousel-card {
+    width: var(--carousel-w-md);
+  }
+}
+
+/* ── Modal overlay ───────────────────────────────────────────
+   Shared backdrop for all modals/sheets.
+   ─────────────────────────────────────────────────────────── */
+.modal-overlay {
   position: fixed;
-  bottom: 0;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* ── Sheet (bottom-sheet on mobile, centered dialog on tablet) ─
+   JS controls animation via useIsTablet — see useIsTablet.ts
+   CSS provides the final resting position only.
+   ─────────────────────────────────────────────────────────── */
+.sheet {
+  position: fixed;
   left: 0;
   right: 0;
-  z-index: 50;
+  bottom: 0;
+  z-index: 61;
   background: hsl(var(--background));
   border-top: 2px solid hsl(var(--foreground));
   border-left: 2px solid hsl(var(--foreground));
   border-right: 2px solid hsl(var(--foreground));
   border-radius: 1.5rem 1.5rem 0 0;
-  padding-left: max(1.5rem, env(safe-area-inset-left));
-  padding-right: max(1.5rem, env(safe-area-inset-right));
+  overflow: hidden;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
 }
-
 @media (min-width: 768px) {
-  .bottom-sheet {
-    bottom: auto;
-    top: 50%;
+  .sheet {
+    /* Reset mobile positioning */
     left: 50%;
     right: auto;
+    bottom: auto;
+    top: 50%;
     transform: translate(-50%, -50%);
+    /* Dialog sizing */
     width: 100%;
-    max-width: var(--app-sheet-max);
+    max-width: var(--sheet-max);
+    max-height: 88vh;
     border-radius: 1.5rem;
     border: 2px solid hsl(var(--foreground));
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    max-height: 90vh;
-    overflow-y: auto;
   }
-}
-
-/* ── Carousel cards ──────────────────────────────────────────
-   Mobile: nearly full viewport width.
-   Tablet: fixed comfortable card width.
-   ─────────────────────────────────────────────────────────── */
-.carousel-card {
-  flex-shrink: 0;
-  width: calc(100vw - 4rem);
-}
-
-@media (min-width: 768px) {
-  .carousel-card {
-    width: 380px;
-  }
-}
-
-/* ── Prevent fixed-height text containers from clipping ─────── */
-.text-container-auto {
-  height: auto !important;
-  min-height: unset !important;
 }
 
 /* ── Horizontal scroll row ───────────────────────────────────── */
@@ -429,3 +445,9 @@ html, body, #root {
   -ms-overflow-style: none;
 }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ── Text container — never clip on large font scales ───────── */
+.text-auto {
+  height: auto !important;
+  min-height: unset !important;
+}

@@ -6,6 +6,7 @@ import TaskBar from "@/components/TaskBar";
 import { SubscriptionDetailDialog } from "@/components/subscription/SubscriptionDetailDialog";
 import { PremiumCodeDialog } from "@/components/subscription/PremiumCodeDialog";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsTablet } from "@/hooks/useIsTablet";
 import {
   fetchStudyTools,
   StudyToolContent,
@@ -169,6 +170,12 @@ function SkeletonRows() {
 export default function SubjectDashboard() {
   const { subjectName } = useParams<{ subjectName: string }>();
   const { t } = useLanguage();
+  const isTablet = useIsTablet();
+  const sheetVariants = {
+    hidden:  isTablet ? { scale: 0.94, opacity: 0 } : { y: "100%" },
+    visible: isTablet ? { scale: 1,    opacity: 1 } : { y: 0 },
+    exit:    isTablet ? { scale: 0.94, opacity: 0 } : { y: "100%" },
+  };
   const [showPaywall, setShowPaywall] = useState(false);
   const [showCodeDialog, setShowCodeDialog] = useState(false);
   const [activeSheet, setActiveSheet] = useState<ToolKey | null>(null);
@@ -276,10 +283,12 @@ export default function SubjectDashboard() {
               onClick={() => setActiveSheet(null)}
             />
             <motion.div
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              variants={sheetVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
               transition={{ type: "spring", stiffness: 320, damping: 34 }}
-              className="fixed bottom-0 left-0 right-0 z-[66] bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground overflow-hidden flex flex-col md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
-              style={{ maxHeight: "88vh" }}
+              className="sheet z-[66] flex flex-col"
             >
               {/* Handle */}
               <div className="flex justify-center pt-3 pb-1 shrink-0">

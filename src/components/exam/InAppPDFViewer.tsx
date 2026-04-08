@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Loader } from '@/components/ui/loader';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useIsTablet } from '@/hooks/useIsTablet';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
@@ -30,6 +31,12 @@ interface InAppPDFViewerProps {
 
 export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPremiumNudge }: InAppPDFViewerProps) {
   const { t } = useLanguage();
+  const isTablet = useIsTablet();
+  const sheetVariants = {
+    hidden:  isTablet ? { scale: 0.94, opacity: 0 } : { y: '100%' },
+    visible: isTablet ? { scale: 1,    opacity: 1 } : { y: 0 },
+    exit:    isTablet ? { scale: 0.94, opacity: 0 } : { y: '100%' },
+  };
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [baseScale, setBaseScale] = useState(1.0);
@@ -480,11 +487,12 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-[9985] bg-black/40" onClick={() => setShowEndNudge(false)} />
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
+              variants={sheetVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
               transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-[9986] bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground px-6 pt-5 pb-[max(2rem,env(safe-area-inset-bottom))] md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
+              className="sheet z-[9986] px-6 pt-5 pb-[max(2rem,env(safe-area-inset-bottom))]"
             >
               <div className="w-10 h-1.5 rounded-full bg-foreground/20 mx-auto mb-4" />
               <button onClick={() => setShowEndNudge(false)}
@@ -537,11 +545,12 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-[9990] bg-black/50" onClick={dismissTour} />
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
+              variants={sheetVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
               transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-[9991] bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground px-6 pt-5 pb-[max(2rem,env(safe-area-inset-bottom))] md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
+              className="sheet z-[9991] px-6 pt-5 pb-[max(2rem,env(safe-area-inset-bottom))]"
             >
               <div className="w-10 h-1.5 rounded-full bg-foreground/20 mx-auto mb-5" />
               <button onClick={dismissTour}

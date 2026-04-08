@@ -68,7 +68,7 @@ const OnboardingScreen = ({
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -50 }}
-          className="flex flex-col items-center gap-8 px-6 pt-28 pb-36"
+          className="flex flex-col items-center gap-8 pt-28 pb-36 content-col"
         >
           <motion.div
             initial={{ scale: 0.3, opacity: 0 }}
@@ -83,7 +83,7 @@ const OnboardingScreen = ({
             <p className="mt-2 text-muted-foreground font-semibold">{t("chooseSystem")}</p>
           </div>
 
-          <div className="w-full max-w-xs flex flex-col gap-3">
+          <div className="w-full flex flex-col gap-3">
             <button
               onClick={() => onGradingSystemChange("apc")}
               className={`rounded-2xl p-5 text-left transition-all active:scale-[0.98] border-2 border-foreground card-shadow ${
@@ -130,7 +130,7 @@ const OnboardingScreen = ({
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -50 }}
-          className="flex flex-col items-center gap-6 px-6 pt-28 pb-36 overflow-y-auto min-h-screen"
+          className="flex flex-col items-center gap-6 pt-28 pb-36 overflow-y-auto min-h-screen content-col"
         >
           <motion.div
             initial={{ scale: 0.3, opacity: 0 }}
@@ -145,7 +145,7 @@ const OnboardingScreen = ({
             <p className="mt-2 text-muted-foreground font-semibold">{t("tellUsNameClass")}</p>
           </div>
 
-          <div className="w-full max-w-xs flex flex-col gap-4">
+          <div className="w-full flex flex-col gap-4">
             <div>
               <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("fullName")}</label>
               <input
@@ -211,7 +211,7 @@ const OnboardingScreen = ({
             {isLycee(classLevel) && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
                 <label className="text-sm font-bold text-muted-foreground mb-1 block">Série</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {LYCEE_SERIES.map((s) => (
                     <button
                       key={s}
@@ -285,7 +285,7 @@ const OnboardingScreen = ({
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -50 }}
-          className="flex flex-col items-center gap-8 px-6 pt-28 pb-36"
+          className="flex flex-col items-center gap-8 pt-28 pb-36 content-col"
         >
           <motion.div
             initial={{ scale: 0.3, opacity: 0 }}
@@ -308,7 +308,7 @@ const OnboardingScreen = ({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="w-full max-w-xs"
+            className="w-full"
           >
             <div className="rounded-2xl bg-card p-8 border-2 border-border text-center">
               <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">{t("targetRange")}</p>

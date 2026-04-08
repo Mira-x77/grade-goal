@@ -52,7 +52,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
     <div className="flex flex-col h-screen bg-background w-full overflow-hidden">
 
       {/* Static header content below fixed nav */}
-      <div className="pt-20 px-6 pb-3 flex-shrink-0">
+      <div className="pt-20 pb-3 flex-shrink-0 content-col">
         <h2 className="text-2xl font-black text-foreground">{t("enterYourMarks")}</h2>
         <p className="text-sm text-muted-foreground font-semibold mb-3">{t("enterCurrentMarks")}</p>
 
@@ -71,7 +71,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
       </div>
 
       {/* Scrollable list */}
-      <div className="flex-1 overflow-y-auto px-6 pb-32">
+      <div className="flex-1 overflow-y-auto pb-32 content-col">
         {/* Subject cards */}
         <div className="flex flex-col gap-3">
           {subjects.map((sub, i) => {

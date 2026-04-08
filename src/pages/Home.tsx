@@ -20,6 +20,7 @@ import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
 import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
 import { Subject } from "@/types/exam";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsTablet } from "@/hooks/useIsTablet";
 
 const markTypeLabels: Record<string, string> = {
   interro: "Interro",
@@ -97,6 +98,15 @@ const Home = () => {
   const history = getHistory();
   const { t, language } = useLanguage();
   const navigate = useNavigate();
+  const isTablet = useIsTablet();
+
+  // Sheet animation variants — slide-up on mobile, scale-fade on tablet
+  const sheetVariants = {
+    hidden:  isTablet ? { scale: 0.94, opacity: 0 } : { y: "100%" },
+    visible: isTablet ? { scale: 1,    opacity: 1 } : { y: 0 },
+    exit:    isTablet ? { scale: 0.94, opacity: 0 } : { y: "100%" },
+  };
+  const sheetTransition = { type: "spring" as const, stiffness: 300, damping: 30 };
 
   const [downloadedCount, setDownloadedCount] = useState(0);
   const [appState, setAppState] = useState(state);
@@ -741,11 +751,12 @@ const Home = () => {
             />
             {/* Sheet */}
             <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground p-6 pb-10 md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
+              variants={sheetVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={sheetTransition}
+              className="sheet z-50 p-6 pb-10"
             >
               {/* Handle */}
               <div className="w-10 h-1 rounded-full bg-foreground/20 mx-auto mb-5" />
@@ -919,12 +930,12 @@ const Home = () => {
               className="fixed inset-0 z-50 bg-black/50"
             />
             <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground overflow-hidden md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
-              style={{ maxHeight: "92vh" }}
+              variants={sheetVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={sheetTransition}
+              className="sheet z-50"
               id="results-sheet"
             >
               {/* Drag handle — touch here to drag the whole sheet */}
@@ -959,7 +970,7 @@ const Home = () => {
               >
                 <div className="w-10 h-1.5 rounded-full bg-foreground/30" />
               </div>
-              <div className="overflow-y-auto" style={{ maxHeight: "calc(92vh - 28px)" }}>
+              <div className="flex-1 overflow-y-auto min-h-0">
                 {appState && (
                   <ResultsScreen
                     subjects={appState.subjects}
@@ -985,12 +996,12 @@ const Home = () => {
               className="fixed inset-0 z-50 bg-black/50"
             />
             <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground overflow-hidden md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
-              style={{ maxHeight: "92vh" }}
+              variants={sheetVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={sheetTransition}
+              className="sheet z-50"
             >
               {/* Handle */}
               <div className="flex justify-center pt-3 pb-1">
@@ -1012,7 +1023,7 @@ const Home = () => {
               </div>
 
               {/* Subject list */}
-              <div className="overflow-y-auto px-6 py-4 flex flex-col gap-4" style={{ maxHeight: "calc(92vh - 100px)" }}>
+              <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4 min-h-0">
                 {appState?.subjects.map((sub) => {
                   const vals = editMarksState[sub.id] ?? { interro: "", dev: "", compo: "" };
                   const rows: { key: "interro" | "dev" | "compo"; label: string }[] = [
@@ -1071,12 +1082,12 @@ const Home = () => {
               className="fixed inset-0 z-50 bg-black/50"
             />
             <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
-              style={{ maxHeight: "75vh" }}
+              variants={sheetVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={sheetTransition}
+              className="sheet z-50"
             >
               <div className="flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1.5 rounded-full bg-foreground/30" />

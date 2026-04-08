@@ -4,6 +4,7 @@ import { Plus, Search, X, Lightbulb, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsTablet } from "@/hooks/useIsTablet";
 import VoteButton from "@/components/feedback/VoteButton";
 import TaskBar from "@/components/TaskBar";
 import { toast } from "sonner";
@@ -31,6 +32,12 @@ const STATUS_META: Record<Status, { label: string; labelFr: string; color: strin
 export default function FeedbackBoard() {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const isTablet = useIsTablet();
+  const sheetVariants = {
+    hidden:  isTablet ? { scale: 0.94, opacity: 0 } : { y: "100%" },
+    visible: isTablet ? { scale: 1,    opacity: 1 } : { y: 0 },
+    exit:    isTablet ? { scale: 0.94, opacity: 0 } : { y: "100%" },
+  };
   const fr = language === "fr";
 
   const [items, setItems] = useState<FeedbackItem[]>([]);
@@ -205,9 +212,12 @@ export default function FeedbackBoard() {
               className="fixed inset-0 z-[60] bg-black/50"
             />
             <motion.div
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              variants={sheetVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 z-[61] bg-background rounded-t-3xl md:rounded-3xl border-t-2 border-x-2 md:border-2 border-foreground p-6 pb-10 md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg"
+              className="sheet z-[61] p-6 pb-10"
             >
               <div className="w-10 h-1 rounded-full bg-foreground/20 mx-auto mb-5" />
               <div className="flex items-center justify-between mb-5">
