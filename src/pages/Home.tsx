@@ -545,27 +545,11 @@ const Home = () => {
                 >
                   <div className="flex flex-col gap-1.5 px-4 pb-4 border-t border-secondary/20 pt-3">
                     {/* Group marks by subject */}
-                    {(() => {
-                      const subjectEntries = Array.from(
-                        new Map(savedStrategy.marks.map(sm => [sm.subjectId, sm.subjectName]))
-                      ).map(([subjectId, subjectName]) => {
-                        const subMarks = savedStrategy.marks.filter(sm => sm.subjectId === subjectId);
-                        const sub = appState!.subjects.find(s => s.id === subjectId);
-                        const allFulfilled = subMarks.every(sm => sub?.marks[sm.markType] !== null);
-                        const anyFulfilled = subMarks.some(sm => sub?.marks[sm.markType] !== null);
-                        return { subjectId, subjectName, subMarks, sub, allFulfilled, anyFulfilled };
-                      }).sort((a, b) => a.subjectName.localeCompare(b.subjectName));
-                      const pendingSubjects = subjectEntries.filter(e => !e.allFulfilled);
-                      const allDone = pendingSubjects.length === 0;
-
-                      if (allDone) return (
-                        <div className="flex items-center gap-2 rounded-lg bg-success/10 px-3 py-2.5">
-                          <Check className="h-4 w-4 text-success flex-shrink-0" />
-                          <p className="text-xs font-bold text-success">All strategy targets have been entered.</p>
-                        </div>
-                      );
-
-                      return pendingSubjects.map(({ subjectId, subjectName, subMarks, sub, anyFulfilled }) => (
+                    {Array.from(new Map(savedStrategy.marks.map(sm => [sm.subjectId, sm.subjectName]))).map(([subjectId, subjectName]) => {
+                      const subMarks = savedStrategy.marks.filter(sm => sm.subjectId === subjectId);
+                      const sub = appState!.subjects.find(s => s.id === subjectId);
+                      const anyFulfilled = subMarks.some(sm => sub?.marks[sm.markType] !== null);
+                      return (
                         <div
                           key={subjectId}
                           className={`flex items-center justify-between rounded-lg px-3 py-2 ${anyFulfilled ? "bg-secondary/10" : "bg-muted/50"}`}
@@ -590,8 +574,8 @@ const Home = () => {
                             })}
                           </div>
                         </div>
-                      ));
-                    })()}
+                      );
+                    })}
                   </div>
                 </motion.div>
               )}
@@ -777,10 +761,7 @@ const Home = () => {
                   </div>
                   <div className="flex flex-col gap-2 max-h-72 overflow-y-auto">
                     {[...(appState?.subjects ?? [])].sort((a, b) => a.name.localeCompare(b.name)).map((sub) => {
-                      const allFilled =
-                        sub.marks.interro !== null &&
-                        sub.marks.dev !== null &&
-                        sub.marks.compo !== null;
+                      const markKeys = ["interro", "dev", "compo"] as const;
                       return (
                         <button
                           key={sub.id}
@@ -789,11 +770,17 @@ const Home = () => {
                         >
                           <span className="font-black text-foreground">{sub.name}</span>
                           <div className="flex items-center gap-2">
-                            {allFilled && (
-                              <div className="flex gap-0.5">
-                                {[0,1,2].map(i => <div key={i} className="h-1.5 w-1.5 rounded-full bg-success" />)}
-                              </div>
-                            )}
+                            <div className="flex gap-1">
+                              {markKeys.map(k => {
+                                const filled = sub.marks[k] !== null && sub.marks[k] !== undefined;
+                                return (
+                                  <div
+                                    key={k}
+                                    className={`h-2 w-2 rounded-full border-2 border-foreground transition-all ${filled ? "bg-foreground" : "bg-transparent"}`}
+                                  />
+                                );
+                              })}
+                            </div>
                             <span className="text-xs font-bold text-muted-foreground">{t("coeff")} {sub.coefficient}</span>
                           </div>
                         </button>
