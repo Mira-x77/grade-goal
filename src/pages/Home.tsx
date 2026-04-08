@@ -789,7 +789,7 @@ const Home = () => {
                           onClick={() => handleSelectSubject(sub)}
                           className="flex items-center justify-between rounded-2xl bg-card border-2 border-foreground px-4 py-3 active:scale-[0.98] transition-transform card-shadow"
                         >
-                          <span className="font-black text-foreground">{sub.name}</span>
+                          <span className="font-black text-foreground truncate min-w-0 mr-3">{sub.name}</span>
                           <div className="flex items-center gap-2">
                             <div className="flex gap-1">
                               {markKeys.map(k => {

@@ -86,9 +86,9 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
     }
   }, [currentPage, numPages, midNudgeDismissed, onPremiumNudge]);
 
-  // End nudge: show when user reaches the last page (once per session)
+  // End nudge: show when user reaches the last page (once per session, only for multi-page PDFs)
   useEffect(() => {
-    if (!endNudgeShown && numPages > 0 && currentPage === numPages && onPremiumNudge) {
+    if (!endNudgeShown && numPages > 2 && currentPage === numPages && onPremiumNudge) {
       setEndNudgeShown(true);
       setShowEndNudge(true);
     }

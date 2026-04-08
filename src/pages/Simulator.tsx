@@ -39,9 +39,16 @@ const Simulator = () => {
   const state = loadState();
   const subjects = state?.subjects ?? [];
   const targetAvg = state?.targetMin ?? state?.targetAverage ?? 16;
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [activeSlider, setActiveSlider] = useState<number | null>(null);
+
+  // Premium nudge
+  const [activeNudge, setActiveNudge] = useState(false);
+  const [showPlanSelect, setShowPlanSelect] = useState(false);
+  const [showPaymentSheet, setShowPaymentSheet] = useState(false);
+  const [showSubjectPack, setShowSubjectPack] = useState(false);
+  const { fire: fireNudge } = usePremiumNudge(() => setActiveNudge(true));
 
   // Refs for fixed header + dynamic padding (same fix as LibraryDirect)
   const heroRef = useRef<HTMLDivElement>(null);
@@ -106,6 +113,8 @@ const Simulator = () => {
     saveState({ ...state, savedStrategy: strategy });
     setIsDirty(false);
     toast.success(t("strategySavedNavigating"));
+    // Fire strategy_saved nudge after a short delay (let toast show first)
+    setTimeout(() => fireNudge("strategy_saved"), 1200);
     setTimeout(() => navigate("/", { replace: true }), 800);
   };
 
@@ -360,6 +369,34 @@ const Simulator = () => {
           )
         ) : undefined
       } />
+
+      {/* Contextual premium nudge sheets */}
+      <PremiumIntroSheet
+        open={activeNudge}
+        nudgeSubtext={nudgeSubtext("strategy_saved", language as "en" | "fr")}
+        onClose={() => setActiveNudge(false)}
+        onContinue={() => { setActiveNudge(false); setShowPlanSelect(true); }}
+      />
+      <PlanSelectSheet
+        open={showPlanSelect}
+        onClose={() => setShowPlanSelect(false)}
+        onBack={() => { setShowPlanSelect(false); setActiveNudge(true); }}
+        onSelectPack={() => { setShowPlanSelect(false); setShowSubjectPack(true); }}
+        onSelectAll={() => { setShowPlanSelect(false); setShowPaymentSheet(true); }}
+      />
+      <SubjectPackSheet
+        open={showSubjectPack}
+        onClose={() => setShowSubjectPack(false)}
+        onBack={() => { setShowSubjectPack(false); setShowPlanSelect(true); }}
+        subjects={subjects.map(s => s.name)}
+        onConfirm={() => { setShowSubjectPack(false); setShowPaymentSheet(true); }}
+      />
+      <PaymentSheet
+        open={showPaymentSheet}
+        onClose={() => setShowPaymentSheet(false)}
+        onBack={() => { setShowPaymentSheet(false); setShowPlanSelect(true); }}
+        onSuccess={() => setShowPaymentSheet(false)}
+      />
     </motion.div>
   );
 };

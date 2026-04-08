@@ -24,6 +24,7 @@ const MyDownloads = () => {
   const [revealedDelete, setRevealedDelete] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [examTypeFilter, setExamTypeFilter] = useState("");
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showPDFViewer, setShowPDFViewer] = useState(false);
   const [currentPDF, setCurrentPDF] = useState<{ data: string; title: string } | null>(null);
@@ -140,9 +141,13 @@ const MyDownloads = () => {
     : 0;
   const storageWarning = usedPct > 80;
 
+  const examTypes = Array.from(new Set(downloadedPapers.map(p => p.examType).filter(Boolean))).sort();
+
   const filteredPapers = downloadedPapers.filter((p) => {
     const q = search.toLowerCase();
-    return p.title.toLowerCase().includes(q) || p.subject.toLowerCase().includes(q) || p.classLevel.toLowerCase().includes(q);
+    const matchesSearch = p.title.toLowerCase().includes(q) || p.subject.toLowerCase().includes(q) || p.classLevel.toLowerCase().includes(q);
+    const matchesType = !examTypeFilter || p.examType === examTypeFilter;
+    return matchesSearch && matchesType;
   });
 
   if (loading) {
@@ -199,19 +204,48 @@ const MyDownloads = () => {
         </div>
 
         {downloadedPapers.length > 0 && (
-          <div className="relative mt-2">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("searchByTitle")}
-              className="w-full bg-card border-2 border-foreground rounded-2xl py-2.5 pl-9 pr-10 text-sm font-semibold placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
-            />
-            {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                <X className="h-4 w-4" />
-              </button>
+          <div className="mt-2 space-y-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t("searchByTitle")}
+                className="w-full bg-card border-2 border-foreground rounded-2xl py-2.5 pl-9 pr-10 text-sm font-semibold placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {examTypes.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-0.5">
+                <button
+                  onClick={() => setExamTypeFilter("")}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black border-2 transition-all active:scale-95 ${
+                    !examTypeFilter
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-card text-foreground border-foreground/30"
+                  }`}
+                >
+                  All
+                </button>
+                {examTypes.map(type => (
+                  <button
+                    key={type}
+                    onClick={() => setExamTypeFilter(prev => prev === type ? "" : type)}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black border-2 transition-all active:scale-95 ${
+                      examTypeFilter === type
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-card text-foreground border-foreground/30"
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         )}

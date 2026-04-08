@@ -14,6 +14,7 @@ import TaskBar from '@/components/TaskBar';
 import ScreenIntro from '@/components/ScreenIntro';
 import ScreenTour from '@/components/ScreenTour';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { usePremiumNudge, nudgeSubtext } from '@/hooks/usePremiumNudge';
 
 const supabaseUrl = 'https://aaayzhvqgqptgqaxxbdh.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhYXl6aHZxZ3FwdGdxYXh4YmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzAwNDksImV4cCI6MjA4ODA0NjA0OX0.NNKOn17jGZHEbBKBnX3oxVhSYJhKm28QSOkK76I0bgo';
@@ -69,7 +70,7 @@ function CyclingSubtext() {
 
 export default function LibraryDirect() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const headerRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(80);
 
@@ -109,15 +110,32 @@ export default function LibraryDirect() {
   const [showSubjectPack, setShowSubjectPack] = useState(false);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
+  // Premium nudge
+  const [activeNudge, setActiveNudge] = useState<"library_open" | "paper_downloaded" | null>(null);
+  const { fire: fireNudge } = usePremiumNudge((trigger) => {
+    if (trigger === "library_open" || trigger === "paper_downloaded") setActiveNudge(trigger);
+  });
+
+  const prevDownloadCount = useRef(0);
+
   useEffect(() => {
     loadPapers();
     loadDownloadedPapers();
-  }, []);
+    // Trigger 4: library_open — fire after screen settles
+    const timer = setTimeout(() => fireNudge("library_open"), 4000);
+    return () => clearTimeout(timer);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadDownloadedPapers = async () => {
     const cachedPapers = await cacheService.getCachedPapers();
     const downloaded = new Set(cachedPapers.filter(p => p.isDownloaded).map(p => p.id));
+    const prevCount = prevDownloadCount.current;
+    prevDownloadCount.current = downloaded.size;
     setDownloadedPaperIds(downloaded);
+    // Trigger 5: paper_downloaded — only when count increases during this session
+    if (prevCount === 0 && downloaded.size > 0) {
+      setTimeout(() => fireNudge("paper_downloaded"), 1500);
+    }
   };
 
   const loadPapers = async () => {
@@ -412,6 +430,13 @@ export default function LibraryDirect() {
         open={showPremiumIntro}
         onClose={() => setShowPremiumIntro(false)}
         onContinue={() => { setShowPremiumIntro(false); setShowPlanSelect(true); }}
+      />
+      {/* Contextual nudge sheet */}
+      <PremiumIntroSheet
+        open={!!activeNudge}
+        nudgeSubtext={activeNudge ? nudgeSubtext(activeNudge, language as "en" | "fr") : undefined}
+        onClose={() => setActiveNudge(null)}
+        onContinue={() => { setActiveNudge(null); setShowPlanSelect(true); }}
       />
       <PlanSelectSheet
         open={showPlanSelect}
