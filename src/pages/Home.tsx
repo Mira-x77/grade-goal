@@ -545,34 +545,38 @@ const Home = () => {
                 >
                   <div className="flex flex-col gap-1.5 px-4 pb-4 border-t border-secondary/20 pt-3">
                     {/* Group marks by subject */}
-                    {Array.from(new Map(savedStrategy.marks.map(sm => [sm.subjectId, sm.subjectName]))).map(([subjectId, subjectName]) => {
-                      const subMarks = savedStrategy.marks.filter(sm => sm.subjectId === subjectId);
-                      const sub = appState!.subjects.find(s => s.id === subjectId);
-                      const allFulfilled = subMarks.every(sm => sub?.marks[sm.markType] !== null);
-                      const anyFulfilled = subMarks.some(sm => sub?.marks[sm.markType] !== null);
-                      return (
+                    {(() => {
+                      const subjectEntries = Array.from(
+                        new Map(savedStrategy.marks.map(sm => [sm.subjectId, sm.subjectName]))
+                      ).map(([subjectId, subjectName]) => {
+                        const subMarks = savedStrategy.marks.filter(sm => sm.subjectId === subjectId);
+                        const sub = appState!.subjects.find(s => s.id === subjectId);
+                        const allFulfilled = subMarks.every(sm => sub?.marks[sm.markType] !== null);
+                        const anyFulfilled = subMarks.some(sm => sub?.marks[sm.markType] !== null);
+                        return { subjectId, subjectName, subMarks, sub, allFulfilled, anyFulfilled };
+                      });
+                      const pendingSubjects = subjectEntries.filter(e => !e.allFulfilled);
+                      const allDone = pendingSubjects.length === 0;
+
+                      if (allDone) return (
+                        <div className="flex items-center gap-2 rounded-lg bg-success/10 px-3 py-2.5">
+                          <Check className="h-4 w-4 text-success flex-shrink-0" />
+                          <p className="text-xs font-bold text-success">All strategy targets have been entered.</p>
+                        </div>
+                      );
+
+                      return pendingSubjects.map(({ subjectId, subjectName, subMarks, sub, anyFulfilled }) => (
                         <div
                           key={subjectId}
-                          className={`flex items-center justify-between rounded-lg px-3 py-2 ${allFulfilled ? "bg-success/10" : anyFulfilled ? "bg-secondary/10" : "bg-muted/50"}`}
+                          className={`flex items-center justify-between rounded-lg px-3 py-2 ${anyFulfilled ? "bg-secondary/10" : "bg-muted/50"}`}
                         >
                           <div className="flex items-center gap-2">
-                            {allFulfilled ? (
-                              <Check className="h-3.5 w-3.5 text-success flex-shrink-0" />
-                            ) : (
-                              <div className="h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
-                            )}
-                            <span className={`text-xs font-bold ${allFulfilled ? "text-success line-through" : "text-foreground"}`}>
-                              {subjectName}
-                            </span>
+                            <div className="h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
+                            <span className="text-xs font-bold text-foreground">{subjectName}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             {subMarks.map(sm => {
                               const actual = sub?.marks[sm.markType] ?? null;
-                              // Pill always shows the strategized target — never the actual score.
-                              // Color reflects how the actual result compares to the target:
-                              //   no score yet  → neutral (muted)
-                              //   actual ≥ target → green (met/exceeded)
-                              //   actual < target → amber (fell short, not failure)
                               const pillStyle = actual === null
                                 ? "bg-muted text-foreground/60"
                                 : actual >= sm.targetValue
@@ -586,8 +590,8 @@ const Home = () => {
                             })}
                           </div>
                         </div>
-                      );
-                    })}
+                      ));
+                    })()}
                   </div>
                 </motion.div>
               )}
