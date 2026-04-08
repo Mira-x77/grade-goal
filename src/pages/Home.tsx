@@ -568,10 +568,19 @@ const Home = () => {
                           <div className="flex items-center gap-1.5">
                             {subMarks.map(sm => {
                               const actual = sub?.marks[sm.markType] ?? null;
-                              const done = actual !== null;
+                              // Pill always shows the strategized target — never the actual score.
+                              // Color reflects how the actual result compares to the target:
+                              //   no score yet  → neutral (muted)
+                              //   actual ≥ target → green (met/exceeded)
+                              //   actual < target → amber (fell short, not failure)
+                              const pillStyle = actual === null
+                                ? "bg-muted text-foreground/60"
+                                : actual >= sm.targetValue
+                                  ? "bg-success/20 text-success"
+                                  : "bg-warning/20 text-warning";
                               return (
-                                <span key={sm.markType} className={`text-[10px] font-black px-1.5 py-0.5 rounded ${done ? "bg-success/20 text-success" : "bg-muted text-foreground"}`}>
-                                  {done ? actual!.toFixed(1) : sm.targetValue.toFixed(1)}
+                                <span key={sm.markType} className={`text-[10px] font-black px-1.5 py-0.5 rounded ${pillStyle}`}>
+                                  {sm.targetValue.toFixed(1)}
                                 </span>
                               );
                             })}
