@@ -27,9 +27,7 @@ export default function ScreenIntro({
   useEffect(() => {
     const seen = localStorage.getItem(STORAGE_PREFIX + screenKey);
     if (!seen) {
-      // Small delay so the page renders first
-      const t = setTimeout(() => setVisible(true), 400);
-      return () => clearTimeout(t);
+      setVisible(true);
     }
   }, [screenKey]);
 

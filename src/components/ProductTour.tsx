@@ -160,18 +160,33 @@ export default function ProductTour() {
 
   const handlePressStart = useCallback(() => {
     if (!run) return;
+    // On the "tap it now" step, don't pause — let the tap fall through to the element
+    if (steps[step].actionKey === "tourAddMarkAction") return;
     // snapshot how much has elapsed so far
     const segElapsed = performance.now() - segmentStartRef.current;
     elapsedRef.current = elapsedRef.current + segElapsed;
     stopTimer();
     setPaused(true);
-  }, [run, stopTimer]);
+  }, [run, step, stopTimer]);
 
-  const handlePressEnd = useCallback(() => {
-    if (!run || !paused) return;
+  const handlePressEnd = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (!run) return;
+    // On the "tap it now" step, a tap on the highlighted target advances the tour
+    if (steps[step].actionKey === "tourAddMarkAction") {
+      const target = e.target as Element;
+      const highlighted = rect && document.querySelector(steps[step].target);
+      if (highlighted && highlighted.contains(target)) {
+        advance();
+        return;
+      }
+      // Tap anywhere else on this step also advances (user tapped, intent is clear)
+      advance();
+      return;
+    }
+    if (!paused) return;
     setPaused(false);
     startTimer(elapsedRef.current);
-  }, [run, paused, startTimer]);
+  }, [run, step, paused, startTimer, rect, advance]);
 
   if (!run) return null;
 
@@ -204,11 +219,11 @@ export default function ProductTour() {
           <div
             className="fixed inset-0 z-[9997]"
             onMouseDown={handlePressStart}
-            onMouseUp={handlePressEnd}
-            onMouseLeave={handlePressEnd}
+            onMouseUp={(e) => handlePressEnd(e)}
+            onMouseLeave={(e) => handlePressEnd(e)}
             onTouchStart={handlePressStart}
-            onTouchEnd={handlePressEnd}
-            onTouchCancel={handlePressEnd}
+            onTouchEnd={(e) => handlePressEnd(e)}
+            onTouchCancel={(e) => handlePressEnd(e)}
           />
 
           {/* Dimmed overlay */}
