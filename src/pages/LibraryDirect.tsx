@@ -12,6 +12,7 @@ import { PremiumIntroSheet } from '@/components/subscription/PremiumIntroSheet';
 import { SubjectPackSheet } from '@/components/subscription/SubjectPackSheet';
 import TaskBar from '@/components/TaskBar';
 import ScreenIntro from '@/components/ScreenIntro';
+import ScreenTour from '@/components/ScreenTour';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const supabaseUrl = 'https://aaayzhvqgqptgqaxxbdh.supabase.co';
@@ -182,7 +183,7 @@ export default function LibraryDirect() {
           </div>
 
           {/* Tab Switcher */}
-          <div className="flex gap-1 mt-4 bg-muted rounded-xl p-1">
+          <div className="tour-library-tabs flex gap-1 mt-4 bg-muted rounded-xl p-1">
             {(['papers', 'prep'] as LibraryTab[]).map((tab) => (
               <button
                 key={tab}
@@ -210,7 +211,7 @@ export default function LibraryDirect() {
                 className="overflow-hidden"
               >
                 <div className="mt-3 space-y-2">
-                  <div className="relative">
+                  <div className="tour-library-search relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
                       type="text"
@@ -234,7 +235,7 @@ export default function LibraryDirect() {
                     </div>
                     <button
                       onClick={() => setViewLayout(prev => prev === 'grid' ? 'list' : 'grid')}
-                      className="shrink-0 p-2 rounded-xl bg-muted border border-border text-muted-foreground active:scale-95 transition-all"
+                      className="tour-library-grid shrink-0 p-2 rounded-xl bg-muted border border-border text-muted-foreground active:scale-95 transition-all"
                     >
                       {viewLayout === 'grid' ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
                     </button>
@@ -464,6 +465,16 @@ export default function LibraryDirect() {
         description={t("browseDownloadPapers")}
         mascotPose="reading"
         ctaLabel={t("browseLibrary")}
+      />
+
+      <ScreenTour
+        storageKey="scoretarget_tour_library"
+        delay={1200}
+        steps={[
+          { target: ".tour-library-tabs", titleKey: "tourLibraryTabsTitle", contentKey: "tourLibraryTabsContent", duration: 4500, actionKey: "tourLibraryTabsAction" },
+          { target: ".tour-library-search", titleKey: "tourLibrarySearchTitle", contentKey: "tourLibrarySearchContent", duration: 4500 },
+          { target: ".tour-library-grid", titleKey: "tourLibraryGridTitle", contentKey: "tourLibraryGridContent", duration: 4000 },
+        ]}
       />
     </div>
   );

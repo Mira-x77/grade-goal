@@ -8,6 +8,7 @@ import { AppState, Subject } from "@/types/exam";
 import { CLASS_LEVELS, LYCEE_SERIES, getSubjectsForLevel } from "@/lib/subjects-data";
 import TaskBar from "@/components/TaskBar";
 import ScreenIntro from "@/components/ScreenIntro";
+import ScreenTour from "@/components/ScreenTour";
 import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
 import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
 import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
@@ -185,7 +186,7 @@ const Profile = () => {
           </div>
           <ChevronRight className="h-5 w-5 text-premium-foreground/60 shrink-0" />
         </motion.button>
-        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="rounded-2xl bg-card p-5 border-2 border-border">
+        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="tour-profile-info rounded-2xl bg-card p-5 border-2 border-border">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -274,7 +275,7 @@ const Profile = () => {
         </motion.div>
 
         {/* Target Average */}
-        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="rounded-2xl bg-card p-5 border-2 border-border">
+        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="tour-profile-target rounded-2xl bg-card p-5 border-2 border-border">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/10">
@@ -371,7 +372,7 @@ const Profile = () => {
         </motion.div>
 
         {/* Subjects */}
-        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="rounded-2xl bg-card border-2 border-border mb-4 overflow-hidden">
+        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="tour-profile-subjects rounded-2xl bg-card border-2 border-border mb-4 overflow-hidden">
           {/* Header — tapping toggles collapse */}
           <button
             onClick={() => setSubjectsOpen(o => !o)}
@@ -587,6 +588,16 @@ const Profile = () => {
         description={t("profileIntroDesc")}
         mascotPose="idle"
         ctaLabel={t("profileIntroCta")}
+      />
+
+      <ScreenTour
+        storageKey="scoretarget_tour_profile"
+        delay={1000}
+        steps={[
+          { target: ".tour-profile-info", titleKey: "tourProfileInfoTitle", contentKey: "tourProfileInfoContent", duration: 4500 },
+          { target: ".tour-profile-target", titleKey: "tourProfileTargetTitle", contentKey: "tourProfileTargetContent", duration: 4500 },
+          { target: ".tour-profile-subjects", titleKey: "tourProfileSubjectsTitle", contentKey: "tourProfileSubjectsContent", duration: 4500 },
+        ]}
       />
 
       <PremiumIntroSheet

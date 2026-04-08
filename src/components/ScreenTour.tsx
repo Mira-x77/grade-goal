@@ -1,69 +1,30 @@
+/**
+ * ScreenTour — lightweight per-screen tour overlay.
+ * Works identically to ProductTour but is self-contained per screen,
+ * keyed by a unique storageKey so each screen's tour is tracked separately.
+ */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-interface TourStep {
+export interface ScreenTourStep {
   titleKey: string;
   contentKey: string;
-  target: string;
+  target: string; // CSS selector or "body" for centered
   duration: number;
   actionKey?: string;
 }
 
-const steps: TourStep[] = [
-  {
-    target: "body",
-    titleKey: "tourWelcomeTitle",
-    contentKey: "tourWelcomeContent",
-    duration: 4500,
-  },
-  {
-    target: ".tour-dashboard",
-    titleKey: "tourDashboardTitle",
-    contentKey: "tourDashboardContent",
-    duration: 4500,
-    actionKey: "tourDashboardAction",
-  },
-  {
-    target: ".tour-checklist",
-    titleKey: "tourChecklistTitle",
-    contentKey: "tourChecklistContent",
-    duration: 4500,
-    actionKey: "tourChecklistAction",
-  },
-  {
-    target: ".tour-add-mark",
-    titleKey: "tourAddMarkTitle",
-    contentKey: "tourAddMarkContent",
-    duration: 4000,
-    actionKey: "tourAddMarkAction",
-  },
-  {
-    target: ".tour-strategizer",
-    titleKey: "tourStrategizerTitle",
-    contentKey: "tourStrategizerContent",
-    duration: 4500,
-    actionKey: "tourStrategizerAction",
-  },
-  {
-    target: ".tour-library",
-    titleKey: "tourLibraryTitle",
-    contentKey: "tourLibraryContent",
-    duration: 4000,
-    actionKey: "tourLibraryAction",
-  },
-  {
-    target: ".tour-feedback",
-    titleKey: "tourFeedbackTitle",
-    contentKey: "tourFeedbackContent",
-    duration: 4500,
-    actionKey: "tourFeedbackAction",
-  },
-];
+interface ScreenTourProps {
+  storageKey: string;
+  steps: ScreenTourStep[];
+  /** Delay before tour starts (ms). Default 800. */
+  delay?: number;
+}
 
 const PADDING = 10;
 
-export default function ProductTour() {
+export default function ScreenTour({ storageKey, steps, delay = 800 }: ScreenTourProps) {
   const { t } = useLanguage();
   const [run, setRun] = useState(false);
   const [step, setStep] = useState(0);
@@ -77,18 +38,10 @@ export default function ProductTour() {
   const segmentStartRef = useRef(0);
 
   useEffect(() => {
-    const seen = localStorage.getItem("scoretarget_tour_seen");
-    if (seen) return;
-    const t = setTimeout(() => {
-      const raw = localStorage.getItem("scoretarget_state");
-      let hasData = false;
-      if (raw) {
-        try { hasData = JSON.parse(raw)?.subjects?.length > 0; } catch {}
-      }
-      if (hasData) setRun(true);
-    }, 1500);
-    return () => clearTimeout(t);
-  }, []);
+    if (localStorage.getItem(storageKey)) return;
+    const id = setTimeout(() => setRun(true), delay);
+    return () => clearTimeout(id);
+  }, [storageKey, delay]);
 
   const updateRect = useCallback(() => {
     const s = steps[step];
@@ -100,21 +53,18 @@ export default function ProductTour() {
     } else {
       setRect(null);
     }
-  }, [step]);
+  }, [step, steps]);
 
   const finish = useCallback(() => {
     setRun(false);
-    localStorage.setItem("scoretarget_tour_seen", "true");
-  }, []);
+    localStorage.setItem(storageKey, "true");
+  }, [storageKey]);
 
   const advance = useCallback(() => {
     elapsedRef.current = 0;
-    if (step < steps.length - 1) {
-      setStep(s => s + 1);
-    } else {
-      finish();
-    }
-  }, [step, finish]);
+    if (step < steps.length - 1) setStep(s => s + 1);
+    else finish();
+  }, [step, steps.length, finish]);
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
@@ -128,14 +78,13 @@ export default function ProductTour() {
     segmentStartRef.current = performance.now();
     const tick = () => {
       const segElapsed = performance.now() - segmentStartRef.current;
-      const totalElapsed = alreadyElapsed + segElapsed;
-      const p = Math.min(totalElapsed / duration, 1);
+      const p = Math.min((alreadyElapsed + segElapsed) / duration, 1);
       setProgress(p);
       if (p < 1) rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
     timerRef.current = setTimeout(advance, remaining);
-  }, [step, advance]);
+  }, [step, steps, advance]);
 
   useEffect(() => {
     if (!run) return;
@@ -162,23 +111,18 @@ export default function ProductTour() {
 
   const handlePressStart = useCallback(() => {
     if (!run) return;
-    if (steps[step].actionKey === "tourAddMarkAction") return;
     const segElapsed = performance.now() - segmentStartRef.current;
     elapsedRef.current = elapsedRef.current + segElapsed;
     stopTimer();
     setPaused(true);
-  }, [run, step, stopTimer]);
+  }, [run, stopTimer]);
 
-  const handlePressEnd = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+  const handlePressEnd = useCallback(() => {
     if (!run) return;
-    if (steps[step].actionKey === "tourAddMarkAction") {
-      advance();
-      return;
-    }
     if (!paused) return;
     setPaused(false);
     startTimer(elapsedRef.current);
-  }, [run, step, paused, startTimer, advance]);
+  }, [run, paused, startTimer]);
 
   if (!run) return null;
 
@@ -207,7 +151,6 @@ export default function ProductTour() {
     <AnimatePresence>
       {run && (
         <>
-          {/* Full-screen hold-to-pause capture layer */}
           <div
             className="fixed inset-0 z-[9997]"
             onMouseDown={handlePressStart}
@@ -218,14 +161,13 @@ export default function ProductTour() {
             onTouchCancel={handlePressEnd}
           />
 
-          {/* Dimmed overlay */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[9998] pointer-events-none"
           >
             <svg width="100%" height="100%" style={{ position: "absolute", inset: 0 }}>
               <defs>
-                <mask id="tour-mask">
+                <mask id={`screen-tour-mask-${storageKey}`}>
                   <rect width="100%" height="100%" fill="white" />
                   {rect && (
                     <rect
@@ -236,11 +178,10 @@ export default function ProductTour() {
                   )}
                 </mask>
               </defs>
-              <rect width="100%" height="100%" fill="rgba(0,0,0,0.65)" mask="url(#tour-mask)" />
+              <rect width="100%" height="100%" fill="rgba(0,0,0,0.65)" mask={`url(#screen-tour-mask-${storageKey})`} />
             </svg>
           </motion.div>
 
-          {/* Spotlight ring */}
           {rect && (
             <motion.div
               key={`ring-${step}`}
@@ -260,7 +201,6 @@ export default function ProductTour() {
             />
           )}
 
-          {/* Tooltip — purely informational, no interactive elements */}
           <motion.div
             key={`tip-${step}`}
             initial={{ opacity: 0, y: 10 }}
@@ -285,7 +225,6 @@ export default function ProductTour() {
                 <p className="text-xs font-black text-secondary mt-2">→ {action}</p>
               )}
 
-              {/* Progress bar */}
               <div className="mt-4 h-1 rounded-full bg-muted-foreground/20 overflow-hidden">
                 <div
                   className="h-full rounded-full bg-secondary transition-none"
@@ -297,7 +236,6 @@ export default function ProductTour() {
                 {paused ? t("tourPaused") : t("tourHoldToPause")}
               </p>
 
-              {/* Step dots */}
               <div className="flex gap-1 items-center justify-center mt-3">
                 {steps.map((_, i) => (
                   <div key={i} className="rounded-full transition-all duration-200"

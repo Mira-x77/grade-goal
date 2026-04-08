@@ -452,6 +452,7 @@ const Home = () => {
 
         {/* Onboarding checklist — shown until all steps done */}
         {hasData && (
+          <div className="tour-checklist">
           <OnboardingChecklist
             steps={[
               {
@@ -491,6 +492,7 @@ const Home = () => {
               },
             ]}
           />
+          </div>
         )}
 
         {/* ═════════ SAVED STRATEGY CARD ═════════ */}
@@ -699,7 +701,7 @@ const Home = () => {
           >
             <Link
               to="/feedback-board"
-              className="flex items-center gap-3 rounded-2xl bg-card border-2 border-border p-4 active:scale-[0.98] transition-transform"
+              className="tour-feedback flex items-center gap-3 rounded-2xl bg-card border-2 border-border p-4 active:scale-[0.98] transition-transform"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/20 border border-secondary/30 shrink-0">
                 <Lightbulb className="h-5 w-5 text-secondary" />

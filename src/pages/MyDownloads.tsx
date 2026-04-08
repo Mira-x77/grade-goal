@@ -13,6 +13,7 @@ import { readFileAsBase64, getAvailableSpace } from "@/lib/filesystem";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import TaskBar from "@/components/TaskBar";
+import ScreenTour from "@/components/ScreenTour";
 
 const MyDownloads = () => {
   const navigate = useNavigate();
@@ -237,9 +238,9 @@ const MyDownloads = () => {
             <p className="text-sm font-bold text-muted-foreground">{t("noResultsFor")} "{search}"</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="tour-downloads-list space-y-3">
             <AnimatePresence>
-              {filteredPapers.map((paper) => (
+              {filteredPapers.map((paper, idx) => (
                 <motion.div
                   key={paper.id}
                   layout
@@ -253,7 +254,7 @@ const MyDownloads = () => {
                     ? { type: "spring", stiffness: 400, damping: 35 }
                     : { duration: 0.22 }
                   }
-                  className="bg-card rounded-2xl overflow-hidden card-shadow select-none"
+                  className={`bg-card rounded-2xl overflow-hidden card-shadow select-none ${idx === 0 ? 'tour-downloads-swipe' : ''}`}
                   onContextMenu={(e) => { e.preventDefault(); setRevealedDelete(paper.id); }}
                   onTouchStart={() => startLongPress(paper.id)}
                   onTouchEnd={cancelLongPress}
@@ -314,6 +315,15 @@ const MyDownloads = () => {
       )}
 
       {!showPDFViewer && <TaskBar showBack />}
+
+      <ScreenTour
+        storageKey="scoretarget_tour_downloads"
+        delay={1000}
+        steps={[
+          { target: ".tour-downloads-list", titleKey: "tourDownloadsListTitle", contentKey: "tourDownloadsListContent", duration: 4500 },
+          { target: ".tour-downloads-swipe", titleKey: "tourDownloadsSwipeTitle", contentKey: "tourDownloadsSwipeContent", duration: 4500 },
+        ]}
+      />
     </div>
   );
 };

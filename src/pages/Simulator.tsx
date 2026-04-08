@@ -7,6 +7,7 @@ import { simulateYearlyAverage } from "@/lib/exam-logic";
 import { SavedStrategy, StrategyMark } from "@/types/exam";
 import TaskBar from "@/components/TaskBar";
 import ScreenIntro from "@/components/ScreenIntro";
+import ScreenTour from "@/components/ScreenTour";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 
@@ -176,7 +177,7 @@ const Simulator = () => {
 
       <div className="content-col flex flex-col gap-5 py-6">
         {/* Hero card */}
-        <div ref={heroRef}>
+        <div ref={heroRef} className="tour-simulator-hero">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -203,7 +204,7 @@ const Simulator = () => {
         </div>
 
         {/* Sliders grouped by subject */}
-        <div className="flex flex-col gap-3">
+        <div className="tour-simulator-sliders flex flex-col gap-3">
           <h3 className="font-black text-foreground text-sm">{t("planYourScores")}</h3>
           {subjects.map((sub) => {
             const subSlots = emptySlots
@@ -293,6 +294,15 @@ const Simulator = () => {
         description={t("simIntroDesc")}
         mascotPose="thinking"
         ctaLabel={t("simIntroCta")}
+      />
+
+      <ScreenTour
+        storageKey="scoretarget_tour_simulator"
+        delay={1000}
+        steps={[
+          { target: ".tour-simulator-hero", titleKey: "tourSimulatorHeroTitle", contentKey: "tourSimulatorHeroContent", duration: 4500 },
+          { target: ".tour-simulator-sliders", titleKey: "tourSimulatorSlidersTitle", contentKey: "tourSimulatorSlidersContent", duration: 4500, actionKey: "tourSimulatorSlidersAction" },
+        ]}
       />
 
       <TaskBar showBack action={
