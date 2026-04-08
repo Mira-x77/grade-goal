@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, BookOpen, Sun, Moon, Scroll, Maximize2, Crown } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, BookOpen, Sun, Moon, Scroll, Maximize2, Crown, Lock, Unlock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Loader } from '@/components/ui/loader';
@@ -45,6 +45,7 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
   const [pageLoading, setPageLoading] = useState(false);
   const [error, setError] = useState('');
   const [showControls, setShowControls] = useState(true);
+  const [locked, setLocked] = useState(false);
   const [showPageInput, setShowPageInput] = useState(false);
   const [pageInputVal, setPageInputVal] = useState('');
   const [readingMode, setReadingMode] = useState<ReadingMode>('light');
@@ -137,9 +138,7 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
   }, [currentPage, baseScale, rotation, loading]);
 
   const resetControlsTimer = useCallback(() => {
-    setShowControls(true);
-    if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
-    controlsTimerRef.current = setTimeout(() => setShowControls(false), 3500);
+    // Controls are always visible unless locked — nothing to do
   }, []);
 
   useEffect(() => {
@@ -203,7 +202,6 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    resetControlsTimer();
     if (e.touches.length === 2) {
       pinchStartDistRef.current = getTouchDist(e);
       pinchBaseScaleRef.current = baseScale * visualScaleRef.current;
@@ -225,7 +223,8 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
       applyTransform();
       return;
     }
-    if (e.touches.length === 1 && panStartRef.current && !isPinchingRef.current) {
+    // Pan only when not locked
+    if (!locked && e.touches.length === 1 && panStartRef.current && !isPinchingRef.current) {
       const effectiveScale = baseScale * visualScaleRef.current;
       if (effectiveScale <= 1.05) return;
       const t = e.touches[0];
@@ -249,6 +248,7 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
       setBaseScale(finalScale);
       return;
     }
+    if (locked) { touchStartRef.current = null; panStartRef.current = null; return; }
     if (e.touches.length > 0 || !touchStartRef.current) return;
     const t = e.changedTouches[0];
     const dx = t.clientX - touchStartRef.current.x;
@@ -257,12 +257,11 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
       if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) && baseScale <= 1.05) {
         dx > 0 ? goTo(currentPage - 1) : goTo(currentPage + 1);
       } else if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+        // Double-tap to zoom only — no single-tap toggle
         const now = Date.now();
         if (now - lastTapRef.current < 300) {
           panRef.current = { x: 0, y: 0 };
           setBaseScale(baseScale > 1.05 ? 1.0 : 2.0);
-        } else {
-          setShowControls(v => !v);
         }
         lastTapRef.current = now;
       }
@@ -311,8 +310,8 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
 
       {/* ── Top Bar ── */}
       <div className={'absolute top-0 left-0 right-0 z-20 transition-transform duration-300 safe-area-top '
-        + (showControls ? 'translate-y-0' : '-translate-y-full')}>
-        <div className="bg-background/90 backdrop-blur-md border-b border-border/60 flex items-center gap-2 px-4 pt-12 pb-3">
+        + (!locked ? 'translate-y-0' : '-translate-y-full')}>
+        <div className="bg-background/90 backdrop-blur-md border-b border-border/60 flex items-center gap-2 px-4 pt-3 pb-3">
           {/* Close */}
           <button onClick={onClose}
             className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground active:scale-95 transition-transform shrink-0">
@@ -342,7 +341,7 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
                 <span className="text-muted-foreground text-xs font-bold">/{numPages}</span>
               </div>
             ) : (
-              <button onClick={() => { setShowPageInput(true); setPageInputVal(String(currentPage)); resetControlsTimer(); }}
+              <button onClick={() => { setShowPageInput(true); setPageInputVal(String(currentPage)); }}
                 className="px-2.5 py-1.5 rounded-xl bg-muted text-foreground text-xs font-black active:scale-95 transition-transform">
                 p.{currentPage}
               </button>
@@ -350,16 +349,24 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
           )}
 
           {/* Rotate */}
-          <button onClick={() => { setRotation(r => (r + 90) % 360); resetControlsTimer(); }}
+          <button onClick={() => setRotation(r => (r + 90) % 360)}
             className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground active:scale-95 transition-transform">
             <RotateCw className="h-4 w-4" />
           </button>
 
-          {/* Reading mode — shows label */}
+          {/* Reading mode */}
           <button onClick={cycleReadingMode}
             className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-muted text-foreground active:scale-95 transition-transform">
             {mode.icon}
             <span className="text-[10px] font-black">{mode.label}</span>
+          </button>
+
+          {/* Lock button */}
+          <button
+            onClick={() => setLocked(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground active:scale-95 transition-transform"
+          >
+            <Unlock className="h-4 w-4" />
           </button>
         </div>
 
@@ -405,7 +412,7 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
       {/* ── Bottom Controls — floating pill ── */}
       {!loading && !error && (
         <div className={'absolute bottom-0 left-0 right-0 z-20 transition-transform duration-300 '
-          + (showControls ? 'translate-y-0' : 'translate-y-full')}>
+          + (!locked ? 'translate-y-0' : 'translate-y-full')}>
           <div className="flex items-center justify-center gap-3 px-4 pb-10 pt-3 bg-background/90 backdrop-blur-md border-t border-border/60">
 
             {/* Nav group */}
@@ -427,7 +434,7 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
                 className="flex h-11 w-11 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors">
                 <ZoomOut className="h-5 w-5" />
               </button>
-              <button onClick={() => { panRef.current = { x: 0, y: 0 }; setBaseScale(1.0); resetControlsTimer(); }}
+              <button onClick={() => { panRef.current = { x: 0, y: 0 }; setBaseScale(1.0); }}
                 className="flex h-11 px-3 items-center justify-center text-foreground active:bg-muted-foreground/20 transition-colors">
                 <span className="text-xs font-black min-w-[36px] text-center">{Math.round(baseScale * 100)}%</span>
               </button>
@@ -438,13 +445,30 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
             </div>
 
             {/* Fit button */}
-            <button onClick={() => { panRef.current = { x: 0, y: 0 }; setBaseScale(1.0); resetControlsTimer(); }}
+            <button onClick={() => { panRef.current = { x: 0, y: 0 }; setBaseScale(1.0); }}
               className="flex h-11 w-11 items-center justify-center bg-muted rounded-2xl border border-border/40 text-foreground active:scale-95 transition-transform">
               <Maximize2 className="h-4 w-4" />
             </button>
           </div>
         </div>
       )}
+
+      {/* ── Lock indicator — tap to unlock ── */}
+      <AnimatePresence>
+        {locked && !loading && !error && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+            onClick={() => setLocked(false)}
+            className="absolute bottom-10 right-4 z-30 flex items-center gap-2 bg-background/90 backdrop-blur-md border-2 border-foreground rounded-2xl px-3 py-2.5 card-shadow active:scale-95 transition-transform"
+          >
+            <Lock className="h-4 w-4 text-foreground" />
+            <span className="text-xs font-black text-foreground">Locked</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* ── Mid-read nudge — floating banner at page 3 ── */}
       <AnimatePresence>
@@ -565,11 +589,11 @@ export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPrem
 
               <div className="flex flex-col gap-3 mb-6">
                 {[
-                  { icon: '👆', label: 'Tap', desc: 'Show or hide the controls' },
                   { icon: '👆👆', label: 'Double-tap', desc: 'Zoom in / zoom back out' },
                   { icon: '🤏', label: 'Pinch', desc: 'Zoom to any level' },
                   { icon: '👈👉', label: 'Swipe left/right', desc: 'Turn pages (at 1× zoom)' },
                   { icon: '✋', label: 'Drag', desc: 'Pan around when zoomed in' },
+                  { icon: '🔒', label: 'Lock', desc: 'Hide controls — pinch-zoom only' },
                 ].map(({ icon, label, desc }) => (
                   <div key={label} className="flex items-center gap-3">
                     <span className="text-xl w-8 text-center shrink-0">{icon}</span>
