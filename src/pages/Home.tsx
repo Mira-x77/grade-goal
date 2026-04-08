@@ -1062,7 +1062,27 @@ const Home = () => {
                     <div key={sub.id} className="rounded-2xl bg-card border-2 border-foreground card-shadow p-4">
                       <div className="flex items-center justify-between mb-3">
                         <span className="font-black text-foreground">{sub.name}</span>
-                        <span className="text-xs font-bold text-muted-foreground">{t("coeff")} {sub.coefficient}</span>
+                        {/* Coefficient stepper */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-muted-foreground">{t("coeff")}</span>
+                          <button
+                            onClick={() => setEditMarksState(prev => ({
+                              ...prev,
+                              [sub.id]: { ...prev[sub.id], coefficient: String(Math.max(1, parseInt(prev[sub.id]?.coefficient || "1") - 1)) }
+                            }))}
+                            className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95"
+                          >−</button>
+                          <span className="w-5 text-center text-sm font-black text-foreground">
+                            {editMarksState[sub.id]?.coefficient ?? sub.coefficient}
+                          </span>
+                          <button
+                            onClick={() => setEditMarksState(prev => ({
+                              ...prev,
+                              [sub.id]: { ...prev[sub.id], coefficient: String(parseInt(prev[sub.id]?.coefficient || "1") + 1) }
+                            }))}
+                            className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95"
+                          >+</button>
+                        </div>
                       </div>
                       <div className="flex flex-col gap-2">
                         {rows.map(({ key, label }) => (
