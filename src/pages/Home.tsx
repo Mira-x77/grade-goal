@@ -106,7 +106,6 @@ const Home = () => {
     visible: isTablet ? { x: "-50%", y: "-50%", scale: 1,    opacity: 1 } : { y: 0 },
     exit:    isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" },
   };
-  const sheetTransition = { type: "spring" as const, stiffness: 300, damping: 30 };
 
   const [downloadedCount, setDownloadedCount] = useState(0);
   const [appState, setAppState] = useState(state);
@@ -332,7 +331,7 @@ const Home = () => {
               <Crown className="h-5 w-5" />
             </button>
             {/* Bell + Profile grouped in a single pill — like the reference */}
-            <div className="flex items-center bg-card border-2 border-foreground rounded-2xl overflow-hidden card-shadow">
+            <div className="tour-header-actions flex items-center bg-card border-2 border-foreground rounded-2xl overflow-hidden card-shadow">
               <button
                 onClick={() => setShowNotifications(true)}
                 className="flex h-9 w-9 items-center justify-center text-foreground active:bg-muted transition-colors"
@@ -614,7 +613,7 @@ const Home = () => {
 
         {/* Horizontal scroll: Subjects at a glance + Class ranking */}
         {hasData && (
-          <div className="overflow-x-auto -mx-4 px-4 pb-2 hide-scrollbar">
+          <div className="tour-subjects-carousel overflow-x-auto -mx-4 px-4 pb-2 hide-scrollbar">
             <div className="flex gap-3 items-start" style={{ width: "max-content" }}>
               {/* Card 1 — Subjects at a glance (collapsible) */}
               <SubjectsGlanceCard subjects={appState!.subjects} title={t("subjectsGlance")} />
@@ -633,7 +632,7 @@ const Home = () => {
             initial={{ y: 15, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.35 }}
-            className="rounded-2xl bg-card border-2 border-border p-4"
+            className="tour-recent-activity rounded-2xl bg-card border-2 border-border p-4"
           >
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-black text-foreground text-sm">{t("recentActivity")}</h3>

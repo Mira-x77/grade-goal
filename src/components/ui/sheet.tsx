@@ -22,24 +22,6 @@ interface SheetProps {
 export function Sheet({ open, onBackdropClick, children, className = "", zIndex = 61 }: SheetProps) {
   const isTablet = useIsTablet();
 
-  const mobileVariants = {
-    hidden:  { y: "100%", opacity: 1 },
-    visible: { y: 0,      opacity: 1 },
-    exit:    { y: "100%", opacity: 1 },
-  };
-
-  // On tablet the sheet is positioned at left:50% top:50% (CSS).
-  // framer-motion owns the full transform, so we include the -50% offset
-  // here — this prevents the CSS transform + framer transform conflict
-  // that caused the off-center rendering.
-  const tabletVariants = {
-    hidden:  { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 },
-    visible: { x: "-50%", y: "-50%", scale: 1,    opacity: 1 },
-    exit:    { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 },
-  };
-
-  const variants = isTablet ? tabletVariants : mobileVariants;
-
   return (
     <AnimatePresence>
       {open && (
@@ -56,13 +38,26 @@ export function Sheet({ open, onBackdropClick, children, className = "", zIndex 
             onClick={onBackdropClick}
           />
 
-          {/* Panel */}
+          {/* Panel
+              Mobile  : slide up from bottom  (y: 100% → 0)
+              Tablet+ : scale + fade in place  (scale: 0.94 → 1)
+                        x/y offset baked in so framer owns the full
+                        transform — no conflict with CSS positioning.
+          */}
           <motion.div
             key="panel"
-            variants={variants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+            initial={isTablet
+              ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 }
+              : { y: "100%" }
+            }
+            animate={isTablet
+              ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 }
+              : { y: 0 }
+            }
+            exit={isTablet
+              ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 }
+              : { y: "100%" }
+            }
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
             className={`sheet ${className}`}
             style={{ zIndex }}

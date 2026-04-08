@@ -18,6 +18,13 @@ const steps: TourStep[] = [
     duration: 4500,
   },
   {
+    target: ".tour-header-actions",
+    titleKey: "tourHeaderActionsTitle",
+    contentKey: "tourHeaderActionsContent",
+    duration: 4000,
+    actionKey: "tourHeaderActionsAction",
+  },
+  {
     target: ".tour-dashboard",
     titleKey: "tourDashboardTitle",
     contentKey: "tourDashboardContent",
@@ -30,6 +37,19 @@ const steps: TourStep[] = [
     contentKey: "tourChecklistContent",
     duration: 4500,
     actionKey: "tourChecklistAction",
+  },
+  {
+    target: ".tour-subjects-carousel",
+    titleKey: "tourSubjectsCarouselTitle",
+    contentKey: "tourSubjectsCarouselContent",
+    duration: 4000,
+    actionKey: "tourSubjectsCarouselAction",
+  },
+  {
+    target: ".tour-recent-activity",
+    titleKey: "tourRecentActivityTitle",
+    contentKey: "tourRecentActivityContent",
+    duration: 4000,
   },
   {
     target: ".tour-add-mark",
@@ -109,8 +129,15 @@ export default function ProductTour() {
 
   const advance = useCallback(() => {
     elapsedRef.current = 0;
-    if (step < steps.length - 1) {
-      setStep(s => s + 1);
+    // Find next step whose target exists (or is "body")
+    let next = step + 1;
+    while (next < steps.length) {
+      const s = steps[next];
+      if (s.target === "body" || document.querySelector(s.target)) break;
+      next++;
+    }
+    if (next < steps.length) {
+      setStep(next);
     } else {
       finish();
     }
@@ -146,6 +173,12 @@ export default function ProductTour() {
 
   useEffect(() => {
     if (!run) return;
+    // Skip step if its target doesn't exist in the DOM
+    const s = steps[step];
+    if (s.target !== "body" && !document.querySelector(s.target)) {
+      advance();
+      return;
+    }
     elapsedRef.current = 0;
     setProgress(0);
     setPaused(false);
