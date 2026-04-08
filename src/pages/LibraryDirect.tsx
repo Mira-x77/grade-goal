@@ -69,6 +69,17 @@ function CyclingSubtext() {
 export default function LibraryDirect() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      setHeaderHeight(headerRef.current?.getBoundingClientRect().height ?? 0);
+    });
+    ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   const userState = loadState();
   const userClassLevel = userState?.classLevel ?? null;
@@ -163,8 +174,8 @@ export default function LibraryDirect() {
     <div className="flex-1 w-full pb-20">
       <div className="w-full">
 
-        {/* Sticky Header — bleeds edge-to-edge, inner content constrained */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md pb-3 border-b border-border/50 overflow-visible safe-area-top">
+        {/* Fixed Header — bleeds edge-to-edge, inner content constrained */}
+        <div ref={headerRef} className="fixed top-0 left-0 right-0 z-10 bg-background/95 backdrop-blur-md pb-3 border-b border-border/50 overflow-visible safe-area-top">
           <div className="header-inner">
           <div className="flex items-start justify-between">
             <h1 className="text-2xl font-black text-foreground">{t("library")}</h1>
@@ -238,7 +249,7 @@ export default function LibraryDirect() {
         {/* ── PAPERS TAB ── */}
         <AnimatePresence mode="wait">
           {activeTab === 'papers' && (
-            <motion.div key="papers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+            <motion.div key="papers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} style={{ paddingTop: headerHeight }}>
               {loading && (
                 <div className="flex flex-col items-center justify-center py-24 gap-4">
                   <div className="relative h-16 w-16">
@@ -289,9 +300,9 @@ export default function LibraryDirect() {
                           className="bg-card rounded-2xl p-4 border border-border flex items-center gap-4 cursor-pointer card-shadow active:scale-[0.98] transition-all"
                           onClick={() => navigate(`/library/${paper.id}`)}
                         >
-                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0 border border-primary/20">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0 border border-primary/20 overflow-hidden">
                             {paper.preview_url ? (
-                              <img src={paper.preview_url} className="w-full h-full object-cover rounded-xl" alt="" />
+                              <img src={paper.preview_url} className="w-full h-full object-cover object-top rounded-xl" alt="" />
                             ) : (
                               <FileText className="h-6 w-6 text-primary" />
                             )}
@@ -349,7 +360,7 @@ export default function LibraryDirect() {
 
           {/* ── PREP TAB ── */}
           {activeTab === 'prep' && (
-            <motion.div key="prep" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+            <motion.div key="prep" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} style={{ paddingTop: headerHeight }}>
               <div className="content-col pt-4 pb-4">
                 {/* Hero */}
                 <div className="rounded-2xl bg-premium/10 border-2 border-premium/30 px-4 py-4 mb-4 flex items-center gap-3">
