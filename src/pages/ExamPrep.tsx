@@ -14,7 +14,7 @@ export default function ExamPrep() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="max-w-md mx-auto">
+      <div className="w-full">
         {/* Header Hero */}
         <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 px-6 pb-8 border-b border-yellow-200 dark:border-yellow-800 text-center relative overflow-hidden safe-area-top">
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-yellow-200/50 dark:bg-yellow-600/20 rounded-full blur-3xl"></div>

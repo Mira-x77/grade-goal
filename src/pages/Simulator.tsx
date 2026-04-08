@@ -125,7 +125,7 @@ const Simulator = () => {
 
   if (subjects.length === 0) {
     return (
-      <div className="min-h-screen bg-background max-w-md mx-auto flex flex-col items-center justify-center px-6 gap-4">
+      <div className="min-h-screen bg-background w-full flex flex-col items-center justify-center px-6 gap-4">
         <p className="text-lg font-black text-foreground">{t("noSubjectsYet")}</p>
         <Link to="/planner" className="rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground">
           {t("startPlanningAction")}
@@ -138,7 +138,7 @@ const Simulator = () => {
 
   return (
     <motion.div
-      className="min-h-screen bg-background max-w-md mx-auto pb-20"
+      className="min-h-screen bg-background w-full pb-20"
       initial={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}

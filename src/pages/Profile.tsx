@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
-import { ArrowLeft, User, Target, BookOpen, Pencil, Check, Settings, Crown, ChevronRight, Plus, Trash2, Search, X } from "lucide-react";
+import { ArrowLeft, User, Target, BookOpen, Pencil, Check, Settings, Crown, ChevronRight, ChevronDown, Plus, Trash2, Search, X, GraduationCap } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
 import { AppState, Subject } from "@/types/exam";
@@ -25,6 +25,7 @@ const Profile = () => {
   const [editingTarget, setEditingTarget] = useState(false);
   const [editingGrading, setEditingGrading] = useState(false);
   const [editingSubjects, setEditingSubjects] = useState(false);
+  const [subjectsOpen, setSubjectsOpen] = useState(false);
   const [subjectSearch, setSubjectSearch] = useState("");
   const [subjectSelected, setSubjectSelected] = useState<Set<string>>(new Set());
   const [showSubjectModal, setShowSubjectModal] = useState(false);
@@ -145,12 +146,19 @@ const Profile = () => {
   };
 
   const removeSubject = (id: string) => {
+    const subjectName = subjects.find((s) => s.id === id)?.name;
+    // Also remove history entries for this subject
+    if (subjectName) {
+      const history = JSON.parse(localStorage.getItem("scoretarget_history") || "[]");
+      const filtered = history.filter((e: { subjectName: string }) => e.subjectName !== subjectName);
+      localStorage.setItem("scoretarget_history", JSON.stringify(filtered));
+    }
     updateState({ subjects: subjects.filter((s) => s.id !== id) });
   };
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3 flex items-center justify-between safe-area-top">
+    <div className="min-h-screen bg-background w-full pb-20">
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-4 py-3 flex items-center justify-between safe-area-top">
         <h1 className="text-lg font-black text-primary">{t("yourProfile")}</h1>
         <Link to="/settings" className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow">
           <Settings className="h-4 w-4" />
@@ -361,58 +369,78 @@ const Profile = () => {
         </motion.div>
 
         {/* Subjects */}
-        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="rounded-2xl bg-card p-5 border-2 border-border mb-4">
-          <div className="flex items-center justify-between mb-4">
+        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="rounded-2xl bg-card border-2 border-border mb-4 overflow-hidden">
+          {/* Header — tapping toggles collapse */}
+          <button
+            onClick={() => setSubjectsOpen(o => !o)}
+            className="w-full flex items-center justify-between px-5 py-4 active:bg-muted/50 transition-colors"
+          >
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <BookOpen className="h-5 w-5 text-primary" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 shrink-0">
+                <GraduationCap className="h-5 w-5 text-primary" />
               </div>
-              <div>
-                <h3 className="font-black text-foreground">{t("addSubjects")}</h3>
-                <p className="text-xs text-muted-foreground font-semibold">{subjects.length} {subjects.length === 1 ? t("subjectsSelected") : t("subjectsSelectedPlural")}</p>
+              <div className="text-left">
+                <h3 className="font-black text-foreground">Subjects</h3>
+                <p className="text-xs text-muted-foreground font-semibold">{subjects.length} subject{subjects.length !== 1 ? "s" : ""}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={openSubjectModal}
-                className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground active:scale-95 transition-transform"
-              >
-                <Plus className="h-3.5 w-3.5" /> {t("addSubjects")}
-              </button>
-            </div>
-          </div>
+            <motion.div animate={{ rotate: subjectsOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            </motion.div>
+          </button>
 
-          {subjects.length === 0 ? (
-            <p className="text-sm text-muted-foreground font-semibold text-center py-4">{t("noSubjectsAdded")}</p>
-          ) : (
-            <div className="flex flex-col">
-              <div className="flex items-center border-b border-border pb-1 mb-1">
-                <span className="flex-1 text-xs font-black text-muted-foreground uppercase tracking-wider">{t("subject")}</span>
-                <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-8">{t("coefficient")}</span>
-              </div>
-              <AnimatePresence>
-                {subjects.map((sub) => (
-                  <motion.div
-                    key={sub.id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -60 }}
-                    className="flex items-center py-3 border-b border-border/50"
+          <AnimatePresence initial={false}>
+            {subjectsOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="px-5 pb-2 flex justify-end">
+                  <button
+                    onClick={openSubjectModal}
+                    className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground active:scale-95 transition-transform"
                   >
-                    <span className="flex-1 font-bold text-foreground text-sm">{sub.name}</span>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => updateSubjectCoeff(sub.id, sub.coefficient - 1)} className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95">−</button>
-                      <span className="w-6 text-center font-black text-foreground text-sm">{sub.coefficient}</span>
-                      <button onClick={() => updateSubjectCoeff(sub.id, sub.coefficient + 1)} className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95">+</button>
-                      <button onClick={() => removeSubject(sub.id)} className="ml-1 text-destructive/50 active:text-destructive transition-colors">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                    <Plus className="h-3.5 w-3.5" /> {t("addSubjects")}
+                  </button>
+                </div>
+
+                {subjects.length === 0 ? (
+                  <p className="text-sm text-muted-foreground font-semibold text-center py-4 px-5">{t("noSubjectsAdded")}</p>
+                ) : (
+                  <div className="flex flex-col px-5 pb-4">
+                    <div className="flex items-center border-b border-border pb-1 mb-1">
+                      <span className="flex-1 text-xs font-black text-muted-foreground uppercase tracking-wider">{t("subject")}</span>
+                      <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-8">{t("coefficient")}</span>
                     </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          )}
+                    <AnimatePresence>
+                      {subjects.map((sub) => (
+                        <motion.div
+                          key={sub.id}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, x: -60 }}
+                          className="flex items-center py-3 border-b border-border/50"
+                        >
+                          <span className="flex-1 font-bold text-foreground text-sm">{sub.name}</span>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => updateSubjectCoeff(sub.id, sub.coefficient - 1)} className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95">−</button>
+                            <span className="w-6 text-center font-black text-foreground text-sm">{sub.coefficient}</span>
+                            <button onClick={() => updateSubjectCoeff(sub.id, sub.coefficient + 1)} className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95">+</button>
+                            <button onClick={() => removeSubject(sub.id)} className="ml-1 text-destructive/50 active:text-destructive transition-colors">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
 

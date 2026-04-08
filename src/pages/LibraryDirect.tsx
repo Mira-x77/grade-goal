@@ -160,11 +160,11 @@ export default function LibraryDirect() {
   const prepSubjects = userSubjectNames.length > 0 ? userSubjectNames : availableSubjectsArr;
 
   return (
-    <div className="flex-1 pb-20">
-      <div className="max-w-md mx-auto">
+    <div className="flex-1 w-full pb-20">
+      <div className="w-full">
 
         {/* Sticky Header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md px-6 pb-3 border-b border-border/50 overflow-visible safe-area-top">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md pb-3 border-b border-border/50 overflow-visible safe-area-top" style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
           <div className="flex items-start justify-between">
             <h1 className="text-2xl font-black text-foreground">{t("library")}</h1>
           </div>
@@ -248,7 +248,7 @@ export default function LibraryDirect() {
               )}
 
               {!loading && !error && filteredPapers.length > 0 && (
-                <div className="px-4 pt-3">
+                <div className="pt-3" style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
                   <p className="text-xs text-muted-foreground font-bold mb-3">
                     {filteredPapers.length} {filteredPapers.length === 1 ? t("paper") : t("papersFound")}
                   </p>
@@ -317,7 +317,7 @@ export default function LibraryDirect() {
               )}
 
               {!loading && !error && papers.length === 0 && (
-                <div className="px-4 py-12 text-center">
+                <div className="py-12 text-center" style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
                   <div className="bg-muted/50 rounded-2xl p-8">
                     <p className="text-lg font-bold text-foreground mb-2">{t("noPapersYet")}</p>
                     <p className="text-sm text-muted-foreground">{t("uploadFromAdmin")}</p>
@@ -326,7 +326,7 @@ export default function LibraryDirect() {
               )}
 
               {!loading && !error && papers.length > 0 && classPapers.length === 0 && effectivePapers === papers && (
-                <div className="px-4 py-12 text-center">
+                <div className="py-12 text-center" style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
                   <div className="bg-muted/50 rounded-2xl p-8">
                     <p className="text-lg font-bold text-foreground mb-2">{t("noPapersForClass")}</p>
                     <p className="text-sm text-muted-foreground">{t("papersWillAppear").replace("{class}", userClassLevel ?? "your class")}</p>
@@ -335,7 +335,7 @@ export default function LibraryDirect() {
               )}
 
               {!loading && !error && classPapers.length > 0 && filteredPapers.length === 0 && (
-                <div className="px-4 py-12 text-center">
+                <div className="py-12 text-center" style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
                   <div className="bg-muted/50 rounded-2xl p-8">
                     <p className="text-lg font-bold text-foreground mb-2">{t("noMatchFilters")}</p>
                     <p className="text-sm text-muted-foreground">{t("tryAdjustFilters")}</p>
@@ -348,7 +348,7 @@ export default function LibraryDirect() {
           {/* ── PREP TAB ── */}
           {activeTab === 'prep' && (
             <motion.div key="prep" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-              <div className="px-4 pt-4 pb-4">
+              <div className="pt-4 pb-4" style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
                 {/* Hero */}
                 <div className="rounded-2xl bg-premium/10 border-2 border-premium/30 px-4 py-4 mb-4 flex items-center gap-3">
                   <Crown className="h-6 w-6 text-premium shrink-0" />

@@ -49,7 +49,7 @@ export function TodaySubjects() {
 
   if (subjects.length === 0) {
     return (
-      <div className="min-h-screen bg-background max-w-md mx-auto flex items-center justify-center p-6">
+      <div className="min-h-screen bg-background w-full flex items-center justify-center p-6">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -67,7 +67,7 @@ export function TodaySubjects() {
   }
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
+    <div className="min-h-screen bg-background w-full pb-20">
       <div className="px-6 pt-8 pb-4">
         <motion.div
           initial={{ opacity: 0, y: -10 }}

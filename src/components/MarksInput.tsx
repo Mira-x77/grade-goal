@@ -49,7 +49,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
   const allFilled = subjects.length > 0 && filledCount === totalMarks;
 
   return (
-    <div className="flex flex-col h-screen bg-background max-w-md mx-auto overflow-hidden">
+    <div className="flex flex-col h-screen bg-background w-full overflow-hidden">
 
       {/* Static header content below fixed nav */}
       <div className="pt-20 px-6 pb-3 flex-shrink-0">
@@ -153,7 +153,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 28, delay: 0.3 }}
-        className="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto px-6 pb-10 pt-8"
+        className="fixed bottom-0 left-0 right-0 z-30 px-6 pb-10 pt-8"
       >
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background to-transparent z-[-1]" />
         <button

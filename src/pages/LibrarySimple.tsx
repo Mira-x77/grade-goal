@@ -10,7 +10,7 @@ const LibrarySimple = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="max-w-md mx-auto">
+      <div className="w-full">
         {/* Header */}
         <div className="px-6 pt-8 pb-4">
           <div className="flex items-start justify-between">

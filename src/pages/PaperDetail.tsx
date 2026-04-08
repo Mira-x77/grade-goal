@@ -124,7 +124,7 @@ const PaperDetail = () => {
   if (loading) {
     return (
       <div className="flex-1 bg-background min-h-screen">
-        <div className="max-w-md mx-auto p-4 safe-area-top">
+        <div className="w-full p-4 safe-area-top">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-muted rounded w-3/4" />
             <div className="h-64 bg-muted rounded-2xl" />
@@ -137,7 +137,7 @@ const PaperDetail = () => {
   if (!paper) {
     return (
       <div className="flex-1 bg-background min-h-screen">
-        <div className="max-w-md mx-auto p-4 safe-area-top text-center py-20">
+        <div className="w-full p-4 safe-area-top text-center py-20">
           <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground mb-6">{t("paperNotFoundDesc")}</p>
           <button onClick={() => navigate("/library")} className="text-primary font-bold">{t("backToLibrary")}</button>
@@ -162,7 +162,7 @@ const PaperDetail = () => {
 
   return (
     <div className="flex-1 bg-background min-h-screen pb-24">
-      <div className="max-w-md mx-auto p-4 safe-area-top">
+      <div className="w-full p-4 safe-area-top">
         {/* Paper Details Card */}
         <div className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border mb-6">
           {(paper as any).preview_url && (
@@ -262,7 +262,9 @@ const PaperDetail = () => {
         <InAppPDFViewer
           pdfData={pdfData}
           fileName={paper?.title || "Exam Paper"}
+          subjectName={paper?.subject}
           onClose={() => { setShowPDFViewer(false); setPdfData(''); }}
+          onPremiumNudge={() => { setShowPDFViewer(false); setPdfData(''); setPrepOpen(true); }}
         />
       )}
 
@@ -274,7 +276,7 @@ const PaperDetail = () => {
               className="fixed inset-0 z-50 bg-black/50" onClick={() => setPrepOpen(false)} />
             <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground"
             >
               <div className="flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1.5 rounded-full bg-foreground/30" />

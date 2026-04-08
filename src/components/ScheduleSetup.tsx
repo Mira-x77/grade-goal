@@ -80,7 +80,7 @@ export function ScheduleSetup({ onComplete, onSkip, initialSchedule }: ScheduleS
   };
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
+    <div className="min-h-screen bg-background w-full pb-20">
       <div className="px-6 pt-8 pb-4">
         <motion.div
           initial={{ opacity: 0, y: -10 }}

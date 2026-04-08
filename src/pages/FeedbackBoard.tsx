@@ -106,7 +106,7 @@ export default function FeedbackBoard() {
   );
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto pb-24">
+    <div className="min-h-screen bg-background w-full pb-24">
 
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-lg border-b border-border safe-area-top">
@@ -207,7 +207,7 @@ export default function FeedbackBoard() {
             <motion.div
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 z-[61] max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground p-6 pb-10"
+              className="fixed bottom-0 left-0 right-0 z-[61] bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground p-6 pb-10"
             >
               <div className="w-10 h-1 rounded-full bg-foreground/20 mx-auto mb-5" />
               <div className="flex items-center justify-between mb-5">

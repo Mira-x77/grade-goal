@@ -336,7 +336,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
   );
 
   return (
-    <div className="flex flex-col h-screen bg-background max-w-md mx-auto overflow-hidden">
+    <div className="flex flex-col h-screen bg-background w-full overflow-hidden">
 
       {hasSubjects && (
         <div className="px-6 pb-2 flex-shrink-0 safe-area-top" style={{ paddingTop: "calc(5rem + env(safe-area-inset-top))" }}>
@@ -380,7 +380,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto px-6 pb-10 pt-4 bg-background flex items-center gap-3">
+      <div className="fixed bottom-0 left-0 right-0 z-30 px-6 pb-10 pt-4 bg-background flex items-center gap-3">
         <motion.button
           layout
           onClick={openModal}

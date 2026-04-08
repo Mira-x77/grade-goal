@@ -83,7 +83,7 @@ const Index = () => {
   const TOTAL_STEPS = 5;
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
+    <div className="min-h-screen bg-background w-full pb-20">
       {state.step !== "results" && (
         <OnboardingHeader
           title={stepTitles[state.step]}

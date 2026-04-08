@@ -134,9 +134,9 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
+    <div className="min-h-screen bg-background w-full pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3 safe-area-top">
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-4 py-3 safe-area-top">
         <h1 className="text-lg font-black text-primary">{t("settings")}</h1>
       </div>
 
@@ -532,7 +532,7 @@ const Settings = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground p-6 pb-10"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground p-6 pb-10"
             >
               {/* Handle */}
               <div className="w-10 h-1 rounded-full bg-foreground/20 mx-auto mb-6" />

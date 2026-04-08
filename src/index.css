@@ -287,3 +287,80 @@
     display: none !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL EDGE-TO-EDGE & RESPONSIVE SCALING
+   ─────────────────────────────────────────────────────────────
+   • All screens fill 100% width — no max-width centering column
+   • Text containers use relative units so system font-scale is safe
+   • Horizontal filter rows scroll instead of wrapping/clipping
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Root fills the full viewport */
+html, body, #root {
+  width: 100%;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* Every page root div should be full-width */
+.page-root {
+  width: 100%;
+  min-height: 100dvh;
+}
+
+/* Page header — always bleeds edge-to-edge */
+.page-header {
+  width: 100%;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+/* Content area — standard 16px side padding, no max-width cap */
+.page-content {
+  width: 100%;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+/* Prevent fixed-height text containers from clipping on large font scales */
+.text-container-auto {
+  height: auto !important;
+  min-height: unset !important;
+}
+
+/* Horizontal scroll row — filter chips, tag rows, etc. */
+.h-scroll-row {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 0.5rem;
+  padding-bottom: 2px; /* prevent shadow clipping */
+}
+.h-scroll-row::-webkit-scrollbar { display: none; }
+
+/* Hide scrollbar utility (already used in some places) */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Bottom sheet — full width, no max-w-md cap */
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: hsl(var(--background));
+  border-top: 2px solid hsl(var(--foreground));
+  border-left: 2px solid hsl(var(--foreground));
+  border-right: 2px solid hsl(var(--foreground));
+  border-radius: 1.5rem 1.5rem 0 0;
+  padding-left: max(1.5rem, env(safe-area-inset-left));
+  padding-right: max(1.5rem, env(safe-area-inset-right));
+}

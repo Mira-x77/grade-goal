@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, BookOpen, Sun, Moon, Scroll } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, BookOpen, Sun, Moon, Scroll, Maximize2, Crown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Loader } from '@/components/ui/loader';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -10,21 +11,24 @@ const MIN_SCALE = 0.5;
 const MAX_SCALE = 5.0;
 const MAX_CANVAS_DIM = 4096;
 const DPR = Math.min(window.devicePixelRatio || 1, 3);
+const TOUR_KEY = 'scoretarget_pdf_tour_seen';
 
 type ReadingMode = 'light' | 'dark' | 'sepia';
-const MODE_CFG: Record<ReadingMode, { bg: string; filter: string; icon: React.ReactNode }> = {
-  light: { bg: '#f5f5f5', filter: 'none', icon: <Sun className="h-4 w-4 text-foreground" /> },
-  dark:  { bg: '#121212', filter: 'invert(1) hue-rotate(180deg)', icon: <Moon className="h-4 w-4 text-foreground" /> },
-  sepia: { bg: '#f4ecd8', filter: 'sepia(0.35) brightness(0.95)', icon: <Scroll className="h-4 w-4 text-foreground" /> },
+const MODE_CFG: Record<ReadingMode, { bg: string; filter: string; label: string; icon: React.ReactNode }> = {
+  light: { bg: '#f5f5f5', filter: 'none',                          label: 'Light', icon: <Sun  className="h-4 w-4" /> },
+  dark:  { bg: '#121212', filter: 'invert(1) hue-rotate(180deg)',  label: 'Dark',  icon: <Moon className="h-4 w-4" /> },
+  sepia: { bg: '#f4ecd8', filter: 'sepia(0.35) brightness(0.95)', label: 'Sepia', icon: <Scroll className="h-4 w-4" /> },
 };
 
 interface InAppPDFViewerProps {
   pdfData: string;
   fileName: string;
+  subjectName?: string;
   onClose: () => void;
+  onPremiumNudge?: () => void;
 }
 
-export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerProps) {
+export function InAppPDFViewer({ pdfData, fileName, subjectName, onClose, onPremiumNudge }: InAppPDFViewerProps) {
   const { t } = useLanguage();
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,6 +41,11 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
   const [showPageInput, setShowPageInput] = useState(false);
   const [pageInputVal, setPageInputVal] = useState('');
   const [readingMode, setReadingMode] = useState<ReadingMode>('light');
+  const [showTour, setShowTour] = useState(false);
+  // Premium nudges — session-only (not persisted)
+  const [midNudgeDismissed, setMidNudgeDismissed] = useState(false);
+  const [endNudgeShown, setEndNudgeShown] = useState(false);
+  const [showEndNudge, setShowEndNudge] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,6 +64,33 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
   const isPanningRef = useRef(false);
   const isPinchingRef = useRef(false);
   const lastTapRef = useRef(0);
+
+  // Show first-time tour
+  useEffect(() => {
+    if (!localStorage.getItem(TOUR_KEY)) setShowTour(true);
+  }, []);
+
+  // Mid-read nudge: show after page 3 (once per session)
+  useEffect(() => {
+    if (!midNudgeDismissed && currentPage === 3 && numPages > 4 && onPremiumNudge) {
+      // auto-dismiss after 6s if user doesn't tap
+      const t = setTimeout(() => setMidNudgeDismissed(true), 6000);
+      return () => clearTimeout(t);
+    }
+  }, [currentPage, numPages, midNudgeDismissed, onPremiumNudge]);
+
+  // End nudge: show when user reaches the last page (once per session)
+  useEffect(() => {
+    if (!endNudgeShown && numPages > 0 && currentPage === numPages && onPremiumNudge) {
+      setEndNudgeShown(true);
+      setShowEndNudge(true);
+    }
+  }, [currentPage, numPages, endNudgeShown, onPremiumNudge]);
+
+  const dismissTour = () => {
+    localStorage.setItem(TOUR_KEY, 'true');
+    setShowTour(false);
+  };
 
   // ── Load PDF ──
   useEffect(() => {
@@ -88,13 +124,11 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
     return () => { cancelled = true; pdfDocRef.current?.destroy(); pdfDocRef.current = null; };
   }, [pdfData]);
 
-  // ── Render on state change ──
   useEffect(() => {
     if (!pdfDocRef.current || loading) return;
     renderPage(currentPage, baseScale, rotation);
   }, [currentPage, baseScale, rotation, loading]);
 
-  // ── Auto-hide controls ──
   const resetControlsTimer = useCallback(() => {
     setShowControls(true);
     if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
@@ -106,15 +140,12 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
     return () => { if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current); };
   }, []);
 
-  // ── Apply CSS transform (pan + visual pinch scale) ──
   const applyTransform = useCallback(() => {
     if (!wrapperRef.current) return;
     const { x, y } = panRef.current;
-    const vs = visualScaleRef.current;
-    wrapperRef.current.style.transform = `translate(${x}px,${y}px) scale(${vs})`;
+    wrapperRef.current.style.transform = `translate(${x}px,${y}px) scale(${visualScaleRef.current})`;
   }, []);
 
-  // ── Render canvas at committed baseScale ──
   const renderPage = useCallback(async (pageNum: number, sc: number, rot: number) => {
     if (!pdfDocRef.current || !canvasRef.current || !containerRef.current) return;
     if (renderTaskRef.current) { renderTaskRef.current.cancel(); renderTaskRef.current = null; }
@@ -124,37 +155,23 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
       const naturalVp = page.getViewport({ scale: 1, rotation: rot });
       const containerW = containerRef.current.clientWidth;
       const fitScale = containerW / naturalVp.width;
-
-      // Canvas pixel size, capped at MAX_CANVAS_DIM to prevent OOM
       let renderScale = fitScale * sc * DPR;
-      const pxW = naturalVp.width * renderScale;
-      const pxH = naturalVp.height * renderScale;
-      const maxDim = Math.max(pxW, pxH);
+      const maxDim = Math.max(naturalVp.width * renderScale, naturalVp.height * renderScale);
       if (maxDim > MAX_CANVAS_DIM) renderScale *= MAX_CANVAS_DIM / maxDim;
-
       const viewport = page.getViewport({ scale: renderScale, rotation: rot });
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d', { alpha: false });
       if (!ctx) return;
-
       canvas.width = Math.round(viewport.width);
       canvas.height = Math.round(viewport.height);
-
-      // CSS display size = fit-to-width × zoom (can exceed container when zoomed)
-      const dispW = naturalVp.width * fitScale * sc;
-      const dispH = naturalVp.height * fitScale * sc;
-      canvas.style.width = dispW + 'px';
-      canvas.style.height = dispH + 'px';
-
+      canvas.style.width = (naturalVp.width * fitScale * sc) + 'px';
+      canvas.style.height = (naturalVp.height * fitScale * sc) + 'px';
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
       const task = (page.render as any)({ canvasContext: ctx, viewport, intent: 'display' });
       renderTaskRef.current = task;
       await task.promise;
       renderTaskRef.current = null;
-
-      // Reset visual transform after fresh render
       visualScaleRef.current = 1.0;
       applyTransform();
     } catch (e: any) {
@@ -164,20 +181,15 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
     }
   }, [applyTransform]);
 
-  // ── Constrain pan boundaries ──
   const constrainPan = useCallback((x: number, y: number, effectiveScale: number) => {
     if (!canvasRef.current || !containerRef.current || effectiveScale <= 1.05) return { x: 0, y: 0 };
-    const vs = visualScaleRef.current;
-    const cW = canvasRef.current.offsetWidth * vs;
-    const cH = canvasRef.current.offsetHeight * vs;
-    const contW = containerRef.current.clientWidth;
-    const contH = containerRef.current.clientHeight;
-    const maxX = Math.max(0, (cW - contW) / 2);
-    const maxY = Math.max(0, (cH - contH) / 2);
+    const cW = canvasRef.current.offsetWidth * visualScaleRef.current;
+    const cH = canvasRef.current.offsetHeight * visualScaleRef.current;
+    const maxX = Math.max(0, (cW - containerRef.current.clientWidth) / 2);
+    const maxY = Math.max(0, (cH - containerRef.current.clientHeight) / 2);
     return { x: Math.max(-maxX, Math.min(maxX, x)), y: Math.max(-maxY, Math.min(maxY, y)) };
   }, []);
 
-  // ── Touch gesture helpers ──
   const getTouchDist = (e: React.TouchEvent) => {
     const [a, b] = [e.touches[0], e.touches[1]];
     return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
@@ -199,17 +211,13 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    // ── PINCH: CSS transform only, NO canvas re-render ──
     if (e.touches.length === 2 && isPinchingRef.current && pinchStartDistRef.current != null) {
       e.preventDefault();
-      const ratio = getTouchDist(e) / pinchStartDistRef.current;
-      const newEff = pinchBaseScaleRef.current * ratio;
-      const clamped = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newEff));
+      const clamped = Math.max(MIN_SCALE, Math.min(MAX_SCALE, pinchBaseScaleRef.current * getTouchDist(e) / pinchStartDistRef.current));
       visualScaleRef.current = clamped / baseScale;
       applyTransform();
       return;
     }
-    // ── PAN: CSS translate, no re-render ──
     if (e.touches.length === 1 && panStartRef.current && !isPinchingRef.current) {
       const effectiveScale = baseScale * visualScaleRef.current;
       if (effectiveScale <= 1.05) return;
@@ -218,20 +226,16 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
       const dy = t.clientY - panStartRef.current.y;
       if (Math.abs(dx) > 5 || Math.abs(dy) > 5) isPanningRef.current = true;
       if (isPanningRef.current) {
-        const constrained = constrainPan(panStartRef.current.px + dx, panStartRef.current.py + dy, effectiveScale);
-        panRef.current = constrained;
+        panRef.current = constrainPan(panStartRef.current.px + dx, panStartRef.current.py + dy, effectiveScale);
         applyTransform();
       }
     }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    // ── Pinch ended → commit scale, trigger ONE re-render ──
     if (isPinchingRef.current && e.touches.length < 2) {
       isPinchingRef.current = false;
-      const finalScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE,
-        parseFloat((baseScale * visualScaleRef.current).toFixed(2))
-      ));
+      const finalScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, parseFloat((baseScale * visualScaleRef.current).toFixed(2))));
       if (finalScale <= 1.05) panRef.current = { x: 0, y: 0 };
       pinchStartDistRef.current = null;
       visualScaleRef.current = 1.0;
@@ -242,22 +246,14 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
     const t = e.changedTouches[0];
     const dx = t.clientX - touchStartRef.current.x;
     const dy = t.clientY - touchStartRef.current.y;
-
     if (!isPanningRef.current) {
-      // Swipe page (only at 1x)
       if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) && baseScale <= 1.05) {
         dx > 0 ? goTo(currentPage - 1) : goTo(currentPage + 1);
-      }
-      // Tap / double-tap
-      else if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+      } else if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
         const now = Date.now();
         if (now - lastTapRef.current < 300) {
-          if (baseScale > 1.05) {
-            panRef.current = { x: 0, y: 0 };
-            setBaseScale(1.0);
-          } else {
-            setBaseScale(2.0);
-          }
+          panRef.current = { x: 0, y: 0 };
+          setBaseScale(baseScale > 1.05 ? 1.0 : 2.0);
         } else {
           setShowControls(v => !v);
         }
@@ -268,7 +264,6 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
     panStartRef.current = null;
   };
 
-  // ── Navigation & zoom ──
   const goTo = useCallback((n: number) => {
     const p = Math.max(1, Math.min(numPages, n));
     setCurrentPage(p);
@@ -301,21 +296,33 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
   };
 
   const mode = MODE_CFG[readingMode];
+  const progress = numPages > 1 ? (currentPage - 1) / (numPages - 1) : 1;
 
   return (
-    <div className="pdf-viewer-root fixed inset-0 z-50 flex flex-col select-none overflow-hidden safe-area-inset"
+    <div className="pdf-viewer-root fixed inset-0 z-50 flex flex-col select-none overflow-hidden"
          style={{ backgroundColor: mode.bg, WebkitUserSelect: 'none', userSelect: 'none' }}>
 
       {/* ── Top Bar ── */}
       <div className={'absolute top-0 left-0 right-0 z-20 transition-transform duration-300 safe-area-top '
         + (showControls ? 'translate-y-0' : '-translate-y-full')}>
-        <div className="bg-card border-b-2 border-foreground flex items-center gap-2 px-3 pt-12 pb-2">
-          <button onClick={onClose} className="p-2 rounded-xl bg-muted border-2 border-foreground active:scale-95 transition-transform">
-            <X className="h-5 w-5 text-foreground" />
+        <div className="bg-background/90 backdrop-blur-md border-b border-border/60 flex items-center gap-2 px-4 pt-12 pb-3">
+          {/* Close */}
+          <button onClick={onClose}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground active:scale-95 transition-transform shrink-0">
+            <X className="h-5 w-5" />
           </button>
-          <div className="flex-1 min-w-0 mx-2">
-            <p className="text-foreground text-xs font-black truncate">{fileName}</p>
+
+          {/* Title */}
+          <div className="flex-1 min-w-0 px-1">
+            <p className="text-foreground text-xs font-black truncate leading-tight">{fileName}</p>
+            {numPages > 0 && (
+              <p className="text-muted-foreground text-[10px] font-semibold mt-0.5">
+                {currentPage} of {numPages} pages
+              </p>
+            )}
           </div>
+
+          {/* Page jump */}
           {numPages > 0 && (
             showPageInput ? (
               <div className="flex items-center gap-1">
@@ -323,26 +330,38 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
                   onChange={e => setPageInputVal(e.target.value)}
                   onBlur={submitPageInput}
                   onKeyDown={e => e.key === 'Enter' && submitPageInput()}
-                  className="w-14 text-center text-foreground bg-muted rounded-lg px-1 py-1 text-sm outline-none border-2 border-foreground font-bold"
+                  className="w-12 text-center text-foreground bg-muted rounded-lg px-1 py-1.5 text-sm outline-none border-2 border-primary font-bold"
                   min={1} max={numPages} />
-                <span className="text-muted-foreground text-xs font-bold">/ {numPages}</span>
+                <span className="text-muted-foreground text-xs font-bold">/{numPages}</span>
               </div>
             ) : (
               <button onClick={() => { setShowPageInput(true); setPageInputVal(String(currentPage)); resetControlsTimer(); }}
-                className="px-3 py-1.5 rounded-xl bg-muted border-2 border-foreground active:scale-95 transition-transform">
-                <span className="text-foreground text-xs font-black">{currentPage} / {numPages}</span>
+                className="px-2.5 py-1.5 rounded-xl bg-muted text-foreground text-xs font-black active:scale-95 transition-transform">
+                p.{currentPage}
               </button>
             )
           )}
+
+          {/* Rotate */}
           <button onClick={() => { setRotation(r => (r + 90) % 360); resetControlsTimer(); }}
-            className="p-2 rounded-xl bg-muted border-2 border-foreground active:scale-95 transition-transform">
-            <RotateCw className="h-4 w-4 text-foreground" />
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground active:scale-95 transition-transform">
+            <RotateCw className="h-4 w-4" />
           </button>
+
+          {/* Reading mode — shows label */}
           <button onClick={cycleReadingMode}
-            className="p-2 rounded-xl bg-muted border-2 border-foreground active:scale-95 transition-transform text-base leading-none">
+            className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-muted text-foreground active:scale-95 transition-transform">
             {mode.icon}
+            <span className="text-[10px] font-black">{mode.label}</span>
           </button>
         </div>
+
+        {/* Progress bar */}
+        {numPages > 1 && (
+          <div className="h-0.5 bg-border/40">
+            <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress * 100}%` }} />
+          </div>
+        )}
       </div>
 
       {/* ── Canvas Container ── */}
@@ -361,60 +380,206 @@ export function InAppPDFViewer({ pdfData, fileName, onClose }: InAppPDFViewerPro
           <div className="flex flex-col items-center justify-center h-full gap-4 px-6 text-center">
             <BookOpen className="h-12 w-12 text-danger" />
             <p className="text-danger text-sm font-bold">{error}</p>
-            <button onClick={onClose} className="px-4 py-2 bg-muted border-2 border-foreground rounded-xl text-foreground text-sm font-bold card-shadow active:scale-95">{t("close")}</button>
+            <button onClick={onClose} className="px-4 py-2 bg-muted rounded-xl text-foreground text-sm font-bold active:scale-95">{t("close")}</button>
           </div>
         )}
         {!loading && !error && (
-          <div ref={wrapperRef} className="relative will-change-transform"
-               style={{ transformOrigin: 'center center' }}>
+          <div ref={wrapperRef} className="relative will-change-transform" style={{ transformOrigin: 'center center' }}>
             {pageLoading && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/10 backdrop-blur-sm rounded-lg">
-                <div className="w-8 h-8 border-3 border-white/20 border-t-white rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
               </div>
             )}
-            <canvas ref={canvasRef} className="shadow-2xl rounded-sm"
-              style={{ display: 'block', filter: mode.filter }} />
+            <canvas ref={canvasRef} className="shadow-2xl rounded-sm" style={{ display: 'block', filter: mode.filter }} />
           </div>
         )}
       </div>
 
-      {/* ── Bottom Bar ── */}
+      {/* ── Bottom Controls — floating pill ── */}
       {!loading && !error && (
-        <div className={'absolute bottom-0 left-0 right-0 z-20 transition-transform duration-300 safe-area-bottom '
+        <div className={'absolute bottom-0 left-0 right-0 z-20 transition-transform duration-300 '
           + (showControls ? 'translate-y-0' : 'translate-y-full')}>
-          <div className="bg-card border-t-2 border-foreground flex items-center justify-between px-4 pt-2 pb-10 gap-2">
-            <button onClick={() => goTo(currentPage - 1)} disabled={currentPage === 1}
-              className="p-3 rounded-xl bg-muted border-2 border-foreground active:scale-95 disabled:opacity-30 transition-transform">
-              <ChevronLeft className="h-5 w-5 text-foreground" />
-            </button>
-            <button onClick={() => zoom(-0.25)} disabled={baseScale <= MIN_SCALE}
-              className="p-3 rounded-xl bg-muted border-2 border-foreground active:scale-95 disabled:opacity-30 transition-transform">
-              <ZoomOut className="h-5 w-5 text-foreground" />
-            </button>
+          <div className="flex items-center justify-center gap-3 px-4 pb-10 pt-3 bg-background/90 backdrop-blur-md border-t border-border/60">
+
+            {/* Nav group */}
+            <div className="flex items-center bg-muted rounded-2xl overflow-hidden border border-border/40">
+              <button onClick={() => goTo(currentPage - 1)} disabled={currentPage === 1}
+                className="flex h-11 w-11 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors">
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <div className="w-px h-5 bg-border/60" />
+              <button onClick={() => goTo(currentPage + 1)} disabled={currentPage === numPages}
+                className="flex h-11 w-11 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors">
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Zoom group */}
+            <div className="flex items-center bg-muted rounded-2xl overflow-hidden border border-border/40">
+              <button onClick={() => zoom(-0.25)} disabled={baseScale <= MIN_SCALE}
+                className="flex h-11 w-11 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors">
+                <ZoomOut className="h-5 w-5" />
+              </button>
+              <button onClick={() => { panRef.current = { x: 0, y: 0 }; setBaseScale(1.0); resetControlsTimer(); }}
+                className="flex h-11 px-3 items-center justify-center text-foreground active:bg-muted-foreground/20 transition-colors">
+                <span className="text-xs font-black min-w-[36px] text-center">{Math.round(baseScale * 100)}%</span>
+              </button>
+              <button onClick={() => zoom(0.25)} disabled={baseScale >= MAX_SCALE}
+                className="flex h-11 w-11 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors">
+                <ZoomIn className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Fit button */}
             <button onClick={() => { panRef.current = { x: 0, y: 0 }; setBaseScale(1.0); resetControlsTimer(); }}
-              className="px-3 py-2 rounded-xl bg-secondary border-2 border-foreground active:scale-95 min-w-[64px] text-center transition-transform card-shadow">
-              <span className="text-foreground text-sm font-black">{Math.round(baseScale * 100)}%</span>
-            </button>
-            <button onClick={() => zoom(0.25)} disabled={baseScale >= MAX_SCALE}
-              className="p-3 rounded-xl bg-muted border-2 border-foreground active:scale-95 disabled:opacity-30 transition-transform">
-              <ZoomIn className="h-5 w-5 text-foreground" />
-            </button>
-            <button onClick={() => goTo(currentPage + 1)} disabled={currentPage === numPages}
-              className="p-3 rounded-xl bg-muted border-2 border-foreground active:scale-95 disabled:opacity-30 transition-transform">
-              <ChevronRight className="h-5 w-5 text-foreground" />
+              className="flex h-11 w-11 items-center justify-center bg-muted rounded-2xl border border-border/40 text-foreground active:scale-95 transition-transform">
+              <Maximize2 className="h-4 w-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* ── Hint ── */}
-      {!loading && !error && currentPage === 1 && showControls && numPages > 1 && (
-        <div className="absolute bottom-32 left-0 right-0 flex justify-center pointer-events-none z-30">
-          <div className="bg-card/90 border-2 border-foreground text-foreground text-xs px-4 py-1.5 rounded-full backdrop-blur-sm flex items-center gap-1.5 font-bold">
-            {t("swipeHint")}
-          </div>
-        </div>
-      )}
+      {/* ── Mid-read nudge — floating banner at page 3 ── */}
+      <AnimatePresence>
+        {!midNudgeDismissed && currentPage === 3 && numPages > 4 && onPremiumNudge && !showTour && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            className="absolute bottom-28 left-4 right-4 z-30 pointer-events-auto"
+          >
+            <div className="bg-premium rounded-2xl px-4 py-3 flex items-center gap-3 shadow-lg">
+              <Crown className="h-5 w-5 text-premium-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-premium-foreground text-xs font-black leading-tight">
+                  Want the model answers?
+                </p>
+                <p className="text-premium-foreground/70 text-[10px] font-semibold mt-0.5">
+                  {subjectName ? `Unlock prep tools for ${subjectName}` : 'Unlock premium prep tools'}
+                </p>
+              </div>
+              <button
+                onClick={() => { setMidNudgeDismissed(true); onPremiumNudge(); }}
+                className="shrink-0 bg-premium-foreground/20 border border-premium-foreground/30 rounded-xl px-3 py-1.5 text-premium-foreground text-xs font-black active:scale-95 transition-transform"
+              >
+                Unlock
+              </button>
+              <button onClick={() => setMidNudgeDismissed(true)} className="text-premium-foreground/60 active:scale-95 transition-transform">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── End-of-paper nudge — bottom sheet ── */}
+      <AnimatePresence>
+        {showEndNudge && onPremiumNudge && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9985] bg-black/40" onClick={() => setShowEndNudge(false)} />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+              className="fixed bottom-0 left-0 right-0 z-[9986] bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground px-6 pt-5 pb-[max(2rem,env(safe-area-inset-bottom))]"
+            >
+              <div className="w-10 h-1.5 rounded-full bg-foreground/20 mx-auto mb-4" />
+              <button onClick={() => setShowEndNudge(false)}
+                className="absolute top-5 right-5 flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-95">
+                <X className="h-4 w-4" />
+              </button>
+
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-2xl">🎉</span>
+                <div>
+                  <h2 className="text-base font-black text-foreground leading-tight">You've finished the paper!</h2>
+                  <p className="text-xs font-semibold text-muted-foreground mt-0.5">
+                    {subjectName ? `Now check how you'd do on ${subjectName}` : 'Now check your answers'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {[
+                  { icon: '✅', label: 'Model answers' },
+                  { icon: '🎯', label: 'Top questions' },
+                  { icon: '📋', label: 'Cheat sheet' },
+                ].map(({ icon, label }) => (
+                  <div key={label} className="rounded-xl bg-muted/60 border border-border px-2 py-2.5 text-center">
+                    <span className="text-lg block mb-1">{icon}</span>
+                    <p className="text-[10px] font-black text-foreground leading-tight">{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => { setShowEndNudge(false); onPremiumNudge(); }}
+                className="w-full rounded-2xl bg-premium py-3.5 text-sm font-extrabold text-premium-foreground active:translate-y-0.5 transition-all flex items-center justify-center gap-2"
+              >
+                <Crown className="h-4 w-4" />
+                {subjectName ? `Unlock prep for ${subjectName}` : 'Unlock premium prep'}
+              </button>
+              <p className="text-center text-[10px] text-muted-foreground font-semibold mt-2">
+                Model answers · Key topics · Practice tests
+              </p>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── First-time tour overlay ── */}
+      <AnimatePresence>
+        {showTour && !loading && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9990] bg-black/50" onClick={dismissTour} />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+              className="fixed bottom-0 left-0 right-0 z-[9991] bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground px-6 pt-5 pb-[max(2rem,env(safe-area-inset-bottom))]"
+            >
+              <div className="w-10 h-1.5 rounded-full bg-foreground/20 mx-auto mb-5" />
+              <button onClick={dismissTour}
+                className="absolute top-5 right-5 flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground active:scale-95">
+                <X className="h-4 w-4" />
+              </button>
+
+              <h2 className="text-lg font-black text-foreground mb-1">Reading your paper 📄</h2>
+              <p className="text-sm font-semibold text-muted-foreground mb-5 leading-relaxed">
+                Here's how to navigate:
+              </p>
+
+              <div className="flex flex-col gap-3 mb-6">
+                {[
+                  { icon: '👆', label: 'Tap', desc: 'Show or hide the controls' },
+                  { icon: '👆👆', label: 'Double-tap', desc: 'Zoom in / zoom back out' },
+                  { icon: '🤏', label: 'Pinch', desc: 'Zoom to any level' },
+                  { icon: '👈👉', label: 'Swipe left/right', desc: 'Turn pages (at 1× zoom)' },
+                  { icon: '✋', label: 'Drag', desc: 'Pan around when zoomed in' },
+                ].map(({ icon, label, desc }) => (
+                  <div key={label} className="flex items-center gap-3">
+                    <span className="text-xl w-8 text-center shrink-0">{icon}</span>
+                    <div>
+                      <span className="text-sm font-black text-foreground">{label} </span>
+                      <span className="text-sm font-semibold text-muted-foreground">— {desc}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={dismissTour}
+                className="w-full rounded-2xl bg-primary py-3.5 text-sm font-extrabold text-primary-foreground active:translate-y-0.5 transition-all">
+                Got it, let's read
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

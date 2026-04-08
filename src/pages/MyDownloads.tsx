@@ -147,7 +147,7 @@ const MyDownloads = () => {
   if (loading) {
     return (
       <div className="flex-1 bg-background">
-        <div className="w-full max-w-md mx-auto px-4 py-4 safe-area-top">
+        <div className="w-full px-4 py-4 safe-area-top">
           <div className="animate-pulse space-y-4">
             <div className="h-28 bg-muted rounded-2xl" />
             <div className="h-12 bg-muted rounded-2xl" />
@@ -161,7 +161,7 @@ const MyDownloads = () => {
   return (
     <div className="flex-1 bg-background min-h-screen">
       {/* Fixed header */}
-      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-20 max-w-md mx-auto bg-background/90 backdrop-blur-lg border-b border-border px-4 pb-3 safe-area-top">
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-20 bg-background/90 backdrop-blur-lg border-b border-border px-4 pb-3 safe-area-top">
         <div className="mt-3 rounded-2xl bg-card border-2 border-border overflow-hidden">
           {/* Top row: icon + used + free + papers count */}
           <div className="flex items-center gap-3 px-4 pt-3 pb-2">
@@ -217,7 +217,7 @@ const MyDownloads = () => {
 
       {/* Scrollable list */}
       <div
-        className="w-full max-w-md mx-auto px-4 pb-24"
+        className="w-full px-4 pb-24"
         style={{ paddingTop: headerHeight + 12 }}
         onClick={() => setRevealedDelete(null)}
       >

@@ -294,9 +294,9 @@ const Home = () => {
   const savedStrategy = appState?.savedStrategy;
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
+    <div className="min-h-screen bg-background w-full pb-20">
       {/* Header */}
-      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-30 max-w-md mx-auto bg-background/80 backdrop-blur-lg border-b border-border px-6 pb-4 safe-area-top">
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border px-4 pb-4 safe-area-top" style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -362,7 +362,7 @@ const Home = () => {
         </AnimatePresence>
       </div>
 
-      <div className="flex flex-col gap-4 px-6 pb-8 pt-[calc(7rem+env(safe-area-inset-top))]">
+      <div className="flex flex-col gap-4 pb-8 pt-[calc(7rem+env(safe-area-inset-top))]" style={{ paddingLeft: "max(1rem, env(safe-area-inset-left))", paddingRight: "max(1rem, env(safe-area-inset-right))" }}>
         {/* Performance Alerts */}
         {alerts.length > 0 && (
           <motion.div
@@ -600,7 +600,7 @@ const Home = () => {
 
         {/* Horizontal scroll: Subjects at a glance + Class ranking */}
         {hasData && (
-          <div className="overflow-x-auto -mx-6 px-6 pb-2">
+          <div className="overflow-x-auto -mx-4 px-4 pb-2 hide-scrollbar">
             <div className="flex gap-3 items-start" style={{ width: "max-content" }}>
               {/* Card 1 — Subjects at a glance (collapsible) */}
               <SubjectsGlanceCard subjects={appState!.subjects} title={t("subjectsGlance")} />
@@ -743,7 +743,7 @@ const Home = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground p-6 pb-10"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground p-6 pb-10"
             >
               {/* Handle */}
               <div className="w-10 h-1 rounded-full bg-foreground/20 mx-auto mb-5" />
@@ -921,7 +921,7 @@ const Home = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground overflow-hidden"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground overflow-hidden"
               style={{ maxHeight: "92vh" }}
               id="results-sheet"
             >
@@ -987,7 +987,7 @@ const Home = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground overflow-hidden"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground overflow-hidden"
               style={{ maxHeight: "92vh" }}
             >
               {/* Handle */}
@@ -1073,7 +1073,7 @@ const Home = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground"
               style={{ maxHeight: "75vh" }}
             >
               <div className="flex justify-center pt-3 pb-1">

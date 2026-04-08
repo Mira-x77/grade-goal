@@ -90,7 +90,7 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
           <motion.div
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 32 }}
-            className="fixed bottom-0 left-0 right-0 z-[70] max-w-md mx-auto bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-[70] bg-background rounded-t-3xl border-t-2 border-x-2 border-foreground overflow-hidden"
             style={{ maxHeight: "90vh" }}
           >
             {/* Handle */}
