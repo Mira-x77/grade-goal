@@ -71,6 +71,19 @@ export function loadState(): AppState | null {
     if (parsed.targetMin === undefined || parsed.targetMin === null) {
       parsed.targetMin = parsed.targetAverage ?? 16;
     }
+    // Safety: reset malformed nigerianState
+    if (parsed.nigerianState !== undefined) {
+      const ns = parsed.nigerianState;
+      if (!ns || !Array.isArray(ns.semesters)) {
+        parsed.nigerianState = {
+          semesters: [],
+          cgpa: 0,
+          classOfDegree: "Fail",
+          targetCGPA: null,
+          remainingCreditUnits: 0,
+        };
+      }
+    }
     saveState(parsed);
     return parsed;
   } catch {

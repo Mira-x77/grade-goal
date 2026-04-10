@@ -10,7 +10,14 @@ interface TourStep {
   actionKey?: string;
 }
 
-const steps: TourStep[] = [
+function getGradingSystem(): string {
+  try {
+    const raw = localStorage.getItem("scoretarget_state");
+    return JSON.parse(raw ?? "")?.settings?.gradingSystem ?? "apc";
+  } catch { return "apc"; }
+}
+
+const apcSteps: TourStep[] = [
   {
     target: "body",
     titleKey: "tourWelcomeTitle",
@@ -81,6 +88,16 @@ const steps: TourStep[] = [
   },
 ];
 
+const nigerianSteps: TourStep[] = [
+  { target: "body", titleKey: "tourWelcomeTitle", contentKey: "tourWelcomeContent", duration: 4500 },
+  { target: ".tour-dashboard", titleKey: "tourNigerianGpaTitle", contentKey: "tourNigerianGpaContent", duration: 4500, actionKey: "tourDashboardAction" },
+  { target: ".tour-checklist", titleKey: "tourChecklistTitle", contentKey: "tourChecklistContent", duration: 4500, actionKey: "tourChecklistAction" },
+  { target: ".tour-subjects-carousel", titleKey: "tourNigerianCoursesTitle", contentKey: "tourNigerianCoursesContent", duration: 4000 },
+  { target: ".tour-recent-activity", titleKey: "tourRecentActivityTitle", contentKey: "tourRecentActivityContent", duration: 4000 },
+  { target: ".tour-add-mark", titleKey: "tourNigerianAddScoreTitle", contentKey: "tourNigerianAddScoreContent", duration: 4000, actionKey: "tourAddMarkAction" },
+  { target: ".tour-feedback", titleKey: "tourFeedbackTitle", contentKey: "tourFeedbackContent", duration: 4500, actionKey: "tourFeedbackAction" },
+];
+
 const PADDING = 10;
 
 export default function ProductTour() {
@@ -90,6 +107,15 @@ export default function ProductTour() {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
+
+  const gradingSystem = getGradingSystem();
+  const isNigerian = gradingSystem === "nigerian_university";
+  const steps = isNigerian ? nigerianSteps : apcSteps;
+
+  const tSafe = (key: string, fallback: string) => {
+    const result = t(key as Parameters<typeof t>[0]);
+    return result === key ? fallback : result;
+  };
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -220,10 +246,19 @@ export default function ProductTour() {
 
   if (!run) return null;
 
+  const nigerianFallbacks: Record<string, string> = {
+    tourNigerianGpaTitle: "Your GPA",
+    tourNigerianGpaContent: "This is your current GPA out of 5.00. Tap it to see your full breakdown by course and semester.",
+    tourNigerianCoursesTitle: "Your Courses",
+    tourNigerianCoursesContent: "All your courses at a glance with credit units and current scores.",
+    tourNigerianAddScoreTitle: "Log a Score",
+    tourNigerianAddScoreContent: "Tap + to add or update assessment scores for any course.",
+  };
+
   const current = steps[step];
-  const title = t(current.titleKey as Parameters<typeof t>[0]);
-  const content = t(current.contentKey as Parameters<typeof t>[0]);
-  const action = current.actionKey ? t(current.actionKey as Parameters<typeof t>[0]) : undefined;
+  const title = tSafe(current.titleKey, nigerianFallbacks[current.titleKey] ?? current.titleKey);
+  const content = tSafe(current.contentKey, nigerianFallbacks[current.contentKey] ?? current.contentKey);
+  const action = current.actionKey ? tSafe(current.actionKey, current.actionKey) : undefined;
   const isCenter = current.target === "body" || !rect;
 
   const SAFE_TOP = 56;

@@ -13,6 +13,7 @@ interface SubjectsSetupProps {
   onBack: () => void;
   classLevel?: string;
   serie?: string;
+  isNigerian?: boolean;
 }
 
 /** Returns how many px the visual viewport is shorter than the layout viewport (i.e. keyboard height) */
@@ -35,7 +36,7 @@ function useKeyboardHeight() {
   return kbHeight;
 }
 
-const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, classLevel, serie }: SubjectsSetupProps) => {
+const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, classLevel, serie, isNigerian }: SubjectsSetupProps) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
@@ -47,6 +48,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
 
   // Pre-populate with preset subjects when first arriving at this step
   useEffect(() => {
+    if (isNigerian) return; // No presets for Nigerian users
     if (subjects.length === 0 && classLevel) {
       const isLycee = CLASS_LEVELS.lycee.includes(classLevel as any);
       // For lycée, only pre-populate if we have a série — otherwise we'd dump all subjects from all séries
@@ -64,7 +66,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const allSuggested = classLevel ? getSubjectsForLevel(classLevel, serie) : [];
+  const allSuggested = (!isNigerian && classLevel) ? getSubjectsForLevel(classLevel, serie) : [];
   const existingNames = new Set(subjects.map((s) => s.name.toLowerCase()));
   const available = allSuggested
     .filter((s) => !existingNames.has(s.toLowerCase()))
@@ -106,12 +108,14 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
       id: crypto.randomUUID(),
       name,
       coefficient: 1,
+      ...(isNigerian ? { creditUnits: 1, customAssessments: [] } : {}),
       marks: { interro: null, dev: null, compo: null },
     };
     const selectedSubjects = Array.from(selected).map((n) => ({
       id: crypto.randomUUID(),
       name: n,
       coefficient: 1,
+      ...(isNigerian ? { creditUnits: 1, customAssessments: [] } : {}),
       marks: { interro: null, dev: null, compo: null },
     }));
     onSubjectsChange([...subjects, customSubject, ...selectedSubjects]);
@@ -135,6 +139,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
       id: crypto.randomUUID(),
       name,
       coefficient: 1,
+      ...(isNigerian ? { creditUnits: 1, customAssessments: [] } : {}),
       marks: { interro: null, dev: null, compo: null },
     }));
     onSubjectsChange([...subjects, ...newSubjects]);
@@ -144,9 +149,16 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
   };
 
   const updateCoeff = (id: string, coeff: number) => {
-    onSubjectsChange(
-      subjects.map((s) => (s.id === id ? { ...s, coefficient: Math.max(1, coeff) } : s))
-    );
+    const max = isNigerian ? 6 : Infinity;
+    if (isNigerian) {
+      onSubjectsChange(
+        subjects.map((s) => (s.id === id ? { ...s, creditUnits: Math.min(max, Math.max(1, coeff)) } : s))
+      );
+    } else {
+      onSubjectsChange(
+        subjects.map((s) => (s.id === id ? { ...s, coefficient: Math.min(max, Math.max(1, coeff)) } : s))
+      );
+    }
   };
 
   const removeSubject = (id: string) => {
@@ -182,7 +194,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
                     {/* Header */}
                     <div className="flex items-center justify-between px-5 pt-5 pb-3">
                       <div>
-                        <h2 className="text-base font-black text-foreground">{t("addSubjects")}</h2>
+                        <h2 className="text-base font-black text-foreground">{isNigerian ? "Add Courses" : t("addSubjects")}</h2>
                         {selected.size > 0 && (
                           <p className="text-xs font-semibold text-primary mt-0.5">{selected.size} {t("selected")}</p>
                         )}
@@ -201,7 +213,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <input
                           type="text"
-                          placeholder={t("searchOrTypeSubject")}
+                          placeholder={isNigerian ? "Course name…" : t("searchOrTypeSubject")}
                           value={search}
                           onChange={(e) => setSearch(e.target.value)}
                           className="w-full pl-9 pr-4 py-2.5 rounded-xl border-2 border-border bg-muted text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
@@ -210,7 +222,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
                       </div>
                     </div>
 
-                    {/* Persistent "Create custom subject" button */}
+                    {/* Persistent "Create custom subject/course" button */}
                     {!showCustomOption && (
                       <div className="px-4 pb-2">
                         <button
@@ -220,7 +232,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
                           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted-foreground/20">
                             <Plus className="h-3.5 w-3.5" />
                           </div>
-                          <span className="text-sm font-bold">Create custom subject</span>
+                          <span className="text-sm font-bold">{isNigerian ? "Add custom course" : "Create custom subject"}</span>
                         </button>
                       </div>
                     )}
@@ -246,7 +258,8 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
                       </div>
                     )}
 
-                    {/* Subject list */}
+                    {/* Subject list — hidden for Nigerian (no presets) */}
+                    {!isNigerian && (
                     <div className="overflow-y-auto max-h-56 px-3 pb-2">
                       {filtered.length === 0 && !showCustomOption ? (
                         <p className="text-center text-sm text-muted-foreground py-8 font-semibold">
@@ -274,6 +287,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
                         })
                       )}
                     </div>
+                    )}
 
                     {/* Footer */}
                     {selected.size > 0 && (
@@ -299,14 +313,14 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
                       >
                         <X className="h-4 w-4" />
                       </button>
-                      <h2 className="text-base font-black text-foreground">Create custom subject</h2>
+                      <h2 className="text-base font-black text-foreground">{isNigerian ? "Add custom course" : "Create custom subject"}</h2>
                     </div>
 
                     <div className="px-5 pb-3">
-                      <label className="text-xs font-bold text-muted-foreground mb-1.5 block">Subject name</label>
+                      <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{isNigerian ? "Course name" : "Subject name"}</label>
                       <input
                         type="text"
-                        placeholder="e.g. Latin, Drama, Economics…"
+                        placeholder={isNigerian ? "e.g. MTH 101, ENG 201…" : "e.g. Latin, Drama, Economics…"}
                         value={customName}
                         onChange={(e) => setCustomName(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && confirmCustomName()}
@@ -341,8 +355,8 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
       {hasSubjects && (
         <div className="px-6 pb-2 flex-shrink-0 safe-area-top" style={{ paddingTop: "calc(5rem + env(safe-area-inset-top))" }}>
           <div className="flex items-center border-b border-border pb-1">
-            <span className="flex-1 text-xs font-black text-muted-foreground uppercase tracking-wider">{t("subject")}</span>
-            <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-10">{t("coefficient")}</span>
+            <span className="flex-1 text-xs font-black text-muted-foreground uppercase tracking-wider">{isNigerian ? "Course" : t("subject")}</span>
+            <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-10">{isNigerian ? "Credit Units" : t("coefficient")}</span>
           </div>
         </div>
       )}
@@ -360,9 +374,9 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
             >
               <span className="flex-1 font-bold text-foreground text-sm">{sub.name}</span>
               <div className="flex items-center gap-2">
-                <button onClick={() => updateCoeff(sub.id, sub.coefficient - 1)} className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95">−</button>
-                <span className="w-6 text-center font-black text-foreground text-sm">{sub.coefficient}</span>
-                <button onClick={() => updateCoeff(sub.id, sub.coefficient + 1)} className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95">+</button>
+                <button onClick={() => updateCoeff(sub.id, (isNigerian ? (sub.creditUnits ?? sub.coefficient) : sub.coefficient) - 1)} className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95">−</button>
+                <span className="w-6 text-center font-black text-foreground text-sm">{isNigerian ? (sub.creditUnits ?? sub.coefficient) : sub.coefficient}</span>
+                <button onClick={() => updateCoeff(sub.id, (isNigerian ? (sub.creditUnits ?? sub.coefficient) : sub.coefficient) + 1)} className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95">+</button>
                 <button onClick={() => removeSubject(sub.id)} className="ml-2 text-destructive/50 hover:text-destructive transition-colors">
                   <Trash2 className="h-4 w-4" />
                 </button>

@@ -5,6 +5,8 @@ import { Subject } from "@/types/exam";
 import { calcSubjectAverage } from "@/lib/exam-logic";
 import { addHistoryEntry } from "@/lib/storage";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { scoreToGrade } from "@/lib/grading-nigerian";
+
 interface MarksInputProps {
   subjects: Subject[];
   onSubjectsChange: (subjects: Subject[]) => void;
@@ -12,6 +14,7 @@ interface MarksInputProps {
   onBack: () => void;
   classLevel?: string;
   serie?: string;
+  isNigerian?: boolean;
 }
 
 const markLabels = {
@@ -20,7 +23,7 @@ const markLabels = {
   compo:   { label: "Compo",   weight: "×2", icon: <Clipboard className="h-4 w-4" /> },
 } as const;
 
-const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, classLevel, serie }: MarksInputProps) => {
+const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, classLevel, serie, isNigerian }: MarksInputProps) => {
   const [expanded, setExpanded] = useState<string | null>(
     subjects.length > 0 ? subjects[0].id : null
   );
@@ -56,9 +59,31 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
     }
   };
 
-  const filledCount = subjects.reduce((acc, s) =>
-    acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0), 0);
-  const totalMarks = subjects.length * 3;
+  const updateNigerianScore = (subjectId: string, value: string) => {
+    const raw = parseInt(value, 10);
+    const finalValue = value === "" ? null : (isNaN(raw) ? null : Math.min(100, Math.max(0, raw)));
+    const oldSubject = subjects.find((s) => s.id === subjectId);
+    const updatedSubjects = subjects.map((s) =>
+      s.id === subjectId ? { ...s, marks: { ...s.marks, interro: finalValue } } : s
+    );
+    onSubjectsChange(updatedSubjects);
+    if (finalValue !== null && oldSubject?.marks.interro === null && oldSubject) {
+      addHistoryEntry({ date: new Date().toISOString(), subjectName: oldSubject.name, markType: "interro", value: finalValue });
+    }
+    // Auto-advance to next subject when score is filled
+    const currentIdx = updatedSubjects.findIndex(s => s.id === subjectId);
+    const nextIncomplete = updatedSubjects.slice(currentIdx + 1).find(s => s.marks.interro === null);
+    if (finalValue !== null) {
+      if (nextIncomplete) setExpanded(nextIncomplete.id);
+      else setExpanded(null);
+    }
+  };
+
+  const filledCount = isNigerian
+    ? subjects.reduce((acc, s) => acc + (s.marks.interro !== null ? 1 : 0), 0)
+    : subjects.reduce((acc, s) =>
+        acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0), 0);
+  const totalMarks = isNigerian ? subjects.length : subjects.length * 3;
   const progress = totalMarks > 0 ? (filledCount / totalMarks) * 100 : 0;
 
   const allFilled = subjects.length > 0 && filledCount === totalMarks;
@@ -68,7 +93,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
 
       {/* Static header content below fixed nav */}
       <div className="pt-20 pb-3 flex-shrink-0 content-col">
-        <h2 className="text-2xl font-black text-foreground">{t("enterYourMarks")}</h2>
+        <h2 className="text-2xl font-black text-foreground">{isNigerian ? "Enter Your Scores" : t("enterYourMarks")}</h2>
         <p className="text-sm text-muted-foreground font-semibold mb-3">{t("enterCurrentMarks")}</p>
 
         {/* Progress bar */}
@@ -90,10 +115,15 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
         {/* Subject cards */}
         <div className="flex flex-col gap-3">
           {[...subjects].sort((a, b) => a.name.localeCompare(b.name)).map((sub, i) => {
-            const avg = calcSubjectAverage(sub.marks);
+            const avg = isNigerian ? null : calcSubjectAverage(sub.marks);
             const isOpen = expanded === sub.id;
-            const subFilled = (sub.marks.interro !== null ? 1 : 0) + (sub.marks.dev !== null ? 1 : 0) + (sub.marks.compo !== null ? 1 : 0);
-            const subDone = subFilled === 3;
+            const subFilled = isNigerian
+              ? (sub.marks.interro !== null ? 1 : 0)
+              : (sub.marks.interro !== null ? 1 : 0) + (sub.marks.dev !== null ? 1 : 0) + (sub.marks.compo !== null ? 1 : 0);
+            const subDone = isNigerian ? subFilled === 1 : subFilled === 3;
+            const nigerianGrade = isNigerian && sub.marks.interro !== null
+              ? scoreToGrade(sub.marks.interro).letter
+              : null;
 
             return (
               <motion.div
@@ -115,7 +145,13 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
                     <span className="font-black text-foreground">{sub.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {avg !== null && (
+                    {isNigerian && nigerianGrade && (
+                      <span className={`text-sm font-black ${
+                        nigerianGrade === "A" ? "text-success" : nigerianGrade === "B" ? "text-primary"
+                        : nigerianGrade === "C" ? "text-warning" : nigerianGrade === "F" ? "text-danger" : "text-muted-foreground"
+                      }`}>{nigerianGrade}</span>
+                    )}
+                    {!isNigerian && avg !== null && (
                       <span className="text-sm font-bold text-primary">{avg.toFixed(1)}</span>
                     )}
                     <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -134,26 +170,53 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       className="overflow-hidden"
                     >
-                      <div className="grid grid-cols-3 gap-2 px-4 pb-4">
-                        {(Object.keys(markLabels) as Array<keyof typeof markLabels>).map((type) => (
-                          <div key={type} className="flex flex-col items-center gap-1">
-                            <span className="text-muted-foreground">{markLabels[type].icon}</span>
+                      {isNigerian ? (
+                        <div className="px-4 pb-4 flex items-center gap-3">
+                          <div className="flex-1">
+                            <label className="text-xs font-bold text-muted-foreground mb-1 block">Score (0–100)</label>
                             <input
                               type="number"
                               min="0"
-                              max="20"
-                              step="0.5"
+                              max="100"
+                              step="1"
                               placeholder="—"
-                              value={sub.marks[type] ?? ""}
-                              onChange={(e) => updateMark(sub.id, type, e.target.value)}
-                              className="w-full rounded-xl border-2 border-border bg-background px-2 py-2 text-center font-bold text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none transition-colors"
+                              value={sub.marks.interro ?? ""}
+                              onChange={(e) => updateNigerianScore(sub.id, e.target.value)}
+                              className="w-full rounded-xl border-2 border-border bg-background px-3 py-2.5 text-center font-bold text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none transition-colors"
                             />
-                            <span className="text-[10px] font-bold text-muted-foreground">
-                              {markLabels[type].label} {markLabels[type].weight}
-                            </span>
                           </div>
-                        ))}
-                      </div>
+                          {nigerianGrade && (
+                            <div className="flex flex-col items-center gap-0.5 shrink-0">
+                              <span className="text-xs font-bold text-muted-foreground">Grade</span>
+                              <span className={`text-2xl font-black ${
+                                nigerianGrade === "A" ? "text-success" : nigerianGrade === "B" ? "text-primary"
+                                : nigerianGrade === "C" ? "text-warning" : nigerianGrade === "F" ? "text-danger" : "text-muted-foreground"
+                              }`}>{nigerianGrade}</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-2 px-4 pb-4">
+                          {(Object.keys(markLabels) as Array<keyof typeof markLabels>).map((type) => (
+                            <div key={type} className="flex flex-col items-center gap-1">
+                              <span className="text-muted-foreground">{markLabels[type].icon}</span>
+                              <input
+                                type="number"
+                                min="0"
+                                max="20"
+                                step="0.5"
+                                placeholder="—"
+                                value={sub.marks[type] ?? ""}
+                                onChange={(e) => updateMark(sub.id, type, e.target.value)}
+                                className="w-full rounded-xl border-2 border-border bg-background px-2 py-2 text-center font-bold text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none transition-colors"
+                              />
+                              <span className="text-[10px] font-bold text-muted-foreground">
+                                {markLabels[type].label} {markLabels[type].weight}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -176,7 +239,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
           onClick={onContinue}
           className="w-full rounded-2xl bg-primary py-4 text-base font-extrabold text-primary-foreground card-shadow-primary active:translate-y-1 active:shadow-none transition-all"
         >
-          {filledCount > 0 ? t("continueBtn") : t("skipForNow")}
+          {isNigerian ? t("continueBtn") : (filledCount > 0 ? t("continueBtn") : t("skipForNow"))}
         </button>
         </div>
       </motion.div>

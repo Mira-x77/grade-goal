@@ -1,6 +1,8 @@
+import type { NigerianState } from "./nigerian";
+
 export type MarkType = "interro" | "dev" | "compo";
 
-export type GradingSystem = "apc" | "french";
+export type GradingSystem = "apc" | "french" | "nigerian_university";
 
 export interface Mark {
   type: MarkType;
@@ -14,10 +16,19 @@ export interface FrenchSubjectData {
   appreciation: number | null; // 1-5 sentiment scale
 }
 
+export interface CustomAssessment {
+  id: string;
+  label: string;
+  weight: number;   // percentage weight (e.g. 30 for 30%)
+  value: number | null; // score 0–100
+}
+
 export interface Subject {
   id: string;
   name: string;
   coefficient: number;
+  creditUnits?: number;        // Nigerian: credit units (1–6), replaces coefficient semantically
+  customAssessments?: CustomAssessment[]; // Nigerian: dynamic assessments
   marks: {
     interro: number | null;
     dev: number | null;
@@ -87,7 +98,10 @@ export interface AppState {
   classLevel?: string;
   serie?: string;
   semester?: string;
+  department?: string;      // Nigerian: department/faculty
+  universityLevel?: string; // Nigerian: 100/200/300/400/500
   savedStrategy?: SavedStrategy;
+  nigerianState?: NigerianState; // only populated when gradingSystem === "nigerian_university"
 }
 
 export type FeedbackStatus = "possible" | "risky" | "impossible";

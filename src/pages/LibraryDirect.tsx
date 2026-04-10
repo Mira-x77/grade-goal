@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { Download, Search, Eye, X, LayoutGrid, List, FileText, ChevronDown, Check, Crown, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cacheService } from '@/services/cacheService';
@@ -15,10 +15,6 @@ import ScreenIntro from '@/components/ScreenIntro';
 import ScreenTour from '@/components/ScreenTour';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePremiumNudge, nudgeSubtext } from '@/hooks/usePremiumNudge';
-
-const supabaseUrl = 'https://aaayzhvqgqptgqaxxbdh.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhYXl6aHZxZ3FwdGdxYXh4YmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzAwNDksImV4cCI6MjA4ODA0NjA0OX0.NNKOn17jGZHEbBKBnX3oxVhSYJhKm28QSOkK76I0bgo';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 type LibraryTab = 'papers' | 'prep';
 

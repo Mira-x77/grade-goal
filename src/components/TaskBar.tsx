@@ -1,4 +1,4 @@
-import { Home, BookOpen, ArrowLeft } from "lucide-react";
+import { Home, BookOpen, ArrowLeft, User } from "lucide-react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ReactNode } from "react";
@@ -6,6 +6,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 // Routes that belong to the Home tab
 const HOME_ROUTES = ["/", "/profile", "/settings", "/simulator", "/planner", "/subject"];
+
+function getIsNigerian(): boolean {
+  try {
+    const raw = localStorage.getItem("scoretarget_state");
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed?.settings?.gradingSystem === "nigerian_university";
+  } catch { return false; }
+}
 
 interface TaskBarProps {
   action?: ReactNode;
@@ -17,14 +25,24 @@ const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const isNigerian = getIsNigerian();
 
-  const tabs = [
-    { path: "/", icon: Home, label: t("home") },
-    { path: "/library", icon: BookOpen, label: t("library") },
-  ] as const;
+  const tabs = isNigerian
+    ? [
+        { path: "/", icon: Home, label: t("home") },
+        { path: "/profile", icon: User, label: "Profile" },
+      ] as const
+    : [
+        { path: "/", icon: Home, label: t("home") },
+        { path: "/library", icon: BookOpen, label: t("library") },
+      ] as const;
 
   const getActiveTab = () => {
     const p = location.pathname;
+    if (isNigerian) {
+      if (p.startsWith("/profile")) return "/profile";
+      return "/";
+    }
     if (p.startsWith("/library") || p.startsWith("/my-downloads")) return "/library";
     if (HOME_ROUTES.some(r => r === "/" ? p === "/" : p.startsWith(r))) return "/";
     return "/";
@@ -65,7 +83,7 @@ const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
             const Icon = tab.icon;
 
             return (
-                <Link
+              <Link
                 key={tab.path}
                 to={tab.path}
                 className={`${tab.path === '/library' ? 'tour-library' : ''} relative flex flex-col items-center gap-0.5 px-4 py-2 rounded-full transition-colors`}

@@ -38,7 +38,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let hasAppData = false;
     try {
       const parsed = raw ? JSON.parse(raw) : null;
-      hasAppData = parsed && Array.isArray(parsed.subjects) && parsed.subjects.length > 0;
+      if (parsed) {
+        const isNigerian = parsed?.settings?.gradingSystem === "nigerian_university";
+        hasAppData = isNigerian
+          ? (parsed.step === "results" || !!parsed.studentName || (Array.isArray(parsed.subjects) && parsed.subjects.length > 0))
+          : (Array.isArray(parsed.subjects) && parsed.subjects.length > 0);
+      }
     } catch {}
     navigate(hasAppData ? "/" : "/onboarding", { replace: true });
   };

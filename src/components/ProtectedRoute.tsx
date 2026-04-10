@@ -32,7 +32,17 @@ export default function ProtectedRoute({
     let hasAppData = false;
     try {
       const parsed = raw ? JSON.parse(raw) : null;
-      hasAppData = parsed && Array.isArray(parsed.subjects) && parsed.subjects.length > 0;
+      if (parsed) {
+        const isNigerian = parsed?.settings?.gradingSystem === "nigerian_university";
+        if (isNigerian) {
+          // Nigerian users pass if: step is results, OR they have subjects, OR they have a studentName (completed basic info)
+          hasAppData = parsed.step === "results"
+            || (Array.isArray(parsed.subjects) && parsed.subjects.length > 0)
+            || !!parsed.studentName;
+        } else {
+          hasAppData = Array.isArray(parsed.subjects) && parsed.subjects.length > 0;
+        }
+      }
     } catch {
       hasAppData = false;
     }
