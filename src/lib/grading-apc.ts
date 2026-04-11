@@ -1,8 +1,8 @@
 import { Subject } from "@/types/exam";
 
 /**
- * APC (Togolese Standard) Subject Average:
- * Default: (Interro + Devoir + Compo) / 3
+ * APC (Cameroonian/French Standard) Subject Average:
+ * Default: (Interro + Devoir + 2×Compo) / 4  — composition counts double
  * With 40/60 split: (0.4 * classwork_avg + 0.6 * compo)
  *   where classwork_avg = (interro + dev) / 2
  */
@@ -15,17 +15,21 @@ export function calcAPCSubjectAverage(
 
   if (weightedSplit) {
     // 40/60 split: classwork (interro+dev) = 40%, compo = 60%
-    if (compo === null) return null; // need compo for this mode
+    if (compo === null) return null;
     const classworkMarks = [interro, dev].filter((m) => m !== null) as number[];
-    if (classworkMarks.length === 0) return compo; // only compo
+    if (classworkMarks.length === 0) return compo;
     const classworkAvg = classworkMarks.reduce((a, b) => a + b, 0) / classworkMarks.length;
     return 0.4 * classworkAvg + 0.6 * compo;
   }
 
-  // Default: simple average of available marks
-  const available = [interro, dev, compo].filter((m) => m !== null) as number[];
-  if (available.length === 0) return null;
-  return available.reduce((a, b) => a + b, 0) / available.length;
+  // Default: (Interro + Dev + 2×Compo) / 4 — composition weighted ×2
+  let sum = 0;
+  let weight = 0;
+  if (interro !== null) { sum += interro * 1; weight += 1; }
+  if (dev !== null)     { sum += dev * 1;     weight += 1; }
+  if (compo !== null)   { sum += compo * 2;   weight += 2; }
+
+  return weight > 0 ? sum / weight : null;
 }
 
 /**
@@ -106,17 +110,18 @@ export function calcAPCMinimumMark(
     }
   }
 
-  // Default: simple /3 solving
-  // Subject avg = (known_marks + x) / total_count
-  const otherMarks: number[] = [];
-  if (targetMarkType !== "interro" && marks.interro !== null) otherMarks.push(marks.interro);
-  if (targetMarkType !== "dev" && marks.dev !== null) otherMarks.push(marks.dev);
-  if (targetMarkType !== "compo" && marks.compo !== null) otherMarks.push(marks.compo);
+  // Default: (I+D+2C)/4 solving
+  // Subject avg = (known_weighted_sum + x*markWeight) / totalWeight
+  let subKnownSum = 0;
+  let subKnownWeight = 0;
+  if (targetMarkType !== "interro" && marks.interro !== null) { subKnownSum += marks.interro * 1; subKnownWeight += 1; }
+  if (targetMarkType !== "dev"     && marks.dev     !== null) { subKnownSum += marks.dev * 1;     subKnownWeight += 1; }
+  if (targetMarkType !== "compo"   && marks.compo   !== null) { subKnownSum += marks.compo * 2;   subKnownWeight += 2; }
 
-  const totalCount = otherMarks.length + 1; // including the unknown
-  const knownSum = otherMarks.reduce((a, b) => a + b, 0);
+  const markWeight = targetMarkType === "compo" ? 2 : 1;
+  const totalWeight = subKnownWeight + markWeight;
   const neededSubjectAvg = (targetAverage * totalCoeff - knownPoints) / coeff;
-  return neededSubjectAvg * totalCount - knownSum;
+  return (neededSubjectAvg * totalWeight - subKnownSum) / markWeight;
 }
 
 /**
