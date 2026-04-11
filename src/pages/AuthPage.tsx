@@ -286,7 +286,14 @@ export default function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithOAuth({
           provider,
-          options: { redirectTo: getRedirectUrl() },
+          options: { 
+            redirectTo: getRedirectUrl(),
+            skipBrowserRedirect: false,
+            queryParams: {
+              access_type: 'offline',
+              prompt: 'consent',
+            }
+          },
         });
         if (error) throw error;
         return;
@@ -314,7 +321,7 @@ export default function AuthPage() {
   const handleDevBypass = () => {
     localStorage.setItem("dev_bypass", "true");
     localStorage.setItem("scoretarget_state", JSON.stringify({
-      step: "results", studentName: "Dev", targetAverage: 16,
+      studentName: "Dev", targetAverage: 16,
       subjects: [
         { id: "1", name: "Mathematics", coefficient: 5, isOptional: false, marks: [], average: 15 },
         { id: "2", name: "Physics", coefficient: 4, isOptional: false, marks: [], average: 12 },

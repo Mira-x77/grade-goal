@@ -55,15 +55,28 @@ export async function saveHistoryEntryToCloud(
   userId: string,
   entry: HistoryEntry
 ): Promise<void> {
-  const { error } = await withTimeout(supabase.from('user_history').insert({
-    id: entry.id,
-    user_id: userId,
-    subject_name: entry.subjectName,
-    mark_type: entry.markType,
-    value: entry.value,
-    date: entry.date,
-  }));
-  if (error && error.code !== '23505') throw error;
+  try {
+    // Use upsert instead of insert to avoid 409 conflicts
+    const { error } = await withTimeout(supabase.from('user_history').upsert({
+      id: entry.id,
+      user_id: userId,
+      subject_name: entry.subjectName,
+      mark_type: entry.markType,
+      value: entry.value,
+      date: entry.date,
+    }, {
+      onConflict: 'id',
+      ignoreDuplicates: false
+    }));
+    
+    if (error) {
+      // Log but don't throw - we don't want to block the app
+      console.warn('Failed to save history entry:', error);
+    }
+  } catch (err) {
+    // Catch any errors including 403 Forbidden
+    console.warn('Failed to save history entry:', err);
+  }
 }
 
 export async function loadHistoryFromCloud(userId: string): Promise<HistoryEntry[]> {

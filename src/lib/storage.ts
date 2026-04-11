@@ -1,10 +1,11 @@
 import { AppState, Subject } from "@/types/exam";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  saveAppStateToCloud,
+  saveAppState as saveAppStateToCloud,
   saveHistoryEntryToCloud,
   saveStreakToCloud,
-} from "@/services/cloudSyncService";
+} from "@/services/hybridSyncService";
+import { ensureNigerianAssessments } from "@/lib/nigerian-defaults";
 
 const STORAGE_KEY = "scoretarget_state";
 const HISTORY_KEY = "scoretarget_history";
@@ -57,9 +58,11 @@ export function saveState(state: AppState) {
 
 export function loadState(): AppState | null {
   const raw = localStorage.getItem(STORAGE_KEY);
+  console.log("loadState called, raw data:", raw ? raw.substring(0, 100) + "..." : null);
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as AppState;
+    console.log("loadState parsed successfully, step:", parsed.step);
     // Migration: old class levels
     const CLASS_MAPPINGS: Record<string, string> = {
       "6ème": "Sixième", "5ème": "Cinquième", "4ème": "Quatrième", "3ème": "Troisième",
@@ -84,9 +87,16 @@ export function loadState(): AppState | null {
         };
       }
     }
+    
+    // Safety: ensure Nigerian subjects have customAssessments
+    if (parsed.settings?.gradingSystem === "nigerian_university" && parsed.subjects) {
+      parsed.subjects = parsed.subjects.map(ensureNigerianAssessments);
+    }
+    
     saveState(parsed);
     return parsed;
-  } catch {
+  } catch (error) {
+    console.error("loadState error:", error);
     return null;
   }
 }

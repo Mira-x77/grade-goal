@@ -31,7 +31,7 @@ const Index = () => {
       initial.targetMin = initial.targetAverage ?? 16;
     }
     if (stepParam && saved && saved.subjects.length > 0) {
-      const validSteps = ["onboarding", "subjects", "marks", "results"] as const;
+      const validSteps = ["onboarding", "subjects", "marks"] as const;
       if (validSteps.includes(stepParam as any)) {
         return { ...initial, step: stepParam as AppState["step"] };
       }
@@ -40,11 +40,8 @@ const Index = () => {
   });
 
   useEffect(() => {
-    // Only auto-save while actively in onboarding steps — not after we've
-    // manually saved a finalState and navigated away
-    if (state.step !== "results") {
-      saveState(state);
-    }
+    // Auto-save state during onboarding
+    saveState(state);
   }, [state]);
 
   const setStep = (step: AppState["step"]) => setState((s) => ({ ...s, step }));
@@ -78,8 +75,6 @@ const Index = () => {
       handleOnboardingStepChange("target");
     } else if (state.step === "marks") {
       setStep("subjects");
-    } else if (state.step === "results") {
-      setStep("marks");
     }
   };
 
@@ -89,7 +84,6 @@ const Index = () => {
     onboarding: onboardingStep === "system" ? t("gradingSystem") : onboardingStep === "profile" ? t("basicInfo") : onboardingStep === "semester" ? "Current Semester" : t("targetAverage"),
     subjects: t("addSubjects"),
     marks: t("enterYourMarks"),
-    results: t("gradingSystem"), // never rendered in Index — just satisfies the type
   };
 
   const stepNumbers: Record<AppState["step"], number> = isNigerianOnboarding
@@ -97,27 +91,23 @@ const Index = () => {
         onboarding: onboardingStep === "system" ? 1 : onboardingStep === "profile" ? 2 : onboardingStep === "semester" ? 3 : 4,
         subjects: 5,
         marks: 6,
-        results: 1,
       }
     : {
         onboarding: onboardingStep === "system" ? 1 : onboardingStep === "profile" ? 2 : 3,
         subjects: 4,
         marks: 5,
-        results: 1,
       };
 
   const TOTAL_STEPS = isNigerianOnboarding ? 6 : 5;
 
   return (
     <div className="min-h-screen bg-background w-full pb-20">
-      {state.step !== "results" && (
-        <OnboardingHeader
-          title={stepTitles[state.step]}
-          onBack={handleBack}
-          currentStep={stepNumbers[state.step]}
-          totalSteps={TOTAL_STEPS}
-        />
-      )}
+      <OnboardingHeader
+        title={stepTitles[state.step]}
+        onBack={handleBack}
+        currentStep={stepNumbers[state.step]}
+        totalSteps={TOTAL_STEPS}
+      />
 
       <AnimatePresence mode="wait">
         <motion.div key={state.step + onboardingStep}>
@@ -181,23 +171,25 @@ const Index = () => {
                 if (isNigerian) {
                   const finalState = {
                     ...state,
-                    step: "results" as const,
-                    nigerianState: state.nigerianState ?? {
-                      semesters: [],
-                      cgpa: 0,
-                      classOfDegree: "Fail",
-                      targetCGPA: state.targetMin ?? null,
-                      remainingCreditUnits: 0,
-                    },
+                    studentName: state.studentName || "Student",
+                    nigerianState: state.nigerianState && state.nigerianState.semesters.length > 0 
+                      ? state.nigerianState 
+                      : {
+                          semesters: [],
+                          cgpa: 0,
+                          classOfDegree: "Fail",
+                          targetCGPA: state.targetMin ?? null,
+                          remainingCreditUnits: 0,
+                        },
                   };
-                  // Write to localStorage synchronously before navigating
-                  localStorage.setItem("scoretarget_state", JSON.stringify(finalState));
+                  console.log("Saving Nigerian onboarding state:", finalState);
                   saveState(finalState);
+                  console.log("State saved, navigating to /");
                   navigate("/");
                 } else {
-                  const finalState = { ...state, step: "results" as const };
-                  localStorage.setItem("scoretarget_state", JSON.stringify(finalState));
-                  saveState(finalState);
+                  console.log("Saving non-Nigerian onboarding state:", state);
+                  saveState(state);
+                  console.log("State saved, navigating to /");
                   navigate("/");
                 }
               }}
@@ -207,7 +199,6 @@ const Index = () => {
               isNigerian={state.settings?.gradingSystem === "nigerian_university"}
             />
           )}
-          {/* "results" step is never rendered here — it means onboarding is done, navigate("/") handles it */}
         </motion.div>
       </AnimatePresence>
     </div>

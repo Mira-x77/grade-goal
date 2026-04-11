@@ -13,6 +13,7 @@ import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
 import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
 import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
 import { PaymentSheet } from "@/components/subscription/PaymentSheet";
+import { createNigerianSubject } from "@/lib/nigerian-defaults";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const allLevels = [...CLASS_LEVELS.college, ...CLASS_LEVELS.lycee];
@@ -126,13 +127,16 @@ const Profile = () => {
   };
 
   const confirmAddSubjects = () => {
-    const newSubs: Subject[] = Array.from(subjectSelected).map((name) => ({
-      id: crypto.randomUUID(),
-      name,
-      coefficient: 1,
-      ...(isNigerian ? { creditUnits: 1, customAssessments: [] } : {}),
-      marks: { interro: null, dev: null, compo: null },
-    }));
+    const newSubs: Subject[] = Array.from(subjectSelected).map((name) =>
+      isNigerian
+        ? createNigerianSubject(name, 1)
+        : {
+            id: crypto.randomUUID(),
+            name,
+            coefficient: 1,
+            marks: { interro: null, dev: null, compo: null },
+          }
+    );
     updateState({ subjects: [...subjects, ...newSubs] });
     setSubjectSelected(new Set());
     setSubjectSearch("");
@@ -142,10 +146,17 @@ const Profile = () => {
   const addCustomSubject = () => {
     const name = subjectSearch.trim();
     if (!name || existingSubjectNames.has(name.toLowerCase())) return;
-    const newSub: Subject = { id: crypto.randomUUID(), name, coefficient: 1, ...(isNigerian ? { creditUnits: 1, customAssessments: [] } : {}), marks: { interro: null, dev: null, compo: null } };
-    const selectedSubs: Subject[] = Array.from(subjectSelected).map((n) => ({
-      id: crypto.randomUUID(), name: n, coefficient: 1, ...(isNigerian ? { creditUnits: 1, customAssessments: [] } : {}), marks: { interro: null, dev: null, compo: null },
-    }));
+    
+    const newSub: Subject = isNigerian
+      ? createNigerianSubject(name, 1)
+      : { id: crypto.randomUUID(), name, coefficient: 1, marks: { interro: null, dev: null, compo: null } };
+    
+    const selectedSubs: Subject[] = Array.from(subjectSelected).map((n) =>
+      isNigerian
+        ? createNigerianSubject(n, 1)
+        : { id: crypto.randomUUID(), name: n, coefficient: 1, marks: { interro: null, dev: null, compo: null } }
+    );
+    
     updateState({ subjects: [...subjects, newSub, ...selectedSubs] });
     setSubjectSearch("");
     setSubjectSelected(new Set());
@@ -157,7 +168,7 @@ const Profile = () => {
     if (!name || existingSubjectNames.has(name.toLowerCase())) return;
     if (isNigerian) {
       // For Nigerian, directly add the subject (no preset list to select from)
-      const newSub: Subject = { id: crypto.randomUUID(), name, coefficient: 1, creditUnits: 1, customAssessments: [], marks: { interro: null, dev: null, compo: null } };
+      const newSub = createNigerianSubject(name, 1);
       updateState({ subjects: [...subjects, newSub] });
       setSubjectCustomName("");
       setShowSubjectModal(false);

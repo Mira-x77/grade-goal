@@ -5,6 +5,7 @@ import { Plus, Trash2, Check, X, Search } from "lucide-react";
 import { Subject } from "@/types/exam";
 import { getSubjectsForLevel, CLASS_LEVELS } from "@/lib/subjects-data";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { createNigerianSubject } from "@/lib/nigerian-defaults";
 
 interface SubjectsSetupProps {
   subjects: Subject[];
@@ -104,20 +105,27 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
   const addCustomInline = () => {
     const name = search.trim();
     if (!name || existingNames.has(name.toLowerCase())) return;
-    const customSubject: Subject = {
-      id: crypto.randomUUID(),
-      name,
-      coefficient: 1,
-      ...(isNigerian ? { creditUnits: 1, customAssessments: [] } : {}),
-      marks: { interro: null, dev: null, compo: null },
-    };
-    const selectedSubjects = Array.from(selected).map((n) => ({
-      id: crypto.randomUUID(),
-      name: n,
-      coefficient: 1,
-      ...(isNigerian ? { creditUnits: 1, customAssessments: [] } : {}),
-      marks: { interro: null, dev: null, compo: null },
-    }));
+    
+    const customSubject: Subject = isNigerian
+      ? createNigerianSubject(name, 1)
+      : {
+          id: crypto.randomUUID(),
+          name,
+          coefficient: 1,
+          marks: { interro: null, dev: null, compo: null },
+        };
+    
+    const selectedSubjects = Array.from(selected).map((n) =>
+      isNigerian
+        ? createNigerianSubject(n, 1)
+        : {
+            id: crypto.randomUUID(),
+            name: n,
+            coefficient: 1,
+            marks: { interro: null, dev: null, compo: null },
+          }
+    );
+    
     onSubjectsChange([...subjects, customSubject, ...selectedSubjects]);
     setSearch("");
     setCustomName("");
@@ -135,13 +143,16 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
   };
 
   const confirmAdd = () => {
-    const newSubjects = Array.from(selected).map((name) => ({
-      id: crypto.randomUUID(),
-      name,
-      coefficient: 1,
-      ...(isNigerian ? { creditUnits: 1, customAssessments: [] } : {}),
-      marks: { interro: null, dev: null, compo: null },
-    }));
+    const newSubjects = Array.from(selected).map((name) =>
+      isNigerian
+        ? createNigerianSubject(name, 1)
+        : {
+            id: crypto.randomUUID(),
+            name,
+            coefficient: 1,
+            marks: { interro: null, dev: null, compo: null },
+          }
+    );
     onSubjectsChange([...subjects, ...newSubjects]);
     setSelected(new Set());
     setSearch("");

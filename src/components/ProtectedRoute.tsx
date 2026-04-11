@@ -10,6 +10,8 @@ export default function ProtectedRoute({
 }) {
   const { session, loading, syncing } = useAuth();
 
+  console.log("ProtectedRoute state:", { loading, syncing, hasSession: !!session });
+
   if (loading || syncing) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
@@ -35,9 +37,8 @@ export default function ProtectedRoute({
       if (parsed) {
         const isNigerian = parsed?.settings?.gradingSystem === "nigerian_university";
         if (isNigerian) {
-          // Nigerian users pass if: step is results, OR they have subjects, OR they have a studentName (completed basic info)
-          hasAppData = parsed.step === "results"
-            || (Array.isArray(parsed.subjects) && parsed.subjects.length > 0)
+          // Nigerian users pass if: they have subjects, OR they have a studentName (completed basic info)
+          hasAppData = (Array.isArray(parsed.subjects) && parsed.subjects.length > 0)
             || !!parsed.studentName;
         } else {
           hasAppData = Array.isArray(parsed.subjects) && parsed.subjects.length > 0;

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Download, AlertCircle, Eye, FolderOpen, Crown, ChevronDown, Lock, X, Check } from "lucide-react";
+import { Download, AlertCircle, Eye, FolderOpen, Crown, ChevronDown, Lock, X, Check, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ExamPaper, DownloadProgress } from "@/types/exam-library";
 import { examService } from "@/services/examService";
@@ -125,6 +125,45 @@ const PaperDetail = () => {
       setDownloadProgress(null);
     } catch (err) {
       console.error("Failed to cancel download:", err);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!paper) return;
+    try {
+      const { Share } = await import('@capacitor/share');
+      const { Capacitor } = await import('@capacitor/core');
+      
+      // Check if sharing is available
+      const canShare = await Share.canShare();
+      
+      if (canShare.value) {
+        await Share.share({
+          title: paper.title,
+          text: `${paper.title} - ${paper.subject} (${paper.classLevel}, ${paper.year})`,
+          url: window.location.href,
+          dialogTitle: t("share"),
+        });
+      } else {
+        // Fallback for web or unsupported platforms
+        if (navigator.share) {
+          await navigator.share({
+            title: paper.title,
+            text: `${paper.title} - ${paper.subject} (${paper.classLevel}, ${paper.year})`,
+            url: window.location.href,
+          });
+        } else {
+          // Copy to clipboard as last resort
+          await navigator.clipboard.writeText(window.location.href);
+          toast.success(t("linkCopied"));
+        }
+      }
+    } catch (err) {
+      // User cancelled or error occurred
+      if (err instanceof Error && !err.message.includes('cancel')) {
+        console.error("Share failed:", err);
+        toast.error(t("shareFailed"));
+      }
     }
   };
 
@@ -253,6 +292,15 @@ const PaperDetail = () => {
               <p className="text-xs font-semibold text-premium-foreground/60">{t("premiumStudyTools")}</p>
             </div>
             <ChevronDown className="h-5 w-5 text-premium-foreground rotate-[-90deg]" />
+          </button>
+
+          {/* Share */}
+          <button
+            onClick={handleShare}
+            className="w-full flex items-center justify-center gap-2 bg-card border-2 border-foreground py-3.5 rounded-2xl font-black text-sm text-foreground active:scale-[0.98] transition-all card-shadow"
+          >
+            <Share2 className="h-4 w-4" />
+            {t("share")}
           </button>
         </div>
       </div>

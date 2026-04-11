@@ -89,7 +89,7 @@ export interface SavedStrategy {
 }
 
 export interface AppState {
-  step: "onboarding" | "subjects" | "marks" | "results";
+  step: "onboarding" | "subjects" | "marks";
   targetAverage: number;   // kept for backward compat — use targetMin going forward
   targetMin: number;       // minimum of the target range (user-set)
   subjects: Subject[];

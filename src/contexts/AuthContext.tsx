@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { useNavigate } from "react-router-dom";
-import { restoreUserDataFromCloud, pushLocalDataToCloud } from "@/services/cloudSyncService";
+import { restoreUserData as restoreUserDataFromCloud, pushLocalData as pushLocalDataToCloud } from "@/services/hybridSyncService";
 
 interface AuthContextType {
   session: Session | null;
@@ -33,7 +33,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const initialSessionRestoredRef = useRef(false);
   const navigate = useNavigate();
 
-  const navigateAfterAuth = () => {
+  const checkUserHasCloudData = async (userId: string): Promise<boolean> => {
+    try {
+      // Check if user has profile data in the database
+      const { data: profile, error } = await supabase
+        .from('user_profile')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error checking user profile:", error);
+        return false;
+      }
+      
+      // User has profile = returning user
+      return !!profile;
+    } catch (err) {
+      console.error("Error checking user data:", err);
+      return false;
+    }
+  };
+
+  const navigateAfterAuth = async (userId?: string) => {
     const raw = localStorage.getItem("scoretarget_state");
     let hasAppData = false;
     try {
@@ -41,11 +63,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (parsed) {
         const isNigerian = parsed?.settings?.gradingSystem === "nigerian_university";
         hasAppData = isNigerian
-          ? (parsed.step === "results" || !!parsed.studentName || (Array.isArray(parsed.subjects) && parsed.subjects.length > 0))
+          ? (!!parsed.studentName || (Array.isArray(parsed.subjects) && parsed.subjects.length > 0))
           : (Array.isArray(parsed.subjects) && parsed.subjects.length > 0);
       }
     } catch {}
-    navigate(hasAppData ? "/" : "/onboarding", { replace: true });
+    
+    // Also check cloud data if userId is provided
+    const hasCloudData = userId ? await checkUserHasCloudData(userId) : false;
+    
+    navigate((hasAppData || hasCloudData) ? "/" : "/onboarding", { replace: true });
   };
 
   /**
@@ -59,17 +85,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  /**
-   * Foreground sync — only on fresh login.
-   * If the device has no local data, pull from cloud (new device scenario).
-   * If the device already has local data, push it up to cloud instead.
-   * Shows the spinner only in the new-device case where the user is waiting for their data.
-   */
   const syncOnLogin = async (userId: string) => {
+    console.log("syncOnLogin called, userId:", userId);
     const hasLocalData = !!localStorage.getItem('scoretarget_state');
+    console.log("hasLocalData:", hasLocalData);
 
     if (hasLocalData) {
       // Device already has data — just push it up silently, no spinner needed
+      console.log("Has local data, pushing to cloud silently");
       void pushLocalDataToCloud(userId).catch((err) =>
         console.warn("Login cloud push failed:", err)
       );
@@ -77,17 +100,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // No local data — this is a new device, pull from cloud and show spinner
+    console.log("No local data, setting syncing=true");
     setSyncing(true);
-    const timeout = new Promise<void>((resolve) => setTimeout(resolve, 5000));
-    const restore = async () => {
-      try {
-        await restoreUserDataFromCloud(userId);
-      } catch (err) {
-        console.warn("Cloud restore failed, continuing with empty state:", err);
-      }
-    };
-    await Promise.race([restore(), timeout]);
-    setSyncing(false);
+    try {
+      const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2000));
+      const restore = async () => {
+        try {
+          await restoreUserDataFromCloud(userId);
+        } catch (err) {
+          console.warn("Cloud restore failed, continuing with empty state:", err);
+        }
+      };
+      await Promise.race([restore(), timeout]);
+    } catch (err) {
+      console.error("Sync on login failed:", err);
+    } finally {
+      console.log("Setting syncing=false");
+      setSyncing(false);
+    }
   };
 
   useEffect(() => {
@@ -150,8 +180,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // PKCE flow — code in query params
       const code = urlObj.searchParams.get("code");
       if (code) {
-        await supabase.auth.exchangeCodeForSession(url);
-        navigateAfterAuth();
+        const { data } = await supabase.auth.exchangeCodeForSession(url);
+        await navigateAfterAuth(data.session?.user?.id);
         return;
       }
 
@@ -160,8 +190,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const accessToken = hashParams.get("access_token");
       const refreshToken = hashParams.get("refresh_token");
       if (accessToken && refreshToken) {
-        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-        navigateAfterAuth();
+        const { data } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        await navigateAfterAuth(data.session?.user?.id);
       }
     }).then((handle) => {
       deepLinkListener = handle;

@@ -6,6 +6,8 @@ import { loadState, saveState, getStreak, getHistory, HistoryEntry } from "@/lib
 import { downloadService } from "@/services/downloadService";
 import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds } from "@/lib/exam-logic";
 import { calcAPCYearlyAverage, getPerformanceAlerts } from "@/lib/grading-apc";
+import { getAdapter } from "@/adapters/AdapterFactory";
+import { DashboardData } from "@/types/dashboard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import FrenchClassView from "@/components/FrenchClassView";
 import TaskBar from "@/components/TaskBar";
@@ -13,6 +15,7 @@ import Mascot from "@/components/Mascot";
 import ProductTour from "@/components/ProductTour";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import ResultsScreen from "@/components/ResultsScreen";
+import { TargetAdjustmentDialog } from "@/components/TargetAdjustmentDialog";
 import { PaymentSheet } from "@/components/subscription/PaymentSheet";
 import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
 import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
@@ -384,12 +387,32 @@ const Home = () => {
   const { fire: fireNudge } = usePremiumNudge((trigger) => setActiveNudge(trigger));
 
   const [downloadedCount, setDownloadedCount] = useState(0);
-  const [appState, setAppState] = useState(() => loadState());
+  const [appState, setAppState] = useState(() => {
+    const state = loadState();
+    console.log("Home component loadState returned:", state);
+    console.log("Home component initial appState will be:", state);
+    return state;
+  });
 
-  const hasData = appState && appState.subjects.length > 0;
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ADAPTER INTEGRATION: Get system-agnostic dashboard data
+  // ═══════════════════════════════════════════════════════════════════════════
   const gradingSystem = appState?.settings?.gradingSystem ?? "apc";
   const weightedSplit = appState?.settings?.apcWeightedSplit ?? false;
   const isNigerian = gradingSystem === "nigerian_university";
+  
+  const dashboard: DashboardData | null = appState ? (() => {
+    try {
+      const adapter = getAdapter(gradingSystem);
+      return adapter.toDashboardData(appState);
+    } catch (error) {
+      console.error('Adapter error:', error);
+      return null;
+    }
+  })() : null;
+
+  const hasData = dashboard?.hasData ?? false;
+  const isEmpty = dashboard?.isEmpty ?? true;
 
   // Mark entry flow
   const [showMarkSheet, setShowMarkSheet] = useState(false);
@@ -506,12 +529,15 @@ const Home = () => {
       setMarkValue("");
     }
     // Fire bad_score nudge if the mark is low (below 10 or below the target avg)
-    if (val < Math.min(10, targetAvg - 2)) {
+    const threshold = heroTarget ? Math.min(10, heroTarget - 2) : 10;
+    if (val < threshold) {
       setTimeout(() => fireNudge("bad_score"), 800);
     }
   };
 
   const [showDeleteStrategyConfirm, setShowDeleteStrategyConfirm] = useState(false);
+  const [showTargetAdjustDialog, setShowTargetAdjustDialog] = useState(false);
+  const [targetAdjustData, setTargetAdjustData] = useState<{ currentTarget: number; maxPossible: number } | null>(null);
 
   const handleNigerianStateChange = (nigerianState: NigerianState) => {
     if (!appState) return;
@@ -533,51 +559,47 @@ const Home = () => {
 
   // Fire at_risk nudge on mount when avg is below target but recovery is possible
   useEffect(() => {
-    if (isNigerian || !hasData || currentAvg === null) return;
-    const gap = targetAvg - currentAvg;
+    if (isNigerian || !hasData || heroValue === null || heroTarget === null) return;
+    const gap = heroTarget - heroValue;
     // Only nudge if behind by 0.5–4 points (still recoverable, not hopeless)
-    if (gap > 0.4 && gap <= 4) {
+    // Scale the gap check based on the max value (5 for Nigerian, 20 for APC/French)
+    const minGap = heroMax === 5 ? 0.1 : 0.4;
+    const maxGap = heroMax === 5 ? 1.0 : 4.0;
+    if (gap > minGap && gap <= maxGap) {
       const timer = setTimeout(() => fireNudge("at_risk"), 3000);
       return () => clearTimeout(timer);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const currentAvg = hasData
-    ? gradingSystem === "apc"
-      ? calcAPCYearlyAverage(appState!.subjects, weightedSplit)
-      : calcYearlyAverage(appState!.subjects)
-    : null;
-  const range = hasData ? getPredictedRange(appState!.subjects) : null;
-  const bounds = hasData ? getAbsoluteBounds(appState!.subjects) : null;
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ADAPTER-BASED DATA ACCESS: Use dashboard instead of direct calculations
+  // ═══════════════════════════════════════════════════════════════════════════
+  const performance = dashboard?.performance;
+  const heroValue = performance?.value ?? null;
+  const heroMax = performance?.max ?? 20;
+  const heroTarget = performance?.target ?? null;
+  const heroLabel = performance?.label ?? t("currentAverage");
+  const heroSuffix = performance?.suffix ?? "/20";
+  const heroTargetLabel = performance?.targetLabel ?? "";
+  const heroBarColor = heroValue === null ? "bg-muted-foreground/30"
+    : heroTarget && heroValue >= heroTarget ? "bg-success"
+    : heroTarget && heroValue >= heroTarget - (heroMax === 5 ? 0.5 : 2) ? "bg-warning"
+    : "bg-danger";
+  const heroHasData = hasData && heroValue !== null;
+  const avgBarColor = heroBarColor;
+  
+  // Legacy values for backward compatibility (simulator, alerts, etc.)
+  const currentAvg = !isNigerian ? heroValue : null;
   const targetAvg = appState?.targetMin ?? appState?.targetAverage ?? 16;
+  const range = hasData && !isNigerian ? getPredictedRange(appState!.subjects) : null;
+  const bounds = hasData && !isNigerian ? getAbsoluteBounds(appState!.subjects) : null;
 
-  // Nigerian-specific derived values
+  // Nigerian-specific derived values (for semester management UI)
   const nigerianState: NigerianState = appState?.nigerianState ?? {
     semesters: [], cgpa: 0, classOfDegree: "Fail", targetCGPA: null, remainingCreditUnits: 0,
   };
-  // GPA is computed from subjects with customAssessments (the integrated model)
-  const nigerianCGPA = isNigerian
-    ? (computeIntegratedCGPA(appState?.subjects ?? []) ?? 0)
-    : 0;
-  const nigerianClass = isNigerian ? classifyDegree(nigerianCGPA) : "";
-  const nigerianHasData = isNigerian && (appState?.subjects ?? []).some(s =>
-    s.customAssessments && s.customAssessments.some(a => a.value !== null)
-  );
-
-  // Unified hero values — same card, different semantics
-  const heroValue = isNigerian ? nigerianCGPA : currentAvg;
-  const heroMax = isNigerian ? 5 : 20;
-  const heroTarget = isNigerian ? (appState?.targetMin ?? 5) : targetAvg;
-  const heroLabel = isNigerian ? "Current GPA" : t("currentAverage");
-  const heroSuffix = isNigerian ? "/ 5.00" : "/20";
-  const heroTargetLabel = isNigerian ? `Target: ${nigerianState.targetCGPA?.toFixed(2) ?? "—"} / 5.00` : `${t("target")}: ${targetAvg}–20`;
-  const heroBarColor = heroValue === null ? "bg-muted-foreground/30"
-    : heroValue >= heroTarget ? "bg-success"
-    : heroValue >= heroTarget - (isNigerian ? 0.5 : 2) ? "bg-warning"
-    : "bg-danger";
-  const heroHasData = isNigerian ? nigerianHasData : (hasData && currentAvg !== null);
-
-  const avgBarColor = heroBarColor;
+  const nigerianClass = dashboard?.classification?.label ?? "";
+  const nigerianCGPA = isNigerian ? (heroValue ?? 0) : 0;
 
   useEffect(() => {
     if (!avgCardRef.current) return;
@@ -615,7 +637,7 @@ const Home = () => {
       cancelAnimationFrame(raf);
       observer?.disconnect();
     };
-  }, [hasData, currentAvg]);
+  }, [hasData, heroValue]);
 
   const alerts = hasData ? getPerformanceAlerts(appState!.subjects, weightedSplit) : [];
 
@@ -761,7 +783,7 @@ const Home = () => {
         )}
 
         {/* APC/French: Current Average */}
-        {!isNigerian && hasData && currentAvg !== null && (
+        {!isNigerian && heroValue !== null && (
           <button onClick={() => setShowResultsSheet(true)} className="w-full text-left">
           <motion.div
             ref={avgCardRef}
@@ -770,38 +792,28 @@ const Home = () => {
             transition={{ delay: 0.1 }}
             className="tour-dashboard rounded-2xl p-5 bg-card border-2 border-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-shadow"
           >
-            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{t("currentAverage")}</p>
+            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{heroLabel}</p>
             <div className="flex items-end justify-between gap-2">
               <div className="flex items-end gap-1">
-                <span className="text-5xl font-black text-foreground">{currentAvg.toFixed(1)}</span>
-                <span className="text-xl font-bold text-muted-foreground mb-1">/20</span>
+                <span className="text-5xl font-black text-foreground">{heroValue.toFixed(1)}</span>
+                <span className="text-xl font-bold text-muted-foreground mb-1">{heroSuffix}</span>
               </div>
-              <span className="text-xs font-black text-muted-foreground mb-1.5">{t("target")}: {targetAvg}–20</span>
+              {heroTarget && (
+                <span className="text-xs font-black text-muted-foreground mb-1.5">{t("target")}: {heroTarget}–{heroMax}</span>
+              )}
             </div>
             <div className="mt-3 h-2.5 rounded-full bg-muted border border-foreground/20 overflow-hidden">
               <div
                 className={`h-full rounded-full ${avgBarColor} transition-all`}
-                style={{ width: `${Math.min((currentAvg / targetAvg) * 100, 100)}%` }}
+                style={{ width: `${Math.min((heroValue / (heroTarget ?? heroMax)) * 100, 100)}%` }}
               />
             </div>
           </motion.div>
           </button>
         )}
 
-        {/* Empty state — no data yet */}
-        {!isNigerian && !hasData && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center gap-2 py-6"
-          >
-            <Mascot pose="pointing" size={100} animate />
-            <p className="text-sm font-black text-foreground">{t("startBySettingUp")}</p>
-          </motion.div>
-        )}
-
         {/* APC/French: has subjects but no marks yet */}
-        {!isNigerian && hasData && currentAvg === null && (
+        {!isNigerian && heroValue === null && appState && (
           <motion.div
             ref={avgCardRef}
             initial={{ scale: 0.95, opacity: 0 }}
@@ -809,8 +821,8 @@ const Home = () => {
             transition={{ delay: 0.1 }}
             className="tour-dashboard rounded-2xl p-5 bg-card border-2 border-border"
           >
-            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{t("currentAverage")}</p>
-            <p className="text-3xl font-black text-muted-foreground/40 mb-1">—/20</p>
+            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{heroLabel}</p>
+            <p className="text-3xl font-black text-muted-foreground/40 mb-1">—{heroSuffix}</p>
             <p className="text-sm font-semibold text-muted-foreground">{t("noMarksYet")}</p>
             <div className="mt-3 h-2.5 rounded-full bg-muted border border-foreground/10" />
           </motion.div>
@@ -867,7 +879,7 @@ const Home = () => {
         )}
 
         {/* Onboarding checklist — APC/French */}
-        {!isNigerian && hasData && (
+        {!isNigerian && appState && (
           <div className="tour-checklist">
           <OnboardingChecklist
             steps={[
@@ -912,7 +924,7 @@ const Home = () => {
         )}
 
         {/* Saved Strategy — APC/French only */}
-        {!isNigerian && hasData && savedStrategy && savedStrategy.marks.length > 0 && (
+        {!isNigerian && appState && savedStrategy && savedStrategy.marks.length > 0 && (
           <motion.div
             initial={{ y: 15, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -1009,40 +1021,6 @@ const Home = () => {
           </motion.div>
         )}
 
-        {/* New user CTA — APC/French */}
-        {!isNigerian && !hasData && (
-          <Link to="/planner" className="block">
-            <div className="rounded-2xl bg-secondary border-2 border-foreground p-4 card-shadow flex items-center gap-4 active:translate-y-0.5 active:shadow-none transition-all">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-foreground bg-card">
-                <Target className="h-6 w-6 text-foreground" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-black text-foreground">
-                  {t("startPlanningAction")}
-                </h3>
-                <p className="text-xs font-semibold text-foreground/60">{t("setTargetAddSubjects")}</p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-foreground" />
-            </div>
-          </Link>
-        )}
-
-        {/* New user CTA — Nigerian */}
-        {isNigerian && !hasData && (
-          <Link to="/planner" className="block">
-            <div className="rounded-2xl bg-secondary border-2 border-foreground p-4 card-shadow flex items-center gap-4 active:translate-y-0.5 active:shadow-none transition-all">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-foreground bg-card">
-                <GraduationCap className="h-6 w-6 text-foreground" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-black text-foreground">Add your courses</h3>
-                <p className="text-xs font-semibold text-foreground/60">Set your target GPA and log your scores</p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-foreground" />
-            </div>
-          </Link>
-        )}
-
         {/* Courses at a glance — Nigerian (replaces SubjectsGlanceCard) */}
         {isNigerian && hasData && (
           <div className="tour-subjects-carousel overflow-x-auto -mx-4 px-4 pb-2 hide-scrollbar">
@@ -1077,7 +1055,7 @@ const Home = () => {
         )}
 
         {/* Subjects at a glance + Class ranking — APC/French */}
-        {!isNigerian && hasData && (
+        {!isNigerian && appState && (
           <div className="tour-subjects-carousel overflow-x-auto -mx-4 px-4 pb-2 hide-scrollbar">
             <div className="flex gap-3 items-start" style={{ width: "max-content" }}>
               <SubjectsGlanceCard subjects={appState!.subjects} title={t("subjectsGlance")} />
@@ -1089,7 +1067,7 @@ const Home = () => {
         )}
 
         {/* Recent Activity — both systems */}
-        {(isNigerian ? hasData : hasData) && recentHistory.length > 0 && (
+        {appState && recentHistory.length > 0 && (
           <motion.div
             initial={{ y: 15, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -1144,7 +1122,7 @@ const Home = () => {
         )}
 
         {/* Ideas & Feedback — both systems */}
-        {hasData && (
+        {appState && (
           <motion.div initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }}>
             <Link to="/feedback-board" className="tour-feedback flex items-center gap-3 rounded-2xl bg-card border-2 border-border p-4 active:scale-[0.98] transition-transform">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/20 border border-secondary/30 shrink-0">
@@ -1161,18 +1139,30 @@ const Home = () => {
       </div>
 
       <TaskBar action={
-        (isNigerian ? hasData : hasData) ? (
+        appState ? (
           <div className="relative">
             {/* Strategizer — APC/French only */}
             {!isNigerian && (
               <div className="absolute bottom-full mb-3 left-0">
-                <Link
-                  to="/simulator"
+                <button
+                  onClick={() => {
+                    // Check if target is unreachable
+                    const bounds = getAbsoluteBounds(appState.subjects);
+                    const targetAvg = appState.targetMin ?? appState.targetAverage;
+                    if (bounds && bounds.max < targetAvg) {
+                      // Target is unreachable, show dialog
+                      setTargetAdjustData({ currentTarget: targetAvg, maxPossible: bounds.max });
+                      setShowTargetAdjustDialog(true);
+                    } else {
+                      // Target is reachable, navigate to simulator
+                      navigate("/simulator");
+                    }
+                  }}
                   title={t("whatIfSimulator")}
                   className="tour-strategizer h-12 w-12 rounded-full bg-card border-2 border-foreground card-shadow flex items-center justify-center active:scale-95 transition-transform"
                 >
                   <TrendingUp className="h-6 w-6 text-foreground" />
-                </Link>
+                </button>
               </div>
             )}
             <button
@@ -1460,6 +1450,31 @@ const Home = () => {
         subjectName={selectedSubjects.length === 1 ? selectedSubjects[0] : undefined}
         amount={(window as any).__packAmount ?? undefined}
       />
+
+      {/* Target Adjustment Dialog */}
+      {targetAdjustData && (
+        <TargetAdjustmentDialog
+          open={showTargetAdjustDialog}
+          currentTarget={targetAdjustData.currentTarget}
+          maxPossible={targetAdjustData.maxPossible}
+          onClose={() => {
+            setShowTargetAdjustDialog(false);
+            setTargetAdjustData(null);
+          }}
+          onUpdateAndContinue={(newTarget) => {
+            // Update the target in state
+            if (appState) {
+              const updated = { ...appState, targetAverage: newTarget, targetMin: newTarget };
+              saveState(updated);
+              setAppState(updated);
+            }
+            setShowTargetAdjustDialog(false);
+            setTargetAdjustData(null);
+            // Navigate to simulator
+            navigate("/simulator");
+          }}
+        />
+      )}
 
       {/* Results bottom sheet */}
       <AnimatePresence>
