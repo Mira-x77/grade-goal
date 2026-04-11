@@ -1,25 +1,35 @@
 import { useState, useEffect } from "react";
-import { DEFAULT_SETTINGS } from "@/types/exam";
-import { useSearchParams } from "react-router-dom";
+import { DEFAULT_SETTINGS, GradingSystem } from "@/types/exam";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Home } from "lucide-react";
-import { Link } from "react-router-dom";
 import { AppState, Subject } from "@/types/exam";
 import { saveState, loadState } from "@/lib/storage";
-import OnboardingScreen from "@/components/OnboardingScreen";
+import { OnboardingHeader } from "@/components/OnboardingHeader";
+import OnboardingScreen, { OnboardingStep } from "@/components/OnboardingScreen";
 import SubjectsSetup from "@/components/SubjectsSetup";
 import MarksInput from "@/components/MarksInput";
-import ResultsScreen from "@/components/ResultsScreen";
-import TaskBar from "@/components/TaskBar";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { t } = useLanguage();
   const stepParam = searchParams.get("step");
+  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>("system");
+
+  const handleOnboardingStepChange = (step: OnboardingStep) => {
+    setOnboardingStep(step);
+  };
   
   const [state, setState] = useState<AppState>(() => {
     const saved = loadState();
-    const initial = saved || { step: "onboarding" as const, targetAverage: 16, subjects: [], settings: DEFAULT_SETTINGS };
-    // If URL has a step param and we have data, go to that step
+    // Always ensure settings exists — old stored states may not have it
+    const initial: AppState = saved
+      ? { ...saved, settings: saved.settings ?? DEFAULT_SETTINGS }
+      : { step: "onboarding" as const, targetAverage: 20, targetMin: 20, subjects: [], settings: DEFAULT_SETTINGS };
+    if (initial.targetMin === undefined || initial.targetMin === null) {
+      initial.targetMin = initial.targetAverage ?? 16;
+    }
     if (stepParam && saved && saved.subjects.length > 0) {
       const validSteps = ["onboarding", "subjects", "marks", "results"] as const;
       if (validSteps.includes(stepParam as any)) {
@@ -30,52 +40,105 @@ const Index = () => {
   });
 
   useEffect(() => {
-    saveState(state);
+    // Only auto-save while actively in onboarding steps — not after we've
+    // manually saved a finalState and navigated away
+    if (state.step !== "results") {
+      saveState(state);
+    }
   }, [state]);
 
   const setStep = (step: AppState["step"]) => setState((s) => ({ ...s, step }));
-  const setTarget = (targetAverage: number) => setState((s) => ({ ...s, targetAverage }));
+  const setTarget = (targetMin: number) => setState((s) => ({ ...s, targetMin, targetAverage: targetMin }));
   const setSubjects = (subjects: Subject[]) => setState((s) => ({ ...s, subjects }));
-  const setGradingSystem = (gradingSystem: "apc" | "french") =>
+  const setGradingSystem = (gradingSystem: GradingSystem) =>
     setState((s) => ({ ...s, settings: { ...s.settings, gradingSystem } }));
   const setStudentName = (studentName: string) => setState((s) => ({ ...s, studentName }));
   const setClassLevel = (classLevel: string) => setState((s) => ({ ...s, classLevel }));
   const setSerie = (serie: string) => setState((s) => ({ ...s, serie }));
+  const setSemester = (semester: string) => setState((s) => ({ ...s, semester }));
+  const setDepartment = (department: string) => setState((s) => ({ ...s, department }));
+  const setUniversityLevel = (universityLevel: string) => setState((s) => ({ ...s, universityLevel }));
+
+  const [nigerianSemester, setNigerianSemester] = useState<string>(() => loadState()?.semester ?? "");
+
+  const handleBack = () => {
+    if (state.step === "onboarding") {
+      const isNigerian = state.settings?.gradingSystem === "nigerian_university";
+      if (onboardingStep === "target") {
+        handleOnboardingStepChange(isNigerian ? "semester" : "profile");
+      } else if (onboardingStep === "semester") {
+        handleOnboardingStepChange("profile");
+      } else if (onboardingStep === "profile") {
+        handleOnboardingStepChange("system");
+      } else {
+        navigate("/");
+      }
+    } else if (state.step === "subjects") {
+      setStep("onboarding");
+      handleOnboardingStepChange("target");
+    } else if (state.step === "marks") {
+      setStep("subjects");
+    } else if (state.step === "results") {
+      setStep("marks");
+    }
+  };
+
+  const isNigerianOnboarding = state.settings?.gradingSystem === "nigerian_university";
+
+  const stepTitles: Record<AppState["step"], string> = {
+    onboarding: onboardingStep === "system" ? t("gradingSystem") : onboardingStep === "profile" ? t("basicInfo") : onboardingStep === "semester" ? "Current Semester" : t("targetAverage"),
+    subjects: t("addSubjects"),
+    marks: t("enterYourMarks"),
+    results: t("gradingSystem"), // never rendered in Index — just satisfies the type
+  };
+
+  const stepNumbers: Record<AppState["step"], number> = isNigerianOnboarding
+    ? {
+        onboarding: onboardingStep === "system" ? 1 : onboardingStep === "profile" ? 2 : onboardingStep === "semester" ? 3 : 4,
+        subjects: 5,
+        marks: 6,
+        results: 1,
+      }
+    : {
+        onboarding: onboardingStep === "system" ? 1 : onboardingStep === "profile" ? 2 : 3,
+        subjects: 4,
+        marks: 5,
+        results: 1,
+      };
+
+  const TOTAL_STEPS = isNigerianOnboarding ? 6 : 5;
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
-      {/* Top bar */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Home className="h-5 w-5" />
-            </Link>
-            <h1 className="text-lg font-black text-primary">ScoreTarget</h1>
-          </div>
-          <div className="flex gap-1">
-            {(["onboarding", "subjects", "marks", "results"] as const).map((s, i) => (
-              <div
-                key={s}
-                className={`h-2 rounded-full transition-all ${
-                  state.step === s ? "w-8 bg-primary" :
-                  (["onboarding", "subjects", "marks", "results"].indexOf(state.step) > i) ? "w-4 bg-primary/40" :
-                  "w-4 bg-muted"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background w-full pb-20">
+      {state.step !== "results" && (
+        <OnboardingHeader
+          title={stepTitles[state.step]}
+          onBack={handleBack}
+          currentStep={stepNumbers[state.step]}
+          totalSteps={TOTAL_STEPS}
+        />
+      )}
 
       <AnimatePresence mode="wait">
-        <motion.div key={state.step}>
+        <motion.div key={state.step + onboardingStep}>
           {state.step === "onboarding" && (
             <OnboardingScreen
               targetAverage={state.targetAverage}
               onTargetChange={setTarget}
-              onContinue={() => setStep("subjects")}
-              gradingSystem={state.settings.gradingSystem}
+              onContinue={() => {
+                const isNigerian = state.settings?.gradingSystem === "nigerian_university";
+                if (isNigerian) {
+                  if (onboardingStep === "target") {
+                    setState((s) => ({ ...s, semester: nigerianSemester }));
+                    setStep("subjects");
+                  } else {
+                    setStep("subjects");
+                  }
+                } else {
+                  setStep("subjects");
+                }
+              }}
+              gradingSystem={state.settings?.gradingSystem ?? "apc"}
               onGradingSystemChange={setGradingSystem}
               studentName={state.studentName || ""}
               onStudentNameChange={setStudentName}
@@ -83,6 +146,19 @@ const Index = () => {
               onClassLevelChange={setClassLevel}
               serie={state.serie || ""}
               onSerieChange={setSerie}
+              semester={state.semester || ""}
+              onSemesterChange={setSemester}
+              department={state.department || ""}
+              onDepartmentChange={setDepartment}
+              level={state.universityLevel || ""}
+              onLevelChange={setUniversityLevel}
+              nigerianSemester={nigerianSemester}
+              onNigerianSemesterChange={(sem) => {
+                setNigerianSemester(sem);
+                setState((s) => ({ ...s, semester: sem }));
+              }}
+              step={onboardingStep}
+              onStepChange={handleOnboardingStepChange}
             />
           )}
           {state.step === "subjects" && (
@@ -93,30 +169,47 @@ const Index = () => {
               onBack={() => setStep("onboarding")}
               classLevel={state.classLevel}
               serie={state.serie}
+              isNigerian={state.settings?.gradingSystem === "nigerian_university"}
             />
           )}
           {state.step === "marks" && (
             <MarksInput
               subjects={state.subjects}
               onSubjectsChange={setSubjects}
-              onContinue={() => setStep("results")}
+              onContinue={() => {
+                const isNigerian = state.settings?.gradingSystem === "nigerian_university";
+                if (isNigerian) {
+                  const finalState = {
+                    ...state,
+                    step: "results" as const,
+                    nigerianState: state.nigerianState ?? {
+                      semesters: [],
+                      cgpa: 0,
+                      classOfDegree: "Fail",
+                      targetCGPA: state.targetMin ?? null,
+                      remainingCreditUnits: 0,
+                    },
+                  };
+                  // Write to localStorage synchronously before navigating
+                  localStorage.setItem("scoretarget_state", JSON.stringify(finalState));
+                  saveState(finalState);
+                  navigate("/");
+                } else {
+                  const finalState = { ...state, step: "results" as const };
+                  localStorage.setItem("scoretarget_state", JSON.stringify(finalState));
+                  saveState(finalState);
+                  navigate("/");
+                }
+              }}
               onBack={() => setStep("subjects")}
               classLevel={state.classLevel}
               serie={state.serie}
+              isNigerian={state.settings?.gradingSystem === "nigerian_university"}
             />
           )}
-          {state.step === "results" && (
-            <ResultsScreen
-              subjects={state.subjects}
-              targetAverage={state.targetAverage}
-              onBack={() => setStep("marks")}
-              onEditMarks={() => setStep("marks")}
-            />
-          )}
+          {/* "results" step is never rendered here — it means onboarding is done, navigate("/") handles it */}
         </motion.div>
       </AnimatePresence>
-
-      <TaskBar />
     </div>
   );
 };

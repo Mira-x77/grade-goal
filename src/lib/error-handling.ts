@@ -57,7 +57,7 @@ export async function checkStorageBeforeDownload(
   requiredBytes: number
 ): Promise<{ available: boolean; error?: string }> {
   try {
-    const availableSpace = await getAvailableSpace();
+    const { available: availableSpace } = await getAvailableSpace();
     
     if (availableSpace < requiredBytes) {
       return {

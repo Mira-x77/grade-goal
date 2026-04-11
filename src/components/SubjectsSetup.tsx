@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, BookOpen, Trash2 } from "lucide-react";
+import { Plus, Trash2, Check, X, Search } from "lucide-react";
 import { Subject } from "@/types/exam";
-import { getSubjectsForLevel } from "@/lib/subjects-data";
+import { getSubjectsForLevel, CLASS_LEVELS } from "@/lib/subjects-data";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SubjectsSetupProps {
   subjects: Subject[];
@@ -11,159 +13,419 @@ interface SubjectsSetupProps {
   onBack: () => void;
   classLevel?: string;
   serie?: string;
+  isNigerian?: boolean;
 }
 
-const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack, classLevel, serie }: SubjectsSetupProps) => {
-  const [newName, setNewName] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
+/** Returns how many px the visual viewport is shorter than the layout viewport (i.e. keyboard height) */
+function useKeyboardHeight() {
+  const [kbHeight, setKbHeight] = useState(0);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => {
+      const diff = window.innerHeight - vv.height - vv.offsetTop;
+      setKbHeight(Math.max(0, diff));
+    };
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
+  return kbHeight;
+}
 
-  const suggestedSubjects = classLevel ? getSubjectsForLevel(classLevel, serie) : [];
+const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, classLevel, serie, isNigerian }: SubjectsSetupProps) => {
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
+  const [customName, setCustomName] = useState("");
+  // "list" = main modal view, "custom" = custom subject name input view
+  const [modalView, setModalView] = useState<"list" | "custom">("list");
+  const { t } = useLanguage();
+  const kbHeight = useKeyboardHeight();
+
+  // Pre-populate with preset subjects when first arriving at this step
+  useEffect(() => {
+    if (isNigerian) return; // No presets for Nigerian users
+    if (subjects.length === 0 && classLevel) {
+      const isLycee = CLASS_LEVELS.lycee.includes(classLevel as any);
+      // For lycée, only pre-populate if we have a série — otherwise we'd dump all subjects from all séries
+      if (isLycee && !serie) return;
+      const presets = getSubjectsForLevel(classLevel, serie);
+      const prePopulated: Subject[] = presets.map((name) => ({
+        id: crypto.randomUUID(),
+        name,
+        coefficient: 1,
+        marks: { interro: null, dev: null, compo: null },
+      }));
+      if (prePopulated.length > 0) onSubjectsChange(prePopulated);
+    }
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const allSuggested = (!isNigerian && classLevel) ? getSubjectsForLevel(classLevel, serie) : [];
   const existingNames = new Set(subjects.map((s) => s.name.toLowerCase()));
-  const filteredSuggestions = suggestedSubjects.filter(
-    (s) => !existingNames.has(s.toLowerCase()) && s.toLowerCase().includes(newName.toLowerCase())
-  );
+  const available = allSuggested
+    .filter((s) => !existingNames.has(s.toLowerCase()))
+    .sort((a, b) => a.localeCompare(b));
 
-  const addSubject = (name?: string) => {
-    const subjectName = name || newName.trim();
-    if (!subjectName) return;
-    const newSubject: Subject = {
+  const filtered = search.trim()
+    ? available.filter((s) => s.toLowerCase().includes(search.toLowerCase()))
+    : available;
+
+  // Show custom option if search doesn't match any suggestion and isn't already added
+  const showCustomOption =
+    search.trim().length > 0 &&
+    !available.some((s) => s.toLowerCase() === search.toLowerCase()) &&
+    !existingNames.has(search.toLowerCase());
+
+  const hasSubjects = subjects.length > 0;
+
+  const openModal = () => {
+    setSelected(new Set());
+    setSearch("");
+    setCustomName("");
+    setModalView("list");
+    setShowAddModal(true);
+  };
+
+  const toggleSelect = (name: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
+  };
+
+  // Called from the inline "Add [typed text]" shortcut (existing behaviour)
+  const addCustomInline = () => {
+    const name = search.trim();
+    if (!name || existingNames.has(name.toLowerCase())) return;
+    const customSubject: Subject = {
       id: crypto.randomUUID(),
-      name: subjectName,
+      name,
       coefficient: 1,
+      ...(isNigerian ? { creditUnits: 1, customAssessments: [] } : {}),
       marks: { interro: null, dev: null, compo: null },
     };
-    onSubjectsChange([...subjects, newSubject]);
-    setNewName("");
-    setShowSuggestions(false);
+    const selectedSubjects = Array.from(selected).map((n) => ({
+      id: crypto.randomUUID(),
+      name: n,
+      coefficient: 1,
+      ...(isNigerian ? { creditUnits: 1, customAssessments: [] } : {}),
+      marks: { interro: null, dev: null, compo: null },
+    }));
+    onSubjectsChange([...subjects, customSubject, ...selectedSubjects]);
+    setSearch("");
+    setCustomName("");
+    setSelected(new Set());
+    setShowAddModal(false);
+  };
+
+  // Called from the custom-name input view — adds to selected list and returns to list view
+  const confirmCustomName = () => {
+    const name = customName.trim();
+    if (!name || existingNames.has(name.toLowerCase())) return;
+    setSelected((prev) => new Set([...prev, name]));
+    setCustomName("");
+    setModalView("list");
+  };
+
+  const confirmAdd = () => {
+    const newSubjects = Array.from(selected).map((name) => ({
+      id: crypto.randomUUID(),
+      name,
+      coefficient: 1,
+      ...(isNigerian ? { creditUnits: 1, customAssessments: [] } : {}),
+      marks: { interro: null, dev: null, compo: null },
+    }));
+    onSubjectsChange([...subjects, ...newSubjects]);
+    setSelected(new Set());
+    setSearch("");
+    setShowAddModal(false);
   };
 
   const updateCoeff = (id: string, coeff: number) => {
-    onSubjectsChange(
-      subjects.map((s) => (s.id === id ? { ...s, coefficient: Math.max(1, coeff) } : s))
-    );
+    const max = isNigerian ? 6 : Infinity;
+    if (isNigerian) {
+      onSubjectsChange(
+        subjects.map((s) => (s.id === id ? { ...s, creditUnits: Math.min(max, Math.max(1, coeff)) } : s))
+      );
+    } else {
+      onSubjectsChange(
+        subjects.map((s) => (s.id === id ? { ...s, coefficient: Math.min(max, Math.max(1, coeff)) } : s))
+      );
+    }
   };
 
   const removeSubject = (id: string) => {
     onSubjectsChange(subjects.filter((s) => s.id !== id));
   };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -50 }}
-      className="flex flex-col gap-6 px-6 py-8"
-    >
-      <div>
-        <button onClick={onBack} className="text-sm font-bold text-muted-foreground mb-2">
-          ← Back
-        </button>
-        <h2 className="text-2xl font-black text-foreground">Your subjects</h2>
-        <p className="text-sm text-muted-foreground font-semibold">Add subjects & set coefficients</p>
-      </div>
-
-      {/* Add subject input */}
-      <div className="relative">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="e.g. Maths, French..."
-            value={newName}
-            onChange={(e) => { setNewName(e.target.value); setShowSuggestions(true); }}
-            onFocus={() => setShowSuggestions(true)}
-            onKeyDown={(e) => e.key === "Enter" && addSubject()}
-            className="flex-1 rounded-xl border-2 border-border bg-card px-4 py-3 font-semibold text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none transition-colors"
-          />
-          <button
-            onClick={() => addSubject()}
-            className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground active:scale-95 transition-transform"
-          >
-            <Plus className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Suggestions dropdown */}
-        {showSuggestions && filteredSuggestions.length > 0 && (
+  const modal = (
+    <AnimatePresence>
+      {showAddModal && (
+        <>
           <motion.div
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="absolute z-20 left-0 right-12 mt-1 rounded-xl bg-card border-2 border-border card-shadow max-h-48 overflow-y-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/50"
+            onClick={() => setShowAddModal(false)}
+          />
+          <motion.div
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.92, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 320, damping: 28 }}
+            className="fixed inset-0 z-[101] flex items-end justify-center pointer-events-none px-4"
+            style={{ paddingBottom: kbHeight > 0 ? kbHeight + 8 : undefined }}
           >
-            {filteredSuggestions.map((s) => (
-              <button
-                key={s}
-                onClick={() => addSubject(s)}
-                className="w-full text-left px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors first:rounded-t-xl last:rounded-b-xl"
-              >
-                {s}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </div>
+            <div className="pointer-events-auto w-full max-w-sm bg-card rounded-3xl card-shadow overflow-hidden mb-2">
 
-      {/* Subject list */}
-      <div className="flex flex-col gap-3">
+              <AnimatePresence mode="wait">
+
+                {/* ── LIST VIEW ── */}
+                {modalView === "list" && (
+                  <motion.div key="list" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.18 }}>
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-5 pt-5 pb-3">
+                      <div>
+                        <h2 className="text-base font-black text-foreground">{isNigerian ? "Add Courses" : t("addSubjects")}</h2>
+                        {selected.size > 0 && (
+                          <p className="text-xs font-semibold text-primary mt-0.5">{selected.size} {t("selected")}</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setShowAddModal(false)}
+                        className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground active:scale-95 transition-transform"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {/* Search bar */}
+                    <div className="px-4 pb-3">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <input
+                          type="text"
+                          placeholder={isNigerian ? "Course name…" : t("searchOrTypeSubject")}
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2.5 rounded-xl border-2 border-border bg-muted text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+
+                    {/* Persistent "Create custom subject/course" button */}
+                    {!showCustomOption && (
+                      <div className="px-4 pb-2">
+                        <button
+                          onClick={() => { setCustomName(""); setModalView("custom"); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/40 text-muted-foreground active:scale-[0.98] transition-all"
+                        >
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted-foreground/20">
+                            <Plus className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="text-sm font-bold">{isNigerian ? "Add custom course" : "Create custom subject"}</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Inline "Add [typed text]" — appears when search has no match */}
+                    {showCustomOption && (
+                      <div className="px-4 pb-2">
+                        <button
+                          onClick={addCustomInline}
+                          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl border-2 border-dashed border-primary/50 bg-primary/5 text-primary active:scale-[0.98] transition-all"
+                        >
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
+                            <Plus className="h-3.5 w-3.5 text-primary-foreground" />
+                          </div>
+                          <span className="text-sm font-black">{t("addSubjectBtn")} "{search.trim()}"</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {showCustomOption && filtered.length > 0 && (
+                      <div className="px-4 pb-1">
+                        <p className="text-xs font-bold text-muted-foreground">{t("suggestions")}</p>
+                      </div>
+                    )}
+
+                    {/* Subject list — hidden for Nigerian (no presets) */}
+                    {!isNigerian && (
+                    <div className="overflow-y-auto max-h-56 px-3 pb-2">
+                      {filtered.length === 0 && !showCustomOption ? (
+                        <p className="text-center text-sm text-muted-foreground py-8 font-semibold">
+                          {available.length === 0 ? t("allSubjectsAdded") : t("noMatchesTypeCustom")}
+                        </p>
+                      ) : (
+                        filtered.map((name) => {
+                          const isSelected = selected.has(name);
+                          return (
+                            <button
+                              key={name}
+                              onClick={() => toggleSelect(name)}
+                              className={`w-full flex items-center justify-between px-3 py-3 rounded-xl mb-1 transition-all active:scale-[0.98] ${
+                                isSelected ? "bg-primary/15 text-primary" : "hover:bg-muted/60 text-foreground"
+                              }`}
+                            >
+                              <span className="text-sm font-bold">{name}</span>
+                              <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
+                                isSelected ? "bg-primary border-primary" : "border-border"
+                              }`}>
+                                {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                    )}
+
+                    {/* Footer */}
+                    {selected.size > 0 && (
+                      <div className="px-5 pb-5 pt-3 border-t border-border">
+                        <button
+                          onClick={confirmAdd}
+                          className="w-full rounded-2xl bg-primary py-3.5 text-sm font-extrabold text-primary-foreground active:translate-y-0.5 transition-all"
+                        >
+                          {t("addSubjectBtn")} {selected.size} {selected.size > 1 ? t("subjectsSelectedPlural") : t("subjectsSelected")}
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* ── CUSTOM NAME INPUT VIEW ── */}
+                {modalView === "custom" && (
+                  <motion.div key="custom" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.18 }}>
+                    <div className="flex items-center gap-3 px-5 pt-5 pb-3">
+                      <button
+                        onClick={() => setModalView("list")}
+                        className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground active:scale-95 transition-transform shrink-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                      <h2 className="text-base font-black text-foreground">{isNigerian ? "Add custom course" : "Create custom subject"}</h2>
+                    </div>
+
+                    <div className="px-5 pb-3">
+                      <label className="text-xs font-bold text-muted-foreground mb-1.5 block">{isNigerian ? "Course name" : "Subject name"}</label>
+                      <input
+                        type="text"
+                        placeholder={isNigerian ? "e.g. MTH 101, ENG 201…" : "e.g. Latin, Drama, Economics…"}
+                        value={customName}
+                        onChange={(e) => setCustomName(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && confirmCustomName()}
+                        className="w-full rounded-xl border-2 border-border bg-muted px-4 py-3 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className="px-5 pb-5">
+                      <button
+                        onClick={confirmCustomName}
+                        disabled={!customName.trim() || existingNames.has(customName.trim().toLowerCase())}
+                        className="w-full rounded-2xl bg-primary py-3.5 text-sm font-extrabold text-primary-foreground active:translate-y-0.5 transition-all disabled:opacity-30 disabled:pointer-events-none"
+                      >
+                        Done
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+    <div className="flex flex-col h-screen bg-background w-full overflow-hidden">
+
+      {hasSubjects && (
+        <div className="px-6 pb-2 flex-shrink-0 safe-area-top" style={{ paddingTop: "calc(5rem + env(safe-area-inset-top))" }}>
+          <div className="flex items-center border-b border-border pb-1">
+            <span className="flex-1 text-xs font-black text-muted-foreground uppercase tracking-wider">{isNigerian ? "Course" : t("subject")}</span>
+            <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-10">{isNigerian ? "Credit Units" : t("coefficient")}</span>
+          </div>
+        </div>
+      )}
+
+      <div className={`flex-1 px-6 ${hasSubjects ? "overflow-y-auto" : "overflow-hidden flex flex-col items-center justify-center"}`} style={{ paddingTop: hasSubjects ? 0 : 0 }}>
         <AnimatePresence>
           {subjects.map((sub, i) => (
             <motion.div
               key={sub.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ delay: i * 0.05 }}
-              className="flex items-center gap-3 rounded-2xl bg-card p-4 card-shadow"
+              exit={{ opacity: 0, x: -80 }}
+              transition={{ delay: i * 0.04 }}
+              className="flex items-center py-3.5 border-b border-border/50"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/20">
-                <BookOpen className="h-5 w-5 text-secondary" />
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-foreground">{sub.name}</p>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-xs font-bold text-muted-foreground mr-1">Coeff</span>
-                <button
-                  onClick={() => updateCoeff(sub.id, sub.coefficient - 1)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95"
-                >
-                  −
-                </button>
-                <span className="w-8 text-center font-black text-foreground">{sub.coefficient}</span>
-                <button
-                  onClick={() => updateCoeff(sub.id, sub.coefficient + 1)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95"
-                >
-                  +
+              <span className="flex-1 font-bold text-foreground text-sm">{sub.name}</span>
+              <div className="flex items-center gap-2">
+                <button onClick={() => updateCoeff(sub.id, (isNigerian ? (sub.creditUnits ?? sub.coefficient) : sub.coefficient) - 1)} className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95">−</button>
+                <span className="w-6 text-center font-black text-foreground text-sm">{isNigerian ? (sub.creditUnits ?? sub.coefficient) : sub.coefficient}</span>
+                <button onClick={() => updateCoeff(sub.id, (isNigerian ? (sub.creditUnits ?? sub.coefficient) : sub.coefficient) + 1)} className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95">+</button>
+                <button onClick={() => removeSubject(sub.id)} className="ml-2 text-destructive/50 hover:text-destructive transition-colors">
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
-              <button
-                onClick={() => removeSubject(sub.id)}
-                className="ml-1 text-destructive/60 hover:text-destructive transition-colors"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
             </motion.div>
           ))}
         </AnimatePresence>
 
-        {subjects.length === 0 && (
-          <div className="py-12 text-center text-muted-foreground font-semibold">
-            Add your first subject above ☝️
+        {!hasSubjects && (
+          <div className="text-center">
+            <p className="text-2xl mb-2">📚</p>
+            <p className="text-base font-black text-foreground mb-1">{t("noSubjectsAdded")}</p>
+            <p className="text-sm font-semibold text-muted-foreground">{t("tapToAddFirst")}</p>
           </div>
         )}
       </div>
 
-      {subjects.length > 0 && (
+      <div className="fixed bottom-0 left-0 right-0 z-30 pb-10 pt-4 bg-background">
+        <div className="content-col flex items-center gap-3">
         <motion.button
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          onClick={onContinue}
-          className="w-full rounded-2xl bg-primary py-4 text-lg font-extrabold text-primary-foreground card-shadow-primary active:translate-y-1 active:shadow-none transition-all"
+          layout
+          onClick={openModal}
+          animate={{ width: hasSubjects ? 56 : "100%" }}
+          transition={{ type: "spring", stiffness: 300, damping: 28 }}
+          className="flex h-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground card-shadow-primary active:scale-95"
+          style={{ minWidth: 56 }}
         >
-          CONTINUE →
+          <Plus className="h-7 w-7" />
         </motion.button>
-      )}
-    </motion.div>
+
+        <AnimatePresence>
+          {hasSubjects && (
+            <motion.button
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "100%" }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+              onClick={onContinue}
+              className="h-14 rounded-2xl bg-secondary border-2 border-foreground text-base font-extrabold text-foreground card-shadow active:translate-y-1 active:shadow-none overflow-hidden whitespace-nowrap"
+            >
+              {t("next")}
+            </motion.button>
+          )}
+        </AnimatePresence>
+        </div>{/* /content-col */}
+      </div>
+
+      {createPortal(modal, document.body)}
+    </div>
   );
 };
 

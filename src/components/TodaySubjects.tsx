@@ -49,11 +49,11 @@ export function TodaySubjects() {
 
   if (subjects.length === 0) {
     return (
-      <div className="min-h-screen bg-background max-w-md mx-auto flex items-center justify-center p-6">
+      <div className="min-h-screen bg-background w-full flex items-center justify-center p-6">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="rounded-2xl bg-card p-8 card-shadow text-center"
+          className="rounded-2xl bg-card p-8 border-2 border-border text-center"
         >
           <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
           <p className="text-lg font-bold text-foreground">
@@ -67,13 +67,13 @@ export function TodaySubjects() {
   }
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
+    <div className="min-h-screen bg-background w-full pb-20">
       <div className="px-6 pt-8 pb-4">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-2xl font-black text-foreground">📖 {t("todaysBooks")}</h1>
+          <h1 className="text-2xl font-black text-foreground flex items-center gap-2"><BookOpen className="h-6 w-6" /> {t("todaysBooks")}</h1>
           <p className="text-sm font-semibold text-muted-foreground mt-1">{dayName}</p>
         </motion.div>
       </div>
@@ -100,7 +100,7 @@ export function TodaySubjects() {
               className={`flex items-center gap-4 p-4 rounded-2xl transition-all ${
                 packed[subject]
                   ? "bg-success/10 border-2 border-success/30"
-                  : "bg-card border-2 border-border card-shadow"
+                  : "bg-card border-2 border-border"
               }`}
             >
               <Checkbox

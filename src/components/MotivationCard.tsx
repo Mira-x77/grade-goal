@@ -11,22 +11,22 @@ interface MotivationCardProps {
 
 const encouragements = {
   great: [
-    "You're crushing it! 🔥",
-    "Keep this energy! 💪",
-    "On fire today! 🚀",
-    "Unstoppable! ⚡",
+    "You're crushing it!",
+    "Keep this energy!",
+    "On fire today!",
+    "Unstoppable!",
   ],
   good: [
-    "Solid progress! 👏",
-    "You've got this! 💯",
-    "Stay focused! 🎯",
-    "Almost there! ✨",
+    "Solid progress!",
+    "You've got this!",
+    "Stay focused!",
+    "Almost there!",
   ],
   tough: [
-    "Every point counts! 💪",
-    "Don't give up! 🏋️",
-    "Push through! 🔥",
-    "You can turn this around! 🚀",
+    "Every point counts!",
+    "Don't give up!",
+    "Push through!",
+    "You can turn this around!",
   ],
 };
 
@@ -56,7 +56,7 @@ const MotivationCard = ({ subjects, targetAverage }: MotivationCardProps) => {
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.15 }}
-      className="rounded-2xl bg-card p-4 card-shadow"
+      className="rounded-2xl bg-card p-4 border-2 border-border"
     >
       <div className="flex items-center gap-4">
         {/* Streak */}
@@ -93,3 +93,4 @@ const MotivationCard = ({ subjects, targetAverage }: MotivationCardProps) => {
 };
 
 export default MotivationCard;
+

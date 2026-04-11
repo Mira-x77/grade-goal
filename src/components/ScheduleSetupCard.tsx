@@ -16,7 +16,7 @@ export function ScheduleSetupCard({ onSetupNow, onDismiss }: ScheduleSetupCardPr
   };
 
   return (
-    <div className="rounded-2xl bg-card p-4 card-shadow">
+    <div className="rounded-2xl bg-card p-4 border-2 border-border">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 flex-shrink-0">
           <BookOpen className="h-5 w-5 text-primary" />
@@ -45,3 +45,4 @@ export function ScheduleSetupCard({ onSetupNow, onDismiss }: ScheduleSetupCardPr
     </div>
   );
 }
+

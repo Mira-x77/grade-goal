@@ -30,6 +30,7 @@ export interface ExamPaper {
   downloads: number;
   tags: string[];
   description?: string;
+  preview_url?: string;
 }
 
 // Cached paper interface (IndexedDB)
@@ -47,8 +48,10 @@ export interface CachedPaper {
   downloads: number;
   tags: string[];
   description?: string;
+  preview_url?: string;
   isDownloaded: boolean;
   localPath?: string;
+  localThumbnailPath?: string;
   downloadedAt?: string;
   lastFetched: string;
 }

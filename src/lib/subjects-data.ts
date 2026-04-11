@@ -1,5 +1,5 @@
 export const CLASS_LEVELS = {
-  college: ["6ème", "5ème", "4ème", "3ème"] as const,
+  college: ["Sixième", "Cinquième", "Quatrième", "Troisième"] as const,
   lycee: ["Seconde", "Première", "Terminale"] as const,
 };
 

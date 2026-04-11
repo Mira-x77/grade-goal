@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Plus } from "lucide-react";
+import { X, Plus, BookOpen } from "lucide-react";
 import { DayOfWeek, WeeklySchedule } from "@/types/schedule";
 import { updateSchedule, markSetupCompleted, loadScheduleState } from "@/lib/schedule-storage";
 import { scheduleAllReminders, requestNotificationPermission } from "@/lib/notification-scheduler";
@@ -80,13 +80,13 @@ export function ScheduleSetup({ onComplete, onSkip, initialSchedule }: ScheduleS
   };
 
   return (
-    <div className="min-h-screen bg-background max-w-md mx-auto pb-20">
+    <div className="min-h-screen bg-background w-full pb-20">
       <div className="px-6 pt-8 pb-4">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-2xl font-black text-foreground">📚 {t("weeklySchedule")}</h1>
+          <h1 className="text-2xl font-black text-foreground flex items-center gap-2"><BookOpen className="h-6 w-6" /> {t("weeklySchedule")}</h1>
           <p className="text-sm font-semibold text-muted-foreground mt-1">
             {t("addSubjectsReminder")}
           </p>
@@ -99,7 +99,7 @@ export function ScheduleSetup({ onComplete, onSkip, initialSchedule }: ScheduleS
             key={key}
             initial={{ y: 15, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="rounded-2xl bg-card p-4 card-shadow"
+            className="rounded-2xl bg-card p-4 border-2 border-border"
           >
             <h3 className="font-black text-foreground text-sm mb-3">{label()}</h3>
             
@@ -164,3 +164,4 @@ export function ScheduleSetup({ onComplete, onSkip, initialSchedule }: ScheduleS
     </div>
   );
 }
+

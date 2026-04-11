@@ -1,4 +1,6 @@
 {
+  "name": "Go Study!",
+  "short_name": "Go Study!",
   "icons": [
     {
       "src": "../icons/icon-48.webp",

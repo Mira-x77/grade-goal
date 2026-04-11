@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { BookOpen } from "lucide-react";
+import { BookOpen, CheckCircle2 } from "lucide-react";
 import { Subject, FeedbackStatus } from "@/types/exam";
 import { calcSubjectAverage, calcAllRequiredMarks, calcSubjectBounds, getMarkLabel } from "@/lib/exam-logic";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SubjectBreakdownProps {
   subjects: Subject[];
@@ -9,16 +10,17 @@ interface SubjectBreakdownProps {
 }
 
 const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) => {
+  const { t } = useLanguage();
   return (
     <motion.div
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.3 }}
-      className="rounded-2xl bg-card p-5 card-shadow"
+      className="rounded-2xl bg-card p-5 border-2 border-border"
     >
       <div className="flex items-center gap-2 mb-4">
         <BookOpen className="h-5 w-5 text-secondary" />
-        <h3 className="font-black text-foreground">Per-subject breakdown</h3>
+        <h3 className="font-black text-foreground">{t("perSubjectBreakdownTitle")}</h3>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -46,7 +48,7 @@ const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) =>
               {/* Show bounds if multiple unknowns */}
               {bounds && !allFilled && (
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[10px] font-bold text-muted-foreground">Range:</span>
+                  <span className="text-[10px] font-bold text-muted-foreground">{t("range")}:</span>
                   <div className="flex-1 h-1.5 rounded-full bg-muted relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-danger via-warning to-success rounded-full" />
                   </div>
@@ -54,20 +56,7 @@ const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) =>
                 </div>
               )}
 
-              {allFilled ? (
-                <p className="text-xs text-success font-bold">✅ All marks entered</p>
-              ) : (
-                <div className="flex flex-col gap-1">
-                  {required.map((r) => (
-                    <div key={r.markType} className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-muted-foreground">
-                        {r.label}
-                      </span>
-                      <NeededBadge needed={r.needed} status={r.status} />
-                    </div>
-                  ))}
-                </div>
-              )}
+
             </motion.div>
           );
         })}
@@ -99,3 +88,4 @@ function NeededBadge({ needed, status }: { needed: number | null; status: Feedba
 }
 
 export default SubjectBreakdown;
+

@@ -48,85 +48,69 @@ class DownloadService {
         status: 'downloading'
       });
 
-      // For mobile, use Capacitor Filesystem download (streaming, no memory issues)
+      // For mobile, use fetch + Filesystem.writeFile (reliable on Android)
       let blob: Blob;
       if (Capacitor.getPlatform() !== 'web') {
-        // Mobile: Use Capacitor Filesystem download API (handles large files efficiently)
         try {
           console.log('📥 Starting mobile download for:', paper.fileName);
 
-          // Listen for real byte-level progress events
-          const progressListener = await Filesystem.addListener('progress', (progressEvent) => {
-            const { bytes, contentLength } = progressEvent;
-            if (contentLength && contentLength > 0) {
-              const pct = Math.min(Math.round((bytes / contentLength) * 100), 99);
-              onProgress({
-                paperId: paper.id,
-                progress: pct,
-                bytesDownloaded: bytes,
-                totalBytes: contentLength,
-                status: 'downloading'
-              });
-            }
+          onProgress({ paperId: paper.id, progress: 20, bytesDownloaded: 0, totalBytes: paper.fileSize, status: 'downloading' });
+
+          const response = await fetch(paper.fileUrl);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          blob = await response.blob();
+
+          onProgress({ paperId: paper.id, progress: 70, bytesDownloaded: paper.fileSize * 0.7, totalBytes: paper.fileSize, status: 'downloading' });
+
+          // Convert blob to base64 and write to filesystem
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
           });
-          
-          // Download directly to filesystem (streaming, no memory load)
-          const downloadResult = await Filesystem.downloadFile({
-            path: `exam-papers/${paper.fileName}`,
-            url: paper.fileUrl,
+
+          await Filesystem.writeFile({
+            path: `${EXAM_PAPERS_DIR}/${paper.fileName}`,
+            data: base64Data,
             directory: Directory.Data,
-            progress: true,
-            recursive: true
+            recursive: true,
           });
 
-          // Remove progress listener after download
-          await progressListener.remove();
+          onProgress({ paperId: paper.id, progress: 90, bytesDownloaded: paper.fileSize * 0.9, totalBytes: paper.fileSize, status: 'downloading' });
 
-          console.log('✅ Download complete:', downloadResult);
-
-          // File is already saved, just get the path
           const localPath = `${EXAM_PAPERS_DIR}/${paper.fileName}`;
-          
           console.log('📁 File saved at:', localPath);
 
-          // CRITICAL: Ensure paper is in cache before updating download status
-          console.log('🔍 Checking if paper exists in cache before update...');
           const cachedPapers = await cacheService.getCachedPapers();
-          const paperInCache = cachedPapers.find(p => p.id === paper.id);
-          
-          if (!paperInCache) {
-            console.warn('⚠️ Paper not in cache! Adding it now...');
+          if (!cachedPapers.find(p => p.id === paper.id)) {
             await cacheService.cachePapers([paper]);
-            console.log('✅ Paper added to cache');
-          } else {
-            console.log('✅ Paper already in cache');
+          }
+          await cacheService.updateDownloadStatus(paper.id, true, localPath);
+
+          // Download thumbnail if available
+          if (paper.preview_url) {
+            try {
+              const thumbResponse = await fetch(paper.preview_url);
+              if (thumbResponse.ok) {
+                const thumbBlob = await thumbResponse.blob();
+                const thumbDataUrl = await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(thumbBlob);
+                });
+                await cacheService.updateThumbnailPath(paper.id, thumbDataUrl);
+              }
+            } catch (thumbErr) {
+              console.warn('Thumbnail download failed (non-critical):', thumbErr);
+            }
           }
 
-          // Update cache with download status
-          console.log('💾 Updating cache for paper:', paper.id, 'with localPath:', localPath);
-          await cacheService.updateDownloadStatus(paper.id, true, localPath);
-          console.log('✅ Cache updated successfully');
-          
-          // Verify the update worked
-          const updatedPapers = await cacheService.getCachedPapers();
-          const updatedPaper = updatedPapers.find(p => p.id === paper.id);
-          console.log('🔍 Verification - Paper after update:', {
-            id: updatedPaper?.id,
-            isDownloaded: updatedPaper?.isDownloaded,
-            localPath: updatedPaper?.localPath
-          });
-
-          // Complete progress
-          onProgress({
-            paperId: paper.id,
-            progress: 100,
-            bytesDownloaded: paper.fileSize,
-            totalBytes: paper.fileSize,
-            status: 'completed'
-          });
+          onProgress({ paperId: paper.id, progress: 100, bytesDownloaded: paper.fileSize, totalBytes: paper.fileSize, status: 'completed' });
 
           return localPath;
-          
+
         } catch (fetchError) {
           console.error('Mobile download error:', fetchError);
           throw new Error('Failed to download file. Please check your internet connection and try again.');

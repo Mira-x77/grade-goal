@@ -1,18 +1,26 @@
-// Subscription types for the exam library
+// Subscription types for premium study tools access
 
 export type SubscriptionTier = 'free' | 'premium';
 export type SubscriptionStatus = 'active' | 'expired';
+
+// Premium access types
+export type PremiumAccessType = 'subject_pack' | 'all_subjects';
+
+export interface UnlockedSubject {
+  subjectName: string;
+  unlockedAt: string; // ISO date
+  accessType: PremiumAccessType;
+}
 
 export interface LocalSubscription {
   deviceId: string;
   tier: SubscriptionTier;
   status: SubscriptionStatus;
-  downloadsThisMonth: number;
-  maxDownloads: number; // 5 for free, -1 for unlimited
   subscriptionCode?: string;
   activatedAt?: string; // ISO date
   expiresAt?: string; // ISO date
-  lastResetDate: string; // ISO date of last monthly reset
+  accessType?: PremiumAccessType; // 'subject_pack' or 'all_subjects'
+  unlockedSubjects: UnlockedSubject[]; // List of subjects with premium access
   createdAt: string;
   updatedAt: string;
 }
@@ -20,12 +28,16 @@ export interface LocalSubscription {
 export interface SubscriptionCode {
   id: string;
   code: string;
+  product_type: 'subject_pack' | 'all_subjects' | 'premium_subscription' | 'full_access';
   duration_months: number;
   is_used: boolean;
   used_by?: string;
   used_at?: string;
   created_at: string;
   created_by: string;
+  metadata?: {
+    subjectName?: string; // For subject_pack codes
+  };
 }
 
 export interface SubscriptionAnalytics {
@@ -36,25 +48,6 @@ export interface SubscriptionAnalytics {
   codes_by_duration: Record<string, number>;
   last_updated: string;
 }
-
-export interface SubscriptionLimits {
-  free: {
-    downloadsPerMonth: number;
-  };
-  premium: {
-    downloadsPerMonth: number; // -1 for unlimited
-  };
-}
-
-// Default limits
-export const DEFAULT_SUBSCRIPTION_LIMITS: SubscriptionLimits = {
-  free: {
-    downloadsPerMonth: 5
-  },
-  premium: {
-    downloadsPerMonth: -1 // Unlimited
-  }
-};
 
 // Helper to check if subscription is active
 export function isSubscriptionActive(subscription: LocalSubscription): boolean {
@@ -67,33 +60,29 @@ export function isSubscriptionActive(subscription: LocalSubscription): boolean {
   return true;
 }
 
-// Helper to check if user can download
-export function canUserDownload(subscription: LocalSubscription): boolean {
+// Helper to check if user has access to a specific subject's premium features
+export function hasSubjectAccess(subscription: LocalSubscription, subjectName: string): boolean {
   if (!isSubscriptionActive(subscription)) return false;
   
-  // Premium with unlimited downloads
-  if (subscription.tier === 'premium' && subscription.maxDownloads === -1) {
+  // All-subjects pass grants access to everything
+  if (subscription.accessType === 'all_subjects') {
     return true;
   }
   
-  // Check download limit
-  return subscription.downloadsThisMonth < subscription.maxDownloads;
+  // Check if specific subject is unlocked
+  return subscription.unlockedSubjects.some(
+    s => s.subjectName.toLowerCase() === subjectName.toLowerCase()
+  );
 }
 
-// Helper to get remaining downloads
-export function getRemainingDownloads(subscription: LocalSubscription): number {
-  if (subscription.tier === 'premium' && subscription.maxDownloads === -1) {
-    return -1; // Unlimited
+// Helper to get list of unlocked subjects
+export function getUnlockedSubjects(subscription: LocalSubscription): string[] {
+  if (!isSubscriptionActive(subscription)) return [];
+  
+  // All-subjects pass means everything is unlocked
+  if (subscription.accessType === 'all_subjects') {
+    return ['all'];
   }
   
-  return Math.max(0, subscription.maxDownloads - subscription.downloadsThisMonth);
-}
-
-// Helper to format downloads display
-export function formatDownloadsDisplay(subscription: LocalSubscription): string {
-  if (subscription.tier === 'premium' && subscription.maxDownloads === -1) {
-    return 'Unlimited';
-  }
-  
-  return `${subscription.downloadsThisMonth}/${subscription.maxDownloads}`;
+  return subscription.unlockedSubjects.map(s => s.subjectName);
 }

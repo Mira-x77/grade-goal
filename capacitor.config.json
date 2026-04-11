@@ -1,9 +1,5 @@
 {
-  "appId": "app.lovable.0a7d9cbd47ae470b80c2202326376e2e",
+  "appId": "com.scoretarget.app",
   "appName": "ScoreTarget",
-  "webDir": "dist",
-  "server": {
-    "url": "https://0a7d9cbd-47ae-470b-80c2-202326376e2e.lovableproject.com?forceHideBadge=true",
-    "cleartext": true
-  }
+  "webDir": "dist"
 }

@@ -1,7 +1,7 @@
-import { FilterCriteria, ClassLevel, ExamType } from "@/types/exam-library";
+import { FilterCriteria, ExamType } from "@/types/exam-library";
 import { X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PaperFiltersProps {
   filters: FilterCriteria;
@@ -11,22 +11,16 @@ interface PaperFiltersProps {
   years: number[];
 }
 
-const CLASS_LEVELS: ClassLevel[] = [
-  "Sixième", "Cinquième", "Quatrième", "Troisième",
-  "Seconde", 
-  "Première A", "Première C", "Première D", "Première E",
-  "Terminale A", "Terminale C", "Terminale D", "Terminale E"
-];
-
 const EXAM_TYPES: ExamType[] = ["Baccalauréat", "Composition", "Devoir", "Interro", "midterm", "Practice", "Revision"];
 
 export function PaperFilters({ filters, onFilterChange, onClear, subjects, years }: PaperFiltersProps) {
-  const hasActiveFilters = filters.classLevel || filters.subject || filters.year || filters.examType;
+  const { t } = useLanguage();
+  const hasActiveFilters = filters.subject || filters.year || filters.examType;
 
   return (
     <div className="rounded-2xl bg-card p-4 card-shadow">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-black text-foreground text-sm">Filters</h3>
+        <h3 className="font-black text-foreground text-sm">{t("filters")}</h3>
         {hasActiveFilters && (
           <button
             onClick={onClear}
@@ -38,31 +32,8 @@ export function PaperFilters({ filters, onFilterChange, onClear, subjects, years
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {/* Class Level */}
-        <div>
-          <label className="text-xs font-bold text-muted-foreground mb-1 block">
-            {t("classLevel")}
-          </label>
-          <Select
-            value={filters.classLevel || ""}
-            onValueChange={(value) => onFilterChange({ ...filters, classLevel: value as ClassLevel || undefined })}
-          >
-            <SelectTrigger className="h-9 text-xs">
-              <SelectValue placeholder={t("allClasses")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">{t("allClasses")}</SelectItem>
-              {CLASS_LEVELS.map((level) => (
-                <SelectItem key={level} value={level}>
-                  {level}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Subject */}
+      <div className="grid grid-cols-3 gap-3">
+        {/* Subject — only user's subjects */}
         <div>
           <label className="text-xs font-bold text-muted-foreground mb-1 block">
             {t("subject")}

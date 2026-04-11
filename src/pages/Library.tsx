@@ -5,12 +5,12 @@ import { WifiOff, RefreshCw, Download } from "lucide-react";
 import { PaperGrid } from "@/components/exam/PaperGrid";
 import { PaperFilters } from "@/components/exam/PaperFilters";
 import { PaperSearch } from "@/components/exam/PaperSearch";
-import { SubscriptionBadge } from "@/components/subscription/SubscriptionBadge";
 import { SubscriptionDetailDialog } from "@/components/subscription/SubscriptionDetailDialog";
 import { PremiumCodeDialog } from "@/components/subscription/PremiumCodeDialog";
 import TaskBar from "@/components/TaskBar";
 import { examService } from "@/services/examService";
 import { cacheService } from "@/services/cacheService";
+import { loadState } from "@/lib/storage";
 import { FilterCriteria, ExamPaper, CachedPaper } from "@/types/exam-library";
 import { t } from "@/lib/i18n";
 
@@ -19,6 +19,12 @@ const PAPERS_PER_PAGE = 50;
 
 const Library = () => {
   const navigate = useNavigate();
+
+  // Load user profile once — class level and subject names
+  const userState = loadState();
+  const userClassLevel = userState?.classLevel ?? null;
+  const userSubjectNames = userState?.subjects?.map(s => s.name) ?? [];
+
   const [papers, setPapers] = useState<(ExamPaper | CachedPaper)[]>([]);
   const [filteredPapers, setFilteredPapers] = useState<(ExamPaper | CachedPaper)[]>([]);
   const [displayedPapers, setDisplayedPapers] = useState<(ExamPaper | CachedPaper)[]>([]);
@@ -71,11 +77,19 @@ const Library = () => {
       console.log('✅ Library: Loaded papers:', fetchedPapers.length);
       setPapers(fetchedPapers);
 
-      // Extract unique subjects and years
-      const uniqueSubjects = Array.from(new Set(fetchedPapers.map(p => p.subject))).sort();
-      const uniqueYears = Array.from(new Set(fetchedPapers.map(p => p.year))).sort((a, b) => b - a);
-      setSubjects(uniqueSubjects);
+      // Years from papers matching user's class
+      const classFiltered = userClassLevel
+        ? fetchedPapers.filter(p => p.classLevel === userClassLevel)
+        : fetchedPapers;
+      const uniqueYears = Array.from(new Set(classFiltered.map(p => p.year))).sort((a, b) => b - a);
       setYears(uniqueYears);
+
+      // Subjects: user's own subjects that exist in the library for their class
+      const availableSubjects = new Set(classFiltered.map(p => p.subject));
+      const filteredSubjects = userSubjectNames.length > 0
+        ? userSubjectNames.filter(s => availableSubjects.has(s))
+        : Array.from(availableSubjects).sort();
+      setSubjects(filteredSubjects);
     } catch (error) {
       console.error('❌ Library: Failed to load papers:', error);
       
@@ -114,13 +128,15 @@ const Library = () => {
   const applyFiltersAndSearch = useCallback(() => {
     let result = [...papers];
 
-    // Filter out downloaded papers - they should only appear in MyDownloads
+    // Filter out downloaded papers
     result = result.filter(p => !downloadedPaperIds.has(p.id));
 
-    // Apply filters
-    if (filters.classLevel) {
-      result = result.filter(p => p.classLevel === filters.classLevel);
+    // Always filter by user's class level
+    if (userClassLevel) {
+      result = result.filter(p => p.classLevel === userClassLevel);
     }
+
+    // Apply remaining filters
     if (filters.subject) {
       result = result.filter(p => p.subject === filters.subject);
     }
@@ -188,7 +204,7 @@ const Library = () => {
     <div className="min-h-screen bg-background pb-20">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="pt-8 pb-4">
+        <div className="safe-area-top pb-4">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -201,7 +217,6 @@ const Library = () => {
                   {t("browseDownloadPapers")}
                 </p>
               </div>
-              <SubscriptionBadge onClick={() => setShowDetailDialog(true)} />
             </div>
             <button
               onClick={() => navigate("/my-downloads")}
@@ -257,35 +272,34 @@ const Library = () => {
             />
           </motion.div>
 
-          {/* Results Count */}
-          {!loading && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-muted-foreground">
-                {filteredPapers.length} {filteredPapers.length === 1 ? t("paperFound") : t("papersFound")}
-                {showPagination && (
-                  <span className="text-xs ml-2">
-                    ({t("page")} {currentPage} {t("of")} {totalPages})
-                  </span>
-                )}
-              </p>
-              {!isOnline && (
-                <button
-                  onClick={handleRetry}
-                  className="flex items-center gap-1 text-xs font-bold text-primary active:scale-95 transition-transform"
-                >
-                  <RefreshCw className="h-3 w-3" />
-                  {t("retry")}
-                </button>
-              )}
-            </div>
-          )}
-
           {/* Papers Grid */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
+            {/* Results Count */}
+            {!loading && (
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-muted-foreground/70 tracking-wide">
+                  About {filteredPapers.length.toLocaleString()} {filteredPapers.length === 1 ? t("paperFound") : t("papersFound")}
+                  {showPagination && (
+                    <span className="ml-1">
+                      &middot; {t("page")} {currentPage} {t("of")} {totalPages}
+                    </span>
+                  )}
+                </p>
+                {!isOnline && (
+                  <button
+                    onClick={handleRetry}
+                    className="flex items-center gap-1 text-xs font-bold text-primary active:scale-95 transition-transform"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    {t("retry")}
+                  </button>
+                )}
+              </div>
+            )}
             <PaperGrid
               papers={displayedPapers}
               onPaperClick={handlePaperClick}

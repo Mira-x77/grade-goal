@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Push to VAEG Branch",
+  "description": "Manually triggered hook that commits all changes and pushes to the VAEG git branch after device approval",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "git add . && git commit -m \"Approved: push to VAEG branch\" && git push origin VAEG",
+    "timeout": 60
+  }
+}

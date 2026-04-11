@@ -68,7 +68,7 @@ export function ReminderSettings() {
     <motion.div
       initial={{ y: 10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="rounded-2xl bg-card p-5 card-shadow"
+      className="rounded-2xl bg-card p-5 border-2 border-border"
     >
       <div className="flex items-center gap-2 mb-4">
         <Bell className="h-5 w-5 text-primary" />
@@ -151,3 +151,4 @@ export function ReminderSettings() {
     </motion.div>
   );
 }
+

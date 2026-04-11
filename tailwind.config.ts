@@ -6,11 +6,8 @@ export default {
   prefix: "",
   theme: {
     container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
+      center: false,
+      padding: "1rem",
     },
     extend: {
       fontFamily: {
@@ -57,6 +54,10 @@ export default {
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
+        },
+        premium: {
+          DEFAULT: "hsl(var(--premium))",
+          foreground: "hsl(var(--premium-foreground))",
         },
         danger: {
           DEFAULT: "hsl(var(--danger))",

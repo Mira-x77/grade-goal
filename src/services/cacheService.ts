@@ -91,6 +91,7 @@ class CacheService {
         downloads: paper.downloads,
         tags: paper.tags,
         description: paper.description,
+        preview_url: paper.preview_url,
         isDownloaded: false,
         lastFetched: now
       };
@@ -222,6 +223,28 @@ class CacheService {
   }
 
   /**
+   * Update local thumbnail path for a downloaded paper
+   */
+  async updateThumbnailPath(paperId: string, localThumbnailPath: string): Promise<void> {
+    if (!this.db) await this.init();
+    const transaction = this.db!.transaction([STORES.PAPERS], 'readwrite');
+    const store = transaction.objectStore(STORES.PAPERS);
+    const request = store.get(paperId);
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => {
+        const paper = request.result as CachedPaper;
+        if (paper) {
+          paper.localThumbnailPath = localThumbnailPath;
+          store.put(paper);
+        }
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
    * Save filter state
    */
   async saveFilterState(filters: FilterCriteria): Promise<void> {
@@ -326,9 +349,10 @@ class CacheService {
     if (!this.db) await this.init();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([STORES.PAPERS, STORES.METADATA], 'readwrite');
+      const transaction = this.db!.transaction([STORES.PAPERS, STORES.DOWNLOADS, STORES.METADATA], 'readwrite');
 
       transaction.objectStore(STORES.PAPERS).clear();
+      transaction.objectStore(STORES.DOWNLOADS).clear();
       transaction.objectStore(STORES.METADATA).clear();
 
       transaction.oncomplete = () => resolve();

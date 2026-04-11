@@ -3,6 +3,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AppThemeProvider } from "@/contexts/ThemeContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import AuthPage from "./pages/AuthPage";
+import AuthCallback from "./pages/AuthCallback";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Simulator from "./pages/Simulator";
@@ -10,30 +16,60 @@ import Settings from "./pages/Settings";
 import LibraryDirect from "./pages/LibraryDirect";
 import PaperDetail from "./pages/PaperDetail";
 import MyDownloads from "./pages/MyDownloads";
+import SubjectDashboard from "./pages/SubjectDashboard";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import FeedbackBoard from "./pages/FeedbackBoard";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <AppThemeProvider>
+    <LanguageProvider>
+      <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      {/* SVG filter for hand-drawn wobbly borders — referenced via CSS filter: url(#sketchy) */}
+      <svg width="0" height="0" style={{ position: "absolute" }}>
+        <defs>
+          <filter id="sketchy">
+            <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="3" result="noise" seed="2" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+      </svg>
       <Toaster />
-      <Sonner />
+      <Sonner position="top-center" offset="max(3.5rem, calc(env(safe-area-inset-top) + 1rem))" />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/planner" element={<Index />} />
-          <Route path="/simulator" element={<Simulator />} />
-          <Route path="/library" element={<LibraryDirect />} />
-          <Route path="/library/:paperId" element={<PaperDetail />} />
-          <Route path="/my-downloads" element={<MyDownloads />} />
-          <Route path="/settings" element={<Settings />} />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            {/* Public */}
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+
+            {/* Onboarding — authenticated but no app data yet */}
+            <Route path="/onboarding" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+
+            {/* Protected — requires auth + completed onboarding */}
+            <Route path="/" element={<ProtectedRoute requireOnboarding><Home /></ProtectedRoute>} />
+            <Route path="/planner" element={<ProtectedRoute requireOnboarding><Index /></ProtectedRoute>} />
+            <Route path="/simulator" element={<ProtectedRoute requireOnboarding><Simulator /></ProtectedRoute>} />
+            <Route path="/library" element={<ProtectedRoute requireOnboarding><LibraryDirect /></ProtectedRoute>} />
+            <Route path="/library/:paperId" element={<ProtectedRoute requireOnboarding><PaperDetail /></ProtectedRoute>} />
+            <Route path="/subject/:subjectName" element={<ProtectedRoute requireOnboarding><SubjectDashboard /></ProtectedRoute>} />
+            <Route path="/my-downloads" element={<ProtectedRoute requireOnboarding><MyDownloads /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute requireOnboarding><Settings /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute requireOnboarding><Profile /></ProtectedRoute>} />
+            <Route path="/feedback" element={<ProtectedRoute requireOnboarding><FeedbackBoard /></ProtectedRoute>} />
+            <Route path="/feedback-board" element={<ProtectedRoute requireOnboarding><FeedbackBoard /></ProtectedRoute>} />
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
+    </QueryClientProvider>
+    </LanguageProvider>
+  </AppThemeProvider>
 );
 
 export default App;

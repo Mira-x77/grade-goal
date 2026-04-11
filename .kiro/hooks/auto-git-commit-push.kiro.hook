@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Auto Git Commit & Push",
+  "description": "After each agent session completes, stages all changes, generates a smart commit message from the diff, and pushes to origin VAEG",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "git add -A && git diff --cached --quiet && echo nothing to commit || git commit -m \"chore: update $(git diff --cached --name-only | tr \"\n\" \",\" | sed \"s/,$//\")\" && git push origin VAEG",
+    "timeout": 60
+  }
+}

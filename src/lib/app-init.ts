@@ -15,7 +15,7 @@ import { ScreenOrientation } from '@capacitor/screen-orientation';
  * This should be called once when the app starts
  */
 export async function initializeApp(): Promise<void> {
-  console.log('Initializing ScoreTarget app...');
+  console.log('Initializing Go Study! app...');
 
   try {
     // Native Mobile Initializations

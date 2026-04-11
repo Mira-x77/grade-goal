@@ -1,17 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import {
   LocalSubscription,
-  DEFAULT_SUBSCRIPTION_LIMITS,
   isSubscriptionActive,
-  canUserDownload,
-  getRemainingDownloads,
-  formatDownloadsDisplay
+  hasSubjectAccess,
+  getUnlockedSubjects,
+  UnlockedSubject,
+  PremiumAccessType
 } from '@/types/subscription';
 import { getDeviceId } from '@/lib/device-id';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://aaayzhvqgqptgqaxxbdh.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhYXl6aHZxZ3FwdGdxYXh4YmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzAwNDksImV4cCI6MjA4ODA0NjA0OX0.NNKOn17jGZHEbBKBnX3oxVhSYJhKm28QSOkK76I0bgo';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const SUBSCRIPTION_KEY = 'scoretarget_subscription';
 
@@ -72,9 +68,7 @@ class SubscriptionService {
       deviceId: this.deviceId!,
       tier: 'free',
       status: 'active',
-      downloadsThisMonth: 0,
-      maxDownloads: DEFAULT_SUBSCRIPTION_LIMITS.free.downloadsPerMonth,
-      lastResetDate: now,
+      unlockedSubjects: [],
       createdAt: now,
       updatedAt: now
     };
@@ -105,53 +99,26 @@ class SubscriptionService {
   }
 
   /**
-   * Check if user can download
+   * Check if user has access to a specific subject's premium features
    */
-  async canDownload(): Promise<{
-    allowed: boolean;
-    reason?: string;
-    remaining: number;
-  }> {
+  async hasSubjectAccess(subjectName: string): Promise<boolean> {
     const subscription = await this.getSubscription();
-
-    if (!isSubscriptionActive(subscription)) {
-      return {
-        allowed: false,
-        reason: 'expired',
-        remaining: 0
-      };
-    }
-
-    const remaining = getRemainingDownloads(subscription);
-
-    if (!canUserDownload(subscription)) {
-      return {
-        allowed: false,
-        reason: 'limit_reached',
-        remaining: 0
-      };
-    }
-
-    return {
-      allowed: true,
-      remaining
-    };
+    return hasSubjectAccess(subscription, subjectName);
   }
 
   /**
-   * Increment download count
+   * Get list of unlocked subjects
    */
-  async incrementDownload(): Promise<void> {
+  async getUnlockedSubjects(): Promise<string[]> {
     const subscription = await this.getSubscription();
-    subscription.downloadsThisMonth += 1;
-    await this.saveSubscription(subscription);
+    return getUnlockedSubjects(subscription);
   }
 
 
   /**
    * Activate premium with code
    */
-  async activatePremiumCode(code: string): Promise<void> {
+  async activatePremiumCode(code: string, subjectName?: string): Promise<void> {
     try {
       const deviceId = await getDeviceId();
       
@@ -177,13 +144,28 @@ class SubscriptionService {
       const now = new Date().toISOString();
 
       subscription.status = 'active';
+      subscription.tier = 'premium';
       subscription.subscriptionCode = code.toUpperCase();
       subscription.activatedAt = now;
       subscription.expiresAt = result.expires_at;
 
-      if (result.product_type === 'premium_subscription' || result.product_type === 'full_access' || !result.product_type) {
-        subscription.tier = 'premium';
-        subscription.maxDownloads = -1;
+      // Handle different product types
+      if (result.product_type === 'all_subjects' || result.product_type === 'full_access') {
+        subscription.accessType = 'all_subjects';
+        subscription.unlockedSubjects = []; // Empty array means all subjects
+      } else if (result.product_type === 'subject_pack') {
+        subscription.accessType = 'subject_pack';
+        const subject = result.metadata?.subjectName || subjectName;
+        if (subject) {
+          // Add subject if not already unlocked
+          if (!subscription.unlockedSubjects.some(s => s.subjectName === subject)) {
+            subscription.unlockedSubjects.push({
+              subjectName: subject,
+              unlockedAt: now,
+              accessType: 'subject_pack'
+            });
+          }
+        }
       }
 
       await this.saveSubscription(subscription);
@@ -196,24 +178,12 @@ class SubscriptionService {
   }
 
   /**
-   * Check and reset monthly downloads
+   * Check monthly reset (no-op for feature-gating model, kept for compatibility)
    */
   async checkMonthlyReset(): Promise<void> {
-    const subscription = await this.getSubscription();
-    const lastReset = new Date(subscription.lastResetDate);
-    const now = new Date();
-
-    // Check if month changed
-    const needsReset = 
-      lastReset.getMonth() !== now.getMonth() ||
-      lastReset.getFullYear() !== now.getFullYear();
-
-    if (needsReset) {
-      subscription.downloadsThisMonth = 0;
-      subscription.lastResetDate = now.toISOString();
-      await this.saveSubscription(subscription);
-      console.log('Monthly downloads reset');
-    }
+    // No monthly reset needed for feature-gating model
+    // Downloads are always free, premium gates study tools
+    return;
   }
 
   /**
@@ -230,11 +200,11 @@ class SubscriptionService {
     const expires = new Date(subscription.expiresAt);
 
     if (expires <= now) {
-      // Downgrade to free
+      // Downgrade to free - lose access to premium study tools
       subscription.tier = 'free';
       subscription.status = 'expired';
-      subscription.maxDownloads = DEFAULT_SUBSCRIPTION_LIMITS.free.downloadsPerMonth;
-      subscription.downloadsThisMonth = 0;
+      subscription.unlockedSubjects = [];
+      subscription.accessType = undefined;
       
       await this.saveSubscription(subscription);
       
@@ -250,13 +220,13 @@ class SubscriptionService {
    */
   async getStatus(): Promise<{
     tier: string;
-    downloads: string;
+    accessType?: PremiumAccessType;
+    unlockedSubjects: string[];
     expires?: string;
     daysRemaining?: number;
-    isUnlimited: boolean;
+    hasPremiumAccess: boolean;
   }> {
     const subscription = await this.getSubscription();
-    const isUnlimited = subscription.tier === 'premium' && subscription.maxDownloads === -1;
 
     let daysRemaining: number | undefined;
     if (subscription.expiresAt) {
@@ -267,19 +237,12 @@ class SubscriptionService {
 
     return {
       tier: subscription.tier,
-      downloads: formatDownloadsDisplay(subscription),
+      accessType: subscription.accessType,
+      unlockedSubjects: getUnlockedSubjects(subscription),
       expires: subscription.expiresAt,
       daysRemaining,
-      isUnlimited
+      hasPremiumAccess: subscription.tier === 'premium' && isSubscriptionActive(subscription)
     };
-  }
-
-  /**
-   * Get remaining downloads
-   */
-  async getRemainingDownloads(): Promise<number> {
-    const subscription = await this.getSubscription();
-    return getRemainingDownloads(subscription);
   }
 }
 
