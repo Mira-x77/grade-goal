@@ -349,7 +349,7 @@ function SubjectsGlanceCard({ subjects, title, gradingSystem, weightedSplit }: {
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-muted-foreground">×{sub.coefficient}</span>
                         <span className="text-sm font-black text-foreground">
-                          {avg !== null ? avg.toFixed(1) : "—"}<span className="text-xs font-bold text-muted-foreground">/20</span>
+                          {avg !== null ? avg.toFixed(2) : "—"}<span className="text-xs font-bold text-muted-foreground">/20</span>
                         </span>
                       </div>
                     </div>

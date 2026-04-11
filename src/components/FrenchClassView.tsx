@@ -31,7 +31,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
         <div className="flex items-center gap-2 shrink-0">
           {summary.studentAvg !== null && (
             <span className="text-xs font-black text-foreground">
-              {summary.studentAvg.toFixed(1)}<span className="text-muted-foreground font-bold">/20</span>
+              {summary.studentAvg.toFixed(2)}<span className="text-muted-foreground font-bold">/20</span>
             </span>
           )}
           <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -56,13 +56,13 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
                 <div className="rounded-xl bg-muted/50 p-3 text-center">
                   <p className="text-xs font-bold text-muted-foreground">{t("currentAverage")}</p>
                   <p className="text-2xl font-black text-foreground">
-                    {summary.studentAvg?.toFixed(1) ?? "—"}
+                    {summary.studentAvg?.toFixed(2) ?? "—"}
                   </p>
                 </div>
                 <div className="rounded-xl bg-muted/50 p-3 text-center">
                   <p className="text-xs font-bold text-muted-foreground">{t("classAvg")}</p>
                   <p className="text-2xl font-black text-muted-foreground">
-                    {summary.classAvg?.toFixed(1) ?? "—"}
+                    {summary.classAvg?.toFixed(2) ?? "—"}
                   </p>
                 </div>
               </div>
@@ -134,7 +134,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-bold text-foreground">{d.subject.name}</span>
                         <span className="text-xs font-bold text-muted-foreground">
-                          {d.studentAvg?.toFixed(1) ?? "—"}/20
+                          {d.studentAvg?.toFixed(2) ?? "—"}/20
                         </span>
                       </div>
                       {d.percentile !== null && (

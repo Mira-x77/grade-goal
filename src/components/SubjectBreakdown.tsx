@@ -41,7 +41,7 @@ const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) =>
               <div className="flex items-center justify-between mb-2">
                 <span className="font-bold text-foreground text-sm">{sub.name}</span>
                 <span className="text-xs font-bold text-muted-foreground">
-                  Coeff {sub.coefficient} · Avg: {avg !== null ? avg.toFixed(1) : "—"}
+                  Coeff {sub.coefficient} · Avg: {avg !== null ? avg.toFixed(2) : "—"}
                 </span>
               </div>
 

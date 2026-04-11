@@ -152,7 +152,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
                       }`}>{nigerianGrade}</span>
                     )}
                     {!isNigerian && avg !== null && (
-                      <span className="text-sm font-bold text-primary">{avg.toFixed(1)}</span>
+                      <span className="text-sm font-bold text-primary">{avg.toFixed(2)}</span>
                     )}
                     <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
