@@ -1,12 +1,20 @@
 import { Subject, FeedbackStatus } from "@/types/exam";
 
 /**
- * Truncate a number to 2 decimal places (floor), matching French school report display.
- * e.g. 14.125 → "14.12", 17.125 → "17.12", 12.9688 → "12.96"
- * Use this for ALL /20 average displays.
+ * Truncate a number to 2 decimal places (floor), matching French school subject average display.
+ * e.g. 14.125 → "14.12", 17.125 → "17.12"
+ * Use this for SUBJECT averages only.
  */
 export function fmtAvg(value: number): string {
   return (Math.floor(value * 100) / 100).toFixed(2);
+}
+
+/**
+ * Round a number to 2 decimal places, for FINAL/yearly average display.
+ * e.g. 12.9688 → "12.97"
+ */
+export function fmtFinalAvg(value: number): string {
+  return (Math.round(value * 100) / 100).toFixed(2);
 }
 
 /**

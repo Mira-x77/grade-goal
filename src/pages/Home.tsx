@@ -4,7 +4,7 @@ import { Target, Flame, AlertTriangle, ChevronRight, ChevronDown, BookOpen, BarC
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState, getStreak, getHistory, HistoryEntry } from "@/lib/storage";
 import { downloadService } from "@/services/downloadService";
-import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds, calcSubjectAverage, fmtAvg } from "@/lib/exam-logic";
+import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds, calcSubjectAverage, fmtAvg, fmtFinalAvg } from "@/lib/exam-logic";
 import { calcAPCYearlyAverage, getPerformanceAlerts, calcAPCSubjectAverage } from "@/lib/grading-apc";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import FrenchClassView from "@/components/FrenchClassView";
@@ -710,7 +710,7 @@ const Home = () => {
                   />
                 </div>
                 <span className="text-sm font-black text-foreground">
-                  {heroValue !== null ? fmtAvg(heroValue) : "—"}{isNigerian ? "" : "/20"}
+                  {heroValue !== null ? fmtFinalAvg(heroValue) : "—"}{isNigerian ? "" : "/20"}
                 </span>
               </div>
             </motion.button>
@@ -772,7 +772,7 @@ const Home = () => {
             <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{t("currentAverage")}</p>
             <div className="flex items-end justify-between gap-2">
               <div className="flex items-end gap-1">
-                <span className="text-5xl font-black text-foreground">{fmtAvg(currentAvg)}</span>
+                <span className="text-5xl font-black text-foreground">{fmtFinalAvg(currentAvg)}</span>
                 <span className="text-xl font-bold text-muted-foreground mb-1">/20</span>
               </div>
               <span className="text-xs font-black text-muted-foreground mb-1.5">{t("target")}: {targetAvg}–20</span>

@@ -8,6 +8,7 @@ import {
   getAbsoluteBounds,
   calcMinimumMarkNeeded,
   fmtAvg,
+  fmtFinalAvg,
 } from "@/lib/exam-logic";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -107,7 +108,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
               <span className={`text-5xl font-black leading-none ${
                 isOnTrack ? "text-success" : overallStatus === "risky" ? "text-warning" : "text-danger"
               }`}>
-                {currentAvg !== null ? fmtAvg(currentAvg) : "—"}
+                {currentAvg !== null ? fmtFinalAvg(currentAvg) : "—"}
               </span>
             </div>
             <div className="flex flex-col justify-between flex-1 gap-2">
