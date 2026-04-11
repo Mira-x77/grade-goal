@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { BookOpen, CheckCircle2 } from "lucide-react";
 import { Subject, FeedbackStatus } from "@/types/exam";
-import { calcSubjectAverage, calcAllRequiredMarks, calcSubjectBounds, getMarkLabel } from "@/lib/exam-logic";
+import { calcSubjectAverage, calcAllRequiredMarks, calcSubjectBounds, getMarkLabel, fmtAvg } from "@/lib/exam-logic";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SubjectBreakdownProps {
@@ -41,7 +41,7 @@ const SubjectBreakdown = ({ subjects, targetAverage }: SubjectBreakdownProps) =>
               <div className="flex items-center justify-between mb-2">
                 <span className="font-bold text-foreground text-sm">{sub.name}</span>
                 <span className="text-xs font-bold text-muted-foreground">
-                  Coeff {sub.coefficient} · Avg: {avg !== null ? avg.toFixed(2) : "—"}
+                  Coeff {sub.coefficient} · Avg: {avg !== null ? fmtAvg(avg) : "—"}
                 </span>
               </div>
 

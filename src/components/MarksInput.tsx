@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, File, Clipboard, ChevronDown, Check } from "lucide-react";
 import { Subject } from "@/types/exam";
-import { calcSubjectAverage } from "@/lib/exam-logic";
+import { calcSubjectAverage, fmtAvg } from "@/lib/exam-logic";
 import { addHistoryEntry } from "@/lib/storage";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { scoreToGrade } from "@/lib/grading-nigerian";
@@ -152,7 +152,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
                       }`}>{nigerianGrade}</span>
                     )}
                     {!isNigerian && avg !== null && (
-                      <span className="text-sm font-bold text-primary">{avg.toFixed(2)}</span>
+                      <span className="text-sm font-bold text-primary">{fmtAvg(avg)}</span>
                     )}
                     <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />

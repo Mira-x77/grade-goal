@@ -4,7 +4,7 @@ import { Target, Flame, AlertTriangle, ChevronRight, ChevronDown, BookOpen, BarC
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState, getStreak, getHistory, HistoryEntry } from "@/lib/storage";
 import { downloadService } from "@/services/downloadService";
-import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds, calcSubjectAverage } from "@/lib/exam-logic";
+import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds, calcSubjectAverage, fmtAvg } from "@/lib/exam-logic";
 import { calcAPCYearlyAverage, getPerformanceAlerts, calcAPCSubjectAverage } from "@/lib/grading-apc";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import FrenchClassView from "@/components/FrenchClassView";
@@ -349,7 +349,7 @@ function SubjectsGlanceCard({ subjects, title, gradingSystem, weightedSplit }: {
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-muted-foreground">×{sub.coefficient}</span>
                         <span className="text-sm font-black text-foreground">
-                          {avg !== null ? avg.toFixed(2) : "—"}<span className="text-xs font-bold text-muted-foreground">/20</span>
+                          {avg !== null ? fmtAvg(avg) : "—"}<span className="text-xs font-bold text-muted-foreground">/20</span>
                         </span>
                       </div>
                     </div>
@@ -710,7 +710,7 @@ const Home = () => {
                   />
                 </div>
                 <span className="text-sm font-black text-foreground">
-                  {heroValue !== null ? heroValue.toFixed(2) : "—"}{isNigerian ? "" : "/20"}
+                  {heroValue !== null ? fmtAvg(heroValue) : "—"}{isNigerian ? "" : "/20"}
                 </span>
               </div>
             </motion.button>
@@ -772,7 +772,7 @@ const Home = () => {
             <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{t("currentAverage")}</p>
             <div className="flex items-end justify-between gap-2">
               <div className="flex items-end gap-1">
-                <span className="text-5xl font-black text-foreground">{currentAvg.toFixed(2)}</span>
+                <span className="text-5xl font-black text-foreground">{fmtAvg(currentAvg)}</span>
                 <span className="text-xl font-bold text-muted-foreground mb-1">/20</span>
               </div>
               <span className="text-xs font-black text-muted-foreground mb-1.5">{t("target")}: {targetAvg}–20</span>

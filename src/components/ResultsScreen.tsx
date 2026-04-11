@@ -7,6 +7,7 @@ import {
   calcSubjectAverage,
   getAbsoluteBounds,
   calcMinimumMarkNeeded,
+  fmtAvg,
 } from "@/lib/exam-logic";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -106,7 +107,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
               <span className={`text-5xl font-black leading-none ${
                 isOnTrack ? "text-success" : overallStatus === "risky" ? "text-warning" : "text-danger"
               }`}>
-                {currentAvg !== null ? currentAvg.toFixed(2) : "—"}
+                {currentAvg !== null ? fmtAvg(currentAvg) : "—"}
               </span>
             </div>
             <div className="flex flex-col justify-between flex-1 gap-2">
@@ -311,9 +312,9 @@ const SubjectBreakdownItem = ({ data, targetAverage, t, markLabel }: { data: any
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex flex-col items-end gap-0.5">
             <span className="text-xs font-black text-foreground">
-              {currentSubAvg !== null ? currentSubAvg.toFixed(2) : "—"} <span className="opacity-60 font-semibold text-[10px]">/20</span>
+              {currentSubAvg !== null ? fmtAvg(currentSubAvg) : "—"} <span className="opacity-60 font-semibold text-[10px]">/20</span>
             </span>
-            <span className={`text-[9px] font-bold ${bestSubAvg >= targetAverage ? "text-success/80" : "text-muted-foreground"}`}>{bestSubAvg.toFixed(2)} max</span>
+            <span className={`text-[9px] font-bold ${bestSubAvg >= targetAverage ? "text-success/80" : "text-muted-foreground"}`}>{fmtAvg(bestSubAvg)} max</span>
           </div>
           <motion.div animate={{ rotate: isOpen ? 180 : 0 }}>
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -346,9 +347,9 @@ const SubjectBreakdownItem = ({ data, targetAverage, t, markLabel }: { data: any
               </div>
               <div className="flex justify-between mt-1">
                 <span className="text-[9px] font-bold text-muted-foreground">
-                  {currentSubAvg !== null ? `${currentSubAvg.toFixed(2)} ${t("nowLabel")}` : t("noMarksYet")}
+                  {currentSubAvg !== null ? `${fmtAvg(currentSubAvg)} ${t("nowLabel")}` : t("noMarksYet")}
                 </span>
-                <span className="text-[9px] font-bold text-success">{bestSubAvg.toFixed(2)} {t("bestCase")}</span>
+                <span className="text-[9px] font-bold text-success">{fmtAvg(bestSubAvg)} {t("bestCase")}</span>
               </div>
             </div>
           </motion.div>

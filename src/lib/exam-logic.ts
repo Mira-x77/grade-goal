@@ -1,6 +1,15 @@
 import { Subject, FeedbackStatus } from "@/types/exam";
 
 /**
+ * Truncate a number to 2 decimal places (floor), matching French school report display.
+ * e.g. 14.125 → "14.12", 17.125 → "17.12", 12.9688 → "12.96"
+ * Use this for ALL /20 average displays.
+ */
+export function fmtAvg(value: number): string {
+  return (Math.floor(value * 100) / 100).toFixed(2);
+}
+
+/**
  * Subject average = (Interro + Dev + 2×Compo) / 4
  * Weights: Interro=1, Dev=1, Compo=2
  */
