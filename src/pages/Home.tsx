@@ -4,8 +4,8 @@ import { Target, Flame, AlertTriangle, ChevronRight, ChevronDown, BookOpen, BarC
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState, getStreak, getHistory, HistoryEntry } from "@/lib/storage";
 import { downloadService } from "@/services/downloadService";
-import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds } from "@/lib/exam-logic";
-import { calcAPCYearlyAverage, getPerformanceAlerts } from "@/lib/grading-apc";
+import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds, calcSubjectAverage } from "@/lib/exam-logic";
+import { calcAPCYearlyAverage, getPerformanceAlerts, calcAPCSubjectAverage } from "@/lib/grading-apc";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import FrenchClassView from "@/components/FrenchClassView";
 import TaskBar from "@/components/TaskBar";
@@ -17,7 +17,7 @@ import { PaymentSheet } from "@/components/subscription/PaymentSheet";
 import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
 import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
 import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
-import { Subject } from "@/types/exam";
+import { Subject, GradingSystem } from "@/types/exam";
 import { NigerianState, NigerianSemester, NigerianCourse } from "@/types/nigerian";
 import { useLanguage } from "@/contexts/LanguageContext";
 import NigerianAssessmentSheet from "@/components/NigerianAssessmentSheet";
@@ -308,7 +308,7 @@ function NigerianTargetCard({ nigerianState, onChange }: { nigerianState: Nigeri
   );
 }
 
-function SubjectsGlanceCard({ subjects, title }: { subjects: Subject[]; title: string }) {
+function SubjectsGlanceCard({ subjects, title, gradingSystem, weightedSplit }: { subjects: Subject[]; title: string; gradingSystem?: GradingSystem; weightedSplit?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="carousel-card rounded-2xl bg-card border-2 border-border flex-shrink-0 overflow-hidden">
@@ -339,10 +339,9 @@ function SubjectsGlanceCard({ subjects, title }: { subjects: Subject[]; title: s
                   { label: "D", value: sub.marks.dev },
                   { label: "C", value: sub.marks.compo },
                 ];
-                const filled = marks.filter(m => m.value !== null).length;
-                const avg = filled > 0
-                  ? marks.filter(m => m.value !== null).reduce((a, m) => a + m.value!, 0) / filled
-                  : null;
+                const avg = gradingSystem === "apc" 
+                  ? calcAPCSubjectAverage(sub.marks, weightedSplit)
+                  : calcSubjectAverage(sub.marks);
                 return (
                   <div key={sub.id} className="rounded-xl bg-muted/50 px-3 py-2">
                     <div className="flex items-center justify-between">
@@ -711,7 +710,7 @@ const Home = () => {
                   />
                 </div>
                 <span className="text-sm font-black text-foreground">
-                  {heroValue !== null ? heroValue.toFixed(isNigerian ? 2 : 1) : "—"}{isNigerian ? "" : "/20"}
+                  {heroValue !== null ? heroValue.toFixed(2) : "—"}{isNigerian ? "" : "/20"}
                 </span>
               </div>
             </motion.button>
@@ -773,7 +772,7 @@ const Home = () => {
             <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{t("currentAverage")}</p>
             <div className="flex items-end justify-between gap-2">
               <div className="flex items-end gap-1">
-                <span className="text-5xl font-black text-foreground">{currentAvg.toFixed(1)}</span>
+                <span className="text-5xl font-black text-foreground">{currentAvg.toFixed(2)}</span>
                 <span className="text-xl font-bold text-muted-foreground mb-1">/20</span>
               </div>
               <span className="text-xs font-black text-muted-foreground mb-1.5">{t("target")}: {targetAvg}–20</span>
@@ -1080,7 +1079,7 @@ const Home = () => {
         {!isNigerian && hasData && (
           <div className="tour-subjects-carousel overflow-x-auto -mx-4 px-4 pb-2 hide-scrollbar">
             <div className="flex gap-3 items-start" style={{ width: "max-content" }}>
-              <SubjectsGlanceCard subjects={appState!.subjects} title={t("subjectsGlance")} />
+              <SubjectsGlanceCard subjects={appState!.subjects} title={t("subjectsGlance")} gradingSystem={gradingSystem} weightedSplit={weightedSplit} />
               <div className="carousel-card flex-shrink-0">
                 <FrenchClassView subjects={appState!.subjects} />
               </div>

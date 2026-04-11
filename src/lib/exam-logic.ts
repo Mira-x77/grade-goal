@@ -1,20 +1,17 @@
 import { Subject, FeedbackStatus } from "@/types/exam";
 
 /**
- * Subject average = (Interro + Dev + 2×Compo) / 4
- * Weights: Interro=1, Dev=1, Compo=2
+ * Subject average = (Interro + Dev + Compo) / 3
+ * Simple average of all three assessments
  */
 export function calcSubjectAverage(marks: Subject["marks"]): number | null {
   const { interro, dev, compo } = marks;
   if (interro === null && dev === null && compo === null) return null;
 
-  let sum = 0;
-  let weight = 0;
-  if (interro !== null) { sum += interro * 1; weight += 1; }
-  if (dev !== null) { sum += dev * 1; weight += 1; }
-  if (compo !== null) { sum += compo * 2; weight += 2; }
-
-  return weight > 0 ? sum / weight : null;
+  const available = [interro, dev, compo].filter(m => m !== null) as number[];
+  if (available.length === 0) return null;
+  
+  return available.reduce((sum, mark) => sum + mark, 0) / available.length;
 }
 
 /**

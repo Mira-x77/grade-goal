@@ -192,7 +192,7 @@ const Simulator = () => {
                       style={{ width: `${Math.min((simulatedAvg / targetAvg) * 100, 100)}%` }}
                     />
                   </div>
-                  <span className="text-sm font-black text-primary-foreground">{simulatedAvg.toFixed(1)}/20</span>
+                  <span className="text-sm font-black text-primary-foreground">{simulatedAvg.toFixed(2)}/20</span>
                 </div>
               </div>
               {!isOnTrack && isDirty && (
@@ -223,7 +223,7 @@ const Simulator = () => {
               <div>
                 <p className="text-xs font-bold text-primary-foreground/70 uppercase tracking-wider mb-0.5">{t("simulatedAverage")}</p>
                 <p className="text-5xl font-black text-primary-foreground">
-                  {simulatedAvg !== null ? simulatedAvg.toFixed(1) : "—"}<span className="text-xl opacity-75">/20</span>
+                  {simulatedAvg !== null ? simulatedAvg.toFixed(2) : "—"}<span className="text-xl opacity-75">/20</span>
                 </p>
               </div>
               <div className="text-right">
