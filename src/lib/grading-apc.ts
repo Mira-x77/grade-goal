@@ -2,9 +2,13 @@ import { Subject } from "@/types/exam";
 
 /**
  * APC (Cameroonian/French Standard) Subject Average:
- * Default: (Interro + Devoir + 2×Compo) / 4  — composition counts double
+ * Step 1: Moy_classe = (Interro + Dev) / 2  (or just the one present if only one)
+ * Step 2: Moy_sem    = (Moy_classe + Compo) / 2
+ *
+ * If Compo is missing: avg = Moy_classe
+ * If both Interro and Dev are missing: avg = Compo
+ *
  * With 40/60 split: (0.4 * classwork_avg + 0.6 * compo)
- *   where classwork_avg = (interro + dev) / 2
  */
 export function calcAPCSubjectAverage(
   marks: Subject["marks"],
@@ -14,7 +18,6 @@ export function calcAPCSubjectAverage(
   if (interro === null && dev === null && compo === null) return null;
 
   if (weightedSplit) {
-    // 40/60 split: classwork (interro+dev) = 40%, compo = 60%
     if (compo === null) return null;
     const classworkMarks = [interro, dev].filter((m) => m !== null) as number[];
     if (classworkMarks.length === 0) return compo;
@@ -22,14 +25,16 @@ export function calcAPCSubjectAverage(
     return 0.4 * classworkAvg + 0.6 * compo;
   }
 
-  // Default: (Interro + Dev + 2×Compo) / 4 — composition weighted ×2
-  let sum = 0;
-  let weight = 0;
-  if (interro !== null) { sum += interro * 1; weight += 1; }
-  if (dev !== null)     { sum += dev * 1;     weight += 1; }
-  if (compo !== null)   { sum += compo * 2;   weight += 2; }
+  // Step 1: Moy_classe = average of available classwork marks (interro + dev)
+  const classworkMarks = [interro, dev].filter((m) => m !== null) as number[];
+  const moyClasse = classworkMarks.length > 0
+    ? classworkMarks.reduce((a, b) => a + b, 0) / classworkMarks.length
+    : null;
 
-  return weight > 0 ? sum / weight : null;
+  // Step 2: Moy_sem = (Moy_classe + Compo) / 2
+  if (moyClasse !== null && compo !== null) return (moyClasse + compo) / 2;
+  if (moyClasse !== null) return moyClasse;
+  return compo; // only compo present
 }
 
 /**
@@ -110,18 +115,29 @@ export function calcAPCMinimumMark(
     }
   }
 
-  // Default: (I+D+2C)/4 solving
-  // Subject avg = (known_weighted_sum + x*markWeight) / totalWeight
-  let subKnownSum = 0;
-  let subKnownWeight = 0;
-  if (targetMarkType !== "interro" && marks.interro !== null) { subKnownSum += marks.interro * 1; subKnownWeight += 1; }
-  if (targetMarkType !== "dev"     && marks.dev     !== null) { subKnownSum += marks.dev * 1;     subKnownWeight += 1; }
-  if (targetMarkType !== "compo"   && marks.compo   !== null) { subKnownSum += marks.compo * 2;   subKnownWeight += 2; }
-
-  const markWeight = targetMarkType === "compo" ? 2 : 1;
-  const totalWeight = subKnownWeight + markWeight;
+  // Default: two-step formula solving
+  // Moy_classe = avg(interro, dev); Moy_sem = (Moy_classe + compo) / 2
   const neededSubjectAvg = (targetAverage * totalCoeff - knownPoints) / coeff;
-  return (neededSubjectAvg * totalWeight - subKnownSum) / markWeight;
+
+  if (targetMarkType === "compo") {
+    const classworkMarks = [marks.interro, marks.dev].filter(m => m !== null) as number[];
+    const moyClasse = classworkMarks.length > 0
+      ? classworkMarks.reduce((a, b) => a + b, 0) / classworkMarks.length
+      : null;
+    if (moyClasse === null) return neededSubjectAvg;
+    return 2 * neededSubjectAvg - moyClasse;
+  } else {
+    if (marks.compo !== null) {
+      const neededMoyClasse = 2 * neededSubjectAvg - marks.compo;
+      const otherClasswork = targetMarkType === "interro" ? marks.dev : marks.interro;
+      if (otherClasswork !== null) return 2 * neededMoyClasse - otherClasswork;
+      return neededMoyClasse;
+    } else {
+      const otherClasswork = targetMarkType === "interro" ? marks.dev : marks.interro;
+      if (otherClasswork !== null) return 2 * neededSubjectAvg - otherClasswork;
+      return neededSubjectAvg;
+    }
+  }
 }
 
 /**
