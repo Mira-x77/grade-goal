@@ -7,8 +7,11 @@ import { AppThemeProvider } from "@/contexts/ThemeContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import AuthPage from "./pages/AuthPage";
 import AuthCallback from "./pages/AuthCallback";
+import WelcomePage from "./pages/WelcomePage";
+import SignInSuccess from "./pages/SignInSuccess";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Simulator from "./pages/Simulator";
@@ -22,6 +25,12 @@ import NotFound from "./pages/NotFound";
 import FeedbackBoard from "./pages/FeedbackBoard";
 
 const queryClient = new QueryClient();
+
+// Runs inside BrowserRouter so hooks have full context
+function AppInner() {
+  useServiceWorkerUpdate();
+  return null;
+}
 
 const App = () => (
   <AppThemeProvider>
@@ -40,11 +49,14 @@ const App = () => (
       <Toaster />
       <Sonner position="top-center" offset="max(3.5rem, calc(env(safe-area-inset-top) + 1rem))" />
       <BrowserRouter>
+        <AppInner />
         <AuthProvider>
           <Routes>
             {/* Public */}
+            <Route path="/welcome" element={<WelcomePage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/auth/success" element={<SignInSuccess />} />
 
             {/* Onboarding — authenticated but no app data yet */}
             <Route path="/onboarding" element={<ProtectedRoute><Index /></ProtectedRoute>} />
