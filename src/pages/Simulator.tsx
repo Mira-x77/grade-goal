@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Save, ChevronDown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
-import { simulateYearlyAverage } from "@/lib/exam-logic";
+import { simulateYearlyAverage, fmtFinalAvg, getRounding } from "@/lib/exam-logic";
 import { SavedStrategy, StrategyMark } from "@/types/exam";
 import TaskBar from "@/components/TaskBar";
 import ScreenIntro from "@/components/ScreenIntro";
@@ -16,6 +16,7 @@ import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
 import { PaymentSheet } from "@/components/subscription/PaymentSheet";
 import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
 import { nudgeSubtext } from "@/hooks/usePremiumNudge";
+import { useAppConfig } from "@/contexts/AppConfigContext";
 
 interface SliderOverride {
   subjectId: string;
@@ -41,6 +42,7 @@ const Simulator = () => {
   const targetAvg = state?.targetMin ?? state?.targetAverage ?? 16;
   const { t, language } = useLanguage();
   const navigate = useNavigate();
+  const { premiumEnabled: PREMIUM_ENABLED } = useAppConfig();
   const [activeSlider, setActiveSlider] = useState<number | null>(null);
 
   // Premium nudge
@@ -192,7 +194,7 @@ const Simulator = () => {
                       style={{ width: `${Math.min((simulatedAvg / targetAvg) * 100, 100)}%` }}
                     />
                   </div>
-                  <span className="text-sm font-black text-primary-foreground">{simulatedAvg.toFixed(1)}/20</span>
+                  <span className="text-sm font-black text-primary-foreground">{fmtFinalAvg(simulatedAvg, getRounding())}/20</span>
                 </div>
               </div>
               {!isOnTrack && isDirty && (
@@ -223,7 +225,7 @@ const Simulator = () => {
               <div>
                 <p className="text-xs font-bold text-primary-foreground/70 uppercase tracking-wider mb-0.5">{t("simulatedAverage")}</p>
                 <p className="text-5xl font-black text-primary-foreground">
-                  {simulatedAvg !== null ? simulatedAvg.toFixed(1) : "—"}<span className="text-xl opacity-75">/20</span>
+                  {simulatedAvg !== null ? fmtFinalAvg(simulatedAvg, getRounding()) : "—"}<span className="text-xl opacity-75">/20</span>
                 </p>
               </div>
               <div className="text-right">
@@ -371,32 +373,34 @@ const Simulator = () => {
       } />
 
       {/* Contextual premium nudge sheets */}
-      <PremiumIntroSheet
-        open={activeNudge}
-        nudgeSubtext={nudgeSubtext("strategy_saved", language as "en" | "fr")}
-        onClose={() => setActiveNudge(false)}
-        onContinue={() => { setActiveNudge(false); setShowPlanSelect(true); }}
-      />
-      <PlanSelectSheet
-        open={showPlanSelect}
-        onClose={() => setShowPlanSelect(false)}
-        onBack={() => { setShowPlanSelect(false); setActiveNudge(true); }}
-        onSelectPack={() => { setShowPlanSelect(false); setShowSubjectPack(true); }}
-        onSelectAll={() => { setShowPlanSelect(false); setShowPaymentSheet(true); }}
-      />
-      <SubjectPackSheet
-        open={showSubjectPack}
-        onClose={() => setShowSubjectPack(false)}
-        onBack={() => { setShowSubjectPack(false); setShowPlanSelect(true); }}
-        subjects={subjects.map(s => s.name)}
-        onConfirm={() => { setShowSubjectPack(false); setShowPaymentSheet(true); }}
-      />
-      <PaymentSheet
-        open={showPaymentSheet}
-        onClose={() => setShowPaymentSheet(false)}
-        onBack={() => { setShowPaymentSheet(false); setShowPlanSelect(true); }}
-        onSuccess={() => setShowPaymentSheet(false)}
-      />
+      <>
+          <PremiumIntroSheet
+            open={activeNudge}
+            nudgeSubtext={nudgeSubtext("strategy_saved", language as "en" | "fr")}
+            onClose={() => setActiveNudge(false)}
+            onContinue={() => { setActiveNudge(false); setShowPlanSelect(true); }}
+          />
+          <PlanSelectSheet
+            open={showPlanSelect}
+            onClose={() => setShowPlanSelect(false)}
+            onBack={() => { setShowPlanSelect(false); setActiveNudge(true); }}
+            onSelectPack={() => { setShowPlanSelect(false); setShowSubjectPack(true); }}
+            onSelectAll={() => { setShowPlanSelect(false); setShowPaymentSheet(true); }}
+          />
+          <SubjectPackSheet
+            open={showSubjectPack}
+            onClose={() => setShowSubjectPack(false)}
+            onBack={() => { setShowSubjectPack(false); setShowPlanSelect(true); }}
+            subjects={subjects.map(s => s.name)}
+            onConfirm={() => { setShowSubjectPack(false); setShowPaymentSheet(true); }}
+          />
+          <PaymentSheet
+            open={showPaymentSheet}
+            onClose={() => setShowPaymentSheet(false)}
+            onBack={() => { setShowPaymentSheet(false); setShowPlanSelect(true); }}
+            onSuccess={() => setShowPaymentSheet(false)}
+          />
+        </>
     </motion.div>
   );
 };

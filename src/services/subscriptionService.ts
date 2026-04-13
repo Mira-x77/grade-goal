@@ -8,6 +8,7 @@ import {
   PremiumAccessType
 } from '@/types/subscription';
 import { getDeviceId } from '@/lib/device-id';
+import { PREMIUM_ENABLED } from '@/config/premium';
 
 const SUBSCRIPTION_KEY = 'scoretarget_subscription';
 
@@ -226,6 +227,15 @@ class SubscriptionService {
     daysRemaining?: number;
     hasPremiumAccess: boolean;
   }> {
+    // Premium disabled for this release — always return free
+    if (!PREMIUM_ENABLED) {
+      return {
+        tier: 'free',
+        unlockedSubjects: [],
+        hasPremiumAccess: false,
+      };
+    }
+
     const subscription = await this.getSubscription();
 
     let daysRemaining: number | undefined;

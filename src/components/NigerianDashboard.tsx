@@ -417,7 +417,6 @@ export default function NigerianDashboard({ nigerianState, onStateChange }: Nige
           <div className="flex flex-col items-center justify-center flex-1 gap-0.5">
             <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">CGPA</span>
             <span className="text-5xl font-black leading-none text-foreground">{cgpa.toFixed(2)}</span>
-            <span className="text-[9px] font-bold text-muted-foreground">/ 5.00</span>
           </div>
           <div className="w-px bg-border/40 self-stretch" />
           <div className="flex flex-col items-center justify-center flex-1 gap-1.5">

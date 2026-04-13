@@ -1,6 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabaseClient';
 import { storageAdapter } from '../lib/storage-adapter';
-import { formatBytes } from '../lib/integrity';
 import {
   ExamPaper,
   StorageAnalytics,
@@ -11,10 +10,7 @@ import {
   Session
 } from '../types';
 
-// Supabase configuration
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://aaayzhvqgqptgqaxxbdh.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhYXl6aHZxZ3FwdGdxYXh4YmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzAwNDksImV4cCI6MjA4ODA0NjA0OX0.NNKOn17jGZHEbBKBnX3oxVhSYJhKm28QSOkK76I0bgo';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { formatBytes } from '../lib/integrity';
 
 export interface NewExamPaper {
   title: string;

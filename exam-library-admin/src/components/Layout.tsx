@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { BookOpen, LayoutDashboard, Upload, FileText, BarChart3, LogOut, Ticket, Sparkles } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Upload, FileText, BarChart3, LogOut, Ticket, Sparkles, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Layout() {
@@ -25,6 +25,7 @@ export default function Layout() {
     { path: '/papers', icon: FileText, label: 'Papers' },
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/subscription-codes', icon: Ticket, label: 'Subscriptions' },
+    { path: '/app-settings', icon: Settings, label: 'App Settings' },
   ];
 
   return (
@@ -107,6 +108,7 @@ export default function Layout() {
             {location.pathname === '/papers' && 'Manage Papers'}
             {location.pathname === '/analytics' && 'Analytics'}
             {location.pathname === '/subscription-codes' && 'Subscription Codes'}
+            {location.pathname === '/app-settings' && 'App Settings'}
           </h2>
 
           {!isSubscriptionPage && (

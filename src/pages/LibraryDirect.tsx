@@ -2,19 +2,21 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Download, Search, Eye, X, LayoutGrid, List, FileText, ChevronDown, Check, Crown, ChevronRight } from 'lucide-react';
+import { Download, Search, Eye, X, LayoutGrid, List, FileText, ChevronDown, Check, ChevronRight, Sparkles, Crown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cacheService } from '@/services/cacheService';
 import { loadState } from '@/lib/storage';
-import { PaymentSheet } from '@/components/subscription/PaymentSheet';
-import { PlanSelectSheet } from '@/components/subscription/PlanSelectSheet';
-import { PremiumIntroSheet } from '@/components/subscription/PremiumIntroSheet';
-import { SubjectPackSheet } from '@/components/subscription/SubjectPackSheet';
 import TaskBar from '@/components/TaskBar';
 import ScreenIntro from '@/components/ScreenIntro';
 import ScreenTour from '@/components/ScreenTour';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { usePremiumNudge, nudgeSubtext } from '@/hooks/usePremiumNudge';
+import { usePremiumNudge } from '@/hooks/usePremiumNudge';
+import { PREMIUM_ENABLED } from '@/config/premium';
+import { useAppConfig } from '@/contexts/AppConfigContext';
+import { PaymentSheet } from '@/components/subscription/PaymentSheet';
+import { PlanSelectSheet } from '@/components/subscription/PlanSelectSheet';
+import { PremiumIntroSheet } from '@/components/subscription/PremiumIntroSheet';
+import { SubjectPackSheet } from '@/components/subscription/SubjectPackSheet';
 
 type LibraryTab = 'papers' | 'prep';
 
@@ -67,6 +69,7 @@ function CyclingSubtext() {
 export default function LibraryDirect() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
+  const { premiumEnabled: PREMIUM_ENABLED } = useAppConfig();
   const headerRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(80);
 
@@ -106,7 +109,7 @@ export default function LibraryDirect() {
   const [showSubjectPack, setShowSubjectPack] = useState(false);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
-  // Premium nudge
+  // Premium nudge (suppressed when PREMIUM_ENABLED = false)
   const [activeNudge, setActiveNudge] = useState<"library_open" | "paper_downloaded" | null>(null);
   const { fire: fireNudge } = usePremiumNudge((trigger) => {
     if (trigger === "library_open" || trigger === "paper_downloaded") setActiveNudge(trigger);
@@ -196,7 +199,7 @@ export default function LibraryDirect() {
             <h1 className="text-2xl font-black text-foreground">{t("library")}</h1>
           </div>
 
-          {/* Tab Switcher */}
+          {/* Tab Switcher — prep tab shows Coming Soon when premium is disabled */}
           <div className="tour-library-tabs flex gap-1 mt-4 bg-muted rounded-xl p-1">
             {(['papers', 'prep'] as LibraryTab[]).map((tab) => (
               <button
@@ -377,94 +380,96 @@ export default function LibraryDirect() {
           {activeTab === 'prep' && (
             <motion.div key="prep" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} style={{ paddingTop: headerHeight }}>
               <div className="content-col pt-4 pb-4">
-                {/* Hero */}
-                <div className="rounded-2xl bg-premium/10 border-2 border-premium/30 px-4 py-4 mb-4 flex items-center gap-3">
-                  <Crown className="h-6 w-6 text-premium shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-black text-foreground text-sm">{t("passNotHarder")}</p>
-                    <CyclingSubtext />
-                  </div>
-                </div>
+                <>
+                    {/* Hero */}
+                    <div className="rounded-2xl bg-premium/10 border-2 border-premium/30 px-4 py-4 mb-4 flex items-center gap-3">
+                      <Crown className="h-6 w-6 text-premium shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-foreground text-sm">{t("passNotHarder")}</p>
+                        <CyclingSubtext />
+                      </div>
+                    </div>
 
-                {prepSubjects.length === 0 ? (
-                  <div className="py-10 text-center rounded-2xl bg-muted/50">
-                    <p className="text-sm font-bold text-muted-foreground">{t("noSubjectsFound")}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{t("completeOnboarding")}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">{t("selectSubjectUnlock")}</p>
-                    {prepSubjects.map((subject, i) => (
-                      <motion.div
-                        key={subject}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.04 }}
-                        onClick={() => navigate(`/subject/${encodeURIComponent(subject)}`)}
-                        className="bg-card border-2 border-foreground rounded-2xl p-4 flex items-center gap-4 cursor-pointer card-shadow active:scale-[0.98] active:translate-y-0.5 active:shadow-none transition-all"
-                      >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-premium/10 border border-premium/20 shrink-0">
-                          <Crown className="h-5 w-5 text-premium" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-black text-foreground text-sm">{subject}</h3>
-                          <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">{t("unlockSpecificPrep")}</p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
+                    {prepSubjects.length === 0 ? (
+                      <div className="py-10 text-center rounded-2xl bg-muted/50">
+                        <p className="text-sm font-bold text-muted-foreground">{t("noSubjectsFound")}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t("completeOnboarding")}</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">{t("selectSubjectUnlock")}</p>
+                        {prepSubjects.map((subject, i) => (
+                          <motion.div
+                            key={subject}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.04 }}
+                            onClick={() => navigate(`/subject/${encodeURIComponent(subject)}`)}
+                            className="bg-card border-2 border-foreground rounded-2xl p-4 flex items-center gap-4 cursor-pointer card-shadow active:scale-[0.98] active:translate-y-0.5 active:shadow-none transition-all"
+                          >
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-premium/10 border border-premium/20 shrink-0">
+                              <Crown className="h-5 w-5 text-premium" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-black text-foreground text-sm">{subject}</h3>
+                              <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">{t("unlockSpecificPrep")}</p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Sheets */}
-      <PremiumIntroSheet
-        open={showPremiumIntro}
-        onClose={() => setShowPremiumIntro(false)}
-        onContinue={() => { setShowPremiumIntro(false); setShowPlanSelect(true); }}
-      />
-      {/* Contextual nudge sheet */}
-      <PremiumIntroSheet
-        open={!!activeNudge}
-        nudgeSubtext={activeNudge ? nudgeSubtext(activeNudge, language as "en" | "fr") : undefined}
-        onClose={() => setActiveNudge(null)}
-        onContinue={() => { setActiveNudge(null); setShowPlanSelect(true); }}
-      />
-      <PlanSelectSheet
-        open={showPlanSelect}
-        onClose={() => setShowPlanSelect(false)}
-        onBack={() => { setShowPlanSelect(false); setShowPremiumIntro(true); }}
-        onSelectPack={() => { setShowPlanSelect(false); setShowSubjectPack(true); }}
-        onSelectAll={() => { setShowPlanSelect(false); setShowPaymentSheet(true); }}
-      />
-      <SubjectPackSheet
-        open={showSubjectPack}
-        onClose={() => setShowSubjectPack(false)}
-        onBack={() => { setShowSubjectPack(false); setShowPlanSelect(true); }}
-        subjects={uniqueSubjects}
-        onConfirm={(subs, amount) => {
-          setSelectedSubjects(subs);
-          setShowSubjectPack(false);
-          (window as any).__packAmount = amount;
-          setShowPaymentSheet(true);
-        }}
-      />
-      <PaymentSheet
-        open={showPaymentSheet}
-        onClose={() => setShowPaymentSheet(false)}
-        onBack={() => {
-          setShowPaymentSheet(false);
-          if (selectedSubjects.length === 0) setShowPlanSelect(true);
-          else setShowSubjectPack(true);
-        }}
-        onSuccess={() => setShowPaymentSheet(false)}
-        subjectName={selectedSubjects.length === 1 ? selectedSubjects[0] : undefined}
-        amount={(window as any).__packAmount ?? undefined}
-      />
+      {/* Premium sheets — only rendered when premium is enabled */}
+      <>
+          <PremiumIntroSheet
+            open={showPremiumIntro}
+            onClose={() => setShowPremiumIntro(false)}
+            onContinue={() => { setShowPremiumIntro(false); setShowPlanSelect(true); }}
+          />
+          <PremiumIntroSheet
+            open={!!activeNudge}
+            onClose={() => setActiveNudge(null)}
+            onContinue={() => { setActiveNudge(null); setShowPlanSelect(true); }}
+          />
+          <PlanSelectSheet
+            open={showPlanSelect}
+            onClose={() => setShowPlanSelect(false)}
+            onBack={() => { setShowPlanSelect(false); setShowPremiumIntro(true); }}
+            onSelectPack={() => { setShowPlanSelect(false); setShowSubjectPack(true); }}
+            onSelectAll={() => { setShowPlanSelect(false); setShowPaymentSheet(true); }}
+          />
+          <SubjectPackSheet
+            open={showSubjectPack}
+            onClose={() => setShowSubjectPack(false)}
+            onBack={() => { setShowSubjectPack(false); setShowPlanSelect(true); }}
+            subjects={uniqueSubjects}
+            onConfirm={(subs, amount) => {
+              setSelectedSubjects(subs);
+              setShowSubjectPack(false);
+              (window as any).__packAmount = amount;
+              setShowPaymentSheet(true);
+            }}
+          />
+          <PaymentSheet
+            open={showPaymentSheet}
+            onClose={() => setShowPaymentSheet(false)}
+            onBack={() => {
+              setShowPaymentSheet(false);
+              if (selectedSubjects.length === 0) setShowPlanSelect(true);
+              else setShowSubjectPack(true);
+            }}
+            onSuccess={() => setShowPaymentSheet(false)}
+            subjectName={selectedSubjects.length === 1 ? selectedSubjects[0] : undefined}
+            amount={(window as any).__packAmount ?? undefined}
+          />
+        </>
 
       <TaskBar action={
         downloadedPaperIds.size > 0 ? (

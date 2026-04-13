@@ -1,5 +1,6 @@
 import { Crown, Lock } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAppConfig } from "@/contexts/AppConfigContext";
 
 interface LockedPreviewProps {
   title: string;
@@ -18,6 +19,9 @@ export function LockedPreview({
   className = "",
   expanded = false,
 }: LockedPreviewProps) {
+  const { premiumEnabled } = useAppConfig();
+  const isComingSoon = !premiumEnabled;
+
   return (
     <motion.div
       layout
@@ -54,14 +58,21 @@ export function LockedPreview({
 
         {/* Gradient + CTA overlay */}
         <div className="absolute inset-0 top-8 flex flex-col items-center justify-end bg-gradient-to-t from-card via-card/80 to-transparent pb-4 px-4">
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={onUnlockClick}
-            className="w-full rounded-2xl bg-secondary border-2 border-foreground py-3 font-black text-foreground text-sm card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2"
-          >
-            <Crown className="h-4 w-4" />
-            {unlockText ?? "Unlock Now"}
-          </motion.button>
+          {isComingSoon ? (
+            <div className="w-full rounded-2xl bg-muted border-2 border-border py-3 font-black text-muted-foreground text-sm flex items-center justify-center gap-2 opacity-60 cursor-not-allowed">
+              <Crown className="h-4 w-4" />
+              Coming Soon
+            </div>
+          ) : (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={onUnlockClick}
+              className="w-full rounded-2xl bg-secondary border-2 border-foreground py-3 font-black text-foreground text-sm card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2"
+            >
+              <Crown className="h-4 w-4" />
+              {unlockText ?? "Unlock Now"}
+            </motion.button>
+          )}
           {subtitle && (
             <p className="text-[10px] font-semibold text-muted-foreground mt-2 text-center">{subtitle}</p>
           )}

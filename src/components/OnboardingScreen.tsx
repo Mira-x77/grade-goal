@@ -22,6 +22,7 @@ function AppDropdown({ value, onChange, placeholder, options }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<React.CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const selected = options.find(o => o.value === value);
 
   const handleOpen = () => {
@@ -45,7 +46,11 @@ function AppDropdown({ value, onChange, placeholder, options }: DropdownProps) {
 
   useEffect(() => {
     if (!open) return;
-    const close = () => setOpen(false);
+    // Only close on scroll events outside the panel itself
+    const close = (e: Event) => {
+      if (panelRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
     window.addEventListener("scroll", close, true);
     return () => window.removeEventListener("scroll", close, true);
   }, [open]);
@@ -68,8 +73,14 @@ function AppDropdown({ value, onChange, placeholder, options }: DropdownProps) {
 
       {open && createPortal(
         <>
-          <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
+          {/* Backdrop — pointer events only, no touch-action blocking */}
+          <div
+            className="fixed inset-0 z-[9998]"
+            onClick={() => setOpen(false)}
+            style={{ touchAction: "none" }}
+          />
           <motion.div
+            ref={panelRef}
             initial={{ opacity: 0, y: -6, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
@@ -77,7 +88,11 @@ function AppDropdown({ value, onChange, placeholder, options }: DropdownProps) {
             style={panelStyle}
             className="bg-card border-2 border-foreground rounded-2xl card-shadow overflow-hidden"
           >
-            <div className="max-h-56 overflow-y-auto py-1">
+            {/* overscroll-contain prevents the scroll from bubbling and closing the dropdown */}
+            <div
+              className="max-h-56 overflow-y-auto py-1 overscroll-contain"
+              onTouchMove={e => e.stopPropagation()}
+            >
               {options.map(opt => (
                 <button
                   key={opt.value}
@@ -148,7 +163,7 @@ const NIGERIAN_DEPARTMENTS = [
 
 const FixedNextButton = ({ onClick, disabled = false, label, hint }: { onClick: () => void; disabled?: boolean; label: string; hint?: React.ReactNode }) => (
   <div className="fixed bottom-0 left-0 right-0 z-30 pb-10 pt-2 bg-gradient-to-t from-background via-background to-transparent">
-    <div className="content-col">
+    <div className="content-col max-w-lg mx-auto">
       {hint && <div className="mb-3 w-full flex justify-center">{hint}</div>}
       <button
         onClick={onClick}
@@ -228,22 +243,17 @@ const OnboardingScreen = ({
               </div>
             </button>
 
-            <button
-              onClick={() => onGradingSystemChange("french")}
-              className={`rounded-2xl p-5 text-left transition-all active:scale-[0.98] border-2 border-foreground card-shadow ${
-                gradingSystem === "french" ? "bg-secondary" : "bg-card"
-              }`}
-            >
+            <div className="rounded-2xl p-5 text-left border-2 border-border bg-muted/30 opacity-50 relative overflow-hidden">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-foreground bg-background">
-                  <Target className="h-5 w-5 text-foreground" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-border bg-background">
+                  <Target className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="font-black text-foreground">{t("frenchTraditional")}</p>
-                  <p className="text-xs font-semibold text-muted-foreground">{t("comparativeRanking")}</p>
+                  <p className="font-black text-muted-foreground">{t("frenchTraditional")}</p>
+                  <p className="text-xs font-semibold text-muted-foreground/70">Coming soon</p>
                 </div>
               </div>
-            </button>
+            </div>
 
             <button
               onClick={() => onGradingSystemChange("nigerian_university")}
@@ -552,7 +562,6 @@ const OnboardingScreen = ({
                 <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Target GPA</p>
                 <div className="flex items-baseline justify-center gap-2">
                   <span className="text-5xl font-black text-primary">{(targetAverage ?? 4.00).toFixed(2)}</span>
-                  <span className="text-xl font-bold text-muted-foreground">/ 5.00</span>
                 </div>
                 <div className="mt-8">
                   <input

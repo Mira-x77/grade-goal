@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, File, Clipboard, ChevronDown, Check } from "lucide-react";
 import { Subject } from "@/types/exam";
-import { calcSubjectAverage } from "@/lib/exam-logic";
+import { calcSubjectAverage, fmtAvg, getRounding } from "@/lib/exam-logic";
 import { addHistoryEntry } from "@/lib/storage";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { scoreToGrade } from "@/lib/grading-nigerian";
@@ -70,13 +70,17 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
     if (finalValue !== null && oldSubject?.marks.interro === null && oldSubject) {
       addHistoryEntry({ date: new Date().toISOString(), subjectName: oldSubject.name, markType: "interro", value: finalValue });
     }
-    // Auto-advance to next subject when score is filled
-    const currentIdx = updatedSubjects.findIndex(s => s.id === subjectId);
-    const nextIncomplete = updatedSubjects.slice(currentIdx + 1).find(s => s.marks.interro === null);
-    if (finalValue !== null) {
-      if (nextIncomplete) setExpanded(nextIncomplete.id);
-      else setExpanded(null);
-    }
+    // Do NOT auto-advance on every keystroke — only on blur (see onBlur handler)
+  };
+
+  const handleNigerianScoreBlur = (subjectId: string) => {
+    const sub = subjects.find(s => s.id === subjectId);
+    if (!sub || sub.marks.interro === null) return;
+    // Auto-advance to next subject on blur
+    const currentIdx = subjects.findIndex(s => s.id === subjectId);
+    const nextIncomplete = subjects.slice(currentIdx + 1).find(s => s.marks.interro === null);
+    if (nextIncomplete) setExpanded(nextIncomplete.id);
+    else setExpanded(null);
   };
 
   const filledCount = isNigerian
@@ -84,8 +88,6 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
     : subjects.reduce((acc, s) =>
         acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0), 0);
   const totalMarks = isNigerian ? subjects.length : subjects.length * 3;
-  const progress = totalMarks > 0 ? (filledCount / totalMarks) * 100 : 0;
-
   const allFilled = subjects.length > 0 && filledCount === totalMarks;
 
   return (
@@ -96,18 +98,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
         <h2 className="text-2xl font-black text-foreground">{isNigerian ? "Enter Your Scores" : t("enterYourMarks")}</h2>
         <p className="text-sm text-muted-foreground font-semibold mb-3">{t("enterCurrentMarks")}</p>
 
-        {/* Progress bar */}
-        <div className="rounded-full bg-muted h-2.5 overflow-hidden">
-          <motion.div
-            className="h-full rounded-full bg-primary"
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ type: "spring", stiffness: 100 }}
-          />
-        </div>
-        <p className="text-xs font-bold text-muted-foreground text-center mt-1">
-          {filledCount}/{totalMarks} {t("marksEntered")}
-        </p>
+
       </div>
 
       {/* Scrollable list */}
@@ -115,7 +106,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
         {/* Subject cards */}
         <div className="flex flex-col gap-3">
           {[...subjects].sort((a, b) => a.name.localeCompare(b.name)).map((sub, i) => {
-            const avg = isNigerian ? null : calcSubjectAverage(sub.marks);
+            const avg = isNigerian ? null : calcSubjectAverage(sub.marks, sub.markStatuses);
             const isOpen = expanded === sub.id;
             const subFilled = isNigerian
               ? (sub.marks.interro !== null ? 1 : 0)
@@ -152,7 +143,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
                       }`}>{nigerianGrade}</span>
                     )}
                     {!isNigerian && avg !== null && (
-                      <span className="text-sm font-bold text-primary">{avg.toFixed(1)}</span>
+                      <span className="text-sm font-bold text-primary">{fmtAvg(avg, getRounding())}</span>
                     )}
                     <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -182,6 +173,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
                               placeholder="—"
                               value={sub.marks.interro ?? ""}
                               onChange={(e) => updateNigerianScore(sub.id, e.target.value)}
+                              onBlur={() => handleNigerianScoreBlur(sub.id)}
                               className="w-full rounded-xl border-2 border-border bg-background px-3 py-2.5 text-center font-bold text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none transition-colors"
                             />
                           </div>
@@ -234,12 +226,12 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
         className="fixed bottom-0 left-0 right-0 z-30 pb-10 pt-8"
       >
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background to-transparent z-[-1]" />
-        <div className="content-col">
+        <div className="content-col max-w-lg mx-auto">
         <button
           onClick={onContinue}
           className="w-full rounded-2xl bg-primary py-4 text-base font-extrabold text-primary-foreground card-shadow-primary active:translate-y-1 active:shadow-none transition-all"
         >
-          {isNigerian ? t("continueBtn") : (filledCount > 0 ? t("continueBtn") : t("skipForNow"))}
+          {filledCount > 0 ? t("continueBtn") : t("skipForNow")}
         </button>
         </div>
       </motion.div>

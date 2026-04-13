@@ -146,10 +146,14 @@ export function computeIntegratedSubjectScore(subject: SubjectLike): number | nu
   if (!assessments || assessments.length === 0) return null;
   const filled = assessments.filter((a) => a.value !== null);
   if (filled.length === 0) return null;
-  // Compute weighted sum over filled assessments, normalised by their total weight
   const totalWeight = filled.reduce((s, a) => s + a.weight, 0);
   if (totalWeight === 0) return null;
-  const weightedSum = filled.reduce((s, a) => s + (a.value! * a.weight), 0);
+  // Normalize each score to /100 before weighting
+  const weightedSum = filled.reduce((s, a) => {
+    const maxScore = (a as any).maxScore ?? 100;
+    const normalized = (a.value! / maxScore) * 100;
+    return s + (normalized * a.weight);
+  }, 0);
   return weightedSum / totalWeight;
 }
 
@@ -172,7 +176,29 @@ export function computeIntegratedCGPA(subjects: SubjectLike[]): number | null {
   return Math.round((totalGP / totalCU) * 100) / 100;
 }
 
-/** Default assessment template for a new Nigerian integrated course */
+/**
+ * Compute the best possible CGPA if all unfilled assessments score 100/100.
+ * Returns null if no subjects have credit units.
+ */
+export function computeBestPossibleCGPA(subjects: SubjectLike[]): number | null {
+  const eligible = subjects.filter(s => (s.creditUnits ?? 0) > 0);
+  if (eligible.length === 0) return null;
+  const totalGP = eligible.reduce((sum, s) => {
+    const cu = s.creditUnits ?? 1;
+    // Simulate all unfilled assessments as 100
+    const assessments = (s.customAssessments ?? []).map(a => ({
+      ...a,
+      value: a.value !== null ? a.value : 100,
+    }));
+    const totalWeight = assessments.reduce((w, a) => w + a.weight, 0);
+    if (totalWeight === 0) return sum + computeGP(100, cu);
+    const weightedSum = assessments.reduce((w, a) => w + a.value! * a.weight, 0);
+    const bestScore = weightedSum / totalWeight;
+    return sum + computeGP(Math.round(bestScore), cu);
+  }, 0);
+  const totalCU = eligible.reduce((sum, s) => sum + (s.creditUnits ?? 1), 0);
+  return Math.round((totalGP / totalCU) * 100) / 100;
+}
 export function defaultNigerianAssessments(): { id: string; label: string; weight: number; value: number | null }[] {
   return [
     { id: crypto.randomUUID(), label: "CA", weight: 30, value: null },

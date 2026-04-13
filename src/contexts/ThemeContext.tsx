@@ -82,9 +82,17 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<AppTheme>(() =>
     (localStorage.getItem(THEME_KEY) as AppTheme) ?? "system"
   );
-  const [accent, setAccentState] = useState<AccentColor>(() =>
-    (localStorage.getItem(ACCENT_KEY) as AccentColor) ?? "orange"
-  );
+  const [accent, setAccentState] = useState<AccentColor>(() => {
+    // Prefer AppState.settings.accentColor (synced from cloud) over local key
+    try {
+      const raw = localStorage.getItem("scoretarget_state");
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed?.settings?.accentColor) {
+        return parsed.settings.accentColor as AccentColor;
+      }
+    } catch {}
+    return (localStorage.getItem(ACCENT_KEY) as AccentColor) ?? "orange";
+  });
 
   useEffect(() => {
     applyTheme(theme);
@@ -103,7 +111,19 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
   }, [theme, accent]);
 
   const setTheme = (t: AppTheme) => { localStorage.setItem(THEME_KEY, t); setThemeState(t); };
-  const setAccent = (a: AccentColor) => { localStorage.setItem(ACCENT_KEY, a); setAccentState(a); };
+  const setAccent = (a: AccentColor) => {
+    localStorage.setItem(ACCENT_KEY, a);
+    setAccentState(a);
+    // Also persist into AppState so it syncs to cloud
+    try {
+      const raw = localStorage.getItem("scoretarget_state");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        parsed.settings = { ...parsed.settings, accentColor: a };
+        localStorage.setItem("scoretarget_state", JSON.stringify(parsed));
+      }
+    } catch {}
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, accent, setAccent, accentMap: ACCENT_MAP }}>

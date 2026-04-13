@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Download, AlertCircle, Eye, FolderOpen, Crown, ChevronDown, Lock, X, Check, Share2 } from "lucide-react";
+import { Download, AlertCircle, Eye, FolderOpen, Crown, ChevronDown, Lock, X, Check, Share2, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ExamPaper, DownloadProgress } from "@/types/exam-library";
 import { examService } from "@/services/examService";
@@ -13,6 +13,7 @@ import { readFileAsBase64 } from "@/lib/filesystem";
 import { toast } from "sonner";
 import TaskBar from "@/components/TaskBar";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAppConfig } from "@/contexts/AppConfigContext";
 import { useIsTablet } from "@/hooks/useIsTablet";
 
 const PaperDetail = () => {
@@ -24,7 +25,8 @@ const PaperDetail = () => {
     visible: isTablet ? { x: "-50%", y: "-50%", scale: 1,    opacity: 1 } : { y: 0 },
     exit:    isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" },
   };
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { premiumEnabled: PREMIUM_ENABLED } = useAppConfig();
 
   const [paper, setPaper] = useState<ExamPaper | null>(null);
   const [isDownloaded, setIsDownloaded] = useState(false);
@@ -377,26 +379,27 @@ const PaperDetail = () => {
         )}
       </AnimatePresence>
 
-      <PlanSelectSheet
-        open={showPlanSelect}
-        onClose={() => setShowPlanSelect(false)}
-        subjectName={paper?.subject}
-        onSelectPack={() => {
-          // Subject pack from paper context → go straight to payment for this subject
-          setShowPlanSelect(false);
-          setPaymentPlan("single");
-          (window as any).__packAmount = 500;
-          setShowPaywall(true);
-        }}
-        onSelectAll={() => { setShowPlanSelect(false); setPaymentPlan("all"); (window as any).__packAmount = undefined; setShowPaywall(true); }}
-      />
-      <PaymentSheet
-        open={showPaywall}
-        onClose={() => setShowPaywall(false)}
-        onBack={() => { setShowPaywall(false); setShowPlanSelect(true); }}
-        onSuccess={() => { setShowPaywall(false); handleDownload(); }}
-        subjectName={paymentPlan === "single" ? paper?.subject : undefined}
-      />
+      <>
+          <PlanSelectSheet
+            open={showPlanSelect}
+            onClose={() => setShowPlanSelect(false)}
+            subjectName={paper?.subject}
+            onSelectPack={() => {
+              setShowPlanSelect(false);
+              setPaymentPlan("single");
+              (window as any).__packAmount = 500;
+              setShowPaywall(true);
+            }}
+            onSelectAll={() => { setShowPlanSelect(false); setPaymentPlan("all"); (window as any).__packAmount = undefined; setShowPaywall(true); }}
+          />
+          <PaymentSheet
+            open={showPaywall}
+            onClose={() => setShowPaywall(false)}
+            onBack={() => { setShowPaywall(false); setShowPlanSelect(true); }}
+            onSuccess={() => { setShowPaywall(false); handleDownload(); }}
+            subjectName={paymentPlan === "single" ? paper?.subject : undefined}
+          />
+        </>
 
       {!showPDFViewer && !prepOpen && <TaskBar showBack action={downloadAction} />}
     </div>

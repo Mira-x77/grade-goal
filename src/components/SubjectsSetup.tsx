@@ -192,10 +192,13 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.92, opacity: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
-            className="fixed inset-0 z-[101] flex items-end justify-center pointer-events-none px-4"
-            style={{ paddingBottom: kbHeight > 0 ? kbHeight + 8 : undefined }}
+            className="fixed inset-0 z-[101] flex items-center justify-center pointer-events-none px-4"
+            style={{
+              // Shift the center point up by half the keyboard height so modal stays visible
+              paddingBottom: kbHeight > 0 ? kbHeight : undefined,
+            }}
           >
-            <div className="pointer-events-auto w-full max-w-sm bg-card rounded-3xl card-shadow overflow-hidden mb-2">
+            <div className="pointer-events-auto w-full max-w-sm bg-card rounded-3xl card-shadow overflow-hidden">
 
               <AnimatePresence mode="wait">
 
@@ -406,7 +409,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-30 pb-10 pt-4 bg-background">
-        <div className="content-col flex items-center gap-3">
+        <div className="content-col max-w-lg mx-auto flex items-center gap-3">
         <motion.button
           layout
           onClick={openModal}

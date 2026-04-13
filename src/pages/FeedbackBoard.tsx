@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, X, Lightbulb, Loader2 } from "lucide-react";
+import { Plus, Search, X, Lightbulb, Loader2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -8,6 +8,15 @@ import { useIsTablet } from "@/hooks/useIsTablet";
 import VoteButton from "@/components/feedback/VoteButton";
 import TaskBar from "@/components/TaskBar";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+
+function getGradingSystem(): string {
+  try {
+    const raw = localStorage.getItem("scoretarget_state");
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed?.settings?.gradingSystem ?? "apc";
+  } catch { return "apc"; }
+}
 
 type Status = "under_review" | "planned" | "in_progress" | "completed";
 
@@ -33,6 +42,8 @@ export default function FeedbackBoard() {
   const { user } = useAuth();
   const { language } = useLanguage();
   const isTablet = useIsTablet();
+  const navigate = useNavigate();
+  const gradingSystem = getGradingSystem();
   const sheetVariants = {
     hidden:  isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" },
     visible: isTablet ? { x: "-50%", y: "-50%", scale: 1,    opacity: 1 } : { y: 0 },
@@ -69,6 +80,7 @@ export default function FeedbackBoard() {
       const { data, error } = await supabase
         .from("feedback_with_votes")
         .select("*")
+        .eq("grading_system", gradingSystem)
         .order(sort === "votes" ? "vote_count" : "created_at", { ascending: false });
       if (error) throw error;
       setItems((data as FeedbackItem[]) ?? []);
@@ -95,7 +107,7 @@ export default function FeedbackBoard() {
     try {
       const { error } = await supabase
         .from("feedback")
-        .insert({ title: reqTitle.trim(), description: reqDesc.trim(), user_id: user.id });
+        .insert({ title: reqTitle.trim(), description: reqDesc.trim(), user_id: user.id, grading_system: gradingSystem });
       if (error) throw error;
       setReqTitle(""); setReqDesc("");
       setShowForm(false);
@@ -117,9 +129,10 @@ export default function FeedbackBoard() {
       animate={{ opacity: 1, scale: 1, x: 0 }}
       exit={{ opacity: 0, scale: 0.5, x: -16 }}
       transition={{ type: "spring", stiffness: 380, damping: 28 }}
-      className="h-12 w-12 rounded-full bg-secondary border-2 border-foreground card-shadow flex items-center justify-center active:scale-95"
+      className="flex items-center gap-2 rounded-full bg-secondary border-2 border-foreground px-5 h-12 font-black text-foreground card-shadow active:scale-95 transition-transform"
     >
-      <Plus className="h-5 w-5 text-foreground" />
+      <Plus className="h-5 w-5" />
+      {fr ? "Idée" : "Idea"}
     </motion.button>
   );
 
@@ -128,7 +141,10 @@ export default function FeedbackBoard() {
 
       {/* Fixed header + search/sort */}
       <div ref={headerRef} className="fixed top-0 left-0 right-0 z-10 bg-background/90 backdrop-blur-lg border-b border-border safe-area-top">
-        <div className="header-inner flex items-center pt-3 pb-3">
+        <div className="header-inner flex items-center gap-3 pt-3 pb-3">
+          <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-card border-2 border-foreground card-shadow active:scale-95 transition-transform shrink-0">
+            <ArrowLeft className="h-5 w-5 text-foreground" />
+          </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-black text-foreground">
               {fr ? "Idées & Fonctionnalités" : "Ideas & Feature Requests"}
@@ -269,7 +285,7 @@ export default function FeedbackBoard() {
         )}
       </AnimatePresence>
 
-      <TaskBar showBack action={<AnimatePresence mode="wait">{actionBtn}</AnimatePresence>} />
+      <TaskBar action={items.length > 0 ? <AnimatePresence mode="wait">{actionBtn}</AnimatePresence> : undefined} />
     </div>
   );
 }

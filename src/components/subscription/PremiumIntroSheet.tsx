@@ -1,6 +1,7 @@
 import { X, Crown, ChevronRight } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAppConfig } from "@/contexts/AppConfigContext";
 
 interface PremiumIntroSheetProps {
   open: boolean;
@@ -12,6 +13,7 @@ interface PremiumIntroSheetProps {
 
 export function PremiumIntroSheet({ open, onClose, onContinue, subjectName, nudgeSubtext }: PremiumIntroSheetProps) {
   const { t } = useLanguage();
+  const { premiumEnabled } = useAppConfig();
 
   const features = [
     { icon: "🎯", title: t("topQuestions"),   desc: t("topQuestionsDesc")    },
@@ -64,13 +66,20 @@ export function PremiumIntroSheet({ open, onClose, onContinue, subjectName, nudg
 
       {/* Sticky CTA */}
       <div className="px-5 pb-8 pt-4 border-t border-border bg-background shrink-0">
-        <button
-          onClick={onContinue}
-          className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2"
-        >
-          {t("seePlans")}
-          <ChevronRight className="h-5 w-5" />
-        </button>
+        {premiumEnabled ? (
+          <button
+            onClick={onContinue}
+            className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2"
+          >
+            {t("seePlans")}
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        ) : (
+          <div className="w-full rounded-2xl bg-muted border-2 border-border py-4 font-black text-muted-foreground flex items-center justify-center gap-2 opacity-60 cursor-not-allowed">
+            <Crown className="h-4 w-4" />
+            Coming Soon
+          </div>
+        )}
       </div>
     </Sheet>
   );

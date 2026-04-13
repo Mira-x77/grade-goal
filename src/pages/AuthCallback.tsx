@@ -75,7 +75,7 @@ const AuthCallback = () => {
           const hasDataNow = !!localStorage.getItem('scoretarget_state');
           
           // Navigate based on whether we have data
-          navigate((hasDataNow || hasCloudData) ? "/" : "/onboarding", { replace: true });
+          navigate((hasDataNow || hasCloudData) ? "/auth/success" : "/onboarding", { replace: true });
         }
         return;
       }
@@ -105,7 +105,7 @@ const AuthCallback = () => {
         const hasDataNow = !!localStorage.getItem('scoretarget_state');
         
         // Navigate based on whether we have data
-        navigate((hasDataNow || hasCloudData) ? "/" : "/onboarding", { replace: true });
+        navigate((hasDataNow || hasCloudData) ? "/auth/success" : "/onboarding", { replace: true });
       }
     };
 

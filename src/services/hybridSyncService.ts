@@ -131,6 +131,10 @@ export async function restoreUserData(userId: string): Promise<CloudUserData> {
     // Hydrate localStorage cache
     if (appState) {
       localStorage.setItem('scoretarget_state', JSON.stringify(appState));
+      // Restore accent color if it was synced
+      if (appState.settings?.accentColor) {
+        localStorage.setItem('gostudy_accent', appState.settings.accentColor);
+      }
     }
     if (history.length > 0) {
       localStorage.setItem('scoretarget_history', JSON.stringify(history));

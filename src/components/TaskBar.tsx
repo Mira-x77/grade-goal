@@ -1,10 +1,9 @@
-import { Home, BookOpen, ArrowLeft, User } from "lucide-react";
+import { Home, BookOpen, ArrowLeft, Plus } from "lucide-react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ReactNode } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-// Routes that belong to the Home tab
 const HOME_ROUTES = ["/", "/profile", "/settings", "/simulator", "/planner", "/subject"];
 
 function getIsNigerian(): boolean {
@@ -18,7 +17,7 @@ function getIsNigerian(): boolean {
 interface TaskBarProps {
   action?: ReactNode;
   backAction?: ReactNode;
-  showBack?: boolean;        // auto back button using navigate(-1)
+  showBack?: boolean;
 }
 
 const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
@@ -27,22 +26,8 @@ const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
   const { t } = useLanguage();
   const isNigerian = getIsNigerian();
 
-  const tabs = isNigerian
-    ? [
-        { path: "/", icon: Home, label: t("home") },
-        { path: "/profile", icon: User, label: "Profile" },
-      ] as const
-    : [
-        { path: "/", icon: Home, label: t("home") },
-        { path: "/library", icon: BookOpen, label: t("library") },
-      ] as const;
-
   const getActiveTab = () => {
     const p = location.pathname;
-    if (isNigerian) {
-      if (p.startsWith("/profile")) return "/profile";
-      return "/";
-    }
     if (p.startsWith("/library") || p.startsWith("/my-downloads")) return "/library";
     if (HOME_ROUTES.some(r => r === "/" ? p === "/" : p.startsWith(r))) return "/";
     return "/";
@@ -63,11 +48,31 @@ const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
     </motion.button>
   ) : null);
 
+  // Nigerian: centered pill FAB with label — no back button (it's in the screen header)
+  if (isNigerian) {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center items-end pointer-events-none pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <div className="pointer-events-none">
+          {action && (
+            <div className="pointer-events-auto">
+              {action}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // APC/French: pill with Home + Library tabs, action floats right
+  const tabs = [
+    { path: "/", icon: Home, label: t("home") },
+    { path: "/library", icon: BookOpen, label: t("library") },
+  ] as const;
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center items-end pointer-events-none pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       <div className="relative flex items-center pointer-events-none">
 
-        {/* Back button — left side */}
         <AnimatePresence>
           {backBtn && (
             <div className="pointer-events-auto absolute right-full mr-3">
@@ -76,35 +81,27 @@ const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
           )}
         </AnimatePresence>
 
-        {/* Pill */}
         <div className="pointer-events-auto flex items-center gap-1 bg-card border-2 border-foreground rounded-full px-3 py-2 card-shadow">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.path;
             const Icon = tab.icon;
-
             return (
-              <Link
-                key={tab.path}
-                to={tab.path}
+              <Link key={tab.path} to={tab.path}
                 className={`${tab.path === '/library' ? 'tour-library' : ''} relative flex flex-col items-center gap-0.5 px-4 py-2 rounded-full transition-colors`}
               >
                 {isActive && (
-                  <motion.div
-                    layoutId="taskbar-active"
+                  <motion.div layoutId="taskbar-active"
                     className="absolute inset-0 bg-secondary rounded-full border border-foreground/20"
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
                   />
                 )}
-                <Icon className={`h-5 w-5 relative z-10 transition-colors ${isActive ? "text-foreground" : "text-muted-foreground"}`} />
-                <span className={`text-[10px] font-black relative z-10 transition-colors ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
-                  {tab.label}
-                </span>
+                <Icon className={`h-5 w-5 relative z-10 ${isActive ? "text-foreground" : "text-muted-foreground"}`} />
+                <span className={`text-[10px] font-black relative z-10 ${isActive ? "text-foreground" : "text-muted-foreground"}`}>{tab.label}</span>
               </Link>
             );
           })}
         </div>
 
-        {/* Action button — right side */}
         {action && (
           <div className="pointer-events-auto absolute left-full ml-3">
             {action}

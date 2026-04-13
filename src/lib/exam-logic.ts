@@ -1,29 +1,58 @@
-import { Subject, FeedbackStatus } from "@/types/exam";
+import { Subject, FeedbackStatus, MarkStatus } from "@/types/exam";
 
 /**
- * Subject average = (Interro + Dev + 2×Compo) / 4
- * Weights: Interro=1, Dev=1, Compo=2
+ * Subject average — two-step Cameroonian school formula:
+ * Step 1: Moy_classe = average of present classwork marks (interro, dev)
+ * Step 2: Moy_sem = (Moy_classe + compo) / 2
+ *
+ * Marks with status "not_done" are excluded from calculation.
  */
-export function calcSubjectAverage(marks: Subject["marks"]): number | null {
+export function calcSubjectAverage(
+  marks: Subject["marks"],
+  markStatuses?: Subject["markStatuses"]
+): number | null {
   const { interro, dev, compo } = marks;
-  if (interro === null && dev === null && compo === null) return null;
 
-  let sum = 0;
-  let weight = 0;
-  if (interro !== null) { sum += interro * 1; weight += 1; }
-  if (dev !== null) { sum += dev * 1; weight += 1; }
-  if (compo !== null) { sum += compo * 2; weight += 2; }
+  // A mark is excluded if its status is "not_done"
+  const isExcluded = (type: "interro" | "dev" | "compo") =>
+    markStatuses?.[type] === "not_done";
 
-  return weight > 0 ? sum / weight : null;
+  const interroVal = !isExcluded("interro") ? interro : null;
+  const devVal = !isExcluded("dev") ? dev : null;
+  const compoVal = !isExcluded("compo") ? compo : null;
+
+  if (interroVal === null && devVal === null && compoVal === null) return null;
+
+  // Compute Moy_classe from available classwork marks
+  const classworkMarks: number[] = [];
+  if (interroVal !== null) classworkMarks.push(interroVal);
+  if (devVal !== null) classworkMarks.push(devVal);
+
+  const hasMoyClasse = classworkMarks.length > 0;
+  const moyClasse = hasMoyClasse
+    ? classworkMarks.reduce((a, b) => a + b, 0) / classworkMarks.length
+    : null;
+
+  if (compoVal === null) {
+    // Only classwork present
+    return moyClasse;
+  }
+  if (moyClasse === null) {
+    // Only compo present
+    return compoVal;
+  }
+  // Both classwork and compo present
+  return (moyClasse + compoVal) / 2;
 }
 
 /**
- * Full subject average when all marks are present
+ * Full subject average when all marks are present — two-step formula
  */
 export function calcFullSubjectAverage(marks: Subject["marks"]): number | null {
   const { interro, dev, compo } = marks;
   if (interro === null || dev === null || compo === null) return null;
-  return (interro + dev + 2 * compo) / 4;
+  const moyClasse = (interro + dev) / 2;
+  return (moyClasse + compo) / 2;
 }
 
 /**
@@ -34,7 +63,7 @@ export function calcYearlyAverage(subjects: Subject[]): number | null {
   let totalCoeff = 0;
 
   for (const sub of subjects) {
-    const avg = calcSubjectAverage(sub.marks);
+    const avg = calcSubjectAverage(sub.marks, sub.markStatuses);
     if (avg !== null) {
       totalPoints += avg * sub.coefficient;
       totalCoeff += sub.coefficient;
@@ -47,6 +76,7 @@ export function calcYearlyAverage(subjects: Subject[]): number | null {
 /**
  * For a given subject and mark type, calculate the minimum value needed
  * to reach the target yearly average. Works with ANY combination of entered marks.
+ * Uses the two-step formula: Moy_sem = (Moy_classe + compo) / 2
  */
 export function calcMinimumMarkNeeded(
   subjects: Subject[],
@@ -59,13 +89,12 @@ export function calcMinimumMarkNeeded(
   if (targetSubject.marks[targetMarkType] !== null) return null; // already filled
 
   // Sum of known points from other subjects
-  // Only count subjects that have at least one mark entered
   let knownPoints = 0;
   let totalCoeff = 0;
 
   for (const sub of subjects) {
     if (sub.id === targetSubjectId) continue;
-    const avg = calcSubjectAverage(sub.marks);
+    const avg = calcSubjectAverage(sub.marks, sub.markStatuses);
     if (avg !== null) {
       knownPoints += avg * sub.coefficient;
       totalCoeff += sub.coefficient;
@@ -74,33 +103,52 @@ export function calcMinimumMarkNeeded(
   // Always include the target subject's coefficient
   totalCoeff += targetSubject.coefficient;
 
-  // For the target subject, calculate partial known marks
-  const marks = { ...targetSubject.marks };
-  const markWeight = targetMarkType === "compo" ? 2 : 1;
-
-  let subKnownSum = 0;
-  let subKnownWeight = 0;
-  if (targetMarkType !== "interro" && marks.interro !== null) {
-    subKnownSum += marks.interro * 1;
-    subKnownWeight += 1;
-  }
-  if (targetMarkType !== "dev" && marks.dev !== null) {
-    subKnownSum += marks.dev * 1;
-    subKnownWeight += 1;
-  }
-  if (targetMarkType !== "compo" && marks.compo !== null) {
-    subKnownSum += marks.compo * 2;
-    subKnownWeight += 2;
-  }
-
   const coeff = targetSubject.coefficient;
-  const totalWeight = subKnownWeight + markWeight;
+  const marks = { ...targetSubject.marks };
 
-  const neededSubjectContribution = targetAverage * totalCoeff - knownPoints;
-  const neededSubjectAvgTimesWeight = neededSubjectContribution / coeff * totalWeight;
-  const x = (neededSubjectAvgTimesWeight - subKnownSum) / markWeight;
+  // neededSubjectAvg = (targetAverage * totalCoeff - knownPoints) / coeff
+  const neededSubjectAvg = (targetAverage * totalCoeff - knownPoints) / coeff;
 
-  return x;
+  if (targetMarkType === "compo") {
+    // Solving for compo:
+    //   neededSubjectAvg = (Moy_classe + x) / 2
+    //   x = 2 × neededSubjectAvg − Moy_classe
+    const classworkMarks: number[] = [];
+    if (marks.interro !== null) classworkMarks.push(marks.interro);
+    if (marks.dev !== null) classworkMarks.push(marks.dev);
+
+    if (classworkMarks.length === 0) {
+      // No classwork at all — compo alone: return = neededSubjectAvg
+      return neededSubjectAvg;
+    }
+    const moyClasse = classworkMarks.reduce((a, b) => a + b, 0) / classworkMarks.length;
+    return 2 * neededSubjectAvg - moyClasse;
+  } else {
+    // Solving for interro or dev (classwork):
+    //   neededSubjectAvg = (Moy_classe + compo) / 2
+    //   neededMoyClasse = 2 × neededSubjectAvg − compo
+    //   x = 2 × neededMoyClasse − otherClasswork  (if other classwork exists)
+    //   x = neededMoyClasse                        (if no other classwork)
+    const compoVal = marks.compo;
+    if (compoVal === null) {
+      // No compo yet — only classwork will be used, avg = Moy_classe = x (or avg of x + other)
+      const otherClasswork = targetMarkType === "interro" ? marks.dev : marks.interro;
+      if (otherClasswork === null) {
+        // x is the only mark — avg = x
+        return neededSubjectAvg;
+      }
+      // avg = (otherClasswork + x) / 2 → x = 2 * neededSubjectAvg - otherClasswork
+      return 2 * neededSubjectAvg - otherClasswork;
+    }
+    const neededMoyClasse = 2 * neededSubjectAvg - compoVal;
+    const otherClasswork = targetMarkType === "interro" ? marks.dev : marks.interro;
+    if (otherClasswork === null) {
+      // x is the only classwork mark → Moy_classe = x
+      return neededMoyClasse;
+    }
+    // Moy_classe = (otherClasswork + x) / 2 → x = 2 * neededMoyClasse - otherClasswork
+    return 2 * neededMoyClasse - otherClasswork;
+  }
 }
 
 /**
@@ -137,13 +185,15 @@ export function calcAllRequiredMarks(
 /**
  * Calculate best-case and worst-case subject average for subjects with unknowns.
  * Unknown marks: pessimistic=0, optimistic=20
+ * Uses the two-step formula.
  */
 export function calcSubjectBounds(marks: Subject["marks"]): { min: number; max: number } | null {
   const hasAnyMark = marks.interro !== null || marks.dev !== null || marks.compo !== null;
   const hasAllMarks = marks.interro !== null && marks.dev !== null && marks.compo !== null;
 
   if (hasAllMarks) {
-    const avg = (marks.interro! + marks.dev! + 2 * marks.compo!) / 4;
+    const moyClasse = (marks.interro! + marks.dev!) / 2;
+    const avg = (moyClasse + marks.compo!) / 2;
     return { min: avg, max: avg };
   }
 
@@ -160,8 +210,10 @@ export function calcSubjectBounds(marks: Subject["marks"]): { min: number; max: 
     compo: marks.compo ?? 20,
   };
 
-  const min = (pessimistic.interro + pessimistic.dev + 2 * pessimistic.compo) / 4;
-  const max = (optimistic.interro + optimistic.dev + 2 * optimistic.compo) / 4;
+  const minMoyClasse = (pessimistic.interro + pessimistic.dev) / 2;
+  const min = (minMoyClasse + pessimistic.compo) / 2;
+  const maxMoyClasse = (optimistic.interro + optimistic.dev) / 2;
+  const max = (maxMoyClasse + optimistic.compo) / 2;
 
   return { min: Math.round(min * 10) / 10, max: Math.round(max * 10) / 10 };
 }
@@ -278,4 +330,36 @@ export function simulateYearlyAverage(
     return { ...s, marks };
   });
   return calcYearlyAverage(simSubjects);
+}
+
+/**
+ * Subject averages — respects rounding setting
+ * - "exact": full precision (up to 4dp)
+ * - "standard": round to 2dp (default)
+ * - "school": floor to nearest 0.25
+ */
+export function fmtAvg(value: number, rounding: "exact" | "standard" | "school" = "standard"): string {
+  if (rounding === "exact") return value.toFixed(4).replace(/\.?0+$/, "");
+  if (rounding === "school") return (Math.floor(value * 4) / 4).toFixed(2);
+  // standard: truncate (floor) to 2dp — matches school report style
+  return (Math.floor(value * 100) / 100).toFixed(2);
+}
+
+/**
+ * Final/yearly average — respects rounding setting
+ */
+export function fmtFinalAvg(value: number, rounding: "exact" | "standard" | "school" = "standard"): string {
+  if (rounding === "exact") return value.toFixed(4).replace(/\.?0+$/, "");
+  if (rounding === "school") return (Math.floor(value * 4) / 4).toFixed(2);
+  // standard: round to 2dp
+  return (Math.round(value * 100) / 100).toFixed(2);
+}
+
+/** Read the current rounding setting from localStorage */
+export function getRounding(): "exact" | "standard" | "school" {
+  try {
+    const raw = localStorage.getItem("scoretarget_state");
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed?.settings?.rounding ?? "standard";
+  } catch { return "standard"; }
 }

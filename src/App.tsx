@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppThemeProvider } from "@/contexts/ThemeContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AppConfigProvider } from "@/contexts/AppConfigContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import AuthPage from "./pages/AuthPage";
@@ -23,6 +24,8 @@ import SubjectDashboard from "./pages/SubjectDashboard";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import FeedbackBoard from "./pages/FeedbackBoard";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +38,7 @@ function AppInner() {
 const App = () => (
   <AppThemeProvider>
     <LanguageProvider>
+      <AppConfigProvider>
       <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       {/* SVG filter for hand-drawn wobbly borders — referenced via CSS filter: url(#sketchy) */}
@@ -75,11 +79,15 @@ const App = () => (
             <Route path="/feedback-board" element={<ProtectedRoute requireOnboarding><FeedbackBoard /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
+            {/* Public legal pages */}
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
     </QueryClientProvider>
+    </AppConfigProvider>
     </LanguageProvider>
   </AppThemeProvider>
 );

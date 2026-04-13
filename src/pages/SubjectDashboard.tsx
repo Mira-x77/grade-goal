@@ -7,6 +7,8 @@ import { SubscriptionDetailDialog } from "@/components/subscription/Subscription
 import { PremiumCodeDialog } from "@/components/subscription/PremiumCodeDialog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsTablet } from "@/hooks/useIsTablet";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { ComingSoon } from "@/components/subscription/ComingSoon";
 import {
   fetchStudyTools,
   StudyToolContent,
@@ -170,6 +172,7 @@ function SkeletonRows() {
 export default function SubjectDashboard() {
   const { subjectName } = useParams<{ subjectName: string }>();
   const { t } = useLanguage();
+  const { premiumEnabled: PREMIUM_ENABLED } = useAppConfig();
   const isTablet = useIsTablet();
   const sheetVariants = {
     hidden:  isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" },
@@ -348,17 +351,19 @@ export default function SubjectDashboard() {
 
       <TaskBar showBack />
 
-      <SubscriptionDetailDialog
-        open={showPaywall}
-        onClose={() => setShowPaywall(false)}
-        onUpgrade={() => { setShowPaywall(false); setShowCodeDialog(true); }}
-        subjectName={subjectName}
-      />
-      <PremiumCodeDialog
-        open={showCodeDialog}
-        onClose={() => setShowCodeDialog(false)}
-        onSuccess={() => setShowCodeDialog(false)}
-      />
+      <>
+          <SubscriptionDetailDialog
+            open={showPaywall}
+            onClose={() => setShowPaywall(false)}
+            onUpgrade={() => { setShowPaywall(false); setShowCodeDialog(true); }}
+            subjectName={subjectName}
+          />
+          <PremiumCodeDialog
+            open={showCodeDialog}
+            onClose={() => setShowCodeDialog(false)}
+            onSuccess={() => setShowCodeDialog(false)}
+          />
+        </>
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
   scoreToGrade,
   computeIntegratedSubjectScore,
   computeIntegratedCGPA,
+  computeCGPA,
   classifyDegree,
 } from "@/lib/grading-nigerian";
 
@@ -26,25 +27,56 @@ export class NigerianAdapter implements AcademicSystemAdapter {
 
   toDashboardData(appState: AppState): DashboardData {
     const subjects = appState.subjects ?? [];
-    const targetMin = appState.targetMin ?? 5;
+    const rawTarget = appState.targetMin ?? appState.targetAverage ?? 3.0;
+    const targetMin = rawTarget > 5 ? 3.0 : rawTarget;
+    const nigerianState = appState.nigerianState;
+    const semesterCount = (nigerianState?.semesters ?? []).length;
 
-    // Compute CGPA from integrated subjects (customAssessments model)
-    const cgpa = computeIntegratedCGPA(subjects) ?? 0;
-    const degreeClass = classifyDegree(cgpa);
+    // ── Semester-based mode: use active semester if one exists ──
+    if (nigerianState && nigerianState.semesters.length > 0) {
+      const activeSemId = nigerianState.activeSemesterId;
+      const activeSem = activeSemId
+        ? nigerianState.semesters.find(s => s.id === activeSemId)
+        : nigerianState.semesters[nigerianState.semesters.length - 1]; // default to last
 
-    // Check if any data exists
-    const hasData = subjects.some(s =>
+      const cgpa = computeCGPA(nigerianState.semesters);
+      const currentGPA = activeSem ? activeSem.gpa : cgpa;
+      const degreeClass = classifyDegree(cgpa);
+      const hasData = (activeSem?.courses.length ?? 0) > 0;
+
+      return {
+        system: "NIGERIAN",
+        performance: {
+          value: hasData ? (semesterCount > 1 ? cgpa : currentGPA) : null,
+          max: 5,
+          label: semesterCount > 1 ? "Current CGPA" : "Current GPA",
+          suffix: "",
+          target: targetMin > 0 ? targetMin : null,
+          targetLabel: targetMin > 0 ? `Target: ${targetMin.toFixed(2)}` : "",
+        },
+        segments: [],
+        classification: this.getClassificationInfo(degreeClass),
+        hasData,
+        isEmpty: (activeSem?.courses.length ?? 0) === 0,
+      };
+    }
+
+    // ── Integrated mode: use subjects with customAssessments ──
+    const repairedSubjects = subjects.map(s => ({
+      ...s,
+      creditUnits: s.creditUnits ?? s.coefficient ?? 1,
+      customAssessments: s.customAssessments ?? [],
+    }));
+
+    const cgpa = computeIntegratedCGPA(repairedSubjects);
+    const degreeClass = classifyDegree(cgpa ?? 0);
+    const hasData = repairedSubjects.some(s =>
       s.customAssessments && s.customAssessments.some(a => a.value !== null)
     );
 
-    // Convert subjects to dashboard items
-    const items: DashboardItem[] = subjects.map(subject => this.subjectToDashboardItem(subject));
-
-    // Single segment for integrated model
-    const segments: DashboardSegment[] = subjects.length > 0 ? [{
-      id: "main",
-      title: "Courses",
-      items,
+    const items: DashboardItem[] = repairedSubjects.map(subject => this.subjectToDashboardItem(subject));
+    const segments: DashboardSegment[] = repairedSubjects.length > 0 ? [{
+      id: "main", title: "Courses", items,
     }] : [];
 
     return {
@@ -53,14 +85,14 @@ export class NigerianAdapter implements AcademicSystemAdapter {
         value: cgpa,
         max: 5,
         label: "Current GPA",
-        suffix: "/ 5.00",
+        suffix: "",
         target: targetMin > 0 ? targetMin : null,
-        targetLabel: targetMin > 0 ? `Target: ${targetMin.toFixed(2)} / 5.00` : "",
+        targetLabel: targetMin > 0 ? `Target: ${targetMin.toFixed(2)}` : "",
       },
       segments,
       classification: this.getClassificationInfo(degreeClass),
       hasData,
-      isEmpty: subjects.length === 0,
+      isEmpty: repairedSubjects.length === 0,
     };
   }
 

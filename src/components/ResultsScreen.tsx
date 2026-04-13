@@ -7,7 +7,17 @@ import {
   calcSubjectAverage,
   getAbsoluteBounds,
   calcMinimumMarkNeeded,
+  fmtAvg,
+  fmtFinalAvg,
+  getRounding,
 } from "@/lib/exam-logic";
+import {
+  computeIntegratedSubjectScore,
+  computeIntegratedCGPA,
+  computeBestPossibleCGPA,
+  scoreToGrade,
+  classifyDegree,
+} from "@/lib/grading-nigerian";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ResultsScreenProps {
@@ -15,6 +25,7 @@ interface ResultsScreenProps {
   targetAverage: number;
   onBack: () => void;
   onEditMarks: () => void;
+  isNigerian?: boolean;
 }
 
 function getSubjectStatus(needed: number | null, hasAnyMark: boolean, bestSubAvg: number, minTarget: number): "safe" | "recoverable" | "critical" | "complete" | "pending" {
@@ -34,14 +45,34 @@ const subjectStatusConfig = {
   pending:     { dot: "bg-muted-foreground", labelKey: "subjectPending" as const,     labelColor: "text-muted-foreground" },
 };
 
-const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: ResultsScreenProps) => {
+const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks, isNigerian = false }: ResultsScreenProps) => {
   const [whatsNextOpen, setWhatsNextOpen] = useState(false);
   const { t } = useLanguage();
-  const currentAvg = calcYearlyAverage(subjects);
-  const bounds = getAbsoluteBounds(subjects);
 
-  const overallStatus: FeedbackStatus = currentAvg !== null && currentAvg >= targetAverage ? "possible"
-    : currentAvg !== null && currentAvg >= targetAverage - 2 ? "risky"
+  // Repair Nigerian subjects — ensure creditUnits and customAssessments exist
+  const repairedSubjects = isNigerian
+    ? subjects.map(s => ({
+        ...s,
+        creditUnits: s.creditUnits ?? s.coefficient ?? 1,
+        customAssessments: s.customAssessments ?? [],
+      }))
+    : subjects;
+
+  // ── APC values ──
+  const currentAvg = !isNigerian ? calcYearlyAverage(subjects) : null;
+  const bounds = !isNigerian ? getAbsoluteBounds(subjects) : null;
+
+  // ── Nigerian values ──
+  const currentCGPA = isNigerian ? computeIntegratedCGPA(repairedSubjects) : null;
+  const bestPossibleCGPA = isNigerian ? computeBestPossibleCGPA(repairedSubjects) : null;
+  const nigerianClass = isNigerian ? classifyDegree(currentCGPA ?? 0) : "";
+
+  // ── Unified display value ──
+  const displayValue = isNigerian ? currentCGPA : currentAvg;
+  const displayMax = isNigerian ? 5 : 20;
+
+  const overallStatus: FeedbackStatus = displayValue !== null && displayValue >= targetAverage ? "possible"
+    : displayValue !== null && displayValue >= targetAverage - (isNigerian ? 0.5 : 2) ? "risky"
     : "impossible";
 
   const statusConfig = {
@@ -51,19 +82,39 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
   };
 
   const config = statusConfig[overallStatus];
-  const progressPercent = currentAvg !== null ? Math.min(100, (currentAvg / targetAverage) * 100) : 0;
-  const targetUnreachable = bounds !== null && bounds.max < targetAverage;
+  const progressPercent = displayValue !== null ? Math.min(100, (displayValue / targetAverage) * 100) : 0;
+  const targetUnreachable = isNigerian
+    ? (bestPossibleCGPA !== null && bestPossibleCGPA < targetAverage)
+    : (bounds !== null && bounds.max < targetAverage);
   const isOnTrack = overallStatus === "possible";
 
-  const subjectData = subjects
-    .map((sub) => {
-      const currentSubAvg = calcSubjectAverage(sub.marks);
+  // ── Subject data — adapted per system ──
+  const subjectData = (isNigerian ? repairedSubjects : subjects).map((sub) => {
+    if (isNigerian) {
+      const score = computeIntegratedSubjectScore(sub);
+      const cu = sub.creditUnits ?? sub.coefficient ?? 1;
+      const { letter, points } = score !== null ? scoreToGrade(Math.round(score)) : { letter: "—", points: 0 };
+      const hasScore = score !== null;
+      // Status: complete if all assessments filled, pending if none, else based on grade
+      const allFilled = (sub.customAssessments ?? []).length > 0 &&
+        (sub.customAssessments ?? []).every(a => a.value !== null);
+      const anyFilled = (sub.customAssessments ?? []).some(a => a.value !== null);
+      const status: "safe" | "recoverable" | "critical" | "complete" | "pending" =
+        allFilled && score !== null && score >= (targetAverage / 5) * 100 ? "complete"
+        : !anyFilled ? "pending"
+        : score !== null && score >= (targetAverage / 5) * 100 ? "safe"
+        : score !== null && score >= 40 ? "recoverable"
+        : "critical";
+      return { sub, score, cu, letter, points, status, hasScore, isNigerian: true as const };
+    } else {
+      const currentSubAvg = calcSubjectAverage(sub.marks, sub.markStatuses);
       const bestMarks = {
         interro: sub.marks.interro ?? 20,
         dev: sub.marks.dev ?? 20,
         compo: sub.marks.compo ?? 20,
       };
-      const bestSubAvg = (bestMarks.interro + bestMarks.dev + bestMarks.compo * 2) / 4;
+      const bestMoyClasse = (bestMarks.interro + bestMarks.dev) / 2;
+      const bestSubAvg = (bestMoyClasse + bestMarks.compo) / 2;
       const missingTypes = (["compo", "dev", "interro"] as const).filter(mt => sub.marks[mt] === null);
       const primaryMissing = missingTypes[0] ?? null;
       const needed = primaryMissing
@@ -71,18 +122,20 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
         : null;
       const hasAnyMark = sub.marks.interro !== null || sub.marks.dev !== null || sub.marks.compo !== null;
       const status = getSubjectStatus(needed, hasAnyMark, bestSubAvg, targetAverage);
-      return { sub, currentSubAvg, bestSubAvg, needed, primaryMissing, status };
-    })
-    .sort((a, b) => a.sub.name.localeCompare(b.sub.name));
+      return { sub, currentSubAvg, bestSubAvg, needed, primaryMissing, status, isNigerian: false as const };
+    }
+  }).sort((a, b) => a.sub.name.localeCompare(b.sub.name));
 
   const focusSubjects = !isOnTrack
     ? subjectData
         .filter(d => d.status === "critical" || d.status === "recoverable")
-        .sort((a, b) => b.sub.coefficient - a.sub.coefficient)
+        .sort((a, b) => (b.sub.creditUnits ?? b.sub.coefficient) - (a.sub.creditUnits ?? a.sub.coefficient))
         .slice(0, 2)
     : [];
   const safeSubjects = subjectData.filter(d => d.status === "safe" || d.status === "complete");
-  const hasMissingMarks = subjectData.some(d => d.primaryMissing !== null);
+  const hasMissingMarks = isNigerian
+    ? subjects.some(s => (s.customAssessments ?? []).some(a => a.value === null))
+    : subjectData.some(d => !d.isNigerian && d.primaryMissing !== null);
 
   const markLabel = (type: string | null) =>
     type === "compo" ? t("composition") : type === "dev" ? t("devoir") : t("interro");
@@ -90,6 +143,33 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
   return (
     <div className="flex flex-col" style={{ minHeight: "60vh" }}>
       <div className="flex flex-col gap-4 px-6 pt-2 pb-24">
+
+        {/* ── Nigerian GPA summary block ── */}
+        {isNigerian && (
+          <div className="rounded-2xl bg-card border-2 border-foreground p-5 text-center">
+            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">
+              Current GPA
+            </p>
+            <div className="flex items-baseline justify-center gap-2">
+              <span className="text-6xl font-black text-foreground">
+                {currentCGPA !== null ? currentCGPA.toFixed(2) : "—"}
+              </span>
+            </div>
+            <span className={`inline-block mt-2 text-sm font-black px-3 py-1 rounded-full border ${
+              nigerianClass === "First Class" ? "bg-success/15 text-success border-success/30"
+              : nigerianClass === "Second Class Upper" ? "bg-primary/15 text-primary border-primary/30"
+              : nigerianClass === "Second Class Lower" ? "bg-warning/15 text-warning border-warning/30"
+              : nigerianClass === "Third Class" ? "bg-orange-500/15 text-orange-500 border-orange-500/30"
+              : nigerianClass === "Pass" ? "bg-muted text-muted-foreground border-border"
+              : "bg-danger/15 text-danger border-danger/30"
+            }`}>{nigerianClass || "Fail"}</span>
+            {targetAverage > 0 && (
+              <p className="text-xs font-bold text-muted-foreground mt-2">
+                Target: {targetAverage.toFixed(2)}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Status card */}
         <motion.div
@@ -106,13 +186,15 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
               <span className={`text-5xl font-black leading-none ${
                 isOnTrack ? "text-success" : overallStatus === "risky" ? "text-warning" : "text-danger"
               }`}>
-                {currentAvg !== null ? currentAvg.toFixed(1) : "—"}
+                {displayValue !== null ? (isNigerian ? displayValue.toFixed(2) : fmtFinalAvg(displayValue, getRounding())) : "—"}
               </span>
             </div>
             <div className="flex flex-col justify-between flex-1 gap-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t("targetLabel")}</span>
-                <span className="text-sm font-black text-foreground">{targetAverage}–20</span>
+                <span className="text-sm font-black text-foreground">
+                  {targetAverage.toFixed(isNigerian ? 2 : 0)}{isNigerian ? "" : `–${displayMax}`}
+                </span>
               </div>
               <div>
                 <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -129,7 +211,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
           </div>
         </motion.div>
 
-        {/* Edit Marks */}
+        {/* Edit Marks / Scores */}
         <motion.button
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -138,11 +220,11 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
           className="w-full flex items-center justify-center gap-2 rounded-2xl bg-card border-2 border-foreground py-3 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
         >
           <Pencil className="h-4 w-4" />
-          {t("editMarks")}
+          {isNigerian ? "Edit Scores" : t("editMarks")}
         </motion.button>
 
-        {/* Best possible */}
-        {bounds && (
+        {/* Best possible — APC only */}
+        {!isNigerian && bounds && (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -157,8 +239,24 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
           </motion.div>
         )}
 
+        {/* Best possible — Nigerian */}
+        {isNigerian && bestPossibleCGPA !== null && bestPossibleCGPA < 5 && bestPossibleCGPA !== currentCGPA && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="rounded-2xl bg-card p-4 border-2 border-border flex items-center justify-between"
+          >
+            <div>
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t("bestPossibleFinal")}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-0.5">If you score 100/100 on all remaining assessments</p>
+            </div>
+            <p className="text-3xl font-black text-success shrink-0">{bestPossibleCGPA.toFixed(2)}</p>
+          </motion.div>
+        )}
+
         {/* Target out of reach */}
-        {targetUnreachable && bounds && (
+        {targetUnreachable && (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -167,13 +265,19 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
           >
             <h3 className="font-black text-danger text-sm mb-1">{t("targetOutOfReach")}</h3>
             <p className="text-xs font-semibold text-danger/80 mb-3">
-              {t("targetOutOfReachDesc")
-                .replace("{max}", bounds.max.toFixed(1))
-                .replace("{target}", String(targetAverage))}
+              {isNigerian
+                ? `Even scoring 100/100 on everything remaining, the highest GPA you can reach is ${bestPossibleCGPA?.toFixed(2)} — below your target of ${targetAverage.toFixed(2)}.`
+                : t("targetOutOfReachDesc")
+                    .replace("{max}", bounds!.max.toFixed(1))
+                    .replace("{target}", String(targetAverage))
+              }
             </p>
             <div className="rounded-xl bg-card border-2 border-border p-3">
               <p className="text-xs font-semibold text-muted-foreground">
-                {t("considerAdjusting").replace("{target}", String(Math.floor(bounds.max * 2) / 2))}
+                {isNigerian
+                  ? `Consider adjusting your target to ${bestPossibleCGPA?.toFixed(2) ?? "—"}.`
+                  : t("considerAdjusting").replace("{target}", String(Math.floor(bounds!.max * 2) / 2))
+                }
               </p>
             </div>
           </motion.div>
@@ -207,7 +311,6 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                   className="overflow-hidden"
                 >
                   <div className="border-t border-border">
-                    {/* Summary */}
                     <div className={`mx-4 mt-4 mb-3 rounded-2xl border p-4 ${
                       isOnTrack ? "bg-success/10 border-success/20" : "bg-secondary/10 border-secondary/20"
                     }`}>
@@ -219,7 +322,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                             : focusSubjects.length > 0
                             ? t("prioritizeSubjects")
                                 .replace("{subjects}", focusSubjects.map(d => d.sub.name).join(" & "))
-                                .replace("{count}", focusSubjects.length === 1 ? t("focusOn") : t("focusOn"))
+                                .replace("{count}", t("focusOn"))
                                 .replace("{target}", String(targetAverage))
                             : t("keepScoresUp")}
                         </p>
@@ -245,11 +348,17 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
                       </div>
                     </div>
 
-                    {/* Per-subject breakdown */}
                     <div className="px-4 pb-4 flex flex-col gap-2">
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{t("perSubjectBreakdown")}</p>
                       {subjectData.map((d) => (
-                        <SubjectBreakdownItem key={d.sub.id} data={d} targetAverage={targetAverage} t={t} markLabel={markLabel} />
+                        <SubjectBreakdownItem
+                          key={d.sub.id}
+                          data={d}
+                          targetAverage={targetAverage}
+                          t={t}
+                          markLabel={markLabel}
+                          isNigerian={isNigerian}
+                        />
                       ))}
                     </div>
                   </div>
@@ -276,10 +385,82 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks }: Results
   );
 };
 
-const SubjectBreakdownItem = ({ data, targetAverage, t, markLabel }: { data: any; targetAverage: number; t: any; markLabel: (m: any) => string }) => {
+const SubjectBreakdownItem = ({ data, targetAverage, t, markLabel, isNigerian }: { data: any; targetAverage: number; t: any; markLabel: (m: any) => string; isNigerian: boolean }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const sc = subjectStatusConfig[data.status as keyof typeof subjectStatusConfig];
+
+  if (isNigerian) {
+    const { sub, score, cu, letter, points } = data;
+    const scorePct = score !== null ? (score / 100) * 100 : 0;
+    const targetScore = (targetAverage / 5) * 100; // convert CGPA target to score equivalent
+    const actionText = data.status === "complete" ? t("allMarksEnteredNothing")
+      : data.status === "pending" ? t("noMarksYetAdd")
+      : data.status === "safe" ? t("alreadyContributing")
+      : data.status === "critical" ? `Score needs improvement — currently ${score?.toFixed(1) ?? "—"}/100`
+      : `Keep pushing — ${score?.toFixed(1) ?? "—"}/100 so far`;
+
+    return (
+      <div className="rounded-2xl bg-card border-2 border-border overflow-hidden">
+        <button onClick={() => setIsOpen(!isOpen)} className="w-full px-4 py-3 flex items-center justify-between active:bg-muted/40 transition-colors">
+          <div className="flex flex-col gap-1.5 items-start">
+            <div className="flex items-center gap-2">
+              <div className={`h-2.5 w-2.5 rounded-full ${sc.dot} shrink-0`} />
+              <span className="font-black text-sm text-foreground text-left">{sub.name}</span>
+              <span className="text-[10px] font-bold text-muted-foreground shrink-0">{cu} CU</span>
+            </div>
+            <span className={`text-[10px] font-black ${sc.labelColor}`}>{t(sc.labelKey)}</span>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex flex-col items-end gap-0.5">
+              <span className="text-xs font-black text-foreground">
+                {score !== null ? score.toFixed(1) : "—"}<span className="opacity-60 font-semibold text-[10px]">/100</span>
+              </span>
+              {letter !== "—" && (
+                <span className={`text-[9px] font-black ${data.status === "safe" || data.status === "complete" ? "text-success/80" : "text-muted-foreground"}`}>
+                  {letter} · {points} GP
+                </span>
+              )}
+            </div>
+            <motion.div animate={{ rotate: isOpen ? 180 : 0 }}>
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            </motion.div>
+          </div>
+        </button>
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+              <div className="px-4 pb-4 pt-1 border-t border-border/50">
+                <p className="text-xs font-semibold text-muted-foreground mb-2 mt-2">{actionText}</p>
+                <div className="relative h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="absolute left-0 top-0 h-full rounded-full bg-success/30" style={{ width: `${Math.min(targetScore, 100)}%` }} />
+                  <div className={`absolute left-0 top-0 h-full rounded-full ${data.status === "critical" ? "bg-danger" : data.status === "recoverable" ? "bg-warning" : data.status === "pending" ? "bg-muted-foreground/30" : "bg-success"}`} style={{ width: `${scorePct}%` }} />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-[9px] font-bold text-muted-foreground">{score !== null ? `${score.toFixed(1)} ${t("nowLabel")}` : t("noMarksYet")}</span>
+                  <span className="text-[9px] font-bold text-muted-foreground">100 max</span>
+                </div>
+                {/* Assessment breakdown */}
+                {(sub.customAssessments ?? []).length > 0 && (
+                  <div className="mt-2 flex flex-col gap-1">
+                    {sub.customAssessments.map((a: any) => (
+                      <div key={a.id} className="flex items-center gap-2 rounded-lg bg-muted/40 px-2 py-1">
+                        <span className="flex-1 text-[10px] font-bold text-foreground">{a.label}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground">{a.weight}%</span>
+                        <span className="text-[10px] font-black text-foreground">{a.value !== null ? `${a.value}/100` : "—"}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // APC/French breakdown
   const { sub, currentSubAvg, bestSubAvg, needed, primaryMissing, status } = data;
-  const sc = subjectStatusConfig[status as keyof typeof subjectStatusConfig];
   const neededClamped = needed !== null ? Math.min(20, Math.max(0, needed)) : null;
   const ml = markLabel(primaryMissing);
   const actionText = (() => {
@@ -296,10 +477,7 @@ const SubjectBreakdownItem = ({ data, targetAverage, t, markLabel }: { data: any
 
   return (
     <div className="rounded-2xl bg-card border-2 border-border overflow-hidden">
-      <button 
-        onClick={() => setIsOpen(!isOpen)} 
-        className="w-full px-4 py-3 flex items-center justify-between active:bg-muted/40 transition-colors"
-      >
+      <button onClick={() => setIsOpen(!isOpen)} className="w-full px-4 py-3 flex items-center justify-between active:bg-muted/40 transition-colors">
         <div className="flex flex-col gap-1.5 items-start">
           <div className="flex items-center gap-2">
             <div className={`h-2.5 w-2.5 rounded-full ${sc.dot} shrink-0`} />
@@ -311,44 +489,27 @@ const SubjectBreakdownItem = ({ data, targetAverage, t, markLabel }: { data: any
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex flex-col items-end gap-0.5">
             <span className="text-xs font-black text-foreground">
-              {currentSubAvg !== null ? currentSubAvg.toFixed(1) : "—"} <span className="opacity-60 font-semibold text-[10px]">/20</span>
+              {currentSubAvg !== null ? fmtAvg(currentSubAvg, getRounding()) : "—"} <span className="opacity-60 font-semibold text-[10px]">/20</span>
             </span>
-            <span className={`text-[9px] font-bold ${bestSubAvg >= targetAverage ? "text-success/80" : "text-muted-foreground"}`}>{bestSubAvg.toFixed(1)} max</span>
+            <span className={`text-[9px] font-bold ${bestSubAvg >= targetAverage ? "text-success/80" : "text-muted-foreground"}`}>{fmtAvg(bestSubAvg, getRounding())} max</span>
           </div>
           <motion.div animate={{ rotate: isOpen ? 180 : 0 }}>
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </motion.div>
         </div>
       </button>
-
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
             <div className="px-4 pb-4 pt-1 border-t border-border/50">
               <p className="text-xs font-semibold text-muted-foreground mb-2 mt-2">{actionText}</p>
               <div className="relative h-2 rounded-full bg-muted overflow-hidden">
                 <div className="absolute left-0 top-0 h-full rounded-full bg-success/30 transition-all duration-500" style={{ width: `${bestPct}%` }} />
-                <div
-                  className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ${
-                    status === "critical" ? "bg-danger"
-                    : status === "recoverable" ? "bg-warning"
-                    : status === "pending" ? "bg-muted-foreground/30"
-                    : "bg-success"
-                  }`}
-                  style={{ width: `${currentPct}%` }}
-                />
+                <div className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ${status === "critical" ? "bg-danger" : status === "recoverable" ? "bg-warning" : status === "pending" ? "bg-muted-foreground/30" : "bg-success"}`} style={{ width: `${currentPct}%` }} />
               </div>
               <div className="flex justify-between mt-1">
-                <span className="text-[9px] font-bold text-muted-foreground">
-                  {currentSubAvg !== null ? `${currentSubAvg.toFixed(1)} ${t("nowLabel")}` : t("noMarksYet")}
-                </span>
-                <span className="text-[9px] font-bold text-success">{bestSubAvg.toFixed(1)} {t("bestCase")}</span>
+                <span className="text-[9px] font-bold text-muted-foreground">{currentSubAvg !== null ? `${fmtAvg(currentSubAvg, getRounding())} ${t("nowLabel")}` : t("noMarksYet")}</span>
+                <span className="text-[9px] font-bold text-success">{fmtAvg(bestSubAvg, getRounding())} {t("bestCase")}</span>
               </div>
             </div>
           </motion.div>

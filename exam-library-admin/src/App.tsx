@@ -12,6 +12,7 @@ const Papers = lazy(() => import('./pages/Papers'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const SubscriptionCodes = lazy(() => import('./pages/SubscriptionCodes'));
 const Debug = lazy(() => import('./pages/Debug'));
+const AppSettings = lazy(() => import('./pages/AppSettings'));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -61,6 +62,7 @@ function App() {
               <Route path="analytics" element={<Analytics />} />
               <Route path="subscription-codes" element={<SubscriptionCodes />} />
               <Route path="debug" element={<Debug />} />
+              <Route path="app-settings" element={<AppSettings />} />
             </Route>
           </Routes>
         </Suspense>

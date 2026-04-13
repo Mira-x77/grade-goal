@@ -70,6 +70,10 @@ export function loadState(): AppState | null {
     if (parsed.classLevel && CLASS_MAPPINGS[parsed.classLevel]) {
       parsed.classLevel = CLASS_MAPPINGS[parsed.classLevel];
     }
+    // Migration: normalize old "results" step — treat as completed onboarding
+    if ((parsed.step as string) === "results") {
+      parsed.step = "marks";
+    }
     // Migration: targetMin from old targetAverage
     if (parsed.targetMin === undefined || parsed.targetMin === null) {
       parsed.targetMin = parsed.targetAverage ?? 16;
@@ -91,6 +95,11 @@ export function loadState(): AppState | null {
     // Safety: ensure Nigerian subjects have customAssessments
     if (parsed.settings?.gradingSystem === "nigerian_university" && parsed.subjects) {
       parsed.subjects = parsed.subjects.map(ensureNigerianAssessments);
+    }
+
+    // Sync accent color from AppState to localStorage so ThemeContext picks it up
+    if (parsed.settings?.accentColor) {
+      localStorage.setItem("gostudy_accent", parsed.settings.accentColor);
     }
     
     saveState(parsed);

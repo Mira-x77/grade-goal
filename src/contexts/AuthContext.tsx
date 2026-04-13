@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Also check cloud data if userId is provided
     const hasCloudData = userId ? await checkUserHasCloudData(userId) : false;
     
-    navigate((hasAppData || hasCloudData) ? "/" : "/onboarding", { replace: true });
+    navigate((hasAppData || hasCloudData) ? "/auth/success" : "/onboarding", { replace: true });
   };
 
   /**
@@ -151,6 +151,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
+      // Clear guest mode flag once a real session is established
+      if (session) localStorage.removeItem("guest_mode");
       if (event === "SIGNED_IN" && session?.user) {
         // Only show the spinner on a genuine new login.
         // If initial session hasn't been restored yet, getSession() is still running

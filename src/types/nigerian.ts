@@ -24,4 +24,5 @@ export interface NigerianState {
   classOfDegree: string;         // computed
   targetCGPA: number | null;     // user-set, 0.00–5.00
   remainingCreditUnits: number;  // user-set
+  activeSemesterId?: string;     // id of the current active semester
 }

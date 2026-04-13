@@ -2,6 +2,8 @@ import type { NigerianState } from "./nigerian";
 
 export type MarkType = "interro" | "dev" | "compo";
 
+export type MarkStatus = "done" | "not_done" | "unknown";
+
 export type GradingSystem = "apc" | "french" | "nigerian_university";
 
 export interface Mark {
@@ -20,7 +22,8 @@ export interface CustomAssessment {
   id: string;
   label: string;
   weight: number;   // percentage weight (e.g. 30 for 30%)
-  value: number | null; // score 0–100
+  value: number | null; // score entered by student
+  maxScore?: number;    // what the score is tracked over (default 100)
 }
 
 export interface Subject {
@@ -33,6 +36,11 @@ export interface Subject {
     interro: number | null;
     dev: number | null;
     compo: number | null;
+  };
+  markStatuses?: {
+    interro: MarkStatus;
+    dev: MarkStatus;
+    compo: MarkStatus;
   };
   french?: FrenchSubjectData;
 }
@@ -64,6 +72,7 @@ export interface AppSettings {
   notifications: NotificationSettings;
   gradingSystem: GradingSystem;
   apcWeightedSplit: boolean; // 40/60 classwork/exam split toggle
+  accentColor?: string;      // persisted accent color for cross-device sync
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {

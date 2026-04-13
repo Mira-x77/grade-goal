@@ -26,8 +26,9 @@ export default function ProtectedRoute({
   }
 
   const isDevBypass = import.meta.env.DEV && localStorage.getItem("dev_bypass") === "true";
+  const isGuestMode = localStorage.getItem("guest_mode") === "true";
 
-  if (!session && !isDevBypass) return <Navigate to="/auth" replace />;
+  if (!session && !isDevBypass && !isGuestMode) return <Navigate to="/welcome" replace />;
 
   if (requireOnboarding) {
     const raw = localStorage.getItem("scoretarget_state");

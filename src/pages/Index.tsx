@@ -48,7 +48,12 @@ const Index = () => {
   const setTarget = (targetMin: number) => setState((s) => ({ ...s, targetMin, targetAverage: targetMin }));
   const setSubjects = (subjects: Subject[]) => setState((s) => ({ ...s, subjects }));
   const setGradingSystem = (gradingSystem: GradingSystem) =>
-    setState((s) => ({ ...s, settings: { ...s.settings, gradingSystem } }));
+    setState((s) => ({
+      ...s,
+      settings: { ...s.settings, gradingSystem },
+      targetAverage: gradingSystem === "nigerian_university" ? 4.0 : 16,
+      targetMin: gradingSystem === "nigerian_university" ? 4.0 : 16,
+    }));
   const setStudentName = (studentName: string) => setState((s) => ({ ...s, studentName }));
   const setClassLevel = (classLevel: string) => setState((s) => ({ ...s, classLevel }));
   const setSerie = (serie: string) => setState((s) => ({ ...s, serie }));
@@ -68,7 +73,7 @@ const Index = () => {
       } else if (onboardingStep === "profile") {
         handleOnboardingStepChange("system");
       } else {
-        navigate("/");
+        navigate("/", { replace: true });
       }
     } else if (state.step === "subjects") {
       setStep("onboarding");
@@ -101,7 +106,8 @@ const Index = () => {
   const TOTAL_STEPS = isNigerianOnboarding ? 6 : 5;
 
   return (
-    <div className="min-h-screen bg-background w-full pb-20">
+    <div className="min-h-screen bg-background w-full pb-20 flex flex-col items-center">
+      <div className="w-full max-w-lg">
       <OnboardingHeader
         title={stepTitles[state.step]}
         onBack={handleBack}
@@ -185,12 +191,12 @@ const Index = () => {
                   console.log("Saving Nigerian onboarding state:", finalState);
                   saveState(finalState);
                   console.log("State saved, navigating to /");
-                  navigate("/");
+                  navigate("/", { replace: true });
                 } else {
                   console.log("Saving non-Nigerian onboarding state:", state);
                   saveState(state);
                   console.log("State saved, navigating to /");
-                  navigate("/");
+                  navigate("/", { replace: true });
                 }
               }}
               onBack={() => setStep("subjects")}
@@ -201,6 +207,7 @@ const Index = () => {
           )}
         </motion.div>
       </AnimatePresence>
+      </div>
     </div>
   );
 };

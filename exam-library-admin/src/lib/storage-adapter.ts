@@ -1,14 +1,12 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { supabase as sharedSupabase } from './supabaseClient';
 
 class StorageAdapter {
   private supabase: SupabaseClient;
   private bucket: string;
 
   constructor() {
-    this.supabase = createClient(
-      import.meta.env.VITE_SUPABASE_URL,
-      import.meta.env.VITE_SUPABASE_ANON_KEY
-    );
+    this.supabase = sharedSupabase;
     this.bucket = import.meta.env.VITE_SUPABASE_BUCKET || 'exam-papers';
   }
 

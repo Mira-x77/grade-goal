@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, RotateCcw, Mail, LogOut, Pencil, Check, Sun, Moon, Monitor, Zap, ChevronDown, AlertTriangle, Lightbulb } from "lucide-react";
+import { Trash2, Mail, LogOut, Pencil, Check, Sun, Moon, Monitor, Zap, ChevronDown, AlertTriangle, Lightbulb, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppTheme, AccentColor } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -81,12 +81,6 @@ const Settings = () => {
     setState((s) => s ? { ...s, settings: { ...s.settings, ...patch } } : s);
   };
 
-  const updateCoeff = (id: string, coeff: number) => {
-    setState((s) =>
-      s ? { ...s, subjects: s.subjects.map((sub) => sub.id === id ? { ...sub, coefficient: Math.max(1, coeff) } : sub) } : s
-    );
-  };
-
   const updateFrenchData = (id: string, field: string, value: number | null) => {
     setState((s) =>
       s ? {
@@ -98,19 +92,6 @@ const Settings = () => {
         ),
       } : s
     );
-  };
-
-  const clearMarks = () => {
-    setState((s) =>
-      s ? {
-        ...s,
-        subjects: s.subjects.map((sub) => ({
-          ...sub,
-          marks: { interro: null, dev: null, compo: null },
-        })),
-      } : s
-    );
-    toast.success(t("allMarksCleared"));
   };
 
   const wipeAll = async () => {
@@ -159,7 +140,12 @@ const Settings = () => {
     <div className="min-h-screen bg-background w-full pb-20">
       {/* Header */}
       <div ref={headerRef} className="fixed top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top py-3">
-        <div className="header-inner">
+        <div className="header-inner flex items-center gap-3">
+          {settings.gradingSystem === "nigerian_university" && (
+            <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-card border-2 border-foreground card-shadow active:scale-95 transition-transform shrink-0">
+              <ArrowLeft className="h-5 w-5 text-foreground" />
+            </button>
+          )}
           <h1 className="text-lg font-black text-primary">{t("settings")}</h1>
         </div>
       </div>
@@ -267,7 +253,8 @@ const Settings = () => {
           </div>
         </Section>
 
-        {/* Assessment Weights */}
+        {/* Assessment Weights — APC/French only */}
+        {settings.gradingSystem !== "nigerian_university" && (
         <Section title={t("assessmentWeights")} subtitle={t("editWeightsSubtitle")}>
           <div className="flex flex-col gap-3">
             {(["interro", "dev", "compo"] as const).map((type) => (
@@ -313,8 +300,10 @@ const Settings = () => {
             </div>
           </div>
         </Section>
+        )}
 
-        {/* Rounding */}
+        {/* Rounding — APC/French only */}
+        {settings.gradingSystem !== "nigerian_university" && (
         <Section title={t("roundingRulesTitle")}>
           <div className="flex flex-col gap-2">
             {([
@@ -336,29 +325,6 @@ const Settings = () => {
             ))}
           </div>
         </Section>
-
-        {/* Subject Coefficients */}
-        {state.subjects.length > 0 && (
-          <Section title={t("subjectCoefficientsTitle")}>
-            <div className="flex flex-col gap-2">
-              {state.subjects.map((sub) => (
-                <div key={sub.id} className="flex items-center justify-between rounded-xl bg-muted/50 px-3 py-2">
-                  <span className="text-sm font-bold text-foreground">{sub.name}</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => updateCoeff(sub.id, sub.coefficient - 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg bg-card text-sm font-bold text-foreground active:scale-95"
-                    >−</button>
-                    <span className="w-7 text-center font-black text-foreground text-sm">{sub.coefficient}</span>
-                    <button
-                      onClick={() => updateCoeff(sub.id, sub.coefficient + 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg bg-card text-sm font-bold text-foreground active:scale-95"
-                    >+</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Section>
         )}
 
         {/* French Class Data */}
@@ -416,45 +382,8 @@ const Settings = () => {
           </Section>
         )}
 
-        {/* Color Thresholds */}
-        <Section title={t("colorFeedbackTitle")} subtitle={t("distanceFromTargetSubtitle")}>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-success" />
-                <span className="text-sm font-bold text-foreground">{t("greenOnTargetLabel")}</span>
-              </div>
-              <span className="text-xs font-bold text-muted-foreground">{t("withinLabel")} {settings.colorThresholds.greenBelow} {t("ptsLabel")}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-warning" />
-                <span className="text-sm font-bold text-foreground">{t("yellowRiskyLabel")}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  min={0}
-                  max={10}
-                  step={0.5}
-                  value={settings.colorThresholds.yellowBelow}
-                  onChange={(e) => updateSettings({
-                    colorThresholds: { ...settings.colorThresholds, yellowBelow: parseFloat(e.target.value) || 2 }
-                  })}
-                  className="w-16 rounded-lg border-2 border-border bg-card px-2 py-1 text-sm font-bold text-foreground text-center focus:border-primary focus:outline-none"
-                />
-                <span className="text-xs font-bold text-muted-foreground">{t("ptsBelowLabel")}</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-danger" />
-              <span className="text-sm font-bold text-foreground">{t("redCriticalLabel")}</span>
-              <span className="ml-auto text-xs font-bold text-muted-foreground">{t("beyondYellowLabel")}</span>
-            </div>
-          </div>
-        </Section>
-
-        {/* Notifications */}
+        {/* Notifications — APC/French only */}
+        {settings.gradingSystem !== "nigerian_university" && (
         <Section title={t("notificationsTitle")}>
           <div className="flex flex-col gap-3">
             {([
@@ -480,19 +409,7 @@ const Settings = () => {
             ))}
           </div>
         </Section>
-
-        {/* Scenario Reset */}
-        <Section title={t("scenarioResetTitle")}>
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={clearMarks}
-              className="flex items-center gap-2 rounded-xl bg-warning/15 px-4 py-3 font-bold text-warning active:scale-[0.98] transition-transform"
-            >
-              <RotateCcw className="h-4 w-4" />
-              {t("clearMarksBtn")}
-            </button>
-          </div>
-        </Section>
+        )}
 
         <Section title={t("dataControlTitle")}>
           <div className="flex flex-col gap-2">
@@ -529,11 +446,23 @@ const Settings = () => {
               </div>
             </Link>
             <button
-              onClick={async () => { await signOut(); navigate("/auth"); }}
+              onClick={async () => { await signOut(); navigate("/welcome"); }}
               className="flex items-center justify-center gap-2 rounded-xl bg-danger/10 px-4 py-3 font-bold text-danger active:scale-[0.98] transition-transform"
             >
               <LogOut className="h-4 w-4" /> {t("signOut")}
             </button>
+          </div>
+        </Section>
+
+        {/* Legal */}
+        <Section title={t("legalSection")}>
+          <div className="flex flex-col gap-2">
+            <Link to="/privacy" className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3 font-bold text-foreground active:scale-[0.98] transition-transform text-sm">
+              {t("privacyPolicyTitle")} <span className="text-muted-foreground">›</span>
+            </Link>
+            <Link to="/terms" className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3 font-bold text-foreground active:scale-[0.98] transition-transform text-sm">
+              {t("termsTitle")} <span className="text-muted-foreground">›</span>
+            </Link>
           </div>
         </Section>
       </div>

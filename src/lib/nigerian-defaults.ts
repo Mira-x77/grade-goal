@@ -8,19 +8,11 @@ import { CustomAssessment } from "@/types/exam";
 
 /**
  * Default assessment template for Nigerian courses
- * Standard: 30% CA (Continuous Assessment) + 70% Exam
+ * Exam: 70% (1 item) + CA: 30% (1 item by default)
  */
 export const DEFAULT_NIGERIAN_ASSESSMENTS: Omit<CustomAssessment, "id">[] = [
-  {
-    label: "CA",
-    weight: 30,
-    value: null,
-  },
-  {
-    label: "Exam",
-    weight: 70,
-    value: null,
-  },
+  { label: "Exam", weight: 70, value: null },
+  { label: "CA 1", weight: 30, value: null },
 ];
 
 /**
@@ -37,12 +29,12 @@ export function createNigerianSubject(name: string, creditUnits: number = 1): {
   return {
     id: crypto.randomUUID(),
     name,
-    coefficient: creditUnits, // Keep for backward compat
+    coefficient: creditUnits,
     creditUnits,
-    customAssessments: DEFAULT_NIGERIAN_ASSESSMENTS.map(a => ({
-      ...a,
-      id: crypto.randomUUID(),
-    })),
+    customAssessments: [
+      { id: `exam_${crypto.randomUUID()}`, label: "Exam", weight: 70, value: null },
+      { id: crypto.randomUUID(), label: "CA 1", weight: 30, value: null },
+    ],
     marks: { interro: null, dev: null, compo: null },
   };
 }

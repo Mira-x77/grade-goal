@@ -17,6 +17,7 @@
 
 import { useCallback, useRef } from "react";
 import { subscriptionService } from "@/services/subscriptionService";
+import { PREMIUM_ENABLED } from "@/config/premium";
 
 export type NudgeTrigger =
   | "at_risk"
@@ -78,6 +79,9 @@ export function usePremiumNudge(onShow: (trigger: NudgeTrigger) => void) {
   const checking = useRef(false);
 
   const fire = useCallback(async (trigger: NudgeTrigger) => {
+    // Premium disabled for this release — suppress all nudges
+    if (!PREMIUM_ENABLED) return;
+
     // Prevent concurrent checks
     if (checking.current) return;
     checking.current = true;

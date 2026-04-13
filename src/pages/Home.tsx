@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, Flame, AlertTriangle, ChevronRight, ChevronDown, BookOpen, BarChart3, TrendingUp, Settings as SettingsIcon, User, Trophy, FileDown, PenLine, Zap, Plus, X, Check, Clock, ArrowUpRight, Trash2, Pencil, Crown, Bell, ArrowLeft, Lightbulb, GraduationCap } from "lucide-react";
+import { Target, Flame, AlertTriangle, ChevronRight, ChevronDown, BookOpen, BarChart3, TrendingUp, Settings as SettingsIcon, User, Trophy, FileDown, PenLine, Zap, Plus, X, Check, Clock, ArrowUpRight, Trash2, Pencil, Crown, Bell, ArrowLeft, Lightbulb, GraduationCap, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState, getStreak, getHistory, HistoryEntry } from "@/lib/storage";
 import { downloadService } from "@/services/downloadService";
-import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds } from "@/lib/exam-logic";
+import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds, calcSubjectAverage, fmtAvg, fmtFinalAvg, getRounding } from "@/lib/exam-logic";
 import { calcAPCYearlyAverage, getPerformanceAlerts } from "@/lib/grading-apc";
 import { getAdapter } from "@/adapters/AdapterFactory";
 import { DashboardData } from "@/types/dashboard";
@@ -13,8 +13,10 @@ import FrenchClassView from "@/components/FrenchClassView";
 import TaskBar from "@/components/TaskBar";
 import Mascot from "@/components/Mascot";
 import ProductTour from "@/components/ProductTour";
+import ScreenIntro from "@/components/ScreenIntro";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import ResultsScreen from "@/components/ResultsScreen";
+import HeroCard from "@/components/HeroCard";
 import { TargetAdjustmentDialog } from "@/components/TargetAdjustmentDialog";
 import { PaymentSheet } from "@/components/subscription/PaymentSheet";
 import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
@@ -26,6 +28,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import NigerianAssessmentSheet from "@/components/NigerianAssessmentSheet";
 import { useIsTablet } from "@/hooks/useIsTablet";
 import { usePremiumNudge, nudgeSubtext, NudgeTrigger } from "@/hooks/usePremiumNudge";
+import { useAppConfig } from "@/contexts/AppConfigContext";
 import {
   scoreToGrade,
   computeGP,
@@ -342,20 +345,17 @@ function SubjectsGlanceCard({ subjects, title }: { subjects: Subject[]; title: s
                   { label: "D", value: sub.marks.dev },
                   { label: "C", value: sub.marks.compo },
                 ];
-                const filled = marks.filter(m => m.value !== null).length;
-                const avg = filled > 0
-                  ? marks.filter(m => m.value !== null).reduce((a, m) => a + m.value!, 0) / filled
-                  : null;
+                const avg = calcSubjectAverage(sub.marks, sub.markStatuses);
                 return (
                   <div key={sub.id} className="rounded-xl bg-muted/50 px-3 py-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-foreground">{sub.name}</span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-foreground">{sub.name}</span>
                         <span className="text-xs font-bold text-muted-foreground">×{sub.coefficient}</span>
-                        <span className="text-sm font-black text-foreground">
-                          {avg !== null ? avg.toFixed(1) : "—"}<span className="text-xs font-bold text-muted-foreground">/20</span>
-                        </span>
                       </div>
+                      <span className="text-sm font-black text-foreground">
+                        {avg !== null ? fmtAvg(avg, getRounding()) : "—"}<span className="text-xs font-bold text-muted-foreground">/20</span>
+                      </span>
                     </div>
                     <div className="flex gap-1.5 mt-1.5">
                       {marks.map((m) => (
@@ -400,6 +400,7 @@ const Home = () => {
   const gradingSystem = appState?.settings?.gradingSystem ?? "apc";
   const weightedSplit = appState?.settings?.apcWeightedSplit ?? false;
   const isNigerian = gradingSystem === "nigerian_university";
+  const { premiumEnabled: PREMIUM_ENABLED } = useAppConfig();
   
   const dashboard: DashboardData | null = appState ? (() => {
     try {
@@ -538,6 +539,7 @@ const Home = () => {
   const [showDeleteStrategyConfirm, setShowDeleteStrategyConfirm] = useState(false);
   const [showTargetAdjustDialog, setShowTargetAdjustDialog] = useState(false);
   const [targetAdjustData, setTargetAdjustData] = useState<{ currentTarget: number; maxPossible: number } | null>(null);
+  const [coursesOpen, setCoursesOpen] = useState(true);
 
   const handleNigerianStateChange = (nigerianState: NigerianState) => {
     if (!appState) return;
@@ -586,7 +588,23 @@ const Home = () => {
     : heroTarget && heroValue >= heroTarget - (heroMax === 5 ? 0.5 : 2) ? "bg-warning"
     : "bg-danger";
   const heroHasData = hasData && heroValue !== null;
-  const avgBarColor = heroBarColor;
+
+  // Data completeness for the hero card progress bar
+  const heroBarWidth = (() => {
+    if (!appState) return 0;
+    if (isNigerian) {
+      // GPA progress toward target
+      if (heroValue === null || !heroTarget || heroTarget <= 0) return 0;
+      return Math.min((heroValue / heroTarget) * 100, 100);
+    }
+    // APC: filled marks / (subjects × 3)
+    const subjects = appState.subjects ?? [];
+    const total = subjects.length * 3;
+    if (total === 0) return 0;
+    const filled = subjects.reduce((acc, s) =>
+      acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0), 0);
+    return (filled / total) * 100;
+  })();
   
   // Legacy values for backward compatibility (simulator, alerts, etc.)
   const currentAvg = !isNigerian ? heroValue : null;
@@ -599,7 +617,6 @@ const Home = () => {
     semesters: [], cgpa: 0, classOfDegree: "Fail", targetCGPA: null, remainingCreditUnits: 0,
   };
   const nigerianClass = dashboard?.classification?.label ?? "";
-  const nigerianCGPA = isNigerian ? (heroValue ?? 0) : 0;
 
   useEffect(() => {
     if (!avgCardRef.current) return;
@@ -683,13 +700,13 @@ const Home = () => {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {!isNigerian && (
-            <button
-              onClick={() => setShowPremiumIntro(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-premium bg-premium text-premium-foreground active:scale-95 transition-all card-shadow"
-              title={t("unlockPremium")}
-            >
-              <Crown className="h-5 w-5" />
-            </button>
+              <button
+                onClick={() => setShowPremiumIntro(true)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-premium bg-premium text-premium-foreground active:scale-95 transition-all card-shadow"
+                title={t("unlockPremium")}
+              >
+                <Crown className="h-5 w-5" />
+              </button>
             )}
             {/* Bell + Profile grouped in a single pill — like the reference */}
             <div className="tour-header-actions flex items-center bg-card border-2 border-foreground rounded-2xl overflow-hidden card-shadow">
@@ -701,8 +718,8 @@ const Home = () => {
               </button>
               <div className="w-px h-5 bg-foreground/20" />
               {isNigerian ? (
-                <Link to="/settings" className="flex h-9 w-9 items-center justify-center text-foreground active:bg-muted transition-colors">
-                  <SettingsIcon className="h-5 w-5" />
+                <Link to="/profile" className="flex h-9 w-9 items-center justify-center text-foreground active:bg-muted transition-colors">
+                  <User className="h-5 w-5" />
                 </Link>
               ) : (
                 <Link to="/profile" className="flex h-9 w-9 items-center justify-center text-foreground active:bg-muted transition-colors">
@@ -728,8 +745,8 @@ const Home = () => {
               <div className="flex items-center gap-3">
                 <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
                   <div
-                    className={`h-full rounded-full ${avgBarColor} transition-all`}
-                    style={{ width: `${Math.min(((heroValue ?? 0) / heroMax) * 100, 100)}%` }}
+                    className="h-full rounded-full bg-secondary transition-all"
+                    style={{ width: `${Math.min(heroBarWidth, 100)}%` }}
                   />
                 </div>
                 <span className="text-sm font-black text-foreground">
@@ -745,88 +762,27 @@ const Home = () => {
       <div className="content-col flex flex-col gap-4 pb-8 pt-[calc(7rem+env(safe-area-inset-top))]">
 
         {/* ══════════ HERO CARD ══════════ */}
-
-        {/* Nigerian: Current GPA */}
-        {isNigerian && (
-          <button onClick={() => setShowResultsSheet(true)} className="w-full text-left">
-          <motion.div
-            ref={avgCardRef}
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="tour-dashboard rounded-2xl p-5 bg-card border-2 border-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-shadow"
-          >
-            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Current GPA</p>
-            <div className="flex items-end justify-between gap-2">
-              <div className="flex items-end gap-1">
-                <span className="text-5xl font-black text-foreground">{nigerianCGPA.toFixed(2)}</span>
-                <span className="text-xl font-bold text-muted-foreground mb-1">/ 5.00</span>
-              </div>
-              <div className="flex flex-col items-end gap-0.5 mb-1.5">
-                {appState?.targetMin != null && appState.targetMin > 0 && (
-                  <span className="text-[10px] font-bold text-muted-foreground">
-                    Target: {appState.targetMin.toFixed(2)}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="mt-3 h-2.5 rounded-full bg-muted border border-foreground/20 overflow-hidden">
-              <motion.div
-                className={`h-full rounded-full ${avgBarColor} transition-all`}
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min((nigerianCGPA / 5) * 100, 100)}%` }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 60 }}
-              />
-            </div>
-          </motion.div>
-          </button>
-        )}
-
-        {/* APC/French: Current Average */}
-        {!isNigerian && heroValue !== null && (
-          <button onClick={() => setShowResultsSheet(true)} className="w-full text-left">
-          <motion.div
-            ref={avgCardRef}
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="tour-dashboard rounded-2xl p-5 bg-card border-2 border-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-shadow"
-          >
-            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{heroLabel}</p>
-            <div className="flex items-end justify-between gap-2">
-              <div className="flex items-end gap-1">
-                <span className="text-5xl font-black text-foreground">{heroValue.toFixed(1)}</span>
-                <span className="text-xl font-bold text-muted-foreground mb-1">{heroSuffix}</span>
-              </div>
-              {heroTarget && (
-                <span className="text-xs font-black text-muted-foreground mb-1.5">{t("target")}: {heroTarget}–{heroMax}</span>
-              )}
-            </div>
-            <div className="mt-3 h-2.5 rounded-full bg-muted border border-foreground/20 overflow-hidden">
-              <div
-                className={`h-full rounded-full ${avgBarColor} transition-all`}
-                style={{ width: `${Math.min((heroValue / (heroTarget ?? heroMax)) * 100, 100)}%` }}
-              />
-            </div>
-          </motion.div>
-          </button>
-        )}
-
-        {/* APC/French: has subjects but no marks yet */}
-        {!isNigerian && heroValue === null && appState && (
-          <motion.div
-            ref={avgCardRef}
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="tour-dashboard rounded-2xl p-5 bg-card border-2 border-border"
-          >
-            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">{heroLabel}</p>
-            <p className="text-3xl font-black text-muted-foreground/40 mb-1">—{heroSuffix}</p>
-            <p className="text-sm font-semibold text-muted-foreground">{t("noMarksYet")}</p>
-            <div className="mt-3 h-2.5 rounded-full bg-muted border border-foreground/10" />
-          </motion.div>
-        )}
+        <HeroCard
+          cardRef={avgCardRef}
+          value={heroValue}
+          max={heroMax}
+          target={heroTarget}
+          label={heroLabel}
+          suffix={heroSuffix}
+          barWidth={heroBarWidth}
+          decimals={isNigerian ? 2 : 1}
+          degreeClass={isNigerian ? nigerianClass : undefined}
+          coverageLabel={!isNigerian && appState ? (() => {
+            const subjects = appState.subjects ?? [];
+            const total = subjects.length * 3;
+            const filled = subjects.reduce((acc, s) =>
+              acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0), 0);
+            if (total === 0) return undefined;
+            return `Coverage: ${Math.round((filled / total) * 100)}% (${filled}/${total} scores)`;
+          })() : isNigerian && heroValue !== null && heroTarget ? `${heroValue.toFixed(2)} / ${heroTarget.toFixed(2)} target` : undefined}
+          hideBar={false}
+          onClick={() => setShowResultsSheet(true)}
+        />
 
         {/* Performance Alerts — APC/French only */}
         {!isNigerian && alerts.length > 0 && (
@@ -848,28 +804,28 @@ const Home = () => {
         )}
 
         {/* Onboarding checklist — Nigerian */}
-        {isNigerian && hasData && (
+        {isNigerian && appState && (
           <div className="tour-checklist">
           <OnboardingChecklist
             steps={[
               {
                 key: "target",
                 label: "Set target GPA",
-                description: "Set the GPA you're aiming for this semester",
-                done: !!(appState?.targetMin && appState.targetMin > 0),
+                description: "Set the GPA you're aiming for",
+                done: !!(appState?.targetMin && appState.targetMin > 0 && appState.targetMin <= 5),
                 href: "/profile",
               },
               {
                 key: "subjects",
                 label: "Add your courses",
-                description: "Add the courses you're taking",
+                description: "Add the courses you're taking this semester",
                 done: (appState?.subjects?.length ?? 0) > 0,
                 href: "/planner",
               },
               {
                 key: "mark",
-                label: "Log a score",
-                description: "Enter your first assessment score",
+                label: "Log your first score",
+                description: "Enter a CA or exam score to see your GPA",
                 done: (appState?.subjects ?? []).some(s => s.customAssessments?.some(a => a.value !== null)),
                 onClick: openMarkSheet,
               },
@@ -1021,38 +977,101 @@ const Home = () => {
           </motion.div>
         )}
 
-        {/* Courses at a glance — Nigerian (replaces SubjectsGlanceCard) */}
-        {isNigerian && hasData && (
-          <div className="tour-subjects-carousel overflow-x-auto -mx-4 px-4 pb-2 hide-scrollbar">
-            <div className="flex gap-3 items-start" style={{ width: "max-content" }}>
-              <div className="carousel-card rounded-2xl bg-card border-2 border-border flex-shrink-0 overflow-hidden">
-                <div className="px-4 py-3">
-                  <h3 className="font-black text-foreground text-sm">Courses</h3>
-                </div>
-                <div className="flex flex-col gap-1 px-4 pb-4">
-                  {[...(appState?.subjects ?? [])].sort((a, b) => a.name.localeCompare(b.name)).map((sub) => {
-                    const score = computeIntegratedSubjectScore(sub);
-                    const { letter } = score !== null ? scoreToGrade(Math.round(score)) : { letter: null };
-                    const cu = sub.creditUnits ?? sub.coefficient;
-                    return (
-                      <div key={sub.id} className="rounded-xl bg-muted/50 px-3 py-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-foreground">{sub.name}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-muted-foreground">{cu} CU</span>
-                            {score !== null && letter && (
-                              <span className="text-sm font-black text-foreground">{score.toFixed(1)}<span className="text-xs font-bold text-muted-foreground"> · {letter}</span></span>
-                            )}
-                          </div>
+        {/* Courses — Nigerian, collapsible */}
+        {/* Scores — Nigerian, shows when subjects or active semester courses exist */}
+        {isNigerian && (() => {
+          // Semester-based mode
+          const hasSemesters = (nigerianState.semesters.length ?? 0) > 0;
+          if (hasSemesters) {
+            const activeSemId = nigerianState.activeSemesterId;
+            const activeSem = activeSemId
+              ? nigerianState.semesters.find(s => s.id === activeSemId)
+              : nigerianState.semesters[nigerianState.semesters.length - 1];
+            const courses = activeSem?.courses ?? [];
+            if (courses.length === 0) return null;
+            return (
+              <div className="rounded-2xl bg-card border-2 border-border overflow-hidden">
+                <button onClick={() => setCoursesOpen(v => !v)} className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/40 transition-colors">
+                  <h3 className="font-black text-foreground text-sm">Scores</h3>
+                  <motion.div animate={{ rotate: coursesOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </motion.div>
+                </button>
+                <AnimatePresence initial={false}>
+                  {coursesOpen && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                      <div className="border-t border-border px-4 pb-3 pt-2 flex flex-col gap-1">
+                        {/* Column headers */}
+                        <div className="flex items-center px-3 py-1 mb-1">
+                          <span className="flex-1 text-[9px] font-black text-muted-foreground uppercase tracking-widest">Course</span>
+                          <span className="w-8 text-center text-[9px] font-black text-muted-foreground uppercase">CU</span>
+                          <span className="w-14 text-center text-[9px] font-black text-muted-foreground uppercase">Score</span>
+                          <span className="w-10 text-center text-[9px] font-black text-muted-foreground uppercase">Grade</span>
                         </div>
+                        {courses.map((c) => (
+                          <div key={c.id} className="flex items-center rounded-xl bg-muted/50 px-3 py-2">
+                            <span className="flex-1 text-sm font-bold text-foreground truncate">{c.name}</span>
+                            <span className="w-8 text-center text-xs font-bold text-muted-foreground">{c.creditUnits}</span>
+                            <span className="w-14 text-center text-sm font-black text-foreground">{c.score}</span>
+                            <span className={`w-10 text-center text-sm font-black ${c.letter === "A" ? "text-success" : c.letter === "B" ? "text-primary" : c.letter === "C" ? "text-warning" : "text-danger"}`}>{c.letter}</span>
+                          </div>
+                        ))}
                       </div>
-                    );
-                  })}
-                </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+            );
+          }
+
+          // Integrated mode
+          const scoredSubjects = [...(appState?.subjects ?? [])]
+            .filter(sub => (sub.customAssessments ?? []).some(a => a.value !== null))
+            .sort((a, b) => a.name.localeCompare(b.name));
+          if (scoredSubjects.length === 0) return null;
+          return (
+            <div className="rounded-2xl bg-card border-2 border-border overflow-hidden">
+              <button onClick={() => setCoursesOpen(v => !v)} className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/40 transition-colors">
+                <h3 className="font-black text-foreground text-sm">Scores</h3>
+                <motion.div animate={{ rotate: coursesOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </motion.div>
+              </button>
+              <AnimatePresence initial={false}>
+                {coursesOpen && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                    <div className="border-t border-border px-4 pb-3 pt-2 flex flex-col gap-1">
+                      {/* Column headers */}
+                      <div className="flex items-center px-3 py-1 mb-1">
+                        <span className="flex-1 text-[9px] font-black text-muted-foreground uppercase tracking-widest">Course</span>
+                        <span className="w-8 text-center text-[9px] font-black text-muted-foreground uppercase">CU</span>
+                        <span className="w-14 text-center text-[9px] font-black text-muted-foreground uppercase">Score</span>
+                        <span className="w-10 text-center text-[9px] font-black text-muted-foreground uppercase">Grade</span>
+                      </div>
+                      {scoredSubjects.map((sub) => {
+                        const score = computeIntegratedSubjectScore(sub);
+                        const { letter } = score !== null ? scoreToGrade(Math.round(score)) : { letter: null };
+                        const cu = sub.creditUnits ?? sub.coefficient;
+                        return (
+                          <div key={sub.id} className="flex items-center rounded-xl bg-muted/50 px-3 py-2">
+                            <span className="flex-1 text-sm font-bold text-foreground truncate">{sub.name}</span>
+                            <span className="w-8 text-center text-xs font-bold text-muted-foreground">{cu}</span>
+                            <span className="w-14 text-center text-sm font-black text-foreground">
+                              {score !== null ? score.toFixed(1) : "—"}
+                            </span>
+                            <span className={`w-10 text-center text-sm font-black ${letter === "A" ? "text-success" : letter === "B" ? "text-primary" : letter === "C" ? "text-warning" : letter ? "text-danger" : "text-muted-foreground/40"}`}>
+                              {letter ?? "—"}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Subjects at a glance + Class ranking — APC/French */}
         {!isNigerian && appState && (
@@ -1090,7 +1109,7 @@ const Home = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-foreground truncate">
-                      {entry.subjectName} · {markTypeLabels[entry.markType] ?? entry.markType}
+                      {entry.subjectName}{!isNigerian ? ` · ${markTypeLabels[entry.markType] ?? entry.markType}` : ""}
                     </p>
                     <p className="text-[10px] font-semibold text-muted-foreground">
                       {new Date(entry.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
@@ -1138,23 +1157,20 @@ const Home = () => {
         )}
       </div>
 
-      <TaskBar action={
-        appState ? (
+      <TaskBar
+        action={appState ? (
           <div className="relative">
             {/* Strategizer — APC/French only */}
             {!isNigerian && (
               <div className="absolute bottom-full mb-3 left-0">
                 <button
                   onClick={() => {
-                    // Check if target is unreachable
                     const bounds = getAbsoluteBounds(appState.subjects);
                     const targetAvg = appState.targetMin ?? appState.targetAverage;
                     if (bounds && bounds.max < targetAvg) {
-                      // Target is unreachable, show dialog
                       setTargetAdjustData({ currentTarget: targetAvg, maxPossible: bounds.max });
                       setShowTargetAdjustDialog(true);
                     } else {
-                      // Target is reachable, navigate to simulator
                       navigate("/simulator");
                     }
                   }}
@@ -1165,15 +1181,25 @@ const Home = () => {
                 </button>
               </div>
             )}
-            <button
-              onClick={openMarkSheet}
-              className="tour-add-mark h-12 w-12 rounded-full bg-secondary border-2 border-foreground card-shadow flex items-center justify-center active:scale-95 transition-transform"
-            >
-              <Plus className="h-6 w-6 text-foreground" />
-            </button>
+            {isNigerian ? (
+              <button
+                onClick={openMarkSheet}
+                className="tour-add-mark flex items-center gap-2 rounded-full bg-secondary border-2 border-foreground px-5 h-12 font-black text-foreground card-shadow active:scale-95 transition-transform"
+              >
+                <Plus className="h-5 w-5" />
+                Log Score
+              </button>
+            ) : (
+              <button
+                onClick={openMarkSheet}
+                className="tour-add-mark h-12 w-12 rounded-full bg-secondary border-2 border-foreground card-shadow flex items-center justify-center active:scale-95 transition-transform"
+              >
+                <Plus className="h-6 w-6 text-foreground" />
+              </button>
+            )}
           </div>
-        ) : undefined
-      } />
+        ) : undefined}
+      />
 
       {/* Mark entry bottom sheet */}
       <AnimatePresence>
@@ -1219,15 +1245,16 @@ const Home = () => {
                           onClick={() => handleSelectSubject(sub)}
                           className="flex items-center justify-between rounded-2xl bg-card border-2 border-foreground px-4 py-3 active:scale-[0.98] transition-transform card-shadow"
                         >
-                          <span className="font-black text-foreground truncate min-w-0 mr-3">{sub.name}</span>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-black text-foreground truncate min-w-0">{sub.name}</span>
+                            <span className="text-xs font-bold text-muted-foreground shrink-0">{sub.creditUnits ?? sub.coefficient} CU</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
                             {isNigerian ? (
                               <>
-                                <span className="text-xs font-bold text-muted-foreground">{sub.creditUnits ?? sub.coefficient} CU</span>
                                 {hasAssessments && nigerianScore !== null && (
                                   <span className="text-xs font-black text-primary">{nigerianScore.toFixed(1)} · {letter}</span>
                                 )}
-                                <div className={`h-2 w-2 rounded-full border-2 border-foreground ${hasAssessments ? "bg-foreground" : "bg-transparent"}`} />
                               </>
                             ) : (
                               <>
@@ -1285,30 +1312,56 @@ const Home = () => {
                   ) : (
                     /* ── APC/French: interro / dev / compo type selector ── */
                     <>
-                      {/* Mark type selector */}
+                      {/* Live subject average preview */}
+                      {(() => {
+                        const previewVal = markValue !== "" && !isNaN(parseFloat(markValue))
+                          ? Math.min(20, Math.max(0, parseFloat(markValue)))
+                          : null;
+                        const previewMarks = {
+                          ...selectedSubject?.marks,
+                          [markType]: previewVal ?? selectedSubject?.marks[markType],
+                        } as { interro: number | null; dev: number | null; compo: number | null };
+                        const avg = calcSubjectAverage(previewMarks, selectedSubject?.markStatuses);
+                        if (avg === null) return null;
+                        return (
+                          <div className="rounded-2xl bg-primary/10 border-2 border-primary/30 px-4 py-3 mb-5">
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Current Average</p>
+                            <p className="text-2xl font-black text-foreground">{fmtAvg(avg, getRounding())}<span className="text-sm text-muted-foreground">/20</span></p>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Mark type selector — locked when there's an unsaved value */}
                       <div className="grid grid-cols-3 gap-2 mb-5">
                         {(["interro", "dev", "compo"] as const).map((type) => {
                           const existingVal = selectedSubject?.marks[type];
                           const isFilled = existingVal !== null && existingVal !== undefined;
                           const isSelected = markType === type;
+                          // Lock other tabs when current input has an unsaved value
+                          const hasUnsavedValue = markValue !== "" && !isNaN(parseFloat(markValue));
+                          const isLocked = !isSelected && hasUnsavedValue;
                           return (
                             <button
                               key={type}
                               onClick={() => {
+                                if (isLocked) return;
                                 setMarkType(type);
                                 if (isFilled) setMarkValue(String(existingVal));
                                 else setMarkValue("");
                               }}
+                              disabled={isLocked}
                               className={`py-3 px-2 rounded-2xl border-2 text-sm font-black transition-all flex flex-col items-center gap-0.5 ${
                                 isSelected
                                   ? "bg-secondary border-foreground card-shadow"
+                                  : isLocked
+                                  ? "bg-muted border-border text-muted-foreground/40 cursor-not-allowed"
                                   : isFilled
                                   ? "bg-primary/10 border-primary/30 text-primary"
                                   : "bg-card border-foreground/30 text-muted-foreground"
                               }`}
                             >
                               <span>{type === "interro" ? "Interro" : type === "dev" ? "Devoir" : "Compo"}</span>
-                              {isFilled && (
+                              {isFilled && !isLocked && (
                                 <span className={`text-[10px] font-black ${isSelected ? "text-foreground/70" : "text-primary/70"}`}>
                                   {Number(existingVal).toFixed(1)}
                                 </span>
@@ -1352,6 +1405,15 @@ const Home = () => {
       </AnimatePresence>
 
       <ProductTour />
+
+      {isNigerian && (
+        <ScreenIntro
+          screenKey="home_nigerian"
+          title={t("homeIntroTitle")}
+          description={t("homeIntroDesc")}
+          mascotPose="pointing"
+        />
+      )}
 
       {/* ── Delete strategy confirm dialog ── */}
       <AnimatePresence>
@@ -1400,57 +1462,55 @@ const Home = () => {
 
 
       {/* Premium intro → plan select → payment */}
-      {/* Manual trigger (Crown button) */}
-      <PremiumIntroSheet
-        open={showPremiumIntro && !activeNudge}
-        onClose={() => setShowPremiumIntro(false)}
-        onContinue={() => { setShowPremiumIntro(false); setShowPlanSelect(true); }}
-      />
-      {/* Contextual nudge trigger */}
-      <PremiumIntroSheet
-        open={!!activeNudge}
-        subjectName={undefined}
-        nudgeSubtext={activeNudge ? nudgeSubtext(activeNudge, language as "en" | "fr") : undefined}
-        onClose={() => setActiveNudge(null)}
-        onContinue={() => { setActiveNudge(null); setShowPlanSelect(true); }}
-      />
-      <PlanSelectSheet
-        open={showPlanSelect}
-        onClose={() => setShowPlanSelect(false)}
-        onBack={() => { setShowPlanSelect(false); setShowPremiumIntro(true); }}
-        onSelectPack={() => { setShowPlanSelect(false); setShowSubjectPack(true); }}
-        onSelectAll={() => { setShowPlanSelect(false); setPaymentPlan("all"); (window as any).__packAmount = undefined; setShowPaymentSheet(true); }}
-      />
-      <SubjectPackSheet
-        open={showSubjectPack}
-        onClose={() => setShowSubjectPack(false)}
-        onBack={() => { setShowSubjectPack(false); setShowPlanSelect(true); }}
-        subjects={appState?.subjects?.map(s => s.name) ?? []}
-        onConfirm={(subs, amount) => {
-          setSelectedSubjects(subs);
-          setPaymentPlan(subs.length >= (appState?.subjects?.length ?? 99) ? "all" : "single");
-          setShowSubjectPack(false);
-          setShowPaymentSheet(true);
-          // store amount for PaymentSheet
-          (window as any).__packAmount = amount;
-        }}
-      />
-      <PaymentSheet
-        open={showPaymentSheet}
-        onClose={() => setShowPaymentSheet(false)}
-        onBack={() => {
-          setShowPaymentSheet(false);
-          if (paymentPlan === "all" && selectedSubjects.length === 0) {
-            setShowPlanSelect(true);
-          } else {
-            setShowSubjectPack(true);
-          }
-        }}
-        onSuccess={() => setShowPaymentSheet(false)}
-        subjectName={selectedSubjects.length === 1 ? selectedSubjects[0] : undefined}
-        amount={(window as any).__packAmount ?? undefined}
-      />
-
+      <>
+        <PremiumIntroSheet
+            open={showPremiumIntro && !activeNudge}
+            onClose={() => setShowPremiumIntro(false)}
+            onContinue={() => { setShowPremiumIntro(false); setShowPlanSelect(true); }}
+          />
+          <PremiumIntroSheet
+            open={!!activeNudge}
+            subjectName={undefined}
+            nudgeSubtext={activeNudge ? nudgeSubtext(activeNudge, language as "en" | "fr") : undefined}
+            onClose={() => setActiveNudge(null)}
+            onContinue={() => { setActiveNudge(null); setShowPlanSelect(true); }}
+          />
+          <PlanSelectSheet
+            open={showPlanSelect}
+            onClose={() => setShowPlanSelect(false)}
+            onBack={() => { setShowPlanSelect(false); setShowPremiumIntro(true); }}
+            onSelectPack={() => { setShowPlanSelect(false); setShowSubjectPack(true); }}
+            onSelectAll={() => { setShowPlanSelect(false); setPaymentPlan("all"); (window as any).__packAmount = undefined; setShowPaymentSheet(true); }}
+          />
+          <SubjectPackSheet
+            open={showSubjectPack}
+            onClose={() => setShowSubjectPack(false)}
+            onBack={() => { setShowSubjectPack(false); setShowPlanSelect(true); }}
+            subjects={appState?.subjects?.map(s => s.name) ?? []}
+            onConfirm={(subs, amount) => {
+              setSelectedSubjects(subs);
+              setPaymentPlan(subs.length >= (appState?.subjects?.length ?? 99) ? "all" : "single");
+              setShowSubjectPack(false);
+              setShowPaymentSheet(true);
+              (window as any).__packAmount = amount;
+            }}
+          />
+          <PaymentSheet
+            open={showPaymentSheet}
+            onClose={() => setShowPaymentSheet(false)}
+            onBack={() => {
+              setShowPaymentSheet(false);
+              if (paymentPlan === "all" && selectedSubjects.length === 0) {
+                setShowPlanSelect(true);
+              } else {
+                setShowSubjectPack(true);
+              }
+            }}
+            onSuccess={() => setShowPaymentSheet(false)}
+            subjectName={selectedSubjects.length === 1 ? selectedSubjects[0] : undefined}
+            amount={(window as any).__packAmount ?? undefined}
+          />
+        </>
       {/* Target Adjustment Dialog */}
       {targetAdjustData && (
         <TargetAdjustmentDialog
@@ -1524,116 +1584,20 @@ const Home = () => {
 
               <div className="flex-1 overflow-y-auto min-h-0">
                 {isNigerian ? (
-                  /* ── Nigerian GPA results view ── */
-                  <div className="px-6 pb-10 pt-2 flex flex-col gap-5">
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-xl font-black text-foreground">GPA Breakdown</h2>
-                      <button onClick={() => setShowResultsSheet(false)}>
-                        <X className="h-5 w-5 text-muted-foreground" />
-                      </button>
-                    </div>
-
-                    {/* CGPA hero */}
-                    <div className="rounded-2xl bg-card border-2 border-foreground p-5 text-center">
-                      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Cumulative GPA</p>
-                      <div className="flex items-baseline justify-center gap-2">
-                        <span className="text-6xl font-black text-foreground">{nigerianCGPA.toFixed(2)}</span>
-                        <span className="text-xl font-bold text-muted-foreground">/ 5.00</span>
-                      </div>
-                      <span className={`inline-block mt-2 text-sm font-black px-3 py-1 rounded-full border ${
-                        nigerianClass === "First Class" ? "bg-success/15 text-success border-success/30"
-                        : nigerianClass === "Second Class Upper" ? "bg-primary/15 text-primary border-primary/30"
-                        : nigerianClass === "Second Class Lower" ? "bg-warning/15 text-warning border-warning/30"
-                        : nigerianClass === "Third Class" ? "bg-orange-500/15 text-orange-500 border-orange-500/30"
-                        : nigerianClass === "Pass" ? "bg-muted text-muted-foreground border-border"
-                        : "bg-danger/15 text-danger border-danger/30"
-                      }`}>{nigerianClass}</span>
-                      {nigerianState.targetCGPA !== null && (
-                        <p className="text-xs font-bold text-muted-foreground mt-2">
-                          Target: {nigerianState.targetCGPA.toFixed(2)} / 5.00
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Per-semester breakdown */}
-                    {nigerianState.semesters.length > 0 && (
-                      <div className="flex flex-col gap-3">
-                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Semesters</p>
-                        {nigerianState.semesters.map((sem) => (
-                          <div key={sem.id} className="rounded-2xl bg-card border-2 border-border overflow-hidden">
-                            <div className="flex items-center justify-between px-4 py-3">
-                              <div>
-                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{sem.sessionLabel}</p>
-                                <p className="text-sm font-black text-foreground">{sem.name}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">GPA</p>
-                                <p className="text-2xl font-black text-foreground leading-none">{sem.gpa.toFixed(2)}</p>
-                              </div>
-                            </div>
-                            {sem.courses.length > 0 && (
-                              <div className="border-t border-border px-4 pb-3 pt-2 flex flex-col gap-1">
-                                {sem.courses.map((c) => (
-                                  <div key={c.id} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-1.5">
-                                    <span className="flex-1 text-xs font-bold text-foreground truncate">{c.name}</span>
-                                    <span className="text-[10px] font-bold text-muted-foreground">{c.creditUnits} CU</span>
-                                    <span className="text-xs font-bold text-foreground">{c.score}</span>
-                                    <span className={`text-xs font-black w-5 text-center ${
-                                      c.letter === "A" ? "text-success" : c.letter === "B" ? "text-primary"
-                                      : c.letter === "C" ? "text-warning" : c.letter === "F" ? "text-danger" : "text-muted-foreground"
-                                    }`}>{c.letter}</span>
-                                    <span className="text-[10px] font-bold text-muted-foreground">GP {c.gp}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Courses (subjects) with assessments */}
-                    {appState && appState.subjects.length > 0 && (
-                      <div className="flex flex-col gap-3">
-                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Courses & Assessments</p>
-                        {appState.subjects.map((sub) => {
-                          const score = computeIntegratedSubjectScore(sub);
-                          const { letter, points } = score !== null ? scoreToGrade(Math.round(score)) : { letter: "—", points: 0 };
-                          const cu = sub.creditUnits ?? sub.coefficient;
-                          return (
-                            <div key={sub.id} className="rounded-2xl bg-card border-2 border-border overflow-hidden">
-                              <div className="flex items-center justify-between px-4 py-3">
-                                <div>
-                                  <p className="text-sm font-black text-foreground">{sub.name}</p>
-                                  <p className="text-[10px] font-bold text-muted-foreground">{cu} Credit Units</p>
-                                </div>
-                                {score !== null && (
-                                  <div className="text-right">
-                                    <p className="text-lg font-black text-foreground">{score.toFixed(1)}<span className="text-xs text-muted-foreground">/100</span></p>
-                                    <p className="text-xs font-black text-primary">{letter} · {points} pts</p>
-                                  </div>
-                                )}
-                              </div>
-                              {sub.customAssessments && sub.customAssessments.length > 0 && (
-                                <div className="border-t border-border px-4 pb-3 pt-2 flex flex-col gap-1">
-                                  {sub.customAssessments.map((a) => (
-                                    <div key={a.id} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-1.5">
-                                      <span className="flex-1 text-xs font-bold text-foreground">{a.label}</span>
-                                      <span className="text-[10px] font-bold text-muted-foreground">{a.weight}%</span>
-                                      <span className="text-xs font-black text-foreground">
-                                        {a.value !== null ? `${a.value}/100` : "—"}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
+                  /* ── Nigerian: now uses shared ResultsScreen ── */
+                  appState && (
+                    <ResultsScreen
+                      subjects={appState.subjects}
+                      targetAverage={(() => {
+                        const raw = appState.targetMin ?? appState.targetAverage ?? 3.0;
+                        // If target looks like it was set for APC (>5), normalize to Nigerian scale
+                        return raw > 5 ? 3.0 : raw;
+                      })()}
+                      onBack={() => setShowResultsSheet(false)}
+                      onEditMarks={() => { setShowResultsSheet(false); setShowMarkSheet(true); }}
+                      isNigerian
+                    />
+                  )
                 ) : (
                   /* ── APC/French results view ── */
                   appState && (
