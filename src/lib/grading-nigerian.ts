@@ -146,9 +146,12 @@ export function computeIntegratedSubjectScore(subject: SubjectLike): number | nu
   if (!assessments || assessments.length === 0) return null;
   const filled = assessments.filter((a) => a.value !== null);
   if (filled.length === 0) return null;
-  const totalWeight = filled.reduce((s, a) => s + a.weight, 0);
+
+  // Use TOTAL weight of all assessments as denominator — missing ones count as 0
+  const totalWeight = assessments.reduce((s, a) => s + a.weight, 0);
   if (totalWeight === 0) return null;
-  // Normalize each score to /100 before weighting
+
+  // Only sum the filled ones; unfilled contribute 0 to the weighted sum
   const weightedSum = filled.reduce((s, a) => {
     const maxScore = (a as any).maxScore ?? 100;
     const normalized = (a.value! / maxScore) * 100;
