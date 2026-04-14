@@ -106,11 +106,27 @@ export interface AppState {
   studentName?: string;
   classLevel?: string;
   serie?: string;
-  semester?: string;
+  semester?: string;       // current active semester label (APC)
   department?: string;      // Nigerian: department/faculty
   universityLevel?: string; // Nigerian: 100/200/300/400/500
   savedStrategy?: SavedStrategy;
   nigerianState?: NigerianState; // only populated when gradingSystem === "nigerian_university"
+  // Multi-semester history for APC/French
+  apcSemesters?: ApcSemester[];
+  activeApcSemesterId?: string;
+}
+
+/** A single archived or active APC/French semester snapshot */
+export interface ApcSemester {
+  id: string;
+  label: string;           // e.g. "1st Semester"
+  academicYear?: string;   // e.g. "2023/2024"
+  classLevel?: string;
+  serie?: string;
+  subjects: Subject[];
+  targetMin: number;
+  archived: boolean;       // true = locked read-only
+  archivedAt?: string;     // ISO date
 }
 
 export type FeedbackStatus = "possible" | "risky" | "impossible";

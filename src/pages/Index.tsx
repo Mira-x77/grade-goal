@@ -175,27 +175,50 @@ const Index = () => {
               onContinue={() => {
                 const isNigerian = state.settings?.gradingSystem === "nigerian_university";
                 if (isNigerian) {
+                  const semId = crypto.randomUUID();
+                  const firstSem = {
+                    id: semId,
+                    name: nigerianSemester || "First Semester",
+                    sessionLabel: new Date().getFullYear() + "/" + (new Date().getFullYear() + 1),
+                    courses: [],
+                    gpa: 0,
+                    archived: false,
+                  };
                   const finalState = {
                     ...state,
                     studentName: state.studentName || "Student",
-                    nigerianState: state.nigerianState && state.nigerianState.semesters.length > 0 
-                      ? state.nigerianState 
+                    nigerianState: state.nigerianState && state.nigerianState.semesters.length > 0
+                      ? state.nigerianState
                       : {
-                          semesters: [],
+                          semesters: [firstSem],
                           cgpa: 0,
                           classOfDegree: "Fail",
                           targetCGPA: state.targetMin ?? null,
                           remainingCreditUnits: 0,
+                          activeSemesterId: semId,
                         },
                   };
-                  console.log("Saving Nigerian onboarding state:", finalState);
                   saveState(finalState);
-                  console.log("State saved, navigating to /");
                   navigate("/", { replace: true });
                 } else {
-                  console.log("Saving non-Nigerian onboarding state:", state);
-                  saveState(state);
-                  console.log("State saved, navigating to /");
+                  // Seed first APC semester from onboarding selection
+                  const semId = crypto.randomUUID();
+                  const firstApcSem = {
+                    id: semId,
+                    label: state.semester || "1st Semester",
+                    academicYear: new Date().getFullYear() + "/" + (new Date().getFullYear() + 1),
+                    classLevel: state.classLevel,
+                    serie: state.serie,
+                    subjects: state.subjects,
+                    targetMin: state.targetMin,
+                    archived: false,
+                  };
+                  const finalState = {
+                    ...state,
+                    apcSemesters: [firstApcSem],
+                    activeApcSemesterId: semId,
+                  };
+                  saveState(finalState);
                   navigate("/", { replace: true });
                 }
               }}

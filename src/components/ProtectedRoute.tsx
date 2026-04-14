@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { loadState } from "@/lib/storage";
 
 export default function ProtectedRoute({
   children,
@@ -10,9 +11,16 @@ export default function ProtectedRoute({
 }) {
   const { session, loading, syncing } = useAuth();
 
-  console.log("ProtectedRoute state:", { loading, syncing, hasSession: !!session });
+  const isDevBypass = import.meta.env.DEV && localStorage.getItem("dev_bypass") === "true";
+  const isGuestMode = localStorage.getItem("guest_mode") === "true";
+  const hasLocalData = !!localStorage.getItem("scoretarget_state");
 
-  if (loading || syncing) {
+  // If we have local data or guest mode, render immediately — don't wait for session.
+  // Session check happens in background (WhatsApp-style).
+  const canPassThrough = hasLocalData || isGuestMode || isDevBypass;
+
+  // Only show loading spinner if we have no local data AND session is still loading
+  if (!canPassThrough && (loading || syncing)) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
         <div className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
@@ -25,10 +33,8 @@ export default function ProtectedRoute({
     );
   }
 
-  const isDevBypass = import.meta.env.DEV && localStorage.getItem("dev_bypass") === "true";
-  const isGuestMode = localStorage.getItem("guest_mode") === "true";
-
-  if (!session && !isDevBypass && !isGuestMode) return <Navigate to="/welcome" replace />;
+  // No local data, not guest, session check done — redirect to welcome
+  if (!canPassThrough && !session) return <Navigate to="/welcome" replace />;
 
   if (requireOnboarding) {
     const raw = localStorage.getItem("scoretarget_state");
@@ -38,7 +44,6 @@ export default function ProtectedRoute({
       if (parsed) {
         const isNigerian = parsed?.settings?.gradingSystem === "nigerian_university";
         if (isNigerian) {
-          // Nigerian users pass if: they have subjects, OR they have a studentName (completed basic info)
           hasAppData = (Array.isArray(parsed.subjects) && parsed.subjects.length > 0)
             || !!parsed.studentName;
         } else {

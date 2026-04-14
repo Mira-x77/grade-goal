@@ -4,7 +4,7 @@
 //   - Supabase API / auth calls: Network-first, no caching
 //   - Everything else: Network-first with cache fallback
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const SHELL_CACHE = `app-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 

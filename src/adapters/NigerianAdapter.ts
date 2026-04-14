@@ -1,8 +1,11 @@
 /**
  * NigerianAdapter.ts — Nigerian University system adapter
- * 
- * Converts Nigerian academic data to unified dashboard format
- * Handles both semester-based and integrated (subject-based) models
+ *
+ * Single source of truth: state.subjects[].customAssessments
+ *
+ * - Live GPA is always computed from customAssessments (integrated mode)
+ * - Archived semesters store a snapshot in nigerianState.semesters[].courses
+ * - CGPA = weighted average of archived semester GPAs + current integrated GPA
  */
 
 import { AcademicSystemAdapter } from "./AcademicSystemAdapter";
@@ -18,7 +21,7 @@ import {
   scoreToGrade,
   computeIntegratedSubjectScore,
   computeIntegratedCGPA,
-  computeCGPA,
+  computeSemesterGPA,
   classifyDegree,
 } from "@/lib/grading-nigerian";
 
@@ -30,61 +33,54 @@ export class NigerianAdapter implements AcademicSystemAdapter {
     const rawTarget = appState.targetMin ?? appState.targetAverage ?? 3.0;
     const targetMin = rawTarget > 5 ? 3.0 : rawTarget;
     const nigerianState = appState.nigerianState;
-    const semesterCount = (nigerianState?.semesters ?? []).length;
 
-    // ── Semester-based mode: use active semester if one exists ──
-    if (nigerianState && nigerianState.semesters.length > 0) {
-      const activeSemId = nigerianState.activeSemesterId;
-      const activeSem = activeSemId
-        ? nigerianState.semesters.find(s => s.id === activeSemId)
-        : nigerianState.semesters[nigerianState.semesters.length - 1]; // default to last
-
-      const cgpa = computeCGPA(nigerianState.semesters);
-      const currentGPA = activeSem ? activeSem.gpa : cgpa;
-      const degreeClass = classifyDegree(cgpa);
-      const hasData = (activeSem?.courses.length ?? 0) > 0;
-
-      return {
-        system: "NIGERIAN",
-        performance: {
-          value: hasData ? (semesterCount > 1 ? cgpa : currentGPA) : null,
-          max: 5,
-          label: semesterCount > 1 ? "Current CGPA" : "Current GPA",
-          suffix: "",
-          target: targetMin > 0 ? targetMin : null,
-          targetLabel: targetMin > 0 ? `Target: ${targetMin.toFixed(2)}` : "",
-        },
-        segments: [],
-        classification: this.getClassificationInfo(degreeClass),
-        hasData,
-        isEmpty: (activeSem?.courses.length ?? 0) === 0,
-      };
-    }
-
-    // ── Integrated mode: use subjects with customAssessments ──
+    // ── Always use integrated mode for live GPA ──
     const repairedSubjects = subjects.map(s => ({
       ...s,
       creditUnits: s.creditUnits ?? s.coefficient ?? 1,
       customAssessments: s.customAssessments ?? [],
     }));
 
-    const cgpa = computeIntegratedCGPA(repairedSubjects);
-    const degreeClass = classifyDegree(cgpa ?? 0);
+    const currentGPA = computeIntegratedCGPA(repairedSubjects);
     const hasData = repairedSubjects.some(s =>
       s.customAssessments && s.customAssessments.some(a => a.value !== null)
     );
 
-    const items: DashboardItem[] = repairedSubjects.map(subject => this.subjectToDashboardItem(subject));
-    const segments: DashboardSegment[] = repairedSubjects.length > 0 ? [{
-      id: "main", title: "Courses", items,
-    }] : [];
+    // ── CGPA: combine archived semester GPAs with current GPA ──
+    const archivedSemesters = (nigerianState?.semesters ?? []).filter(s => s.archived && s.courses.length > 0);
+    const hasMultipleSemesters = archivedSemesters.length > 0;
+
+    let cgpa: number | null = currentGPA;
+    let label = "Current GPA";
+
+    if (hasMultipleSemesters) {
+      // Weighted average: archived semester GPs + current semester GP
+      const archivedTotalGP = archivedSemesters.reduce((sum, sem) => {
+        const totalCU = sem.courses.reduce((s, c) => s + c.creditUnits, 0);
+        return sum + sem.gpa * totalCU;
+      }, 0);
+      const archivedTotalCU = archivedSemesters.reduce((sum, sem) =>
+        sum + sem.courses.reduce((s, c) => s + c.creditUnits, 0), 0);
+
+      const currentTotalCU = repairedSubjects.reduce((s, sub) => s + sub.creditUnits, 0);
+      const currentGP = (currentGPA ?? 0) * currentTotalCU;
+
+      const totalGP = archivedTotalGP + currentGP;
+      const totalCU = archivedTotalCU + currentTotalCU;
+      cgpa = totalCU > 0 ? Math.round((totalGP / totalCU) * 100) / 100 : currentGPA;
+      label = "Current CGPA";
+    }
+
+    const degreeClass = classifyDegree(cgpa ?? 0);
+    const items: DashboardItem[] = repairedSubjects.map(s => this.subjectToDashboardItem(s));
+    const segments: DashboardSegment[] = repairedSubjects.length > 0 ? [{ id: "main", title: "Courses", items }] : [];
 
     return {
       system: "NIGERIAN",
       performance: {
-        value: cgpa,
+        value: hasData ? cgpa : null,
         max: 5,
-        label: "Current GPA",
+        label,
         suffix: "",
         target: targetMin > 0 ? targetMin : null,
         targetLabel: targetMin > 0 ? `Target: ${targetMin.toFixed(2)}` : "",
@@ -97,9 +93,7 @@ export class NigerianAdapter implements AcademicSystemAdapter {
   }
 
   private subjectToDashboardItem(subject: Subject): DashboardItem {
-    // Ensure customAssessments exists (defensive)
     const customAssessments = subject.customAssessments ?? [];
-
     const assessments: DashboardAssessment[] = customAssessments.map(a => ({
       id: a.id,
       label: a.label,
@@ -134,10 +128,6 @@ export class NigerianAdapter implements AcademicSystemAdapter {
       "Pass": "muted",
       "Fail": "danger",
     };
-
-    return {
-      label: degreeClass,
-      color: colorMap[degreeClass] ?? "muted",
-    };
+    return { label: degreeClass, color: colorMap[degreeClass] ?? "muted" };
   }
 }

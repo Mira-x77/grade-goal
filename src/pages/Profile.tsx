@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
-import { ArrowLeft, User, Target, BookOpen, Pencil, Check, Settings, Crown, ChevronRight, ChevronDown, Plus, Trash2, Search, X, GraduationCap, Sparkles } from "lucide-react";
+import { ArrowLeft, User, Target, BookOpen, Pencil, Check, Settings, Crown, ChevronRight, ChevronDown, Plus, Trash2, Search, X, GraduationCap, Sparkles, Archive } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
-import { AppState, Subject } from "@/types/exam";
+import { AppState, Subject, ApcSemester } from "@/types/exam";
+import { calcYearlyAverage } from "@/lib/exam-logic";
 import { CLASS_LEVELS, LYCEE_SERIES, getSubjectsForLevel } from "@/lib/subjects-data";
 import TaskBar from "@/components/TaskBar";
 import ScreenIntro from "@/components/ScreenIntro";
 import ScreenTour from "@/components/ScreenTour";
+import ArchiveWarningModal from "@/components/ArchiveWarningModal";
 import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
 import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
 import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
@@ -23,6 +25,7 @@ import {
   classifyDegree,
   validateScore,
   validateCreditUnits,
+  computeIntegratedCGPA,
 } from "@/lib/grading-nigerian";
 import { NigerianState } from "@/types/nigerian";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -41,6 +44,11 @@ const Profile = () => {
   const [editingSubjects, setEditingSubjects] = useState(false);
   const [subjectsOpen, setSubjectsOpen] = useState(false);
   const [semestersOpen, setSemestersOpen] = useState(false);
+  const [showArchiveWarning, setShowArchiveWarning] = useState(false);
+  const [showAddSemesterForm, setShowAddSemesterForm] = useState(false);
+  // Separate state for APC semester modals to avoid conflict with Nigerian
+  const [showApcArchiveWarning, setShowApcArchiveWarning] = useState(false);
+  const [showApcAddSemesterForm, setShowApcAddSemesterForm] = useState(false);
   const [subjectSearch, setSubjectSearch] = useState("");
   const [subjectSelected, setSubjectSelected] = useState<Set<string>>(new Set());
   const [showSubjectModal, setShowSubjectModal] = useState(false);
@@ -742,14 +750,34 @@ const Profile = () => {
         document.body
       )}
 
-      {/* Semesters — Nigerian only */}
+      {/* Semesters — Nigerian */}
       {state?.settings?.gradingSystem === "nigerian_university" && (() => {
         const nigerianState: NigerianState = state.nigerianState ?? {
           semesters: [], cgpa: 0, classOfDegree: "Fail", targetCGPA: null, remainingCreditUnits: 0,
         };
 
+        // Seed first semester for existing Nigerian users with no semesters
+        if (nigerianState.semesters.length === 0) {
+          const semId = crypto.randomUUID();
+          const seeded = { id: semId, name: state.semester || "First Semester", sessionLabel: new Date().getFullYear() + "/" + (new Date().getFullYear() + 1), courses: [], gpa: 0, archived: false };
+          const seededNig: NigerianState = { ...nigerianState, semesters: [seeded], activeSemesterId: semId };
+          // Also fix targetMin if it was set on APC scale
+          const fixedTarget = (state.targetMin ?? 16) > 5 ? 4.0 : (state.targetMin ?? 4.0);
+          const newState = { ...state, nigerianState: seededNig, targetMin: fixedTarget, targetAverage: fixedTarget };
+          saveState(newState); setState(newState);
+          return null;
+        }
+
         const activeSemId = nigerianState.activeSemesterId
-          ?? (nigerianState.semesters.length > 0 ? nigerianState.semesters[nigerianState.semesters.length - 1].id : undefined);
+          ?? nigerianState.semesters[nigerianState.semesters.length - 1].id;
+
+        // Fix targetMin if it was set on APC scale (> 5)
+        if ((state.targetMin ?? 0) > 5) {
+          const fixed = 4.0;
+          const newState = { ...state, targetMin: fixed, targetAverage: fixed };
+          saveState(newState); setState(newState);
+          return null;
+        }
 
         const updateNigerianState = (updated: NigerianState) => {
           const newState = { ...state, nigerianState: updated };
@@ -757,13 +785,63 @@ const Profile = () => {
           setState(newState);
         };
 
-        const switchToSemester = (semId: string) => {
-          updateNigerianState({ ...nigerianState, activeSemesterId: semId });
-        };
-
         const cgpa = nigerianState.semesters.length > 1
           ? computeCGPA(nigerianState.semesters).toFixed(2)
           : null;
+
+        const handleAddSemester = (sessionLabel: string, name: string) => {
+          // Snapshot current customAssessments scores into the archived semester's courses
+          const currentSubjects = state.subjects ?? [];
+          const snapshotCourses = currentSubjects
+            .filter(s => (s.customAssessments ?? []).some(a => a.value !== null))
+            .map(s => {
+              const score = Math.round(
+                (s.customAssessments ?? []).reduce((sum, a) => {
+                  if (a.value === null) return sum;
+                  const max = (a as any).maxScore ?? 100;
+                  return sum + (a.value / max) * 100 * a.weight;
+                }, 0) /
+                Math.max(1, (s.customAssessments ?? []).filter(a => a.value !== null).reduce((sum, a) => sum + a.weight, 0))
+              );
+              const { letter, points } = scoreToGrade(score);
+              const cu = s.creditUnits ?? s.coefficient ?? 1;
+              return {
+                id: s.id,
+                name: s.name,
+                creditUnits: cu,
+                score,
+                letter,
+                gradePoints: points,
+                gp: points * cu,
+              };
+            });
+
+          const archivedGPA = snapshotCourses.length > 0
+            ? Math.round((snapshotCourses.reduce((sum, c) => sum + c.gp, 0) / snapshotCourses.reduce((sum, c) => sum + c.creditUnits, 0)) * 100) / 100
+            : 0;
+
+          // Archive current semester with snapshot
+          const archived = nigerianState.semesters.map(s =>
+            s.id === activeSemId ? { ...s, archived: true, courses: snapshotCourses, gpa: archivedGPA } : s
+          );
+
+          // Reset customAssessments for new semester
+          const resetSubjects = currentSubjects.map(s => ({
+            ...s,
+            customAssessments: (s.customAssessments ?? []).map(a => ({ ...a, value: null })),
+          }));
+
+          const newSem = { id: crypto.randomUUID(), sessionLabel, name, courses: [], gpa: 0, archived: false };
+          const updated = { ...nigerianState, semesters: [...archived, newSem], activeSemesterId: newSem.id };
+          updated.cgpa = 0;
+          updated.classOfDegree = classifyDegree(0);
+
+          const newState = { ...state, nigerianState: updated, subjects: resetSubjects };
+          saveState(newState);
+          setState(newState);
+          setShowArchiveWarning(false);
+          setShowAddSemesterForm(false);
+        };
 
         return (
           <div className="content-col px-4 pb-4">
@@ -794,102 +872,45 @@ const Profile = () => {
                     className="overflow-hidden"
                   >
                     <div className="border-t border-border px-4 pb-4 pt-3 flex flex-col gap-3">
-
-                      {nigerianState.semesters.length === 0 && (
-                        <p className="text-sm font-semibold text-muted-foreground text-center py-2">No semesters yet. Add your first one below.</p>
-                      )}
-
-                      {nigerianState.semesters.map((sem, i) => {
+                      {nigerianState.semesters.map((sem) => {
                         const isActive = sem.id === activeSemId;
-                        const isPast = !isActive;
+                        const isArchived = !!sem.archived;
+
+                        // Compute live GPA for active semester from customAssessments
+                        const displayGPA = isActive
+                          ? (() => {
+                              const repaired = (state.subjects ?? []).map((s: any) => ({
+                                ...s,
+                                creditUnits: s.creditUnits ?? s.coefficient ?? 1,
+                                customAssessments: s.customAssessments ?? [],
+                              }));
+                              return computeIntegratedCGPA(repaired);
+                            })()
+                          : sem.gpa;
+
                         return (
                           <div key={sem.id} className={`rounded-2xl border-2 overflow-hidden transition-all ${isActive ? "border-primary bg-primary/5" : "border-border bg-card"}`}>
-                            {/* Semester header — tap to switch */}
-                            <button
-                              onClick={() => !isActive && switchToSemester(sem.id)}
-                              className={`w-full flex items-center justify-between px-4 py-3 ${!isActive ? "active:bg-muted/40 transition-colors" : ""}`}
-                            >
+                            <div className="w-full flex items-center justify-between px-4 py-3">
                               <div className="flex flex-col items-start gap-0.5">
                                 <div className="flex items-center gap-2">
                                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{sem.sessionLabel}</span>
-                                  {isActive && (
-                                    <span className="text-[9px] font-black text-primary bg-primary/15 px-1.5 py-0.5 rounded-full uppercase tracking-widest">Current</span>
-                                  )}
+                                  {isActive && <span className="text-[9px] font-black text-primary bg-primary/15 px-1.5 py-0.5 rounded-full uppercase tracking-widest">Current</span>}
+                                  {isArchived && <span className="text-[9px] font-black text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full uppercase tracking-widest flex items-center gap-1"><Archive className="h-2.5 w-2.5" />Archived</span>}
                                 </div>
                                 <span className="text-sm font-black text-foreground">{sem.name}</span>
                               </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <div className="text-right">
-                                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">GPA</p>
-                                  <p className="text-lg font-black text-foreground leading-none">{sem.gpa.toFixed(2)}</p>
-                                </div>
-                                {!isActive && (
-                                  <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-1 rounded-xl">Switch</span>
-                                )}
-                                {!isActive && sem.courses.length === 0 && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const updated = {
-                                        ...nigerianState,
-                                        semesters: nigerianState.semesters.filter(s => s.id !== sem.id),
-                                        activeSemesterId: nigerianState.activeSemesterId === sem.id ? undefined : nigerianState.activeSemesterId,
-                                      };
-                                      updated.cgpa = computeCGPA(updated.semesters);
-                                      updated.classOfDegree = classifyDegree(updated.cgpa);
-                                      updateNigerianState(updated);
-                                    }}
-                                    className="text-danger/50 active:text-danger active:scale-90 transition-all"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
-                                )}
+                              <div className="text-right">
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">GPA</p>
+                                <p className="text-lg font-black text-foreground leading-none">
+                                  {displayGPA !== null ? displayGPA.toFixed(2) : "—"}
+                                </p>
                               </div>
-                            </button>
+                            </div>
 
-                            {/* Active semester: full editable card */}
-                            {isActive && (
-                              <SemesterCardProfile
-                                key={sem.id}
-                                semester={sem}
-                                index={i}
-                                onAddCourse={(semId, name, cu, score) => {
-                                  const { letter, points } = scoreToGrade(score);
-                                  const gp = computeGP(score, cu);
-                                  const newCourse = { id: crypto.randomUUID(), name, creditUnits: cu, score, letter, gradePoints: points, gp };
-                                  const updated = {
-                                    ...nigerianState,
-                                    semesters: nigerianState.semesters.map(s =>
-                                      s.id === semId
-                                        ? { ...s, courses: [...s.courses, newCourse], gpa: computeSemesterGPA([...s.courses, newCourse]) }
-                                        : s
-                                    ),
-                                  };
-                                  updated.cgpa = computeCGPA(updated.semesters);
-                                  updated.classOfDegree = classifyDegree(updated.cgpa);
-                                  updateNigerianState(updated);
-                                }}
-                                onRemoveCourse={(semId, courseId) => {
-                                  const updated = {
-                                    ...nigerianState,
-                                    semesters: nigerianState.semesters.map(s =>
-                                      s.id === semId
-                                        ? { ...s, courses: s.courses.filter(c => c.id !== courseId), gpa: computeSemesterGPA(s.courses.filter(c => c.id !== courseId)) }
-                                        : s
-                                    ),
-                                  };
-                                  updated.cgpa = computeCGPA(updated.semesters);
-                                  updated.classOfDegree = classifyDegree(updated.cgpa);
-                                  updateNigerianState(updated);
-                                }}
-                                headerHidden // header already shown above
-                              />
-                            )}
-
-                            {/* Past semester: read-only course list */}
-                            {isPast && sem.courses.length > 0 && (
+                            {/* Archived semester: read-only result view */}
+                            {isArchived && sem.courses.length > 0 && (
                               <div className="border-t border-border px-4 pb-3 pt-2 flex flex-col gap-1">
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Courses</p>
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Results</p>
                                 {sem.courses.map((c) => (
                                   <div key={c.id} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-1.5">
                                     <span className="flex-1 text-xs font-bold text-foreground truncate">{c.name}</span>
@@ -904,20 +925,204 @@ const Profile = () => {
                         );
                       })}
 
-                      <AddSemesterInline
-                        onAdd={(sessionLabel, name) => {
-                          const newSem = { id: crypto.randomUUID(), sessionLabel, name, courses: [], gpa: 0 };
-                          const updated = { ...nigerianState, semesters: [...nigerianState.semesters, newSem], activeSemesterId: newSem.id };
-                          updated.cgpa = computeCGPA(updated.semesters);
-                          updated.classOfDegree = classifyDegree(updated.cgpa);
-                          updateNigerianState(updated);
-                        }}
-                      />
+                      {/* Add new semester button */}
+                      <button
+                        onClick={() => setShowArchiveWarning(true)}
+                        className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-muted-foreground/30 py-3 text-sm font-black text-muted-foreground active:scale-[0.98] transition-all"
+                      >
+                        <Plus className="h-4 w-4" />
+                        New Semester
+                      </button>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
+
+            {/* Archive warning + new semester form */}
+            <ArchiveWarningModal
+              open={showArchiveWarning}
+              language={language}
+              onCancel={() => setShowArchiveWarning(false)}
+              onConfirm={() => {
+                // Show the add semester form after confirming
+                setShowArchiveWarning(false);
+                setShowAddSemesterForm(true);
+              }}
+            />
+            <AddSemesterInline
+              open={showAddSemesterForm}
+              onClose={() => setShowAddSemesterForm(false)}
+              onAdd={handleAddSemester}
+            />
+          </div>
+        );
+      })()}
+
+      {/* Semesters — APC/French */}
+      {state?.settings?.gradingSystem !== "nigerian_university" && (() => {
+        const apcSemesters: ApcSemester[] = state.apcSemesters ?? [];
+        const activeId = state.activeApcSemesterId
+          ?? (apcSemesters.length > 0 ? apcSemesters[apcSemesters.length - 1].id : undefined);
+
+        const updateApcSemesters = (semesters: ApcSemester[], activeApcSemesterId?: string) => {
+          const newState = { ...state, apcSemesters: semesters, activeApcSemesterId: activeApcSemesterId ?? activeId };
+          saveState(newState);
+          setState(newState);
+        };
+
+        const handleAddApcSemester = (label: string, academicYear: string) => {
+          // Archive current
+          const archived = apcSemesters.map(s =>
+            s.id === activeId ? { ...s, archived: true, archivedAt: new Date().toISOString() } : s
+          );
+          const newSem: ApcSemester = {
+            id: crypto.randomUUID(),
+            label,
+            academicYear,
+            classLevel: state.classLevel,
+            serie: state.serie,
+            subjects: [],
+            targetMin: state.targetMin,
+            archived: false,
+          };
+          updateApcSemesters([...archived, newSem], newSem.id);
+          setShowApcArchiveWarning(false);
+          setShowApcAddSemesterForm(false);
+        };
+
+        // Seed first semester from existing state for users who onboarded before this feature
+        if (apcSemesters.length === 0) {
+          const semId = crypto.randomUUID();
+          const seeded: ApcSemester = {
+            id: semId,
+            label: state.semester || "1st Semester",
+            academicYear: new Date().getFullYear() + "/" + (new Date().getFullYear() + 1),
+            classLevel: state.classLevel,
+            serie: state.serie,
+            subjects: state.subjects ?? [],
+            targetMin: state.targetMin,
+            archived: false,
+          };
+          const newState = { ...state, apcSemesters: [seeded], activeApcSemesterId: semId };
+          saveState(newState);
+          setState(newState);
+          return null; // re-render will show the section
+        }
+
+        // Keep active semester's subjects in sync with state.subjects (source of truth for APC)
+        const activeSem = apcSemesters.find(s => s.id === activeId);
+        if (activeSem && !activeSem.archived) {
+          const needsSync = JSON.stringify(activeSem.subjects) !== JSON.stringify(state.subjects);
+          if (needsSync) {
+            const synced = apcSemesters.map(s =>
+              s.id === activeId ? { ...s, subjects: state.subjects ?? [] } : s
+            );
+            const newState = { ...state, apcSemesters: synced };
+            saveState(newState);
+            setState(newState);
+            return null;
+          }
+        }
+
+        return (
+          <div className="content-col px-4 pb-4">
+            <div className="rounded-2xl bg-card border-2 border-border overflow-hidden">
+              <button
+                onClick={() => setSemestersOpen(v => !v)}
+                className="w-full flex items-center justify-between px-5 py-4 active:bg-muted/40 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  <span className="font-black text-foreground text-sm">{language === "fr" ? "Semestres" : "Semesters"}</span>
+                </div>
+                <motion.div animate={{ rotate: semestersOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </motion.div>
+              </button>
+
+              <AnimatePresence initial={false}>
+                {semestersOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="border-t border-border px-4 pb-4 pt-3 flex flex-col gap-3">
+                      {apcSemesters.map((sem) => {
+                        const isActive = sem.id === activeId;
+                        return (
+                          <div key={sem.id} className={`rounded-2xl border-2 overflow-hidden ${isActive ? "border-primary bg-primary/5" : "border-border bg-card"}`}>
+                            <div className="flex items-center justify-between px-4 py-3">
+                              <div className="flex flex-col gap-0.5">
+                                <div className="flex items-center gap-2">
+                                  {sem.academicYear && <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{sem.academicYear}</span>}
+                                  {isActive && <span className="text-[9px] font-black text-primary bg-primary/15 px-1.5 py-0.5 rounded-full uppercase tracking-widest">Current</span>}
+                                  {sem.archived && <span className="text-[9px] font-black text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full uppercase tracking-widest flex items-center gap-1"><Archive className="h-2.5 w-2.5" />Archived</span>}
+                                </div>
+                                <span className="text-sm font-black text-foreground">{sem.label}</span>
+                                {sem.classLevel && <span className="text-[10px] font-semibold text-muted-foreground">{sem.classLevel}{sem.serie ? ` · Série ${sem.serie}` : ""}</span>}
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{language === "fr" ? "Moy." : "Avg"}</p>
+                                <p className="text-lg font-black text-foreground leading-none">
+                                  {(() => {
+                                    const avg = calcYearlyAverage(sem.subjects);
+                                    return avg !== null ? avg.toFixed(1) : "—";
+                                  })()}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Archived: read-only subject list */}
+                            {sem.archived && sem.subjects.length > 0 && (
+                              <div className="border-t border-border px-4 pb-3 pt-2 flex flex-col gap-1">
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Results</p>
+                                {sem.subjects.map((s) => {
+                                  const avg = s.marks.interro !== null || s.marks.dev !== null || s.marks.compo !== null
+                                    ? ((s.marks.interro ?? 0) + (s.marks.dev ?? 0) + (s.marks.compo ?? 0) * 2) / 4
+                                    : null;
+                                  return (
+                                    <div key={s.id} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-1.5">
+                                      <span className="flex-1 text-xs font-bold text-foreground truncate">{s.name}</span>
+                                      <span className="text-[10px] font-bold text-muted-foreground">Coeff {s.coefficient}</span>
+                                      <span className="text-xs font-black text-foreground">{avg !== null ? avg.toFixed(1) : "—"}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      <button
+                        onClick={() => setShowApcArchiveWarning(true)}
+                        className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-muted-foreground/30 py-3 text-sm font-black text-muted-foreground active:scale-[0.98] transition-all"
+                      >
+                        <Plus className="h-4 w-4" />
+                        {language === "fr" ? "Nouveau semestre" : "New Semester"}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <ArchiveWarningModal
+              open={showApcArchiveWarning}
+              language={language}
+              onCancel={() => setShowApcArchiveWarning(false)}
+              onConfirm={() => { setShowApcArchiveWarning(false); setShowApcAddSemesterForm(true); }}
+            />
+            <AddApcSemesterForm
+              open={showApcAddSemesterForm}
+              onClose={() => setShowApcAddSemesterForm(false)}
+              onAdd={handleAddApcSemester}
+              language={language}
+            />
           </div>
         );
       })()}
@@ -1097,32 +1302,63 @@ function SemesterCardProfile({
   );
 }
 
-function AddSemesterInline({ onAdd }: { onAdd: (sessionLabel: string, name: string) => void }) {
-  const [open, setOpen] = useState(false);
+function AddSemesterInline({ open, onClose, onAdd }: { open: boolean; onClose: () => void; onAdd: (sessionLabel: string, name: string) => void }) {
   const [sessionLabel, setSessionLabel] = useState("");
   const [semName, setSemName] = useState("");
   const canSubmit = sessionLabel.trim().length > 0 && semName.trim().length > 0;
 
-  if (!open) {
-    return (
-      <button onClick={() => setOpen(true)} className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/50 bg-primary/5 py-3 text-sm font-extrabold text-primary active:scale-[0.98] transition-all">
-        <Plus className="h-4 w-4" /> New Semester
-      </button>
-    );
-  }
+  if (!open) return null;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl bg-card border-2 border-primary/40 p-4 flex flex-col gap-3">
-      <div>
-        <p className="text-sm font-black text-foreground">New Semester</p>
-        <p className="text-xs font-semibold text-muted-foreground mt-0.5">This will switch the app to the new semester. You can always switch back.</p>
-      </div>
-      <input type="text" placeholder="Session (e.g. 2023/2024)" value={sessionLabel} onChange={e => setSessionLabel(e.target.value)} autoFocus className="w-full rounded-xl border-2 border-border bg-muted px-3 py-2.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
-      <input type="text" placeholder="Semester name (e.g. First Semester)" value={semName} onChange={e => setSemName(e.target.value)} onKeyDown={e => e.key === "Enter" && canSubmit && (onAdd(sessionLabel.trim(), semName.trim()), setOpen(false), setSessionLabel(""), setSemName(""))} className="w-full rounded-xl border-2 border-border bg-muted px-3 py-2.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
-      <div className="flex gap-2">
-        <button onClick={() => { setOpen(false); setSessionLabel(""); setSemName(""); }} className="flex-1 rounded-xl border-2 border-border py-2.5 text-sm font-extrabold text-foreground active:scale-95 transition-transform">Cancel</button>
-        <button onClick={() => { if (!canSubmit) return; onAdd(sessionLabel.trim(), semName.trim()); setOpen(false); setSessionLabel(""); setSemName(""); }} disabled={!canSubmit} className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-extrabold text-primary-foreground active:scale-95 transition-transform disabled:opacity-30 disabled:pointer-events-none">Create</button>
-      </div>
-    </motion.div>
+    <AnimatePresence>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/60" onClick={onClose} />
+      <motion.div
+        initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[201] bg-card rounded-3xl p-5 card-shadow max-w-sm mx-auto flex flex-col gap-3"
+      >
+        <p className="text-base font-black text-foreground">New Semester</p>
+        <input type="text" placeholder="Session (e.g. 2023/2024)" value={sessionLabel} onChange={e => setSessionLabel(e.target.value)} autoFocus className="w-full rounded-xl border-2 border-border bg-muted px-3 py-2.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
+        <input type="text" placeholder="Semester name (e.g. First Semester)" value={semName} onChange={e => setSemName(e.target.value)} onKeyDown={e => e.key === "Enter" && canSubmit && onAdd(sessionLabel.trim(), semName.trim())} className="w-full rounded-xl border-2 border-border bg-muted px-3 py-2.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
+        <div className="flex gap-2">
+          <button onClick={onClose} className="flex-1 rounded-xl border-2 border-border py-2.5 text-sm font-extrabold text-foreground active:scale-95 transition-transform">Cancel</button>
+          <button onClick={() => canSubmit && onAdd(sessionLabel.trim(), semName.trim())} disabled={!canSubmit} className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-extrabold text-primary-foreground active:scale-95 transition-transform disabled:opacity-30 disabled:pointer-events-none">Create</button>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function AddApcSemesterForm({ open, onClose, onAdd, language }: { open: boolean; onClose: () => void; onAdd: (label: string, academicYear: string) => void; language: string }) {
+  const [label, setLabel] = useState("");
+  const [year, setYear] = useState("");
+  const fr = language === "fr";
+  const canSubmit = label.trim().length > 0;
+
+  if (!open) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/60" onClick={onClose} />
+      <motion.div
+        initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[201] bg-card rounded-3xl p-5 card-shadow max-w-sm mx-auto flex flex-col gap-3"
+      >
+        <p className="text-base font-black text-foreground">{fr ? "Nouveau semestre" : "New Semester"}</p>
+        <div>
+          <label className="text-xs font-bold text-muted-foreground mb-1 block">{fr ? "Semestre" : "Semester"}</label>
+          <input type="text" placeholder={fr ? "ex. 1er Semestre" : "e.g. 1st Semester"} value={label} onChange={e => setLabel(e.target.value)} autoFocus className="w-full rounded-xl border-2 border-border bg-muted px-3 py-2.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-muted-foreground mb-1 block">{fr ? "Année scolaire (optionnel)" : "Academic year (optional)"}</label>
+          <input type="text" placeholder="2024/2025" value={year} onChange={e => setYear(e.target.value)} onKeyDown={e => e.key === "Enter" && canSubmit && onAdd(label.trim(), year.trim())} className="w-full rounded-xl border-2 border-border bg-muted px-3 py-2.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors" />
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onClose} className="flex-1 rounded-xl border-2 border-border py-2.5 text-sm font-extrabold text-foreground active:scale-95 transition-transform">{fr ? "Annuler" : "Cancel"}</button>
+          <button onClick={() => canSubmit && onAdd(label.trim(), year.trim())} disabled={!canSubmit} className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-extrabold text-primary-foreground active:scale-95 transition-transform disabled:opacity-30 disabled:pointer-events-none">{fr ? "Créer" : "Create"}</button>
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

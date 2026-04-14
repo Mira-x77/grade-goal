@@ -6,6 +6,7 @@ import {
   saveStreakToCloud,
 } from "@/services/hybridSyncService";
 import { ensureNigerianAssessments } from "@/lib/nigerian-defaults";
+import { mirrorToNative } from "@/lib/nativeStorage";
 
 const STORAGE_KEY = "scoretarget_state";
 const HISTORY_KEY = "scoretarget_history";
@@ -45,7 +46,9 @@ function getCurrentUserId(): string | null {
 // ─── App State ────────────────────────────────────────────────────────────────
 
 export function saveState(state: AppState) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const json = JSON.stringify(state);
+  localStorage.setItem(STORAGE_KEY, json);
+  void mirrorToNative(STORAGE_KEY, json);
 
   // Fire-and-forget cloud write
   const userId = getCurrentUserId();
@@ -70,8 +73,8 @@ export function loadState(): AppState | null {
     if (parsed.classLevel && CLASS_MAPPINGS[parsed.classLevel]) {
       parsed.classLevel = CLASS_MAPPINGS[parsed.classLevel];
     }
-    // Migration: normalize old "results" step — treat as completed onboarding
-    if ((parsed.step as string) === "results") {
+    // Migration: normalize old "results" / "done" step — treat as completed onboarding
+    if ((parsed.step as string) === "results" || (parsed.step as string) === "done") {
       parsed.step = "marks";
     }
     // Migration: targetMin from old targetAverage
@@ -116,7 +119,9 @@ export function addHistoryEntry(entry: Omit<HistoryEntry, "id">) {
   const full: HistoryEntry = { ...entry, id: crypto.randomUUID() };
   const history = getHistory();
   history.push(full);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  const historyJson = JSON.stringify(history);
+  localStorage.setItem(HISTORY_KEY, historyJson);
+  void mirrorToNative(HISTORY_KEY, historyJson);
   updateStreak();
 
   // Fire-and-forget cloud write
@@ -158,7 +163,9 @@ function updateStreak() {
   streak.totalEntries += 1;
   streak.bestStreak = Math.max(streak.bestStreak, streak.currentStreak);
 
-  localStorage.setItem(STREAK_KEY, JSON.stringify(streak));
+  const streakJson = JSON.stringify(streak);
+  localStorage.setItem(STREAK_KEY, streakJson);
+  void mirrorToNative(STREAK_KEY, streakJson);
 
   // Fire-and-forget cloud write
   const userId = getCurrentUserId();

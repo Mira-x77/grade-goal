@@ -9,6 +9,9 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AppConfigProvider } from "@/contexts/AppConfigContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
+import { useEffect, useState } from "react";
+import { restoreFromNative } from "@/lib/nativeStorage";
+import { Capacitor } from "@capacitor/core";
 import AuthPage from "./pages/AuthPage";
 import AuthCallback from "./pages/AuthCallback";
 import WelcomePage from "./pages/WelcomePage";
@@ -35,7 +38,19 @@ function AppInner() {
   return null;
 }
 
-const App = () => (
+const App = () => {
+  // On web, start ready immediately — restoreFromNative is a no-op on web
+  const [ready, setReady] = useState(!Capacitor.isNativePlatform());
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      restoreFromNative().finally(() => setReady(true));
+    }
+  }, []);
+
+  if (!ready) return null;
+
+  return (
   <AppThemeProvider>
     <LanguageProvider>
       <AppConfigProvider>
@@ -90,6 +105,7 @@ const App = () => (
     </AppConfigProvider>
     </LanguageProvider>
   </AppThemeProvider>
-);
+  );
+};
 
 export default App;

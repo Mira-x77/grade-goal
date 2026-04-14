@@ -103,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log("No local data, setting syncing=true");
     setSyncing(true);
     try {
-      const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2000));
+      const timeout = new Promise<void>((resolve) => setTimeout(resolve, 5000));
       const restore = async () => {
         try {
           await restoreUserDataFromCloud(userId);
@@ -122,11 +122,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Restore existing session on mount — push local data to cloud silently
+    // Add a timeout so offline users aren't stuck on loading screen forever
+    const loadingTimeout = setTimeout(() => setLoading(false), 3000);
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      clearTimeout(loadingTimeout);
       setSession(session);
       if (session?.user) {
         syncInBackground(session.user.id);
       }
+      setLoading(false);
+      initialSessionRestoredRef.current = true;
+    }).catch(() => {
+      clearTimeout(loadingTimeout);
       setLoading(false);
       initialSessionRestoredRef.current = true;
     });

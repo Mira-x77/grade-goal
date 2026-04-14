@@ -16,6 +16,7 @@ export interface NigerianSemester {
   sessionLabel: string;  // e.g. "2023/2024"
   courses: NigerianCourse[];
   gpa: number;           // computed
+  archived?: boolean;    // true = locked read-only past semester
 }
 
 export interface NigerianState {
