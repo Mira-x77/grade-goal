@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsTablet } from "@/hooks/useIsTablet";
 
 export interface ScreenTourStep {
   titleKey: string;
@@ -166,6 +167,7 @@ export default function ScreenTour({ storageKey, steps, introKey, delay = 600 }:
 
   if (!run) return null;
 
+  const isTablet = useIsTablet();
   const current = steps[step];
   const title = t(current.titleKey as Parameters<typeof t>[0]);
   const content = t(current.contentKey as Parameters<typeof t>[0]);
@@ -174,9 +176,20 @@ export default function ScreenTour({ storageKey, steps, introKey, delay = 600 }:
 
   const SAFE_TOP = 56;
   const SAFE_BOTTOM = 100;
-  const SIDE_PAD = 16;
+  const SIDE_PAD = isTablet ? 0 : 16;
+  const TOOLTIP_WIDTH = 420;
 
   const tooltipStyle: React.CSSProperties = (() => {
+    if (isTablet) {
+      const centerH = { left: "50%", transform: isCenter ? "translate(-50%, -50%)" : "translateX(-50%)", width: TOOLTIP_WIDTH };
+      if (isCenter) return { position: "fixed" as const, ...centerH, top: "50%" };
+      const spaceBelow = window.innerHeight - rect!.bottom - SAFE_BOTTOM;
+      const spaceAbove = rect!.top - SAFE_TOP;
+      if (spaceBelow >= 140 || spaceBelow >= spaceAbove) {
+        return { position: "fixed" as const, ...centerH, top: Math.min(rect!.bottom + PADDING + 8, window.innerHeight - SAFE_BOTTOM - 180) };
+      }
+      return { position: "fixed" as const, ...centerH, bottom: Math.min(window.innerHeight - rect!.top + PADDING + 8, window.innerHeight - SAFE_TOP - 180) };
+    }
     const h = { left: SIDE_PAD, right: SIDE_PAD };
     if (isCenter) return { position: "fixed" as const, ...h, top: "50%", transform: "translateY(-50%)" };
     const spaceBelow = window.innerHeight - rect!.bottom - SAFE_BOTTOM;

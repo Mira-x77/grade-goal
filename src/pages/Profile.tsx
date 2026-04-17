@@ -532,19 +532,9 @@ const Profile = () => {
                 <p className="text-xs text-muted-foreground font-semibold">{subjects.length} {isNigerian ? "course" : "subject"}{subjects.length !== 1 ? "s" : ""}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {subjectsOpen && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); openSubjectModal(); }}
-                  className="flex items-center justify-center rounded-xl bg-primary p-1.5 active:scale-95 transition-transform"
-                >
-                  <Plus className="h-4 w-4 text-primary-foreground" />
-                </button>
-              )}
-              <motion.div animate={{ rotate: subjectsOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </motion.div>
-            </div>
+            <motion.div animate={{ rotate: subjectsOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            </motion.div>
           </button>
 
           <AnimatePresence initial={false}>
@@ -556,6 +546,16 @@ const Profile = () => {
                 transition={{ duration: 0.2, ease: "easeInOut" }}
                 className="overflow-hidden"
               >
+                {/* Add button — full width row */}
+                <div className="px-5 pb-3 border-b border-border">
+                  <button
+                    onClick={openSubjectModal}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-black text-primary-foreground active:scale-95 transition-transform"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t("addSubjects")}
+                  </button>
+                </div>
 
                 {subjects.length === 0 ? (
                   <p className="text-sm text-muted-foreground font-semibold text-center py-4 px-5">{t("noSubjectsAdded")}</p>

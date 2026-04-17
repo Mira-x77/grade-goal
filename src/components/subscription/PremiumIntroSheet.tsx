@@ -19,7 +19,7 @@ export function PremiumIntroSheet({ open, onClose, onContinue, subjectName, nudg
     { icon: "🎯", title: t("topQuestions"),   desc: t("topQuestionsDesc")    },
     { icon: "🗺️", title: t("keyTopics"),      desc: t("keyTopicsDesc")       },
     { icon: "📋", title: t("cheatSheet"),     desc: t("cheatSheetDesc")      },
-    { icon: "✅", title: t("stepBySolutions"),desc: t("stepByStepSolutions") },
+    { icon: "✅", title: t("stepBySolutions"),desc: t("stepByStepSolutionsDesc") },
     { icon: "📝", title: t("practiceTests"),  desc: t("practiceTestsDesc")   },
     { icon: "🔍", title: t("weakSpots"),      desc: t("weakSpotsDesc")       },
   ];

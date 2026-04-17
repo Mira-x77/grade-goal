@@ -300,7 +300,7 @@ const PaperDetail = () => {
                 { icon: "🎯", title: t("topQuestions"),   desc: t("topQuestionsDesc") },
                 { icon: "🗺️", title: t("keyTopics"),      desc: t("keyTopicsDesc") },
                 { icon: "📋", title: t("cheatSheet"),     desc: t("cheatSheetDesc") },
-                { icon: "✅", title: t("solutions"),      desc: t("solutionsDesc") },
+                { icon: "✅", title: t("stepBySolutions"),  desc: t("stepByStepSolutionsDesc") },
                 { icon: "📝", title: t("practiceTests"),  desc: t("practiceTestsDesc") },
                 { icon: "🔍", title: t("weakSpots"),      desc: t("weakSpotsDesc") },
               ].map(({ icon, title, desc }) => (
@@ -405,7 +405,7 @@ const PaperDetail = () => {
                     { icon: "🎯", title: t("topQuestions"), desc: t("topQuestionsDesc") },
                     { icon: "🗺️", title: t("keyTopics"), desc: t("keyTopicsDesc") },
                     { icon: "📋", title: t("cheatSheet"), desc: t("cheatSheetDesc") },
-                    { icon: "✅", title: t("solutions"), desc: t("solutionsDesc") },
+                    { icon: "✅", title: t("stepBySolutions"), desc: t("stepByStepSolutionsDesc") },
                     { icon: "📝", title: t("practiceTests"), desc: t("practiceTestsDesc") },
                     { icon: "🔍", title: t("weakSpots"), desc: t("weakSpotsDesc") },
                   ].map(({ icon, title, desc }) => (
