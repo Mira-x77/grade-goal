@@ -144,70 +144,99 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks, isNigeria
     <div className="flex flex-col" style={{ minHeight: "60vh" }}>
       <div className="flex flex-col gap-4 px-6 pt-2 pb-24">
 
-        {/* ── Nigerian GPA summary block ── */}
-        {isNigerian && (
-          <div className="rounded-2xl bg-card border-2 border-foreground p-5 text-center">
-            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">
-              Current GPA
-            </p>
-            <div className="flex items-baseline justify-center gap-2">
-              <span className="text-6xl font-black text-foreground">
-                {currentCGPA !== null ? currentCGPA.toFixed(2) : "—"}
-              </span>
-            </div>
-            <span className={`inline-block mt-2 text-sm font-black px-3 py-1 rounded-full border ${
-              nigerianClass === "First Class" ? "bg-success/15 text-success border-success/30"
-              : nigerianClass === "Second Class Upper" ? "bg-primary/15 text-primary border-primary/30"
-              : nigerianClass === "Second Class Lower" ? "bg-warning/15 text-warning border-warning/30"
-              : nigerianClass === "Third Class" ? "bg-orange-500/15 text-orange-500 border-orange-500/30"
-              : nigerianClass === "Pass" ? "bg-muted text-muted-foreground border-border"
-              : "bg-danger/15 text-danger border-danger/30"
-            }`}>{nigerianClass || "Fail"}</span>
-            {targetAverage > 0 && (
-              <p className="text-xs font-bold text-muted-foreground mt-2">
-                Target: {targetAverage.toFixed(2)}
-              </p>
-            )}
-          </div>
-        )}
-
         {/* Status card */}
         <motion.div
           initial={{ y: -8, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className={`rounded-2xl border-2 ${config.bg} ${config.border} overflow-hidden`}
         >
+          {/* Status header */}
           <div className="flex items-center gap-2 px-4 pt-3 pb-2 border-b border-border/30">
             {config.icon}
             <p className="text-xs font-semibold text-foreground">{config.sub}</p>
           </div>
-          <div className="flex items-stretch px-4 py-3 gap-4">
-            <div className="flex items-center justify-center shrink-0" style={{ width: "33%" }}>
-              <span className={`text-5xl font-black leading-none ${
+
+          {/* Two-column: Current Average | Target */}
+          <div className="flex items-stretch px-4 pt-3 pb-2 gap-0">
+            {/* Left — Current Average */}
+            <div className="flex-1">
+              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">
+                {isNigerian ? "Current GPA" : t("currentAverage")}
+              </p>
+              <span className={`text-4xl font-black leading-none ${
                 isOnTrack ? "text-success" : overallStatus === "risky" ? "text-warning" : "text-danger"
               }`}>
                 {displayValue !== null ? (isNigerian ? displayValue.toFixed(2) : fmtFinalAvg(displayValue, getRounding())) : "—"}
               </span>
-            </div>
-            <div className="flex flex-col justify-between flex-1 gap-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t("targetLabel")}</span>
-                <span className="text-sm font-black text-foreground">
-                  {targetAverage.toFixed(isNigerian ? 2 : 0)}{isNigerian ? "" : `–${displayMax}`}
-                </span>
-              </div>
-              <div>
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <motion.div
-                    className={`h-full rounded-full ${isOnTrack ? "bg-success" : overallStatus === "risky" ? "bg-warning" : "bg-danger"}`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressPercent}%` }}
-                    transition={{ delay: 0.2, type: "spring", stiffness: 60 }}
-                  />
+              {isNigerian && currentCGPA !== null && (
+                <div className="mt-1.5">
+                  <span className={`inline-block text-[10px] font-black px-2 py-0.5 rounded-full border ${
+                    nigerianClass === "First Class" ? "bg-success/15 text-success border-success/30"
+                    : nigerianClass === "Second Class Upper" ? "bg-primary/15 text-primary border-primary/30"
+                    : nigerianClass === "Second Class Lower" ? "bg-warning/15 text-warning border-warning/30"
+                    : nigerianClass === "Third Class" ? "bg-orange-500/15 text-orange-500 border-orange-500/30"
+                    : nigerianClass === "Pass" ? "bg-muted text-muted-foreground border-border"
+                    : "bg-danger/15 text-danger border-danger/30"
+                  }`}>{nigerianClass || "Fail"}</span>
                 </div>
-                <p className="text-[9px] font-bold text-muted-foreground text-right mt-0.5">{progressPercent.toFixed(0)}%</p>
-              </div>
+              )}
             </div>
+
+            {/* Vertical divider */}
+            {targetAverage > 0 && (
+              <>
+                <div className="w-px bg-border/40 self-stretch mx-4" />
+                {/* Right — Target */}
+                <div className="flex-1">
+                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">
+                    {t("target")}
+                  </p>
+                  <span className="text-4xl font-black text-foreground leading-none">
+                    {targetAverage.toFixed(isNigerian ? 2 : 0)}
+                    {!isNigerian && <span className="text-4xl font-black text-muted-foreground">–{displayMax}</span>}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Progress bar — coverage based */}
+          <div className="px-4 pb-3 pt-2">
+            {(() => {
+              let coveragePct = 0;
+              let coverageText = "";
+
+              if (isNigerian) {
+                const total = repairedSubjects.length;
+                const filled = repairedSubjects.filter(s =>
+                  (s.customAssessments ?? []).some(a => a.value !== null)
+                ).length;
+                coveragePct = total > 0 ? (filled / total) * 100 : 0;
+                coverageText = total > 0 ? `Coverage: ${Math.round(coveragePct)}% (${filled}/${total} courses)` : "";
+              } else {
+                const total = subjects.length * 3;
+                const filled = subjects.reduce((acc, s) =>
+                  acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0), 0);
+                coveragePct = total > 0 ? (filled / total) * 100 : 0;
+                coverageText = total > 0 ? `Coverage: ${Math.round(coveragePct)}% (${filled}/${total} scores)` : "";
+              }
+
+              return (
+                <>
+                  <div className="h-2.5 rounded-full bg-muted overflow-hidden border border-foreground/10">
+                    <motion.div
+                      className="h-full rounded-full bg-secondary"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(coveragePct, 100)}%` }}
+                      transition={{ delay: 0.2, type: "spring", stiffness: 60 }}
+                    />
+                  </div>
+                  {coverageText && (
+                    <p className="text-[10px] font-bold text-muted-foreground mt-1.5">{coverageText}</p>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </motion.div>
 

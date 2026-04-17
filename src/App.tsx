@@ -86,6 +86,8 @@ const App = () => {
             <Route path="/simulator" element={<ProtectedRoute requireOnboarding><Simulator /></ProtectedRoute>} />
             <Route path="/library" element={<ProtectedRoute requireOnboarding><LibraryDirect /></ProtectedRoute>} />
             <Route path="/library/:paperId" element={<ProtectedRoute requireOnboarding><PaperDetail /></ProtectedRoute>} />
+            {/* Deep link entry point — /paper/:id redirects to /library/:id */}
+            <Route path="/paper/:paperId" element={<ProtectedRoute requireOnboarding><PaperDetail /></ProtectedRoute>} />
             <Route path="/subject/:subjectName" element={<ProtectedRoute requireOnboarding><SubjectDashboard /></ProtectedRoute>} />
             <Route path="/my-downloads" element={<ProtectedRoute requireOnboarding><MyDownloads /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute requireOnboarding><Settings /></ProtectedRoute>} />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Download, Search, Eye, X, LayoutGrid, List, FileText, ChevronDown, Check, ChevronRight, Sparkles, Crown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -52,7 +52,7 @@ function CyclingSubtext() {
         initial={{ x: -24, opacity: 0 }}
         animate={visible ? { x: 0, opacity: 1 } : { x: 24, opacity: 0 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        className="text-xs font-semibold text-muted-foreground/60 absolute inset-0 whitespace-nowrap overflow-hidden text-ellipsis"
+        className="text-xs font-semibold text-premium-foreground/70 absolute inset-0 whitespace-nowrap overflow-hidden text-ellipsis"
         style={{
           background: "linear-gradient(90deg, transparent 0%, hsl(var(--muted-foreground)/0.55) 20%, hsl(var(--muted-foreground)/0.55) 80%, transparent 100%)",
           WebkitBackgroundClip: "text",
@@ -68,6 +68,7 @@ function CyclingSubtext() {
 
 export default function LibraryDirect() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, language } = useLanguage();
   const { premiumEnabled: PREMIUM_ENABLED } = useAppConfig();
   const headerRef = useRef<HTMLDivElement>(null);
@@ -86,10 +87,13 @@ export default function LibraryDirect() {
   const userClassLevel = userState?.classLevel ?? null;
   const userSubjectNames = userState?.subjects?.map(s => s.name) ?? [];
 
-  const [activeTab, setActiveTab] = useState<LibraryTab>('papers');
+  const [activeTab, setActiveTab] = useState<LibraryTab>(
+    (location.state as any)?.tab === 'prep' ? 'prep' : 'papers'
+  );
   const [papers, setPapers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [searchQuery, setSearchQuery] = useState('');
   const [downloadedPaperIds, setDownloadedPaperIds] = useState<Set<string>>(new Set());
   const queryParams = new URLSearchParams(window.location.search);
@@ -118,11 +122,20 @@ export default function LibraryDirect() {
   const prevDownloadCount = useRef(0);
 
   useEffect(() => {
-    loadPapers();
+    setIsOffline(!navigator.onLine);
+    const handleOnline  = () => { setIsOffline(false); loadPapers(); };
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online',  handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    if (navigator.onLine) loadPapers();
     loadDownloadedPapers();
-    // Trigger 4: library_open — fire after screen settles
     const timer = setTimeout(() => fireNudge("library_open"), 4000);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('online',  handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadDownloadedPapers = async () => {
@@ -131,7 +144,6 @@ export default function LibraryDirect() {
     const prevCount = prevDownloadCount.current;
     prevDownloadCount.current = downloaded.size;
     setDownloadedPaperIds(downloaded);
-    // Trigger 5: paper_downloaded — only when count increases during this session
     if (prevCount === 0 && downloaded.size > 0) {
       setTimeout(() => fireNudge("paper_downloaded"), 1500);
     }
@@ -268,7 +280,65 @@ export default function LibraryDirect() {
         <AnimatePresence mode="wait">
           {activeTab === 'papers' && (
             <motion.div key="papers" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} style={{ paddingTop: headerHeight }}>
-              {loading && (
+              {isOffline && (
+                <div className="content-col flex flex-col items-center justify-center py-20 gap-6 text-center">
+                  <div className="text-5xl">📡</div>
+                  <div>
+                    <p className="text-lg font-black text-foreground">You're offline</p>
+                    <p className="text-sm font-semibold text-muted-foreground mt-1">
+                      Can't load papers without a connection.
+                    </p>
+                    {downloadedPaperIds.size > 0 ? (
+                      <p className="text-sm font-semibold text-muted-foreground">
+                        Browse your downloaded papers instead.
+                      </p>
+                    ) : (
+                      <p className="text-sm font-semibold text-muted-foreground">
+                        Download papers while online to access them offline.
+                      </p>
+                    )}
+                  </div>
+                  {downloadedPaperIds.size > 0 ? (
+                    <div className="flex flex-col items-center gap-1 mt-2">
+                      <Link
+                        to="/my-downloads"
+                        className="flex items-center gap-2 rounded-2xl bg-card border-2 border-foreground px-5 py-3 font-black text-foreground text-sm card-shadow active:scale-95 transition-transform"
+                      >
+                        Go to My Downloads
+                      </Link>
+                      <svg
+                        width="40" height="52" viewBox="0 0 40 52" fill="none"
+                        className="text-muted-foreground mt-1"
+                      >
+                        <path
+                          d="M20 2 C20 2, 8 18, 20 34 C26 42, 14 46, 14 46"
+                          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+                          fill="none" strokeDasharray="5 3"
+                        />
+                        <path
+                          d="M10 42 L14 48 L20 43"
+                          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                          fill="none"
+                        />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 mt-2">
+                      <p className="text-xs font-bold text-muted-foreground/60">
+                        Connect to the internet to browse papers.
+                      </p>
+                      <button
+                        onClick={loadPapers}
+                        className="text-xs font-black text-primary active:scale-95 transition-transform"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!isOffline && loading && (
                 <div className="flex flex-col items-center justify-center py-24 gap-4">
                   <div className="relative h-16 w-16">
                     <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
@@ -278,7 +348,22 @@ export default function LibraryDirect() {
                 </div>
               )}
 
-              {!loading && !error && filteredPapers.length > 0 && (
+              {!isOffline && !loading && !!error && (
+                <div className="content-col py-12 text-center">
+                  <div className="bg-muted/50 rounded-2xl p-8 flex flex-col items-center gap-3">
+                    <p className="text-lg font-bold text-foreground">Couldn't load papers</p>
+                    <p className="text-sm text-muted-foreground">{error}</p>
+                    <button
+                      onClick={loadPapers}
+                      className="mt-2 text-sm font-black text-primary active:scale-95 transition-transform"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!isOffline && !loading && !error && filteredPapers.length > 0 && (
                 <div className="content-col pt-3">
                   <p className="text-xs text-muted-foreground font-bold mb-3">
                     {filteredPapers.length} {filteredPapers.length === 1 ? t("paper") : t("papersFound")}
@@ -347,7 +432,7 @@ export default function LibraryDirect() {
                 </div>
               )}
 
-              {!loading && !error && papers.length === 0 && (
+              {!isOffline && !loading && !error && papers.length === 0 && (
                 <div className="content-col py-12 text-center">
                   <div className="bg-muted/50 rounded-2xl p-8">
                     <p className="text-lg font-bold text-foreground mb-2">{t("noPapersYet")}</p>
@@ -356,7 +441,7 @@ export default function LibraryDirect() {
                 </div>
               )}
 
-              {!loading && !error && papers.length > 0 && classPapers.length === 0 && effectivePapers === papers && (
+              {!isOffline && !loading && !error && papers.length > 0 && classPapers.length === 0 && effectivePapers === papers && (
                 <div className="content-col py-12 text-center">
                   <div className="bg-muted/50 rounded-2xl p-8">
                     <p className="text-lg font-bold text-foreground mb-2">{t("noPapersForClass")}</p>
@@ -365,7 +450,7 @@ export default function LibraryDirect() {
                 </div>
               )}
 
-              {!loading && !error && classPapers.length > 0 && filteredPapers.length === 0 && (
+              {!isOffline && !loading && !error && classPapers.length > 0 && filteredPapers.length === 0 && (
                 <div className="content-col py-12 text-center">
                   <div className="bg-muted/50 rounded-2xl p-8">
                     <p className="text-lg font-bold text-foreground mb-2">{t("noMatchFilters")}</p>
@@ -382,10 +467,10 @@ export default function LibraryDirect() {
               <div className="content-col pt-4 pb-4">
                 <>
                     {/* Hero */}
-                    <div className="rounded-2xl bg-premium/10 border-2 border-premium/30 px-4 py-4 mb-4 flex items-center gap-3">
-                      <Crown className="h-6 w-6 text-premium shrink-0" />
+                    <div className="rounded-2xl bg-premium border-2 border-premium px-4 py-4 mb-4 flex items-center gap-3">
+                      <Crown className="h-6 w-6 text-premium-foreground shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-foreground text-sm">{t("passNotHarder")}</p>
+                        <p className="font-black text-premium-foreground text-sm">{t("passNotHarder")}</p>
                         <CyclingSubtext />
                       </div>
                     </div>

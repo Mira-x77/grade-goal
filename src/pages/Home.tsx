@@ -23,7 +23,7 @@ import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
 import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
 import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
 import { Subject } from "@/types/exam";
-import { NigerianState, NigerianSemester, NigerianCourse } from "@/types/nigerian";
+import { NigerianState } from "@/types/nigerian";
 import { useLanguage } from "@/contexts/LanguageContext";
 import NigerianAssessmentSheet from "@/components/NigerianAssessmentSheet";
 import { useIsTablet } from "@/hooks/useIsTablet";
@@ -31,10 +31,6 @@ import { usePremiumNudge, nudgeSubtext, NudgeTrigger } from "@/hooks/usePremiumN
 import { useAppConfig } from "@/contexts/AppConfigContext";
 import {
   scoreToGrade,
-  computeGP,
-  computeSemesterGPA,
-  computeCGPA,
-  classifyDegree,
   validateScore,
   validateCreditUnits,
   computeIntegratedSubjectScore,
@@ -46,273 +42,7 @@ const markTypeLabels: Record<string, string> = {
   compo: "Compo",
 };
 
-// ── Nigerian helpers (inline, no separate screen) ─────────────────────────────
-
-function recomputeNigerianState(state: NigerianState): NigerianState {
-  const semesters = state.semesters.map((sem) => {
-    const courses = sem.courses.map((c) => {
-      const { letter, points } = scoreToGrade(c.score);
-      return { ...c, letter, gradePoints: points, gp: computeGP(c.score, c.creditUnits) };
-    });
-    return { ...sem, courses, gpa: computeSemesterGPA(courses) };
-  });
-  const cgpa = computeCGPA(semesters);
-  return { ...state, semesters, cgpa, classOfDegree: classifyDegree(cgpa) };
-}
-
-function NigerianSemesterCard({
-  semester, index, onAddCourse, onRemoveCourse,
-}: {
-  semester: NigerianSemester;
-  index: number;
-  onAddCourse: (semId: string, name: string, cu: number, score: number) => void;
-  onRemoveCourse: (semId: string, courseId: string) => void;
-}) {
-  const [open, setOpen] = useState(true);
-  const [name, setName] = useState("");
-  const [cu, setCu] = useState("");
-  const [score, setScore] = useState("");
-  const [scoreErr, setScoreErr] = useState<string | null>(null);
-  const [cuErr, setCuErr] = useState<string | null>(null);
-
-  const canAdd = name.trim().length > 0 && cu !== "" && score !== "" && !scoreErr && !cuErr;
-
-  return (
-    <motion.div
-      initial={{ y: 12, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: index * 0.04 }}
-      className="rounded-2xl bg-card border-2 border-border overflow-hidden"
-    >
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/40 transition-colors"
-      >
-        <div className="flex flex-col items-start gap-0.5">
-          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{semester.sessionLabel}</span>
-          <span className="text-sm font-black text-foreground">{semester.name}</span>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="flex flex-col items-end gap-0.5">
-            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">GPA</span>
-            <span className="text-lg font-black text-foreground leading-none">{semester.gpa.toFixed(2)}</span>
-          </div>
-          <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </motion.div>
-        </div>
-      </button>
-
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            <div className="border-t border-border px-4 pt-3 pb-4 flex flex-col gap-3">
-              {semester.courses.length > 0 && (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center px-1 mb-0.5">
-                    <span className="flex-1 text-[9px] font-black text-muted-foreground uppercase tracking-widest">Course</span>
-                    <span className="w-8 text-center text-[9px] font-black text-muted-foreground uppercase">CU</span>
-                    <span className="w-10 text-center text-[9px] font-black text-muted-foreground uppercase">Score</span>
-                    <span className="w-8 text-center text-[9px] font-black text-muted-foreground uppercase">Grade</span>
-                    <span className="w-8 text-center text-[9px] font-black text-muted-foreground uppercase">GP</span>
-                    <span className="w-8" />
-                  </div>
-                  <AnimatePresence>
-                    {semester.courses.map((course) => (
-                      <motion.div
-                        key={course.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -30 }}
-                        className="flex items-center rounded-xl bg-muted/50 px-3 py-2 gap-1"
-                      >
-                        <span className="flex-1 text-sm font-bold text-foreground truncate">{course.name}</span>
-                        <span className="w-8 text-center text-xs font-bold text-muted-foreground">{course.creditUnits}</span>
-                        <span className="w-10 text-center text-xs font-bold text-foreground">{course.score}</span>
-                        <span className={`w-8 text-center text-xs font-black ${
-                          course.letter === "A" ? "text-success" : course.letter === "B" ? "text-primary"
-                          : course.letter === "C" ? "text-warning" : course.letter === "F" ? "text-danger" : "text-muted-foreground"
-                        }`}>{course.letter}</span>
-                        <span className="w-8 text-center text-xs font-bold text-foreground">{course.gp}</span>
-                        <button
-                          onClick={() => onRemoveCourse(semester.id, course.id)}
-                          className="w-8 flex items-center justify-center text-destructive/50 hover:text-destructive active:scale-90 transition-colors"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              )}
-              {/* Inline add-course form */}
-              <div className="rounded-2xl bg-muted/40 border-2 border-dashed border-border p-3 flex flex-col gap-2">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Add Course</p>
-                <input
-                  type="text" placeholder="Course name" value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full rounded-xl border-2 border-border bg-card px-3 py-2 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                />
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <input
-                      type="number" placeholder="Units (1–6)" value={cu} min={1} max={6}
-                      onChange={e => { setCu(e.target.value); setCuErr(validateCreditUnits(Math.floor(Number(e.target.value)))); }}
-                      className={`w-full rounded-xl border-2 bg-card px-3 py-2 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors ${cuErr ? "border-danger" : "border-border focus:border-primary"}`}
-                    />
-                    {cuErr && <p className="text-[10px] font-bold text-danger mt-0.5 px-1">{cuErr}</p>}
-                  </div>
-                  <div className="flex-1">
-                    <input
-                      type="number" placeholder="Score (0–100)" value={score} min={0} max={100}
-                      onChange={e => { setScore(e.target.value); setScoreErr(validateScore(Math.floor(Number(e.target.value)))); }}
-                      className={`w-full rounded-xl border-2 bg-card px-3 py-2 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors ${scoreErr ? "border-danger" : "border-border focus:border-primary"}`}
-                    />
-                    {scoreErr && <p className="text-[10px] font-bold text-danger mt-0.5 px-1">{scoreErr}</p>}
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    if (!canAdd) return;
-                    onAddCourse(semester.id, name.trim(), Math.floor(Number(cu)), Math.floor(Number(score)));
-                    setName(""); setCu(""); setScore(""); setScoreErr(null); setCuErr(null);
-                  }}
-                  disabled={!canAdd}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-extrabold text-primary-foreground active:scale-95 transition-transform disabled:opacity-30 disabled:pointer-events-none"
-                >
-                  <Plus className="h-4 w-4" /> Add Course
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
-function NigerianAddSemesterButton({ onAdd }: { onAdd: (sessionLabel: string, name: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [sessionLabel, setSessionLabel] = useState("");
-  const [semName, setSemName] = useState("");
-  const canSubmit = sessionLabel.trim().length > 0 && semName.trim().length > 0;
-
-  if (!open) {
-    return (
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        onClick={() => setOpen(true)}
-        className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/50 bg-primary/5 py-3.5 text-sm font-extrabold text-primary active:scale-[0.98] transition-all"
-      >
-        <Plus className="h-4 w-4" /> Add Semester
-      </motion.button>
-    );
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-card border-2 border-primary/40 p-4 flex flex-col gap-3"
-    >
-      <p className="text-sm font-black text-foreground">New Semester</p>
-      <input
-        type="text" placeholder="Session (e.g. 2023/2024)" value={sessionLabel}
-        onChange={e => setSessionLabel(e.target.value)} autoFocus
-        className="w-full rounded-xl border-2 border-border bg-muted px-3 py-2.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-      />
-      <input
-        type="text" placeholder="Semester name (e.g. First Semester)" value={semName}
-        onChange={e => setSemName(e.target.value)}
-        onKeyDown={e => e.key === "Enter" && canSubmit && (onAdd(sessionLabel.trim(), semName.trim()), setOpen(false), setSessionLabel(""), setSemName(""))}
-        className="w-full rounded-xl border-2 border-border bg-muted px-3 py-2.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-      />
-      <div className="flex gap-2">
-        <button onClick={() => setOpen(false)} className="flex-1 rounded-xl border-2 border-border py-2.5 text-sm font-extrabold text-foreground active:scale-95 transition-transform">Cancel</button>
-        <button
-          onClick={() => { if (!canSubmit) return; onAdd(sessionLabel.trim(), semName.trim()); setOpen(false); setSessionLabel(""); setSemName(""); }}
-          disabled={!canSubmit}
-          className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-extrabold text-primary-foreground active:scale-95 transition-transform disabled:opacity-30 disabled:pointer-events-none"
-        >Add</button>
-      </div>
-    </motion.div>
-  );
-}
-
-function NigerianTargetCard({ nigerianState, onChange }: { nigerianState: NigerianState; onChange: (s: NigerianState) => void }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <motion.div
-      initial={{ y: 10, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.15 }}
-      className="rounded-2xl bg-card border-2 border-border overflow-hidden"
-    >
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/40 transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <Target className="h-4 w-4 text-primary" />
-          <span className="text-sm font-black text-foreground">Target CGPA</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {nigerianState.targetCGPA !== null && (
-            <span className="text-sm font-black text-primary">{nigerianState.targetCGPA.toFixed(2)}</span>
-          )}
-          <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </motion.div>
-        </div>
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            <div className="border-t border-border px-4 pt-3 pb-4 flex gap-3">
-              <div className="flex-1">
-                <label className="text-[10px] font-bold text-muted-foreground mb-1 block">Target CGPA (0–5)</label>
-                <input
-                  type="number" placeholder="e.g. 4.50" min={0} max={5} step={0.01}
-                  value={nigerianState.targetCGPA ?? ""}
-                  onChange={e => {
-                    const n = parseFloat(e.target.value);
-                    onChange({ ...nigerianState, targetCGPA: isNaN(n) ? null : Math.min(5, Math.max(0, n)) });
-                  }}
-                  className="w-full rounded-xl border-2 border-border bg-muted px-3 py-2 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="text-[10px] font-bold text-muted-foreground mb-1 block">Remaining Credit Units</label>
-                <input
-                  type="number" placeholder="e.g. 60" min={0}
-                  value={nigerianState.remainingCreditUnits || ""}
-                  onChange={e => {
-                    const n = parseInt(e.target.value, 10);
-                    onChange({ ...nigerianState, remainingCreditUnits: isNaN(n) ? 0 : Math.max(0, n) });
-                  }}
-                  className="w-full rounded-xl border-2 border-border bg-muted px-3 py-2 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                />
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
+// ── Nigerian helpers ──────────────────────────────────────────────────────────
 
 function SubjectsGlanceCard({ subjects, title }: { subjects: Subject[]; title: string }) {
   const [open, setOpen] = useState(false);
@@ -592,13 +322,17 @@ const Home = () => {
   // Data completeness for the hero card progress bar
   const heroBarWidth = (() => {
     if (!appState) return 0;
+    const subjects = appState.subjects ?? [];
     if (isNigerian) {
-      // GPA progress toward target
-      if (heroValue === null || !heroTarget || heroTarget <= 0) return 0;
-      return Math.min((heroValue / heroTarget) * 100, 100);
+      // Nigerian: courses with at least one score entered / total courses
+      const total = subjects.length;
+      if (total === 0) return 0;
+      const filled = subjects.filter(s =>
+        (s.customAssessments ?? []).some(a => a.value !== null)
+      ).length;
+      return (filled / total) * 100;
     }
     // APC: filled marks / (subjects × 3)
-    const subjects = appState.subjects ?? [];
     const total = subjects.length * 3;
     if (total === 0) return 0;
     const filled = subjects.reduce((acc, s) =>
@@ -772,14 +506,22 @@ const Home = () => {
           barWidth={heroBarWidth}
           decimals={isNigerian ? 2 : 1}
           degreeClass={isNigerian ? nigerianClass : undefined}
-          coverageLabel={!isNigerian && appState ? (() => {
+          coverageLabel={appState ? (() => {
             const subjects = appState.subjects ?? [];
+            if (isNigerian) {
+              const total = subjects.length;
+              if (total === 0) return undefined;
+              const filled = subjects.filter(s =>
+                (s.customAssessments ?? []).some(a => a.value !== null)
+              ).length;
+              return `Coverage: ${Math.round((filled / total) * 100)}% (${filled}/${total} courses)`;
+            }
             const total = subjects.length * 3;
             const filled = subjects.reduce((acc, s) =>
               acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0), 0);
             if (total === 0) return undefined;
             return `Coverage: ${Math.round((filled / total) * 100)}% (${filled}/${total} scores)`;
-          })() : isNigerian && heroValue !== null && heroTarget ? `${heroValue.toFixed(2)} / ${heroTarget.toFixed(2)} target` : undefined}
+          })() : undefined}
           hideBar={false}
           onClick={() => setShowResultsSheet(true)}
         />
@@ -978,61 +720,16 @@ const Home = () => {
         )}
 
         {/* Courses — Nigerian, collapsible */}
-        {/* Scores — Nigerian, shows when subjects or active semester courses exist */}
+        {/* Courses — Nigerian, collapsible, shows all subjects */}
         {isNigerian && (() => {
-          // Semester-based mode
-          const hasSemesters = (nigerianState.semesters.length ?? 0) > 0;
-          if (hasSemesters) {
-            const activeSemId = nigerianState.activeSemesterId;
-            const activeSem = activeSemId
-              ? nigerianState.semesters.find(s => s.id === activeSemId)
-              : nigerianState.semesters[nigerianState.semesters.length - 1];
-            const courses = activeSem?.courses ?? [];
-            if (courses.length === 0) return null;
-            return (
-              <div className="rounded-2xl bg-card border-2 border-border overflow-hidden">
-                <button onClick={() => setCoursesOpen(v => !v)} className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/40 transition-colors">
-                  <h3 className="font-black text-foreground text-sm">Scores</h3>
-                  <motion.div animate={{ rotate: coursesOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  </motion.div>
-                </button>
-                <AnimatePresence initial={false}>
-                  {coursesOpen && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-                      <div className="border-t border-border px-4 pb-3 pt-2 flex flex-col gap-1">
-                        {/* Column headers */}
-                        <div className="flex items-center px-3 py-1 mb-1">
-                          <span className="flex-1 text-[9px] font-black text-muted-foreground uppercase tracking-widest">Course</span>
-                          <span className="w-8 text-center text-[9px] font-black text-muted-foreground uppercase">CU</span>
-                          <span className="w-14 text-center text-[9px] font-black text-muted-foreground uppercase">Score</span>
-                          <span className="w-10 text-center text-[9px] font-black text-muted-foreground uppercase">Grade</span>
-                        </div>
-                        {courses.map((c) => (
-                          <div key={c.id} className="flex items-center rounded-xl bg-muted/50 px-3 py-2">
-                            <span className="flex-1 text-sm font-bold text-foreground truncate">{c.name}</span>
-                            <span className="w-8 text-center text-xs font-bold text-muted-foreground">{c.creditUnits}</span>
-                            <span className="w-14 text-center text-sm font-black text-foreground">{c.score}</span>
-                            <span className={`w-10 text-center text-sm font-black ${c.letter === "A" ? "text-success" : c.letter === "B" ? "text-primary" : c.letter === "C" ? "text-warning" : "text-danger"}`}>{c.letter}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          }
-
-          // Integrated mode
-          const scoredSubjects = [...(appState?.subjects ?? [])]
-            .filter(sub => (sub.customAssessments ?? []).some(a => a.value !== null))
+          // Integrated mode only
+          const allSubjects = [...(appState?.subjects ?? [])]
             .sort((a, b) => a.name.localeCompare(b.name));
-          if (scoredSubjects.length === 0) return null;
+          if (allSubjects.length === 0) return null;
           return (
             <div className="rounded-2xl bg-card border-2 border-border overflow-hidden">
               <button onClick={() => setCoursesOpen(v => !v)} className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/40 transition-colors">
-                <h3 className="font-black text-foreground text-sm">Scores</h3>
+                <h3 className="font-black text-foreground text-sm">Courses</h3>
                 <motion.div animate={{ rotate: coursesOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </motion.div>
@@ -1048,7 +745,7 @@ const Home = () => {
                         <span className="w-14 text-center text-[9px] font-black text-muted-foreground uppercase">Score</span>
                         <span className="w-10 text-center text-[9px] font-black text-muted-foreground uppercase">Grade</span>
                       </div>
-                      {scoredSubjects.map((sub) => {
+                      {allSubjects.map((sub) => {
                         const score = computeIntegratedSubjectScore(sub);
                         const { letter } = score !== null ? scoreToGrade(Math.round(score)) : { letter: null };
                         const cu = sub.creditUnits ?? sub.coefficient;

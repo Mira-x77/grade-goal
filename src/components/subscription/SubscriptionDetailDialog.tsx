@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle2, BookOpen, Layers, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Crown, CheckCircle2, ArrowRight, Zap } from 'lucide-react';
 import { subscriptionService } from '@/services/subscriptionService';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SubscriptionDetailDialogProps {
   open: boolean;
   onClose: () => void;
-  onUpgrade: () => void;
+  onSelectPack: () => void;
+  onSelectAll: () => void;
   subjectName?: string;
 }
 
-export function SubscriptionDetailDialog({ open, onClose, onUpgrade, subjectName }: SubscriptionDetailDialogProps) {
+export function SubscriptionDetailDialog({ open, onClose, onSelectPack, onSelectAll, subjectName }: SubscriptionDetailDialogProps) {
   const { t } = useLanguage();
   const [status, setStatus] = useState<{
     tier: string;
@@ -21,15 +23,8 @@ export function SubscriptionDetailDialog({ open, onClose, onUpgrade, subjectName
     ownedPacks?: string[];
   } | null>(null);
 
-  const trackEvent = (eventName: string) => {
-    console.log(`[Analytics Event Tracked]: ${eventName}`);
-  };
-
   useEffect(() => {
-    if (open) {
-      loadStatus();
-      trackEvent('view_paywall');
-    }
+    if (open) loadStatus();
   }, [open]);
 
   const loadStatus = async () => {
@@ -44,132 +39,102 @@ export function SubscriptionDetailDialog({ open, onClose, onUpgrade, subjectName
     }
   };
 
-  const handleClose = () => {
-    trackEvent('dropoff_paywall');
-    onClose();
-  };
-
-  const handlePackClick = () => {
-    trackEvent('click_pack');
-    trackEvent('purchase_pack'); // Simulated purchase
-    onUpgrade();
-  };
-
-  const handlePassClick = () => {
-    trackEvent('click_pass');
-    trackEvent('purchase_pass'); // Simulated purchase
-    onUpgrade();
-  };
-
-  if (!status) return null;
-
   const currentSubject = subjectName || "This Subject";
-  const numOwnedPacks = status.ownedPacks?.length || 0;
-  
-  // If user already owns this specific subject
-  if (status.ownedPacks?.includes(currentSubject)) {
-    return (
-      <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md text-center py-10">
-          <div className="mx-auto w-12 h-12 bg-success/20 rounded-full flex items-center justify-center mb-4">
-            <CheckCircle2 className="h-6 w-6 text-success" />
-          </div>
-          <DialogTitle className="text-xl font-black mb-2">{t("youAlreadyOwn")}</DialogTitle>
-          <DialogDescription className="text-base">
-            {t("fullAccessTo").replace("{subject}", currentSubject)}
-          </DialogDescription>
-          <Button onClick={handleClose} className="mt-6 w-full font-bold">{t("close")}</Button>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
-  // PRICING RULES
-  const packPrice = "500 FCFA";
-  const passPrice = numOwnedPacks > 0 ? "1000 FCFA" : "1500 FCFA";
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[60] bg-black/60"
+          />
 
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden bg-card border-border">
-        {/* Header / Hero */}
-        <div className="bg-premium/10 px-6 pt-8 pb-6 border-b border-premium/20 text-center relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-premium/20 rounded-full blur-3xl"></div>
-          
-          <Crown className="h-10 w-10 text-premium mx-auto mb-3 relative z-10" />
-          <h2 className="text-2xl font-black text-foreground leading-tight mb-2 relative z-10">
-            {t("focusOnWhatMatters")}
-          </h2>
-          <p className="text-sm font-semibold text-muted-foreground relative z-10">
-            {t("questionsRepeat")}
-          </p>
-        </div>
-
-        <div className="px-6 py-6 space-y-6">
-          {/* Value Preview list */}
-          <div className="space-y-3">
-            <div className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" /><span className="text-sm font-bold text-foreground">{t("top30Questions")}</span></div>
-            <div className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" /><span className="text-sm font-bold text-foreground">{t("topicsLikelyAppear")}</span></div>
-            <div className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" /><span className="text-sm font-bold text-foreground">{t("stepByStepSolutions")}</span></div>
-            <div className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" /><span className="text-sm font-bold text-foreground">{t("whatToStudyGuide")}</span></div>
-          </div>
-
-          <div className="space-y-4">
-            {/* CTA 1 (Pack) */}
-            <button 
-              onClick={handlePackClick}
-              className="w-full relative overflow-hidden group rounded-2xl bg-premium border-2 border-premium transition-all p-4 flex flex-col items-center justify-center card-shadow active:translate-y-0.5 active:shadow-none active:scale-[0.98]"
+          {/* Modal — full-screen flex container handles centering */}
+          <div className="fixed inset-0 z-[61] flex items-center justify-center pointer-events-none px-4">
+            <motion.div
+              initial={{ scale: 0.94, opacity: 0, y: 8 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.94, opacity: 0, y: 8 }}
+              transition={{ type: "spring", stiffness: 340, damping: 30 }}
+              className="w-full max-w-sm pointer-events-auto"
             >
-              <span className="relative z-10 text-lg font-black text-premium-foreground flex items-center justify-center gap-2">
-                {t("unlockSubjectPack").replace("{subject}", currentSubject)}
-                <ArrowRight className="h-5 w-5" />
-              </span>
-              <span className="relative z-10 text-sm font-bold text-foreground/70 mt-1">
-                {packPrice}
-              </span>
-            </button>
+            <div className="rounded-2xl bg-card border-2 border-border overflow-hidden card-shadow">
 
-            {/* Divider */}
-            <div className="flex items-center gap-3 w-full">
-              <div className="h-px bg-border flex-1"></div>
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-2">
-                {t("preparingMultiple")}
-              </span>
-              <div className="h-px bg-border flex-1"></div>
-            </div>
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border">
+                <p className="text-sm font-black text-foreground">{t("choosePlan")}</p>
+                <button
+                  onClick={onClose}
+                  className="text-muted-foreground active:scale-90 transition-transform"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-            {/* CTA 2 (Pass/Upgrade) */}
-            <div className="rounded-xl border border-border bg-muted/30 p-4">
-              {numOwnedPacks > 0 ? (
-                <div className="text-center mb-3">
-                  <p className="text-xs font-bold text-primary mb-1">
-                    <Zap className="h-3 w-3 inline mr-1" />
-                    {t("youveUnlocked").replace("{n}", String(numOwnedPacks))}{numOwnedPacks > 1 ? "s" : ""}
-                  </p>
+              {/* Already owned state */}
+              {status?.ownedPacks?.includes(currentSubject) ? (
+                <div className="px-5 py-8 flex flex-col items-center gap-4 text-center">
+                  <div className="w-12 h-12 bg-success/20 rounded-full flex items-center justify-center">
+                    <CheckCircle2 className="h-6 w-6 text-success" />
+                  </div>
+                  <div>
+                    <p className="font-black text-foreground">{t("youAlreadyOwn")}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{t("fullAccessTo").replace("{subject}", currentSubject)}</p>
+                  </div>
+                  <Button onClick={onClose} className="w-full font-bold">{t("close")}</Button>
                 </div>
               ) : (
-                <div className="text-center mb-3">
-                  <p className="text-xs font-bold text-muted-foreground mb-1">{t("mostStudentsStart")}</p>
+                <div className="px-4 py-4 flex flex-col gap-3">
+                  {/* Subject Pack */}
+                  <button
+                    onClick={onSelectPack}
+                    className="w-full rounded-2xl bg-card border-2 border-foreground p-4 text-left card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-3"
+                  >
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/15 border-2 border-foreground/10 shrink-0">
+                      <BookOpen className="h-5 w-5 text-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-foreground text-sm">{currentSubject} Pack</p>
+                      <p className="text-[10px] font-semibold text-muted-foreground mt-0.5 leading-snug">
+                        500 FCFA · Lifetime access
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </button>
+
+                  {/* All Subjects Pass */}
+                  <button
+                    onClick={onSelectAll}
+                    className="w-full rounded-2xl bg-premium border-2 border-premium p-4 text-left card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-3"
+                  >
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 border-2 border-white/20 shrink-0">
+                      <Layers className="h-5 w-5 text-premium-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-premium-foreground text-sm">{t("allSubjectsPass")}</p>
+                      <p className="text-[10px] font-semibold text-premium-foreground/70 mt-0.5 leading-snug">
+                        1 500 FCFA · 1 month access
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <span className="text-[10px] font-black text-premium-foreground bg-white/15 px-2 py-0.5 rounded-full border border-white/20 whitespace-nowrap">
+                        {t("bestValue")}
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-premium-foreground/60" />
+                    </div>
+                  </button>
                 </div>
               )}
-              
-              <button 
-                onClick={handlePassClick}
-                className="w-full rounded-xl bg-card hover:bg-muted border border-border transition-all py-3 flex flex-col items-center justify-center active:scale-[0.98]"
-              >
-                <span className="text-sm font-black text-foreground">
-                  {numOwnedPacks > 0 ? t("unlockAllRemaining") : t("unlockAllSubjects")}
-                </span>
-                <span className="text-sm font-bold text-primary mt-0.5">
-                  {passPrice}
-                </span>
-              </button>
-              <p className="text-[10px] font-bold text-center text-muted-foreground mt-2 opacity-70">
-                {t("bestForExamPrep")}
-              </p>
             </div>
+            </motion.div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+        </>
+      )}
+    </AnimatePresence>
+  , document.body);
 }

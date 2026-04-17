@@ -1,4 +1,4 @@
-import { Home, BookOpen, ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Home, BookOpen } from "lucide-react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ReactNode } from "react";
@@ -65,7 +65,7 @@ const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
 
   // APC/French: pill with Home + Library tabs, action floats right
   const tabs = [
-    { path: "/", icon: Home, label: t("home") },
+    { path: "/",        icon: Home,     label: t("home") },
     { path: "/library", icon: BookOpen, label: t("library") },
   ] as const;
 
@@ -95,7 +95,13 @@ const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
                   />
                 )}
-                <Icon className={`h-5 w-5 relative z-10 ${isActive ? "text-foreground" : "text-muted-foreground"}`} />
+                <Icon
+                  className={`h-5 w-5 relative z-10 transition-all ${
+                    isActive
+                      ? "text-foreground fill-foreground stroke-[1.5]"
+                      : "text-muted-foreground fill-none stroke-2"
+                  }`}
+                />
                 <span className={`text-[10px] font-black relative z-10 ${isActive ? "text-foreground" : "text-muted-foreground"}`}>{tab.label}</span>
               </Link>
             );

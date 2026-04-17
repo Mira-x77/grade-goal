@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Go Study! — Your Strategic Exam Planner</title>
+  <meta name="description" content="Track grades, plan your strategy, and hit your target score. Go Study! is the exam planner built for students who mean business." />
+  <link rel="icon" href="../public/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #EDEAE5;
+      --ink: #1A1A1A;
+      --yellow: #F5C842;
+      --white: #ffffff;
+      --muted: #9a9a9a;
+      --radius: 20px;
+      --border: 2px solid #1A1A1A;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg);
+      border-bottom: var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5vw;
+      height: 64px;
+    }
+    .nav-logo {
+      font-size: 1.4rem; font-weight: 900; letter-spacing: -0.5px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-logo span.highlight {
+      background: var(--yellow); padding: 2px 8px; border-radius: 8px;
+      border: var(--border);
+    }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a {
+      font-weight: 700; text-decoration: none; color: var(--ink);
+      font-size: 0.95rem;
+    }
+    .nav-links a:hover { text-decoration: underline; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: 'Nunito', sans-serif; font-weight: 800;
+      border: var(--border); border-radius: var(--radius);
+      cursor: pointer; text-decoration: none; transition: transform 0.1s, box-shadow 0.1s;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+    .btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--ink); }
+    .btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+    .btn-primary { background: var(--ink); color: var(--white); padding: 12px 28px; font-size: 1rem; }
+    .btn-yellow { background: var(--yellow); color: var(--ink); padding: 12px 28px; font-size: 1rem; }
+    .btn-sm { padding: 8px 18px; font-size: 0.9rem; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: calc(100vh - 64px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 60px 5vw 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--yellow); border: var(--border); border-radius: 100px;
+      padding: 6px 16px; font-weight: 800; font-size: 0.85rem;
+      margin-bottom: 28px;
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+    .hero h1 {
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 900; line-height: 1.05; letter-spacing: -2px;
+      max-width: 900px;
+    }
+    .hero h1 .underline-yellow {
+      position: relative; display: inline-block;
+    }
+    .hero h1 .underline-yellow::after {
+      content: '';
+      position: absolute; left: 0; bottom: -4px;
+      width: 100%; height: 10px;
+      background: var(--yellow);
+      border-radius: 4px; z-index: -1;
+    }
+    .hero-sub {
+      margin-top: 24px; font-size: clamp(1rem, 2.5vw, 1.3rem);
+      font-weight: 600; color: #444; max-width: 560px; line-height: 1.6;
+    }
+    .hero-cta {
+      margin-top: 40px; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    }
+    .hero-mascot {
+      margin-top: 60px;
+      display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    }
+    .mascot-card {
+      background: var(--white); border: var(--border); border-radius: var(--radius);
+      padding: 16px; box-shadow: 4px 4px 0 var(--ink);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      width: 110px; transition: transform 0.15s;
+    }
+    .mascot-card:hover { transform: translateY(-4px); }
+    .mascot-card img { width: 64px; height: 64px; object-fit: contain; }
+    .mascot-card span { font-size: 0.75rem; font-weight: 800; text-align: center; }
+
+    /* ── SECTION SHARED ── */
+    section { padding: 80px 5vw; }
+    .section-label {
+      display: inline-block; background: var(--yellow); border: var(--border);
+      border-radius: 100px; padding: 4px 14px; font-weight: 800; font-size: 0.8rem;
+      margin-bottom: 16px; box-shadow: 2px 2px 0 var(--ink);
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 900;
+      letter-spacing: -1px; line-height: 1.1; max-width: 700px;
+    }
+    .section-sub {
+      margin-top: 12px; font-size: 1.05rem; font-weight: 600;
+      color: #555; max-width: 560px; line-height: 1.6;
+    }
+
+    /* ── FEATURES ── */
+    .features { background: var(--white); border-top: var(--border); border-bottom: var(--border); }
+    .features-header { text-align: center; margin-bottom: 56px; }
+    .features-header .section-title, .features-header .section-sub { margin-left: auto; margin-right: auto; }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px; max-width: 1100px; margin: 0 auto;
+    }
+    .feature-card {
+      background: var(--bg); border: var(--border); border-radius: var(--radius);
+      padding: 28px; box-shadow: 4px 4px 0 var(--ink);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .feature-card:hover { transform: translate(-3px, -3px); box-shadow: 7px 7px 0 var(--ink); }
+    .feature-icon {
+      width: 52px; height: 52px; background: var(--yellow);
+      border: var(--border); border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 16px;
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+    .feature-card h3 { font-size: 1.1rem; font-weight: 900; margin-bottom: 8px; }
+    .feature-card p { font-size: 0.9rem; font-weight: 600; color: #555; line-height: 1.6; }
+
+    /* ── HOW IT WORKS ── */
+    .how { background: var(--bg); }
+    .how-inner { max-width: 1100px; margin: 0 auto; }
+    .how-header { margin-bottom: 56px; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+    .step {
+      background: var(--white); border: var(--border); border-radius: var(--radius);
+      padding: 28px; box-shadow: 4px 4px 0 var(--ink); position: relative;
+    }
+    .step-num {
+      width: 40px; height: 40px; background: var(--ink); color: var(--white);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 1.1rem; margin-bottom: 16px;
+    }
+    .step h3 { font-size: 1rem; font-weight: 900; margin-bottom: 8px; }
+    .step p { font-size: 0.88rem; font-weight: 600; color: #555; line-height: 1.6; }
+
+    /* ── SYSTEMS ── */
+    .systems { background: var(--ink); color: var(--white); border-top: var(--border); }
+    .systems .section-label { background: var(--yellow); color: var(--ink); }
+    .systems .section-title { color: var(--white); }
+    .systems .section-sub { color: #ccc; }
+    .systems-inner { max-width: 1100px; margin: 0 auto; }
+    .systems-header { margin-bottom: 48px; }
+    .systems-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .system-card {
+      background: #2a2a2a; border: 2px solid #444; border-radius: var(--radius);
+      padding: 28px; transition: border-color 0.2s;
+    }
+    .system-card:hover { border-color: var(--yellow); }
+    .system-flag { font-size: 2rem; margin-bottom: 12px; }
+    .system-card h3 { font-size: 1rem; font-weight: 900; margin-bottom: 8px; color: var(--yellow); }
+    .system-card p { font-size: 0.88rem; font-weight: 600; color: #aaa; line-height: 1.6; }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials { background: var(--white); border-top: var(--border); border-bottom: var(--border); }
+    .testimonials-header { text-align: center; margin-bottom: 48px; }
+    .testimonials-header .section-title, .testimonials-header .section-sub { margin-left: auto; margin-right: auto; }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; max-width: 1000px; margin: 0 auto; }
+    .testimonial-card {
+      background: var(--bg); border: var(--border); border-radius: var(--radius);
+      padding: 28px; box-shadow: 4px 4px 0 var(--ink);
+    }
+    .testimonial-stars { color: var(--yellow); font-size: 1.1rem; margin-bottom: 12px; }
+    .testimonial-card p { font-size: 0.95rem; font-weight: 700; line-height: 1.6; margin-bottom: 16px; }
+    .testimonial-author { font-size: 0.82rem; font-weight: 800; color: var(--muted); }
+
+    /* ── CTA BANNER ── */
+    .cta-banner {
+      background: var(--yellow); border-top: var(--border); border-bottom: var(--border);
+      text-align: center; padding: 80px 5vw;
+    }
+    .cta-banner h2 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; letter-spacing: -1px; margin-bottom: 16px; }
+    .cta-banner p { font-size: 1.1rem; font-weight: 600; color: #444; margin-bottom: 36px; }
+    .cta-banner .btn-primary { font-size: 1.1rem; padding: 16px 40px; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink); color: var(--white);
+      padding: 48px 5vw 32px;
+      border-top: var(--border);
+    }
+    .footer-inner { max-width: 1100px; margin: 0 auto; }
+    .footer-top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 32px; margin-bottom: 40px; }
+    .footer-brand .nav-logo { color: var(--white); margin-bottom: 12px; }
+    .footer-brand .nav-logo span.highlight { background: var(--yellow); color: var(--ink); }
+    .footer-brand p { font-size: 0.88rem; font-weight: 600; color: #aaa; max-width: 240px; line-height: 1.6; }
+    .footer-links h4 { font-size: 0.85rem; font-weight: 900; color: var(--yellow); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .footer-links ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .footer-links ul li a { color: #ccc; text-decoration: none; font-size: 0.88rem; font-weight: 600; }
+    .footer-links ul li a:hover { color: var(--white); }
+    .footer-bottom { border-top: 1px solid #333; padding-top: 24px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .footer-bottom p { font-size: 0.82rem; font-weight: 600; color: #666; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .hero h1 { letter-spacing: -1px; }
+      .mascot-card { width: 90px; }
+      .mascot-card img { width: 52px; height: 52px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <span class="highlight">Go</span> Study!
+  </div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#systems">Systems</a>
+    <a href="../index.html" class="btn btn-primary btn-sm">Open App</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🎯 Built for students who mean business</div>
+  <h1>Study smarter.<br>Hit your <span class="underline-yellow">target score</span>.</h1>
+  <p class="hero-sub">
+    Track every grade, simulate what-if scenarios, and know exactly what you need to pass — all in one place.
+  </p>
+  <div class="hero-cta">
+    <a href="../index.html" class="btn btn-primary">Start for free →</a>
+    <a href="#features" class="btn btn-yellow">See features</a>
+  </div>
+
+  <div class="hero-mascot">
+    <div class="mascot-card">
+      <img src="../public/mascot/analyze.png" alt="Analyze" />
+      <span>Analyze</span>
+    </div>
+    <div class="mascot-card">
+      <img src="../public/mascot/think.png" alt="Think" />
+      <span>Strategize</span>
+    </div>
+    <div class="mascot-card">
+      <img src="../public/mascot/work.png" alt="Work" />
+      <span>Work</span>
+    </div>
+    <div class="mascot-card">
+      <img src="../public/mascot/triumph.png" alt="Triumph" />
+      <span>Triumph</span>
+    </div>
+    <div class="mascot-card">
+      <img src="../public/mascot/reward.png" alt="Reward" />
+      <span>Reward</span>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-header">
+    <div class="section-label">✨ Features</div>
+    <h2 class="section-title">Everything you need to ace your exams</h2>
+    <p class="section-sub">From grade tracking to strategic planning — Go Study! has you covered.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Live Grade Tracking</h3>
+      <p>Enter your marks and see your weighted average update in real time. Never be surprised by your final grade again.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <h3>Score Strategizer</h3>
+      <p>Run what-if simulations. See exactly what score you need on your next exam to hit your target average.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📚</div>
+      <h3>Past Paper Library</h3>
+      <p>Browse and download past exam papers by subject. Study with real questions, right from your pocket.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📈</div>
+      <h3>Performance Insights</h3>
+      <p>Track your progress over time with visual charts and activity timelines. Spot weak subjects before it's too late.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔔</div>
+      <h3>Smart Alerts</h3>
+      <p>Get notified when your grade drops below your threshold. Stay on top of your performance without constant checking.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌍</div>
+      <h3>Bilingual</h3>
+      <p>Full English and French support. Switch languages anytime — the app speaks your language.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-inner">
+    <div class="how-header">
+      <div class="section-label">🚀 How it works</div>
+      <h2 class="section-title">Up and running in minutes</h2>
+      <p class="section-sub">No complicated setup. Just pick your system and start tracking.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Pick your grading system</h3>
+        <p>APC, French, or Nigerian University — choose the system that matches your school.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Add your subjects</h3>
+        <p>Set up your courses with coefficients or credit units. Takes about 2 minutes.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Enter your marks</h3>
+        <p>Log your grades as you get them. Your average updates instantly.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Plan your strategy</h3>
+        <p>Use the Strategizer to simulate scenarios and know exactly what to aim for.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SYSTEMS -->
+<section class="systems" id="systems">
+  <div class="systems-inner">
+    <div class="systems-header">
+      <div class="section-label">🌐 Grading Systems</div>
+      <h2 class="section-title">Built for your school system</h2>
+      <p class="section-sub">Go Study! supports multiple grading systems out of the box.</p>
+    </div>
+    <div class="systems-grid">
+      <div class="system-card">
+        <div class="system-flag">🇫🇷</div>
+        <h3>APC System</h3>
+        <p>French secondary education with Interro, Devoir, and Compo marks. Weighted coefficients and 40/60 split support.</p>
+      </div>
+      <div class="system-card">
+        <div class="system-flag">📐</div>
+        <h3>French System</h3>
+        <p>Class averages, min/max tracking, and appreciation ratings. Perfect for French lycée students.</p>
+      </div>
+      <div class="system-card">
+        <div class="system-flag">🇳🇬</div>
+        <h3>Nigerian University</h3>
+        <p>GPA-based grading with credit units, custom assessments, semester management, and degree classification.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <div class="testimonials-header">
+    <div class="section-label">💬 Students love it</div>
+    <h2 class="section-title">Real results, real students</h2>
+    <p class="section-sub">Join thousands of students already using Go Study! to take control of their grades.</p>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="testimonial-stars">★★★★★</div>
+      <p>"I finally know exactly what I need to score on my compo to pass. The Strategizer is a game changer."</p>
+      <div class="testimonial-author">— Terminale S student, Cameroon</div>
+    </div>
+    <div class="testimonial-card">
+      <div class="testimonial-stars">★★★★★</div>
+      <p>"Tracking my GPA semester by semester has never been this easy. I can see my degree class in real time."</p>
+      <div class="testimonial-author">— 300L Engineering student, Nigeria</div>
+    </div>
+    <div class="testimonial-card">
+      <div class="testimonial-stars">★★★★★</div>
+      <p>"The past papers library saved me so much time. Everything is organized and downloadable offline."</p>
+      <div class="testimonial-author">— Première student, Ivory Coast</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="cta-banner">
+  <h2>Ready to take control of your grades?</h2>
+  <p>Free to use. No credit card. Just open the app and start tracking.</p>
+  <a href="../index.html" class="btn btn-primary">Get started — it's free →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="nav-logo"><span class="highlight">Go</span> Study!</div>
+        <p>Your strategic exam planner. Track grades, plan smart, and hit your target score.</p>
+      </div>
+      <div class="footer-links">
+        <h4>App</h4>
+        <ul>
+          <li><a href="../index.html">Open App</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#how">How it works</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="../index.html">Privacy Policy</a></li>
+          <li><a href="../index.html">Terms & Conditions</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Go Study! All rights reserved.</p>
+      <p>Made with ☕ for students everywhere.</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,5 +1,10 @@
 {
   "appId": "com.scoretarget.app",
   "appName": "ScoreTarget",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "App": {
+      "launchUrl": "gostudy.app"
+    }
+  }
 }

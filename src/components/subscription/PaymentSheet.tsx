@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Crown, Smartphone, Key, Check, Loader2 } from "lucide-react";
+import { X, Crown, Smartphone, Key, Check, Loader2, ChevronDown } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { subscriptionService } from "@/services/subscriptionService";
 import { toast } from "sonner";
@@ -20,14 +20,15 @@ type Provider = "flooz" | "mixx";
 const PRICES = { single: 500, all: 1500 };
 
 const PROVIDERS: { id: Provider; name: string; network: string; color: string }[] = [
-  { id: "flooz", name: "Flooz",       network: "Moov Africa",       color: "bg-blue-500"   },
+  { id: "flooz", name: "Flooz",       network: "Moov Africa",      color: "bg-blue-500"   },
   { id: "mixx",  name: "Mixx by YAS", network: "YAS (ex-Togocom)", color: "bg-orange-500" },
 ];
 
 export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, amount }: PaymentSheetProps) {
   const { t } = useLanguage();
   const [tab, setTab]               = useState<Tab>("mobile");
-  const [provider, setProvider]     = useState<Provider>("flooz");
+  const [provider, setProvider]     = useState<Provider | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [phone, setPhone]           = useState("");
   const [code, setCode]             = useState("");
   const [loading, setLoading]       = useState(false);
@@ -35,10 +36,11 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
 
   const price     = amount ?? (subjectName ? PRICES.single : PRICES.all);
   const planLabel = subjectName ? `${subjectName} Pack` : t("allSubjectsPass");
+  const selectedProvider = PROVIDERS.find(p => p.id === provider) ?? null;
 
   const handleClose = () => {
     if (loading) return;
-    setPhone(""); setCode(""); setMobileSent(false);
+    setPhone(""); setCode(""); setMobileSent(false); setProvider(null); setDropdownOpen(false);
     onClose();
   };
 
@@ -137,40 +139,73 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
           <div className="flex flex-col gap-4 pt-2">
             {!mobileSent ? (
               <>
-                <div className="flex flex-col gap-2">
+                {/* Provider dropdown */}
+                <div className="flex flex-col gap-1.5">
                   <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">{t("chooseProvider")}</p>
-                  {PROVIDERS.map((p) => (
+                  <div className="relative">
                     <button
-                      key={p.id}
-                      onClick={() => setProvider(p.id)}
-                      className={`flex items-center gap-3 rounded-2xl px-4 py-3 border-2 transition-all active:scale-[0.98] ${
-                        provider === p.id ? "border-foreground card-shadow bg-card" : "border-border bg-muted/50"
+                      onClick={() => setDropdownOpen(v => !v)}
+                      className={`w-full flex items-center gap-3 rounded-2xl px-4 py-3 border-2 transition-all ${
+                        selectedProvider ? "border-foreground bg-card card-shadow" : "border-border bg-muted/50"
                       }`}
                     >
-                      <div className={`h-9 w-9 rounded-xl ${p.color} flex items-center justify-center shrink-0`}>
-                        <Smartphone className="h-4 w-4 text-white" />
-                      </div>
-                      <div className="text-left">
-                        <p className="font-black text-sm text-foreground">{p.name}</p>
-                        <p className="text-[10px] font-semibold text-muted-foreground">{p.network}</p>
-                      </div>
-                      {provider === p.id && <Check className="h-4 w-4 text-foreground ml-auto" />}
+                      {selectedProvider ? (
+                        <>
+                          <div className={`h-8 w-8 rounded-lg ${selectedProvider.color} flex items-center justify-center shrink-0`}>
+                            <Smartphone className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="font-black text-sm text-foreground">{selectedProvider.name}</p>
+                            <p className="text-[10px] font-semibold text-muted-foreground">{selectedProvider.network}</p>
+                          </div>
+                        </>
+                      ) : (
+                        <span className="flex-1 text-left text-sm font-semibold text-muted-foreground">
+                          {t("chooseProvider")}…
+                        </span>
+                      )}
+                      <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform shrink-0 ${dropdownOpen ? "rotate-180" : ""}`} />
                     </button>
-                  ))}
+
+                    {dropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 z-10 rounded-2xl border-2 border-border bg-card card-shadow overflow-hidden">
+                        {PROVIDERS.map((p) => (
+                          <button
+                            key={p.id}
+                            onClick={() => { setProvider(p.id); setDropdownOpen(false); }}
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
+                          >
+                            <div className={`h-8 w-8 rounded-lg ${p.color} flex items-center justify-center shrink-0`}>
+                              <Smartphone className="h-4 w-4 text-white" />
+                            </div>
+                            <div className="flex-1 text-left">
+                              <p className="font-black text-sm text-foreground">{p.name}</p>
+                              <p className="text-[10px] font-semibold text-muted-foreground">{p.network}</p>
+                            </div>
+                            {provider === p.id && <Check className="h-4 w-4 text-foreground shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
+                {/* Phone input — only active when provider selected */}
                 <div className="flex flex-col gap-1.5">
                   <p className="text-xs font-black text-muted-foreground uppercase tracking-wide">
-                    {t("yourNumber")} {provider === "flooz" ? "Flooz" : "Mixx"}
+                    {selectedProvider ? `${t("yourNumber")} ${selectedProvider.name}` : t("yourNumber")}
                   </p>
-                  <div className="flex items-center gap-2 rounded-2xl border-2 border-foreground bg-card px-4 py-3 card-shadow">
+                  <div className={`flex items-center gap-2 rounded-2xl border-2 px-4 py-3 transition-all ${
+                    provider ? "border-foreground bg-card card-shadow" : "border-border bg-muted/50 opacity-50 pointer-events-none"
+                  }`}>
                     <span className="text-sm font-black text-muted-foreground">+228</span>
                     <input
                       type="tel"
                       placeholder="XX XX XX XX"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="flex-1 bg-transparent text-sm font-black text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+                      disabled={!provider}
+                      className="flex-1 bg-transparent text-sm font-black text-foreground placeholder:text-muted-foreground/50 focus:outline-none disabled:cursor-not-allowed"
                       maxLength={12}
                     />
                   </div>
@@ -181,7 +216,7 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
 
                 <button
                   onClick={handleMobileSubmit}
-                  disabled={loading || phone.replace(/\D/g, "").length < 8}
+                  disabled={loading || !provider || phone.replace(/\D/g, "").length < 8}
                   className="w-full rounded-2xl bg-foreground border-2 border-foreground py-4 font-black text-background card-shadow active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-2"
                 >
                   {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}

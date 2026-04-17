@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Lock, X, Loader2, AlertCircle } from "lucide-react";
+import { Crown, Lock, X, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import TaskBar from "@/components/TaskBar";
 import { SubscriptionDetailDialog } from "@/components/subscription/SubscriptionDetailDialog";
-import { PremiumCodeDialog } from "@/components/subscription/PremiumCodeDialog";
+import { PaymentSheet } from "@/components/subscription/PaymentSheet";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsTablet } from "@/hooks/useIsTablet";
 import { useAppConfig } from "@/contexts/AppConfigContext";
@@ -174,13 +174,16 @@ export default function SubjectDashboard() {
   const { t } = useLanguage();
   const { premiumEnabled: PREMIUM_ENABLED } = useAppConfig();
   const isTablet = useIsTablet();
+  const navigate = useNavigate();
   const sheetVariants = {
     hidden:  isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" },
     visible: isTablet ? { x: "-50%", y: "-50%", scale: 1,    opacity: 1 } : { y: 0 },
     exit:    isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" },
   };
   const [showPaywall, setShowPaywall] = useState(false);
-  const [showCodeDialog, setShowCodeDialog] = useState(false);
+  const [showPaymentSheet, setShowPaymentSheet] = useState(false);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [paymentAmount, setPaymentAmount] = useState<number | undefined>(undefined);
   const [activeSheet, setActiveSheet] = useState<ToolKey | null>(null);
   const [content, setContent] = useState<StudyToolContent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -210,22 +213,35 @@ export default function SubjectDashboard() {
           <p className="text-sm font-semibold text-muted-foreground mt-0.5">{t("masterSubjectFaster")}</p>
         </motion.div>
 
-        {/* Unlock banner */}
+        {/* Unlock banner — active or Coming Soon based on admin toggle */}
+        {PREMIUM_ENABLED ? (
         <motion.button
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setShowPaywall(true)}
-          className="w-full mb-5 rounded-2xl bg-secondary border-2 border-foreground px-4 py-3.5 flex items-center gap-3 card-shadow active:translate-y-0.5 active:shadow-none transition-all"
+          className="w-full mb-5 rounded-2xl bg-premium border-2 border-premium px-4 py-3.5 flex items-center gap-3 card-shadow active:translate-y-0.5 active:shadow-none transition-all"
         >
-          <Crown className="h-5 w-5 text-foreground shrink-0" />
+          <Crown className="h-5 w-5 text-premium-foreground shrink-0" />
           <div className="flex-1 text-left">
-            <p className="font-black text-foreground text-sm">{t("passSmarter")}</p>
-            <p className="text-[11px] font-semibold text-foreground/60 mt-0.5">{t("premiumStudyTools")}</p>
+            <p className="font-black text-premium-foreground text-sm">{t("passSmarter")}</p>
+            <p className="text-[11px] font-semibold text-premium-foreground/70 mt-0.5">{t("premiumStudyTools")}</p>
           </div>
-          <span className="text-xs font-black text-foreground bg-foreground/10 px-2.5 py-1 rounded-full border border-foreground/20">
+          <span className="text-xs font-black text-premium-foreground bg-white/15 px-2.5 py-1 rounded-full border border-white/20">
             {t("unlockNowBtn")}
           </span>
         </motion.button>
+        ) : (
+        <div className="w-full mb-5 rounded-2xl bg-muted border-2 border-border px-4 py-3.5 flex items-center gap-3 opacity-60 cursor-not-allowed">
+          <Crown className="h-5 w-5 text-muted-foreground shrink-0" />
+          <div className="flex-1 text-left">
+            <p className="font-black text-muted-foreground text-sm">{t("passSmarter")}</p>
+            <p className="text-[11px] font-semibold text-muted-foreground/70 mt-0.5">{t("premiumStudyTools")}</p>
+          </div>
+          <span className="text-xs font-black text-muted-foreground bg-muted-foreground/10 px-2.5 py-1 rounded-full border border-muted-foreground/20">
+            Coming Soon
+          </span>
+        </div>
+        )}
 
         {/* Error state */}
         {error && (
@@ -325,9 +341,9 @@ export default function SubjectDashboard() {
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={() => { setActiveSheet(null); setShowPaywall(true); }}
-                  className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2"
+                  className="w-full rounded-2xl bg-premium border-2 border-premium py-4 font-black text-premium-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2"
                 >
-                  <Crown className="h-4 w-4" />
+                  <Crown className="h-4 w-4 text-premium-foreground" />
                   {t("unlockNowBtn")}
                 </motion.button>
               </div>
@@ -349,21 +365,46 @@ export default function SubjectDashboard() {
         )}
       </AnimatePresence>
 
-      <TaskBar showBack />
+      <TaskBar backAction={
+        <motion.button
+          onClick={() => navigate('/library', { state: { tab: 'prep' } })}
+          initial={{ opacity: 0, scale: 0.5, x: 16 }}
+          animate={{ opacity: 1, scale: 1, x: 0 }}
+          exit={{ opacity: 0, scale: 0.5, x: 16 }}
+          transition={{ type: "spring", stiffness: 380, damping: 28 }}
+          className="h-12 w-12 rounded-full bg-card border-2 border-foreground card-shadow flex items-center justify-center active:scale-95"
+        >
+          <ArrowLeft className="h-5 w-5 text-foreground" />
+        </motion.button>
+      } />
 
       <>
-          <SubscriptionDetailDialog
-            open={showPaywall}
-            onClose={() => setShowPaywall(false)}
-            onUpgrade={() => { setShowPaywall(false); setShowCodeDialog(true); }}
-            subjectName={subjectName}
-          />
-          <PremiumCodeDialog
-            open={showCodeDialog}
-            onClose={() => setShowCodeDialog(false)}
-            onSuccess={() => setShowCodeDialog(false)}
-          />
-        </>
+        <SubscriptionDetailDialog
+          open={showPaywall}
+          onClose={() => setShowPaywall(false)}
+          onSelectPack={() => {
+            setSelectedSubjects(subjectName ? [subjectName] : []);
+            setPaymentAmount(500);
+            setShowPaywall(false);
+            setShowPaymentSheet(true);
+          }}
+          onSelectAll={() => {
+            setSelectedSubjects([]);
+            setPaymentAmount(1500);
+            setShowPaywall(false);
+            setShowPaymentSheet(true);
+          }}
+          subjectName={subjectName}
+        />
+        <PaymentSheet
+          open={showPaymentSheet}
+          onClose={() => setShowPaymentSheet(false)}
+          onBack={() => { setShowPaymentSheet(false); setShowPaywall(true); }}
+          onSuccess={() => setShowPaymentSheet(false)}
+          subjectName={selectedSubjects.length === 1 ? selectedSubjects[0] : undefined}
+          amount={paymentAmount}
+        />
+      </>
     </div>
   );
 }

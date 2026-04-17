@@ -181,6 +181,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let deepLinkListener: { remove: () => void } | null = null;
 
     App.addListener("appUrlOpen", async ({ url }) => {
+      // Handle paper deep links: gostudy.app/paper/:id
+      const paperMatch = url.match(/\/paper\/([a-zA-Z0-9_-]+)/);
+      if (paperMatch) {
+        navigate(`/library/${paperMatch[1]}`);
+        return;
+      }
+
       if (!url.includes("auth/callback") && !url.includes("access_token") && !url.includes("code=")) return;
 
       await Browser.close().catch(() => {});

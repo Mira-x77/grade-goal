@@ -57,7 +57,7 @@ export function PlanSelectSheet({ open, onClose, onBack, subjectName, onSelectPa
             </p>
             <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">
               {subjectName
-                ? `Unlock all 6 study tools for ${subjectName} · 500 FCFA`
+                ? `Unlock all 6 study tools for ${subjectName} · 500 FCFA · Lifetime`
                 : t("subjectPackDesc")}
             </p>
           </div>

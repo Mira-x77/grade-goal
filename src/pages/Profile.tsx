@@ -246,16 +246,16 @@ const Profile = () => {
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           onClick={() => setShowPremiumIntro(true)}
-          className="w-full rounded-2xl bg-secondary border-2 border-foreground p-4 flex items-center gap-4 card-shadow cursor-pointer active:translate-y-0.5 active:shadow-none transition-all"
+          className="w-full rounded-2xl bg-premium border-2 border-premium p-4 flex items-center gap-4 card-shadow cursor-pointer active:translate-y-0.5 active:shadow-none transition-all"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-premium/10 border-2 border-premium/30 shrink-0">
-            <Crown className="h-6 w-6 text-premium" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 border-2 border-white/20 shrink-0">
+            <Crown className="h-6 w-6 text-premium-foreground" />
           </div>
           <div className="flex-1">
-            <p className="font-black text-foreground text-sm">{t("unlockPremium")}</p>
-            <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">{t("premiumStudyTools")}</p>
+            <p className="font-black text-premium-foreground text-sm">{t("unlockPremium")}</p>
+            <p className="text-[10px] font-semibold text-premium-foreground/70 mt-0.5">{t("premiumStudyTools")}</p>
           </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+          <ChevronRight className="h-5 w-5 text-premium-foreground/70 shrink-0" />
         </motion.div>
         )}
         <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="tour-profile-info rounded-2xl bg-card p-5 border-2 border-border">
@@ -532,9 +532,19 @@ const Profile = () => {
                 <p className="text-xs text-muted-foreground font-semibold">{subjects.length} {isNigerian ? "course" : "subject"}{subjects.length !== 1 ? "s" : ""}</p>
               </div>
             </div>
-            <motion.div animate={{ rotate: subjectsOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            </motion.div>
+            <div className="flex items-center gap-2">
+              {subjectsOpen && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); openSubjectModal(); }}
+                  className="flex items-center justify-center rounded-xl bg-primary p-1.5 active:scale-95 transition-transform"
+                >
+                  <Plus className="h-4 w-4 text-primary-foreground" />
+                </button>
+              )}
+              <motion.div animate={{ rotate: subjectsOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </motion.div>
+            </div>
           </button>
 
           <AnimatePresence initial={false}>
@@ -546,14 +556,6 @@ const Profile = () => {
                 transition={{ duration: 0.2, ease: "easeInOut" }}
                 className="overflow-hidden"
               >
-                <div className="px-5 pb-2 flex justify-end">
-                  <button
-                    onClick={openSubjectModal}
-                    className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground active:scale-95 transition-transform"
-                  >
-                    <Plus className="h-3.5 w-3.5" /> {t("addSubjects")}
-                  </button>
-                </div>
 
                 {subjects.length === 0 ? (
                   <p className="text-sm text-muted-foreground font-semibold text-center py-4 px-5">{t("noSubjectsAdded")}</p>

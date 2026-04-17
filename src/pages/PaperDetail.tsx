@@ -133,36 +133,32 @@ const PaperDetail = () => {
   const handleShare = async () => {
     if (!paper) return;
     try {
+      const appUrl = import.meta.env.VITE_APP_URL ?? 'https://gostudy.app';
+      const deepLink = `${appUrl}/paper/${paper.id}`;
+      const shareText = `${paper.title} - ${paper.subject} (${paper.classLevel}, ${paper.year})`;
+
       const { Share } = await import('@capacitor/share');
-      const { Capacitor } = await import('@capacitor/core');
-      
-      // Check if sharing is available
+
       const canShare = await Share.canShare();
-      
       if (canShare.value) {
         await Share.share({
           title: paper.title,
-          text: `${paper.title} - ${paper.subject} (${paper.classLevel}, ${paper.year})`,
-          url: window.location.href,
+          text: shareText,
+          url: deepLink,
           dialogTitle: t("share"),
         });
+      } else if (navigator.share) {
+        await navigator.share({
+          title: paper.title,
+          text: shareText,
+          url: deepLink,
+        });
       } else {
-        // Fallback for web or unsupported platforms
-        if (navigator.share) {
-          await navigator.share({
-            title: paper.title,
-            text: `${paper.title} - ${paper.subject} (${paper.classLevel}, ${paper.year})`,
-            url: window.location.href,
-          });
-        } else {
-          // Copy to clipboard as last resort
-          await navigator.clipboard.writeText(window.location.href);
-          toast.success(t("linkCopied"));
-        }
+        await navigator.clipboard.writeText(deepLink);
+        toast.success(t("linkCopied"));
       }
     } catch (err) {
-      // User cancelled or error occurred
-      if (err instanceof Error && !err.message.includes('cancel')) {
+      if (err instanceof Error && !err.message.toLowerCase().includes('cancel')) {
         console.error("Share failed:", err);
         toast.error(t("shareFailed"));
       }
@@ -340,13 +336,13 @@ const PaperDetail = () => {
                 </div>
                 <button
                   onClick={() => { setPrepOpen(false); setShowPlanSelect(true); }}
-                  className="w-full mt-3 rounded-2xl bg-secondary border-2 border-foreground py-3 px-4 flex items-center justify-between card-shadow active:translate-y-0.5 active:shadow-none transition-all"
+                  className="w-full mt-3 rounded-2xl bg-premium border-2 border-premium py-3 px-4 flex items-center justify-between card-shadow active:translate-y-0.5 active:shadow-none transition-all"
                 >
                   <div className="text-left">
-                    <p className="font-black text-sm text-foreground">{t("unlockNowBtn")}</p>
-                    <p className="text-[10px] font-semibold text-foreground/60">{t("getFullAccessFor")} {paper.subject}</p>
+                    <p className="font-black text-sm text-premium-foreground">{t("unlockNowBtn")}</p>
+                    <p className="text-[10px] font-semibold text-premium-foreground/70">{t("getFullAccessFor")} {paper.subject}</p>
                   </div>
-                  <Crown className="h-5 w-5 text-foreground shrink-0" />
+                  <Crown className="h-5 w-5 text-premium-foreground shrink-0" />
                 </button>
               </div>
               <div className="px-5 pb-6">
