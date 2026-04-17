@@ -1069,7 +1069,7 @@ const Home = () => {
                       </div>
 
                       {/* Score input */}
-                      <div className="relative mb-5">
+                      <div className="relative mb-2">
                         <input
                           type="number"
                           min={0}
@@ -1083,6 +1083,9 @@ const Home = () => {
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg font-black text-muted-foreground">/20</span>
                       </div>
+                      <p className="text-[11px] font-semibold text-muted-foreground mb-5 px-1">
+                        Leave blank if this assessment hasn't been done yet — entering 0 will count toward your average.
+                      </p>
 
                       <button
                         onClick={handleSaveMark}
