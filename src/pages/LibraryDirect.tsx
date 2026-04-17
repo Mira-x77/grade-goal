@@ -284,17 +284,17 @@ export default function LibraryDirect() {
                 <div className="content-col flex flex-col items-center justify-center py-20 gap-6 text-center">
                   <div className="text-5xl">📡</div>
                   <div>
-                    <p className="text-lg font-black text-foreground">You're offline</p>
+                    <p className="text-lg font-black text-foreground">{t("offlineTitle")}</p>
                     <p className="text-sm font-semibold text-muted-foreground mt-1">
-                      Can't load papers without a connection.
+                      {t("offlineBody")}
                     </p>
                     {downloadedPaperIds.size > 0 ? (
                       <p className="text-sm font-semibold text-muted-foreground">
-                        Browse your downloaded papers instead.
+                        {t("offlineHasDownloads")}
                       </p>
                     ) : (
                       <p className="text-sm font-semibold text-muted-foreground">
-                        Download papers while online to access them offline.
+                        {t("offlineNoDownloads")}
                       </p>
                     )}
                   </div>
@@ -304,7 +304,7 @@ export default function LibraryDirect() {
                         to="/my-downloads"
                         className="flex items-center gap-2 rounded-2xl bg-card border-2 border-foreground px-5 py-3 font-black text-foreground text-sm card-shadow active:scale-95 transition-transform"
                       >
-                        Go to My Downloads
+                        {t("goToDownloads")}
                       </Link>
                       <svg
                         width="40" height="52" viewBox="0 0 40 52" fill="none"
@@ -325,13 +325,13 @@ export default function LibraryDirect() {
                   ) : (
                     <div className="flex flex-col items-center gap-3 mt-2">
                       <p className="text-xs font-bold text-muted-foreground/60">
-                        Connect to the internet to browse papers.
+                        {t("connectToInternet")}
                       </p>
                       <button
                         onClick={loadPapers}
                         className="text-xs font-black text-primary active:scale-95 transition-transform"
                       >
-                        Retry
+                        {t("retry")}
                       </button>
                     </div>
                   )}
@@ -351,13 +351,13 @@ export default function LibraryDirect() {
               {!isOffline && !loading && !!error && (
                 <div className="content-col py-12 text-center">
                   <div className="bg-muted/50 rounded-2xl p-8 flex flex-col items-center gap-3">
-                    <p className="text-lg font-bold text-foreground">Couldn't load papers</p>
+                    <p className="text-lg font-bold text-foreground">{t("couldntLoadPapers")}</p>
                     <p className="text-sm text-muted-foreground">{error}</p>
                     <button
                       onClick={loadPapers}
                       className="mt-2 text-sm font-black text-primary active:scale-95 transition-transform"
                     >
-                      Retry
+                      {t("retry")}
                     </button>
                   </div>
                 </div>

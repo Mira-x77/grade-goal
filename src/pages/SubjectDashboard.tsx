@@ -210,7 +210,7 @@ export default function SubjectDashboard() {
         {/* Page header */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="pt-4 mb-5">
           <h1 className="text-3xl font-black text-foreground">{title}</h1>
-          <p className="text-sm font-semibold text-muted-foreground mt-0.5">{t("masterSubjectFaster")}</p>
+          <p className="text-sm font-semibold text-muted-foreground mt-0.5">{t("masterSubjectTitle")}</p>
         </motion.div>
 
         {/* Unlock banner — active or Coming Soon based on admin toggle */}
@@ -248,7 +248,7 @@ export default function SubjectDashboard() {
           <div className="rounded-2xl bg-card border-2 border-foreground p-4 flex items-start gap-3 mb-4">
             <AlertCircle className="h-4 w-4 text-danger shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-black text-foreground">Couldn't load study tools</p>
+              <p className="text-sm font-black text-foreground">{t("couldntLoadTools")}</p>
               <p className="text-xs font-semibold text-muted-foreground mt-0.5">{error}</p>
             </div>
           </div>
@@ -336,7 +336,7 @@ export default function SubjectDashboard() {
               {/* Paywall gradient + CTA */}
               <div className="shrink-0 px-5 pb-8 pt-3 border-t border-border bg-background">
                 <p className="text-[11px] font-semibold text-muted-foreground text-center mb-3">
-                  Unlock all {(content[activeSheet] ?? []).length} items — get the full picture
+                  {t("unlockAllItems").replace("{n}", String((content[activeSheet] ?? []).length))}
                 </p>
                 <motion.button
                   whileTap={{ scale: 0.98 }}
@@ -360,7 +360,7 @@ export default function SubjectDashboard() {
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-card border-2 border-foreground rounded-2xl px-5 py-3 flex items-center gap-3 card-shadow"
           >
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
-            <p className="text-sm font-black text-foreground">Generating study tools…</p>
+            <p className="text-sm font-black text-foreground">{t("generatingTools")}</p>
           </motion.div>
         )}
       </AnimatePresence>

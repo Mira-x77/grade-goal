@@ -161,7 +161,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks, isNigeria
             {/* Left — Current Average */}
             <div className="flex-1">
               <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">
-                {isNigerian ? "Current GPA" : t("currentAverage")}
+                {isNigerian ? t("gpaLabel") : t("currentAverage")}
               </p>
               <span className={`text-4xl font-black leading-none ${
                 isOnTrack ? "text-success" : overallStatus === "risky" ? "text-warning" : "text-danger"
@@ -212,13 +212,15 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks, isNigeria
                   (s.customAssessments ?? []).some(a => a.value !== null)
                 ).length;
                 coveragePct = total > 0 ? (filled / total) * 100 : 0;
-                coverageText = total > 0 ? `Coverage: ${Math.round(coveragePct)}% (${filled}/${total} courses)` : "";
+                const pct1 = Math.round(coveragePct);
+                coverageText = total > 0 ? t("coverageCourses").replace("{pct}", String(pct1)).replace("{filled}", String(filled)).replace("{total}", String(total)) : "";
               } else {
                 const total = subjects.length * 3;
                 const filled = subjects.reduce((acc, s) =>
                   acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0), 0);
                 coveragePct = total > 0 ? (filled / total) * 100 : 0;
-                coverageText = total > 0 ? `Coverage: ${Math.round(coveragePct)}% (${filled}/${total} scores)` : "";
+                const pct2 = Math.round(coveragePct);
+                coverageText = total > 0 ? t("coverageScores").replace("{pct}", String(pct2)).replace("{filled}", String(filled)).replace("{total}", String(total)) : "";
               }
 
               return (
@@ -249,7 +251,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks, isNigeria
           className="w-full flex items-center justify-center gap-2 rounded-2xl bg-card border-2 border-foreground py-3 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
         >
           <Pencil className="h-4 w-4" />
-          {isNigerian ? "Edit Scores" : t("editMarks")}
+          {isNigerian ? t("scoresLabel") : t("editMarks")}
         </motion.button>
 
         {/* Best possible — APC only */}
@@ -278,8 +280,7 @@ const ResultsScreen = ({ subjects, targetAverage, onBack, onEditMarks, isNigeria
           >
             <div>
               <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t("bestPossibleFinal")}</p>
-              <p className="text-xs font-semibold text-muted-foreground mt-0.5">If you score 100/100 on all remaining assessments</p>
-            </div>
+              <p className="text-xs font-semibold text-muted-foreground mt-0.5">If you score 100/100 on all remaining assessments</p>            </div>
             <p className="text-3xl font-black text-success shrink-0">{bestPossibleCGPA.toFixed(2)}</p>
           </motion.div>
         )}

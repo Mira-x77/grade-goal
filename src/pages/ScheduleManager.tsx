@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { loadScheduleState, saveScheduleState } from "@/lib/schedule-storage";
 import { cancelAllReminders } from "@/lib/notification-scheduler";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +23,7 @@ import {
 
 export default function ScheduleManager() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [scheduleState, setScheduleState] = useState(loadScheduleState());
 
   const handleResetSchedule = async () => {
@@ -54,7 +56,7 @@ export default function ScheduleManager() {
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
-          <h1 className="text-2xl font-bold">School Schedule & Book Reminder</h1>
+          <h1 className="text-2xl font-bold">{t("scheduleTitle")}</h1>
         </div>
 
         <Tabs defaultValue="schedule" className="space-y-6">

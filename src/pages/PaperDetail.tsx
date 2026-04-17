@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Download, AlertCircle, Eye, FolderOpen, Crown, ChevronDown, Lock, X, Check, Share2, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Download, AlertCircle, Eye, FolderOpen, Crown, ChevronDown, Lock, X, Check, Share2, Sparkles, ArrowLeft } from "lucide-react";import { motion, AnimatePresence } from "framer-motion";
 import { ExamPaper, DownloadProgress } from "@/types/exam-library";
 import { examService } from "@/services/examService";
 import { downloadService } from "@/services/downloadService";
@@ -207,7 +206,13 @@ const PaperDetail = () => {
   return (
     <div className="flex-1 bg-background min-h-screen pb-24">
       <div className="content-col p-4 safe-area-top">
-        {/* Paper Details Card */}
+        {/* Back button — fixed top left */}
+        <button
+          onClick={() => navigate(-1)}
+          className="fixed top-[max(1rem,env(safe-area-inset-top))] left-4 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-card border-2 border-foreground card-shadow active:scale-95 transition-transform"
+        >
+          <ArrowLeft className="h-5 w-5 text-foreground" />
+        </button>
         <div className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border mb-6">
           <div className="p-6">
             <h1 className="text-2xl font-black mb-4 leading-tight">{paper.title}</h1>
@@ -236,8 +241,8 @@ const PaperDetail = () => {
         )}
 
         <div className="space-y-3">
-          {/* View/Open + Download */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* View / Download / Share — single row */}
+          <div className="grid grid-cols-3 gap-3">
             <button
               onClick={handleOpen}
               className="flex flex-col items-center justify-center gap-2 bg-card border-2 border-foreground py-4 rounded-2xl font-black text-sm text-foreground active:scale-[0.98] transition-all card-shadow"
@@ -277,29 +282,78 @@ const PaperDetail = () => {
                 {t("downloadPDF")}
               </button>
             )}
+
+            <button
+              onClick={handleShare}
+              className="flex flex-col items-center justify-center gap-2 bg-card border-2 border-foreground py-4 rounded-2xl font-black text-sm text-foreground active:scale-[0.98] transition-all card-shadow"
+            >
+              <Share2 className="h-5 w-5" />
+              {t("share")}
+            </button>
           </div>
 
-          {/* Prep */}
-          <button
-            onClick={() => setPrepOpen(true)}
-            className="w-full flex items-center gap-4 bg-premium border-2 border-premium py-4 px-5 rounded-2xl card-shadow active:translate-y-0.5 active:shadow-none transition-all"
-          >
-            <Crown className="h-6 w-6 text-premium-foreground shrink-0" />
-            <div className="text-left flex-1">
-              <p className="font-black text-sm text-premium-foreground">{t("prepFor")} {paper.subject}</p>
-              <p className="text-xs font-semibold text-premium-foreground/60">{t("premiumStudyTools")}</p>
+          {/* Premium card — always visible, buttons fixed at bottom */}
+          <div className="rounded-2xl bg-card border-2 border-border overflow-hidden mb-32">
+            {/* Features grid */}
+            <div className="p-4 grid grid-cols-2 gap-2">
+              {[
+                { icon: "🎯", title: t("topQuestions"),   desc: t("topQuestionsDesc") },
+                { icon: "🗺️", title: t("keyTopics"),      desc: t("keyTopicsDesc") },
+                { icon: "📋", title: t("cheatSheet"),     desc: t("cheatSheetDesc") },
+                { icon: "✅", title: t("solutions"),      desc: t("solutionsDesc") },
+                { icon: "📝", title: t("practiceTests"),  desc: t("practiceTestsDesc") },
+                { icon: "🔍", title: t("weakSpots"),      desc: t("weakSpotsDesc") },
+              ].map(({ icon, title, desc }) => (
+                <div key={title} className="rounded-xl bg-muted/50 p-3 flex flex-col gap-1.5">
+                  <span className="text-xl">{icon}</span>
+                  <p className="font-black text-xs text-foreground">{title}</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground leading-relaxed">{desc}</p>
+                </div>
+              ))}
             </div>
-            <ChevronDown className="h-5 w-5 text-premium-foreground rotate-[-90deg]" />
-          </button>
+          </div>
 
-          {/* Share */}
-          <button
-            onClick={handleShare}
-            className="w-full flex items-center justify-center gap-2 bg-card border-2 border-foreground py-3.5 rounded-2xl font-black text-sm text-foreground active:scale-[0.98] transition-all card-shadow"
-          >
-            <Share2 className="h-4 w-4" />
-            {t("share")}
-          </button>
+          {/* Plan buttons — fixed to bottom, above safe area */}
+          <div className="fixed bottom-0 left-0 right-0 z-[60] bg-background border-t border-border px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex flex-col gap-2">
+            {PREMIUM_ENABLED ? (
+              <>
+                <button
+                  onClick={() => { setPaymentPlan("single"); (window as any).__packAmount = 500; setShowPaywall(true); }}
+                  className="w-full rounded-2xl bg-card border-2 border-foreground p-4 text-left card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-3"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/15 border-2 border-foreground/10 shrink-0">
+                    <Crown className="h-5 w-5 text-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-foreground text-sm">{paper.subject} Pack</p>
+                    <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">{t("packLifetime")}</p>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 -rotate-90" />
+                </button>
+                <button
+                  onClick={() => { setPaymentPlan("all"); (window as any).__packAmount = undefined; setShowPaywall(true); }}
+                  className="w-full rounded-2xl bg-premium border-2 border-premium p-4 text-left card-shadow active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-3"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 border-2 border-white/20 shrink-0">
+                    <Sparkles className="h-5 w-5 text-premium-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-premium-foreground text-sm">{t("allSubjectsPass")}</p>
+                    <p className="text-[10px] font-semibold text-premium-foreground/70 mt-0.5">{t("passOneMonth")}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <span className="text-[10px] font-black text-premium-foreground bg-white/15 px-2 py-0.5 rounded-full border border-white/20 whitespace-nowrap">{t("bestValue")}</span>
+                    <ChevronDown className="h-4 w-4 text-premium-foreground/60 -rotate-90" />
+                  </div>
+                </button>
+              </>
+            ) : (
+              <div className="w-full rounded-2xl bg-muted border-2 border-border py-4 font-black text-muted-foreground flex items-center justify-center gap-2 opacity-60 cursor-not-allowed">
+                <Crown className="h-4 w-4" />
+                {t("comingSoon")}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -313,7 +367,7 @@ const PaperDetail = () => {
         />
       )}
 
-      {/* Prep Overlay */}
+      {/* Prep Overlay — kept for PDF viewer nudge */}
       <AnimatePresence>
         {prepOpen && (
           <>
@@ -335,7 +389,7 @@ const PaperDetail = () => {
                   </button>
                 </div>
                 <button
-                  onClick={() => { setPrepOpen(false); setShowPlanSelect(true); }}
+                  onClick={() => { setPrepOpen(false); setPaymentPlan("single"); (window as any).__packAmount = 500; setShowPaywall(true); }}
                   className="w-full mt-3 rounded-2xl bg-premium border-2 border-premium py-3 px-4 flex items-center justify-between card-shadow active:translate-y-0.5 active:shadow-none transition-all"
                 >
                   <div className="text-left">
@@ -356,7 +410,7 @@ const PaperDetail = () => {
                     { icon: "🔍", title: t("weakSpots"), desc: t("weakSpotsDesc") },
                   ].map(({ icon, title, desc }) => (
                     <button key={title}
-                      onClick={() => { setPrepOpen(false); setShowPlanSelect(true); }}
+                      onClick={() => { setPrepOpen(false); setPaymentPlan("single"); (window as any).__packAmount = 500; setShowPaywall(true); }}
                       className="rounded-2xl bg-card border-2 border-border p-3 text-left active:scale-[0.97] transition-transform flex flex-col gap-1.5"
                     >
                       <span className="text-xl">{icon}</span>
@@ -391,13 +445,12 @@ const PaperDetail = () => {
           <PaymentSheet
             open={showPaywall}
             onClose={() => setShowPaywall(false)}
-            onBack={() => { setShowPaywall(false); setShowPlanSelect(true); }}
+            onBack={() => setShowPaywall(false)}
             onSuccess={() => { setShowPaywall(false); handleDownload(); }}
             subjectName={paymentPlan === "single" ? paper?.subject : undefined}
           />
         </>
 
-      {!showPDFViewer && !prepOpen && <TaskBar showBack action={downloadAction} />}
     </div>
   );
 };

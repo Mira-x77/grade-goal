@@ -250,7 +250,7 @@ const OnboardingScreen = ({
                 </div>
                 <div>
                   <p className="font-black text-muted-foreground">{t("frenchTraditional")}</p>
-                  <p className="text-xs font-semibold text-muted-foreground/70">Coming soon</p>
+                  <p className="text-xs font-semibold text-muted-foreground/70">{t("comingSoon")}</p>
                 </div>
               </div>
             </div>
@@ -266,8 +266,8 @@ const OnboardingScreen = ({
                   <GraduationCap className="h-5 w-5 text-foreground" />
                 </div>
                 <div>
-                  <p className="font-black text-foreground">Nigerian University</p>
-                  <p className="text-xs font-semibold text-muted-foreground">GPA / CGPA · Credit units</p>
+                  <p className="font-black text-foreground">{t("nigerianUniversity")}</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{t("gpaCgpaCredit")}</p>
                 </div>
               </div>
             </button>

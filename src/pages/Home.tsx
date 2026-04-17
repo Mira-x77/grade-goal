@@ -310,7 +310,9 @@ const Home = () => {
   const heroValue = performance?.value ?? null;
   const heroMax = performance?.max ?? 20;
   const heroTarget = performance?.target ?? null;
-  const heroLabel = performance?.label ?? t("currentAverage");
+  const heroLabel = performance?.label ?? (isNigerian
+    ? ((appState?.nigerianState?.semesters ?? []).filter(s => s.archived && s.courses.length > 0).length > 0 ? t("cgpaLabel") : t("gpaLabel"))
+    : t("currentAverage"));
   const heroSuffix = performance?.suffix ?? "/20";
   const heroTargetLabel = performance?.targetLabel ?? "";
   const heroBarColor = heroValue === null ? "bg-muted-foreground/30"
@@ -514,13 +516,15 @@ const Home = () => {
               const filled = subjects.filter(s =>
                 (s.customAssessments ?? []).some(a => a.value !== null)
               ).length;
-              return `Coverage: ${Math.round((filled / total) * 100)}% (${filled}/${total} courses)`;
+              const pct = Math.round((filled / total) * 100);
+              return t("coverageCourses").replace("{pct}", String(pct)).replace("{filled}", String(filled)).replace("{total}", String(total));
             }
             const total = subjects.length * 3;
             const filled = subjects.reduce((acc, s) =>
               acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0), 0);
             if (total === 0) return undefined;
-            return `Coverage: ${Math.round((filled / total) * 100)}% (${filled}/${total} scores)`;
+            const pct = Math.round((filled / total) * 100);
+            return t("coverageScores").replace("{pct}", String(pct)).replace("{filled}", String(filled)).replace("{total}", String(total));
           })() : undefined}
           hideBar={false}
           onClick={() => setShowResultsSheet(true)}
@@ -729,7 +733,7 @@ const Home = () => {
           return (
             <div className="rounded-2xl bg-card border-2 border-border overflow-hidden">
               <button onClick={() => setCoursesOpen(v => !v)} className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/40 transition-colors">
-                <h3 className="font-black text-foreground text-sm">Courses</h3>
+                <h3 className="font-black text-foreground text-sm">{t("coursesLabel")}</h3>
                 <motion.div animate={{ rotate: coursesOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </motion.div>
@@ -740,10 +744,10 @@ const Home = () => {
                     <div className="border-t border-border px-4 pb-3 pt-2 flex flex-col gap-1">
                       {/* Column headers */}
                       <div className="flex items-center px-3 py-1 mb-1">
-                        <span className="flex-1 text-[9px] font-black text-muted-foreground uppercase tracking-widest">Course</span>
-                        <span className="w-8 text-center text-[9px] font-black text-muted-foreground uppercase">CU</span>
-                        <span className="w-14 text-center text-[9px] font-black text-muted-foreground uppercase">Score</span>
-                        <span className="w-10 text-center text-[9px] font-black text-muted-foreground uppercase">Grade</span>
+                        <span className="flex-1 text-[9px] font-black text-muted-foreground uppercase tracking-widest">{t("coursesLabel")}</span>
+                        <span className="w-8 text-center text-[9px] font-black text-muted-foreground uppercase">{t("cuLabel")}</span>
+                        <span className="w-14 text-center text-[9px] font-black text-muted-foreground uppercase">{t("scoreLabel")}</span>
+                        <span className="w-10 text-center text-[9px] font-black text-muted-foreground uppercase">{t("gradeLabel")}</span>
                       </div>
                       {allSubjects.map((sub) => {
                         const score = computeIntegratedSubjectScore(sub);
@@ -1022,7 +1026,7 @@ const Home = () => {
                         if (avg === null) return null;
                         return (
                           <div className="rounded-2xl bg-primary/10 border-2 border-primary/30 px-4 py-3 mb-5">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Current Average</p>
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("currentAverageLabel")}</p>
                             <p className="text-2xl font-black text-foreground">{fmtAvg(avg, getRounding())}<span className="text-sm text-muted-foreground">/20</span></p>
                           </div>
                         );
@@ -1084,7 +1088,7 @@ const Home = () => {
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg font-black text-muted-foreground">/20</span>
                       </div>
                       <p className="text-[11px] font-semibold text-muted-foreground mb-5 px-1">
-                        Leave blank if this assessment hasn't been done yet — entering 0 will count toward your average.
+                        {t("leaveBlankHint")}
                       </p>
 
                       <button
@@ -1093,7 +1097,7 @@ const Home = () => {
                         className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 font-black text-foreground flex items-center justify-center gap-2 card-shadow active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none"
                       >
                         <Check className="h-5 w-5" />
-                        Save Mark
+                        {t("saveMark")}
                       </button>
                     </>
                   )}

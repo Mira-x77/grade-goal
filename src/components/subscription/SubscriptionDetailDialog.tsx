@@ -5,7 +5,6 @@ import { CheckCircle2, BookOpen, Layers, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { subscriptionService } from '@/services/subscriptionService';
 import { useLanguage } from '@/contexts/LanguageContext';
-
 interface SubscriptionDetailDialogProps {
   open: boolean;
   onClose: () => void;
@@ -67,7 +66,7 @@ export function SubscriptionDetailDialog({ open, onClose, onSelectPack, onSelect
 
               {/* Header */}
               <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border">
-                <p className="text-sm font-black text-foreground">{t("choosePlan")}</p>
+                <p className="text-sm font-black text-foreground">{t("choosePlanTitle")}</p>
                 <button
                   onClick={onClose}
                   className="text-muted-foreground active:scale-90 transition-transform"
@@ -101,7 +100,7 @@ export function SubscriptionDetailDialog({ open, onClose, onSelectPack, onSelect
                     <div className="flex-1 min-w-0">
                       <p className="font-black text-foreground text-sm">{currentSubject} Pack</p>
                       <p className="text-[10px] font-semibold text-muted-foreground mt-0.5 leading-snug">
-                        500 FCFA · Lifetime access
+                        {t("packLifetime")}
                       </p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -118,7 +117,7 @@ export function SubscriptionDetailDialog({ open, onClose, onSelectPack, onSelect
                     <div className="flex-1 min-w-0">
                       <p className="font-black text-premium-foreground text-sm">{t("allSubjectsPass")}</p>
                       <p className="text-[10px] font-semibold text-premium-foreground/70 mt-0.5 leading-snug">
-                        1 500 FCFA · 1 month access
+                        {t("passOneMonth")}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1.5 shrink-0">

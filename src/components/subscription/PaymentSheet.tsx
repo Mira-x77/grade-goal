@@ -265,7 +265,7 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
                 className="w-full rounded-2xl border-2 border-foreground bg-card px-4 py-4 text-xl font-black text-foreground text-center tracking-widest placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-secondary card-shadow"
               />
               <p className="text-[10px] font-semibold text-muted-foreground text-center">
-                12-character code · Format: XXXX-XXXX-XXXX
+                {t("codeFormat")}
               </p>
             </div>
             <button

@@ -51,7 +51,7 @@ export class NigerianAdapter implements AcademicSystemAdapter {
     const hasMultipleSemesters = archivedSemesters.length > 0;
 
     let cgpa: number | null = currentGPA;
-    let label = "Current GPA";
+    let label: string | undefined = undefined;
 
     if (hasMultipleSemesters) {
       // Weighted average: archived semester GPs + current semester GP
@@ -68,7 +68,7 @@ export class NigerianAdapter implements AcademicSystemAdapter {
       const totalGP = archivedTotalGP + currentGP;
       const totalCU = archivedTotalCU + currentTotalCU;
       cgpa = totalCU > 0 ? Math.round((totalGP / totalCU) * 100) / 100 : currentGPA;
-      label = "Current CGPA";
+      label = undefined; // Home.tsx will use t("currentCGPA") via heroLabel fallback
     }
 
     const degreeClass = classifyDegree(cgpa ?? 0);

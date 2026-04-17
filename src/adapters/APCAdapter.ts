@@ -42,7 +42,7 @@ export class APCAdapter implements AcademicSystemAdapter {
       performance: {
         value: currentAvg,
         max: 20,
-        label: "Current Average",
+        label: undefined,
         suffix: "/20",
         target: targetMin,
         targetLabel: `Target: ${targetMin}–20`,

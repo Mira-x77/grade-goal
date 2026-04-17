@@ -292,17 +292,17 @@ const Profile = () => {
                 {isNigerian ? (
                   <>
                     <div>
-                      <label className="text-sm font-bold text-muted-foreground mb-1 block">Department</label>
+                      <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("departmentLabel")}</label>
                       <input
                         type="text"
                         value={draft.department}
                         onChange={(e) => setDraft((d) => ({ ...d, department: e.target.value }))}
-                        placeholder="e.g. Computer Science"
+                        placeholder={t("departmentPlaceholder")}
                         className="w-full rounded-xl border-2 border-border bg-background px-4 py-3 font-semibold text-foreground focus:border-primary focus:outline-none transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-bold text-muted-foreground mb-1 block">Level</label>
+                      <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("levelLabel")}</label>
                       <div className="grid grid-cols-5 gap-2">
                         {["100", "200", "300", "400", "500"].map((lvl) => (
                           <button
@@ -369,8 +369,8 @@ const Profile = () => {
                 <InfoRow label={t("fullName")} value={state.studentName || "—"} />
                 {isNigerian ? (
                   <>
-                    <InfoRow label="Department" value={state.department || "—"} />
-                    <InfoRow label="Level" value={state.universityLevel ? `${state.universityLevel} Level` : "—"} />
+                <InfoRow label={t("departmentLabel")} value={state.department || "—"} />
+                    <InfoRow label={t("levelLabel")} value={state.universityLevel ? `${state.universityLevel} Level` : "—"} />
                   </>
                 ) : (
                   <>
@@ -509,7 +509,7 @@ const Profile = () => {
                 <InfoRow label={t("gradingSystemLabel")} value={
                   state.settings.gradingSystem === "apc" ? t("apcTogolese")
                   : state.settings.gradingSystem === "french" ? t("frenchTrad")
-                  : "Nigerian University"
+                  : t("nigerianUniversity")
                 } />
               </motion.div>
             )}
@@ -528,7 +528,7 @@ const Profile = () => {
                 <GraduationCap className="h-5 w-5 text-primary" />
               </div>
               <div className="text-left">
-                <h3 className="font-black text-foreground">{isNigerian ? "Courses" : "Subjects"}</h3>
+                <h3 className="font-black text-foreground">{isNigerian ? t("coursesLabel") : t("addSubjects").replace("Add ", "")}</h3>
                 <p className="text-xs text-muted-foreground font-semibold">{subjects.length} {isNigerian ? "course" : "subject"}{subjects.length !== 1 ? "s" : ""}</p>
               </div>
             </div>
@@ -615,7 +615,7 @@ const Profile = () => {
                       <motion.div key="list" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.18 }}>
                         <div className="flex items-center justify-between px-5 pt-5 pb-3">
                           <div>
-                            <h2 className="text-base font-black text-foreground">{isNigerian ? "Add Courses" : t("addSubjects")}</h2>
+                            <h2 className="text-base font-black text-foreground">{isNigerian ? t("addCourse") : t("addSubjects")}</h2>
                             {subjectSelected.size > 0 && <p className="text-xs font-semibold text-primary mt-0.5">{subjectSelected.size} {t("selected")}</p>}
                           </div>
                           <button onClick={() => setShowSubjectModal(false)} className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground active:scale-95">
