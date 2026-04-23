@@ -4,25 +4,10 @@ import { BookOpen, CheckCircle2 } from "lucide-react";
 import { DayOfWeek } from "@/types/schedule";
 import { loadScheduleState } from "@/lib/schedule-storage";
 import { motion } from "framer-motion";
-import { t } from "@/lib/i18n";
-
-const DAY_MAP: Record<number, DayOfWeek> = {
-  1: "monday",
-  2: "tuesday",
-  3: "wednesday",
-  4: "thursday",
-  5: "friday",
-};
-
-const DAY_NAMES: Record<DayOfWeek, () => string> = {
-  monday: () => t("monday"),
-  tuesday: () => t("tuesday"),
-  wednesday: () => t("wednesday"),
-  thursday: () => t("thursday"),
-  friday: () => t("friday"),
-};
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function TodaySubjects() {
+  const { t } = useLanguage();
   const [subjects, setSubjects] = useState<string[]>([]);
   const [packed, setPacked] = useState<Record<string, boolean>>({});
   const [dayName, setDayName] = useState<string>("");
@@ -30,16 +15,16 @@ export function TodaySubjects() {
   useEffect(() => {
     const today = new Date().getDay();
     const scheduleState = loadScheduleState();
-    
+
     if (today >= 1 && today <= 5) {
-      const day = DAY_MAP[today];
-      setDayName(DAY_NAMES[day]());
+      const day = (["monday","tuesday","wednesday","thursday","friday"] as DayOfWeek[])[today - 1];
+      setDayName(t(day as any));
       setSubjects(scheduleState.schedule[day]);
     } else {
-      setDayName("Weekend");
+      setDayName(t("weekend"));
       setSubjects([]);
     }
-  }, []);
+  }, [t]);
 
   const togglePacked = (subject: string) => {
     setPacked((prev) => ({ ...prev, [subject]: !prev[subject] }));

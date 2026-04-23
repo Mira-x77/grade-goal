@@ -772,6 +772,7 @@ export const translations = {
     // Consent
     consentText: "I agree to the",
     consentAnd: "and",
+    consentPassive: "By continuing, you agree to our",
 
     // Hardcoded strings — now translated
     currentAverageLabel: "Current Average",
@@ -825,6 +826,140 @@ export const translations = {
     unlockAllItems: "Unlock all {n} items — get the full picture",
     scheduleTitle: "School Schedule & Book Reminder",
     comingSoon: "Coming soon",
+
+    // ── New i18n keys (audit fixes) ──────────────────────────────────────
+    // Série / class display
+    serieLabel: "Série",
+    // Semester
+    thirdSemester: "3rd Semester",
+    // Theme labels
+    themeLight: "Light",
+    themeDark: "Dark",
+    themeSystem: "System",
+    themeMidnight: "Midnight",
+    themeInk: "Ink",
+    defaultLabel: "DEFAULT",
+    // Ideas & Feedback link
+    ideasFeedback: "Ideas & Feedback",
+    ideasFeedbackDesc: "Vote, suggest, or share your thoughts",
+    // Library results count
+    aboutResults: "About",
+    // Archive modal
+    archiveSemester: "Archive this semester?",
+    archiveSemesterDesc: "Your current semester will be archived and can no longer be edited. You can still view it as a read-only end-of-semester result.",
+    actionIrreversible: "This action cannot be undone.",
+    archive: "Archive",
+    // Grading system conflict modal
+    gradingConflictTitle: "Grading System Conflict",
+    gradingConflictDesc: "Your cloud account and this device have different grading systems saved. Which one would you like to keep?",
+    cloudAccount: "Cloud account",
+    thisDevice: "This device",
+    // Onboarding checklist
+    quickSetup: "Quick Setup",
+    motivational0: "Let's get you set up — 5 quick steps.",
+    motivational1: "Good start! Keep going.",
+    motivational2: "Halfway there. You're doing great.",
+    motivational3: "Almost ready. Just a couple more.",
+    motivational4: "One last step — you're so close!",
+    // Motivation card
+    encourageGreat1: "You're crushing it!",
+    encourageGreat2: "Keep this energy!",
+    encourageGreat3: "On fire today!",
+    encourageGreat4: "Unstoppable!",
+    encourageGood1: "Solid progress!",
+    encourageGood2: "You've got this!",
+    encourageGood3: "Stay focused!",
+    encourageGood4: "Almost there!",
+    encourageTough1: "Every point counts!",
+    encourageTough2: "Don't give up!",
+    encourageTough3: "Push through!",
+    encourageTough4: "You can turn this around!",
+    marksTracked: "{count} mark{plural} tracked",
+    bestStreakDays: "Best streak: {days} days",
+    // French class view
+    sentimentVeryPoor: "Very poor",
+    sentimentPoor: "Poor",
+    sentimentAverage: "Average",
+    sentimentGood: "Good",
+    sentimentExcellent: "Excellent",
+    vsClass: "vs class",
+    // Subject count pluralisation
+    subjects: "subjects",
+    // Schedule manager
+    weeklyScheduleTab: "Weekly Schedule",
+    reminderTimesTab: "Reminder Times",
+    resetEntireSchedule: "Reset Entire Schedule",
+    resetScheduleConfirmTitle: "Are you sure?",
+    resetScheduleConfirmDesc: "This will delete all your subjects and turn off all reminders. You'll need to set everything up again.",
+    resetSchedule: "Reset Schedule",
+    scheduleResetSuccess: "Schedule reset successfully",
+    scheduleUpdated: "Schedule updated!",
+    // Schedule setup toasts
+    scheduleSaved: "Schedule saved!",
+    scheduleSavedWithReminders: "Schedule saved and reminders scheduled!",
+    scheduleSavedEnableNotifications: "Schedule saved! Enable notifications in settings to get reminders.",
+    // Reminder settings toasts
+    invalidEveningTime: "Invalid evening time format. Use HH:MM (e.g., 19:00)",
+    invalidMorningTime: "Invalid morning time format. Use HH:MM (e.g., 05:00)",
+    enableNotificationsDevice: "Please enable notifications in your device settings",
+    addSubjectsFirst: "Please add subjects to your schedule first",
+    schedulingReminders: "Scheduling reminders...",
+    remindersSaved: "Reminder settings saved! {count} notifications scheduled for the next 4 weeks.",
+    failedScheduleReminders: "Failed to schedule reminders. Check console for details.",
+    errorSchedulingReminders: "An error occurred while scheduling reminders",
+    // Welcome page
+    benefit1En: "Track every score.\nSee your average live.",
+    benefit2En: "Know exactly what\nyou need to pass.",
+    benefit3En: "Plan your strategy.\nHit your target.",
+    benefit4En: "Past papers.\nRight in your pocket.",
+    benefit1Fr: "Suivez chaque note.\nVoyez votre moyenne en direct.",
+    benefit2Fr: "Sachez exactement\nce qu'il vous faut pour réussir.",
+    benefit3Fr: "Planifiez votre stratégie.\nAtteignez votre objectif.",
+    benefit4Fr: "Anciens sujets.\nDirectement dans votre poche.",
+    signIn: "Sign In",
+    continueWithoutSigning: "Continue without signing",
+    // Auth sheet
+    signInToContinue: "Sign in to continue",
+    // Today subjects
+    weekend: "Weekend",
+    // Downloads filter
+    all: "All",
+    // Subject pack dynamic
+    unlockToolsForSubject: "Unlock all 6 study tools for {subject} · 500 FCFA · Lifetime",
+    // Missing premium dialog keys
+    unlockPremiumStudyTools: "Unlock Premium Study Tools",
+    unlockPremiumStudyToolsDesc: "Get access to top questions, key topics, and step-by-step solutions.",
+    // Exam paper fallback
+    examPaper: "Exam Paper",
+    // Currency
+    currencyUnit: "FCFA",
+    // College / Lycée tabs
+    collegeTab: "Collège",
+    lyceeTab: "Lycée",
+    // Current semester (onboarding)
+    currentSemester: "Current Semester",
+    currentSemesterDesc: "Which semester are you in right now?",
+    // Feedback board
+    feedbackPageTitle: "Ideas & Feature Requests",
+    feedbackPageSubtitle: "Vote on ideas or suggest your own",
+    feedbackSearch: "Search...",
+    feedbackSortTop: "Top",
+    feedbackSortNew: "New",
+    feedbackEmpty: "No ideas yet",
+    feedbackEmptyDesc: "Be the first to suggest a feature.",
+    feedbackSubmitIdea: "Submit an idea",
+    feedbackIdea: "Idea",
+    feedbackTitleLabel: "Title",
+    feedbackTitlePlaceholder: "e.g. Daily revision reminders",
+    feedbackDescLabel: "Description",
+    feedbackDescPlaceholder: "Describe the feature and why it would be useful...",
+    feedbackSubmit: "Submit",
+    feedbackSubmitted: "Request submitted!",
+    // Status labels
+    statusUnderReview: "Under Review",
+    statusPlanned: "Planned",
+    statusInProgress: "In Progress",
+    statusCompleted: "Completed",
   },
   fr: {
     // Home
@@ -1560,6 +1695,7 @@ export const translations = {
     // Consent
     consentText: "J'accepte les",
     consentAnd: "et la",
+    consentPassive: "En continuant, vous acceptez nos",
 
     // Hardcoded strings — now translated
     currentAverageLabel: "Moyenne Actuelle",
@@ -1613,6 +1749,116 @@ export const translations = {
     unlockAllItems: "Débloquer les {n} éléments — voir l'ensemble",
     scheduleTitle: "Emploi du temps & Rappels",
     comingSoon: "Bientôt disponible",
+
+    // ── New i18n keys (audit fixes) ──────────────────────────────────────
+    serieLabel: "Série",
+    thirdSemester: "3ème Semestre",
+    themeLight: "Clair",
+    themeDark: "Sombre",
+    themeSystem: "Système",
+    themeMidnight: "Midnight",
+    themeInk: "Ink",
+    defaultLabel: "PAR DÉFAUT",
+    ideasFeedback: "Idées & Avis",
+    ideasFeedbackDesc: "Votez ou proposez une fonctionnalité",
+    aboutResults: "Environ",
+    archiveSemester: "Archiver le semestre ?",
+    archiveSemesterDesc: "Votre semestre actuel sera archivé et ne pourra plus être modifié. Vous pourrez le consulter comme un bulletin de fin de semestre en lecture seule.",
+    actionIrreversible: "Cette action est irréversible.",
+    archive: "Archiver",
+    gradingConflictTitle: "Conflit de système de notation",
+    gradingConflictDesc: "Votre compte cloud et cet appareil ont des systèmes de notation différents. Lequel souhaitez-vous conserver ?",
+    cloudAccount: "Compte cloud",
+    thisDevice: "Cet appareil",
+    quickSetup: "Démarrage rapide",
+    motivational0: "Configurons tout — 5 étapes rapides.",
+    motivational1: "Bon début ! Continuez.",
+    motivational2: "À mi-chemin. Vous vous en sortez bien.",
+    motivational3: "Presque prêt. Encore deux étapes.",
+    motivational4: "Une dernière étape — vous y êtes presque !",
+    encourageGreat1: "Vous êtes en feu !",
+    encourageGreat2: "Gardez cette énergie !",
+    encourageGreat3: "En pleine forme !",
+    encourageGreat4: "Inarrêtable !",
+    encourageGood1: "Bonne progression !",
+    encourageGood2: "Vous y arrivez !",
+    encourageGood3: "Restez concentré !",
+    encourageGood4: "Presque là !",
+    encourageTough1: "Chaque point compte !",
+    encourageTough2: "N'abandonnez pas !",
+    encourageTough3: "Continuez !",
+    encourageTough4: "Vous pouvez vous en sortir !",
+    marksTracked: "{count} note{plural} saisie{plural}",
+    bestStreakDays: "Meilleure série : {days} jours",
+    sentimentVeryPoor: "Très faible",
+    sentimentPoor: "Faible",
+    sentimentAverage: "Moyen",
+    sentimentGood: "Bien",
+    sentimentExcellent: "Excellent",
+    vsClass: "vs classe",
+    subjects: "matières",
+    weeklyScheduleTab: "Emploi du temps",
+    reminderTimesTab: "Heures de rappel",
+    resetEntireSchedule: "Réinitialiser l'emploi du temps",
+    resetScheduleConfirmTitle: "Êtes-vous sûr ?",
+    resetScheduleConfirmDesc: "Cela supprimera toutes vos matières et désactivera tous les rappels. Vous devrez tout reconfigurer.",
+    resetSchedule: "Réinitialiser",
+    scheduleResetSuccess: "Emploi du temps réinitialisé",
+    scheduleUpdated: "Emploi du temps mis à jour !",
+    scheduleSaved: "Emploi du temps enregistré !",
+    scheduleSavedWithReminders: "Emploi du temps enregistré et rappels programmés !",
+    scheduleSavedEnableNotifications: "Emploi du temps enregistré ! Activez les notifications dans les paramètres pour recevoir des rappels.",
+    invalidEveningTime: "Format d'heure du soir invalide. Utilisez HH:MM (ex. 19:00)",
+    invalidMorningTime: "Format d'heure du matin invalide. Utilisez HH:MM (ex. 05:00)",
+    enableNotificationsDevice: "Veuillez activer les notifications dans les paramètres de votre appareil",
+    addSubjectsFirst: "Veuillez d'abord ajouter des matières à votre emploi du temps",
+    schedulingReminders: "Programmation des rappels...",
+    remindersSaved: "Paramètres de rappel enregistrés ! {count} notifications programmées pour les 4 prochaines semaines.",
+    failedScheduleReminders: "Échec de la programmation des rappels.",
+    errorSchedulingReminders: "Une erreur s'est produite lors de la programmation des rappels",
+    benefit1En: "Track every score.\nSee your average live.",
+    benefit2En: "Know exactly what\nyou need to pass.",
+    benefit3En: "Plan your strategy.\nHit your target.",
+    benefit4En: "Past papers.\nRight in your pocket.",
+    benefit1Fr: "Suivez chaque note.\nVoyez votre moyenne en direct.",
+    benefit2Fr: "Sachez exactement\nce qu'il vous faut pour réussir.",
+    benefit3Fr: "Planifiez votre stratégie.\nAtteignez votre objectif.",
+    benefit4Fr: "Anciens sujets.\nDirectement dans votre poche.",
+    signIn: "Se connecter",
+    continueWithoutSigning: "Continuer sans connexion",
+    signInToContinue: "Connectez-vous pour continuer",
+    weekend: "Week-end",
+    all: "Tous",
+    unlockToolsForSubject: "Débloquer les 6 outils pour {subject} · 500 FCFA · À vie",
+    unlockPremiumStudyTools: "Débloquer les outils Premium",
+    unlockPremiumStudyToolsDesc: "Accédez aux questions clés, thèmes importants et solutions étape par étape.",
+    examPaper: "Sujet d'examen",
+    currencyUnit: "FCFA",
+    collegeTab: "Collège",
+    lyceeTab: "Lycée",
+    currentSemester: "Semestre actuel",
+    currentSemesterDesc: "Dans quel semestre êtes-vous actuellement ?",
+    // Feedback board
+    feedbackPageTitle: "Idées & Fonctionnalités",
+    feedbackPageSubtitle: "Votez ou proposez une idée",
+    feedbackSearch: "Rechercher...",
+    feedbackSortTop: "Votes",
+    feedbackSortNew: "Récent",
+    feedbackEmpty: "Aucune idée pour l'instant",
+    feedbackEmptyDesc: "Soyez le premier à proposer une fonctionnalité.",
+    feedbackSubmitIdea: "Proposer une idée",
+    feedbackIdea: "Idée",
+    feedbackTitleLabel: "Titre",
+    feedbackTitlePlaceholder: "Ex: Rappels de révision quotidiens",
+    feedbackDescLabel: "Description",
+    feedbackDescPlaceholder: "Décrivez la fonctionnalité et pourquoi elle serait utile...",
+    feedbackSubmit: "Soumettre",
+    feedbackSubmitted: "Idée soumise !",
+    // Status labels
+    statusUnderReview: "En examen",
+    statusPlanned: "Planifié",
+    statusInProgress: "En cours",
+    statusCompleted: "Terminé",
   },
 };
 
@@ -1631,4 +1877,22 @@ export function setLanguage(lang: Language) {
 
 export function t(key: keyof typeof translations.en): string {
   return translations[_currentLanguage][key] || translations.en[key];
+}
+
+/**
+ * Translates a stored semester key (e.g. "1st Semester") to the current language display string.
+ * Safe to call with any string — falls back to the raw value if no mapping exists.
+ */
+export function translateSemester(value: string, lang: Language): string {
+  const map: Record<string, keyof typeof translations.en> = {
+    "1st Semester": "firstSemester",
+    "2nd Semester": "secondSemester",
+    "3rd Semester": "thirdSemester",
+    "Annual":       "annual",
+    "First Semester":  "firstSemester",
+    "Second Semester": "secondSemester",
+  };
+  const key = map[value];
+  if (!key) return value;
+  return translations[lang][key] || translations.en[key];
 }

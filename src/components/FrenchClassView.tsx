@@ -9,13 +9,20 @@ interface FrenchClassViewProps {
   subjects: Subject[];
 }
 
-const sentimentLabels = ["", "Very poor", "Poor", "Average", "Good", "Excellent"];
-
 const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
   const summary = calcFrenchSummary(subjects);
   const trend = getAppreciationTrend(subjects);
   const [open, setOpen] = useState(false);
   const { t } = useLanguage();
+
+  const sentimentLabels = [
+    "",
+    t("sentimentVeryPoor"),
+    t("sentimentPoor"),
+    t("sentimentAverage"),
+    t("sentimentGood"),
+    t("sentimentExcellent"),
+  ];
 
   return (
     <div className="rounded-2xl bg-card border-2 border-border overflow-hidden flex-shrink-0" style={{ width: "calc(100vw - 4rem)" }}>
@@ -75,7 +82,7 @@ const FrenchClassView = ({ subjects }: FrenchClassViewProps) => {
                     ? <TrendingUp className="h-4 w-4 text-success" />
                     : <TrendingDown className="h-4 w-4 text-danger" />}
                   <span className={`text-sm font-black ${summary.overallDelta >= 0 ? "text-success" : "text-danger"}`}>
-                    Δ {summary.overallDelta > 0 ? "+" : ""}{summary.overallDelta.toFixed(1)} vs class
+                    Δ {summary.overallDelta > 0 ? "+" : ""}{summary.overallDelta.toFixed(1)} {t("vsClass")}
                   </span>
                 </div>
               )}

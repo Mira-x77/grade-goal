@@ -86,7 +86,7 @@ const Index = () => {
   const isNigerianOnboarding = state.settings?.gradingSystem === "nigerian_university";
 
   const stepTitles: Record<AppState["step"], string> = {
-    onboarding: onboardingStep === "system" ? t("gradingSystem") : onboardingStep === "profile" ? t("basicInfo") : onboardingStep === "semester" ? "Current Semester" : t("targetAverage"),
+    onboarding: onboardingStep === "system" ? t("gradingSystem") : onboardingStep === "profile" ? t("basicInfo") : onboardingStep === "semester" ? t("currentSemester") : t("targetAverage"),
     subjects: t("addSubjects"),
     marks: t("enterYourMarks"),
   };

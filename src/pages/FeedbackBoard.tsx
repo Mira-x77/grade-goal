@@ -9,6 +9,8 @@ import VoteButton from "@/components/feedback/VoteButton";
 import TaskBar from "@/components/TaskBar";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { fr as frLocale, enGB } from "date-fns/locale";
+import { format } from "date-fns";
 
 function getGradingSystem(): string {
   try {
@@ -31,25 +33,35 @@ interface FeedbackItem {
   user_voted: boolean;
 }
 
-const STATUS_META: Record<Status, { label: string; labelFr: string; color: string }> = {
-  under_review: { label: "Under Review", labelFr: "En examen",  color: "bg-warning/15 text-warning border-warning/30" },
-  planned:      { label: "Planned",      labelFr: "Planifié",   color: "bg-primary/15 text-primary border-primary/30" },
-  in_progress:  { label: "In Progress",  labelFr: "En cours",   color: "bg-secondary/80 text-foreground border-foreground/20" },
-  completed:    { label: "Completed",    labelFr: "Terminé",    color: "bg-success/15 text-success border-success/30" },
+// Status colors stay the same regardless of language
+const STATUS_COLORS: Record<Status, string> = {
+  under_review: "bg-warning/15 text-warning border-warning/30",
+  planned:      "bg-primary/15 text-primary border-primary/30",
+  in_progress:  "bg-secondary/80 text-foreground border-foreground/20",
+  completed:    "bg-success/15 text-success border-success/30",
+};
+
+// Status label keys map to i18n keys
+const STATUS_LABEL_KEYS: Record<Status, "statusUnderReview" | "statusPlanned" | "statusInProgress" | "statusCompleted"> = {
+  under_review: "statusUnderReview",
+  planned:      "statusPlanned",
+  in_progress:  "statusInProgress",
+  completed:    "statusCompleted",
 };
 
 export default function FeedbackBoard() {
   const { user } = useAuth();
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
   const isTablet = useIsTablet();
   const navigate = useNavigate();
   const gradingSystem = getGradingSystem();
+  const dateLocale = language === "fr" ? frLocale : enGB;
+
   const sheetVariants = {
     hidden:  isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" },
     visible: isTablet ? { x: "-50%", y: "-50%", scale: 1,    opacity: 1 } : { y: 0 },
     exit:    isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" },
   };
-  const fr = language === "fr";
 
   const [items, setItems] = useState<FeedbackItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +97,7 @@ export default function FeedbackBoard() {
       if (error) throw error;
       setItems((data as FeedbackItem[]) ?? []);
     } catch (e: any) {
-      setFetchError(e.message ?? "Failed to load");
+      setFetchError(e.message ?? t("errorOccurred"));
     } finally {
       setLoading(false);
     }
@@ -112,9 +124,9 @@ export default function FeedbackBoard() {
       setReqTitle(""); setReqDesc("");
       setShowForm(false);
       fetchItems();
-      toast.success(fr ? "Idée soumise !" : "Request submitted!");
+      toast.success(t("feedbackSubmitted"));
     } catch (e: any) {
-      setSubmitError(e.message ?? "Failed to submit");
+      setSubmitError(e.message ?? t("errorOccurred"));
     } finally {
       setSubmitting(false);
     }
@@ -125,14 +137,13 @@ export default function FeedbackBoard() {
   const actionBtn = (
     <motion.button
       onClick={() => setShowForm(true)}
-      initial={{ opacity: 0, scale: 0.5, x: -16 }}
-      animate={{ opacity: 1, scale: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.5, x: -16 }}
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.5 }}
       transition={{ type: "spring", stiffness: 380, damping: 28 }}
-      className="flex items-center gap-2 rounded-full bg-secondary border-2 border-foreground px-5 h-12 font-black text-foreground card-shadow active:scale-95 transition-transform"
+      className="h-12 w-12 rounded-full bg-secondary border-2 border-foreground card-shadow flex items-center justify-center active:scale-95 transition-transform"
     >
-      <Plus className="h-5 w-5" />
-      {fr ? "Idée" : "Idea"}
+      <Plus className="h-6 w-6 text-foreground" />
     </motion.button>
   );
 
@@ -147,10 +158,10 @@ export default function FeedbackBoard() {
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-base font-black text-foreground">
-              {fr ? "Idées & Fonctionnalités" : "Ideas & Feature Requests"}
+              {t("feedbackPageTitle")}
             </h1>
             <p className="text-[10px] font-semibold text-muted-foreground">
-              {fr ? "Votez ou proposez une idée" : "Vote on ideas or suggest your own"}
+              {t("feedbackPageSubtitle")}
             </p>
           </div>
         </div>
@@ -162,7 +173,7 @@ export default function FeedbackBoard() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder={fr ? "Rechercher..." : "Search..."}
+              placeholder={t("feedbackSearch")}
               className="w-full pl-9 pr-3 py-2 rounded-xl border-2 border-border bg-muted text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
             />
           </div>
@@ -171,7 +182,7 @@ export default function FeedbackBoard() {
               <button key={s} onClick={() => setSort(s)}
                 className={`px-3 py-2 text-xs font-black transition-colors ${sort === s ? "bg-secondary text-foreground" : "text-muted-foreground"}`}
               >
-                {s === "votes" ? (fr ? "Votes" : "Top") : (fr ? "Récent" : "New")}
+                {s === "votes" ? t("feedbackSortTop") : t("feedbackSortNew")}
               </button>
             ))}
           </div>
@@ -185,7 +196,7 @@ export default function FeedbackBoard() {
         ) : fetchError ? (
           <div className="text-center py-16">
             <p className="text-sm font-bold text-danger">{fetchError}</p>
-            <button onClick={fetchItems} className="mt-3 text-xs font-black text-primary">{fr ? "Réessayer" : "Retry"}</button>
+            <button onClick={fetchItems} className="mt-3 text-xs font-black text-primary">{t("retry")}</button>
           </div>
         ) : filtered.length === 0 ? (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -194,19 +205,20 @@ export default function FeedbackBoard() {
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary/30 border-2 border-foreground/10">
               <Lightbulb className="h-8 w-8 text-secondary" />
             </div>
-            <p className="text-lg font-black text-foreground">{fr ? "Aucune idée pour l'instant" : "No ideas yet"}</p>
+            <p className="text-lg font-black text-foreground">{t("feedbackEmpty")}</p>
             <p className="text-sm font-semibold text-muted-foreground leading-relaxed">
-              {fr ? "Soyez le premier à proposer une fonctionnalité." : "Be the first to suggest a feature."}
+              {t("feedbackEmptyDesc")}
             </p>
             <button onClick={() => setShowForm(true)}
               className="mt-2 rounded-2xl bg-secondary border-2 border-foreground px-6 py-3 font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
             >
-              {fr ? "Proposer une idée" : "Submit an idea"}
+              {t("feedbackSubmitIdea")}
             </button>
           </motion.div>
         ) : (
           filtered.map((item, i) => {
-            const meta = STATUS_META[item.status] ?? STATUS_META.under_review;
+            const labelKey = STATUS_LABEL_KEYS[item.status] ?? STATUS_LABEL_KEYS.under_review;
+            const color = STATUS_COLORS[item.status] ?? STATUS_COLORS.under_review;
             return (
               <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                 className="flex gap-3 bg-card border-2 border-border rounded-2xl p-4"
@@ -215,13 +227,13 @@ export default function FeedbackBoard() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <p className="font-black text-foreground text-sm leading-snug">{item.title}</p>
-                    <span className={`shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full border ${meta.color}`}>
-                      {fr ? meta.labelFr : meta.label}
+                    <span className={`shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full border ${color}`}>
+                      {t(labelKey)}
                     </span>
                   </div>
                   <p className="text-xs font-semibold text-muted-foreground leading-relaxed line-clamp-2">{item.description}</p>
                   <p className="text-[10px] font-bold text-muted-foreground/60 mt-1.5">
-                    {new Date(item.created_at).toLocaleDateString(fr ? "fr-FR" : "en-GB", { day: "numeric", month: "short" })}
+                    {format(new Date(item.created_at), "d MMM", { locale: dateLocale })}
                   </p>
                 </div>
               </motion.div>
@@ -248,26 +260,26 @@ export default function FeedbackBoard() {
             >
               <div className="w-10 h-1 rounded-full bg-foreground/20 mx-auto mb-5" />
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-black text-foreground">{fr ? "Proposer une idée" : "Submit a Request"}</h2>
+                <h2 className="text-lg font-black text-foreground">{t("feedbackSubmitIdea")}</h2>
                 <button onClick={() => setShowForm(false)} className="text-muted-foreground"><X className="h-5 w-5" /></button>
               </div>
               <div className="flex flex-col gap-4">
                 <div>
                   <label className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                    {fr ? "Titre" : "Title"} <span className="text-danger">*</span>
+                    {t("feedbackTitleLabel")} <span className="text-danger">*</span>
                   </label>
                   <input value={reqTitle} onChange={e => setReqTitle(e.target.value)} maxLength={120}
-                    placeholder={fr ? "Ex: Rappels de révision quotidiens" : "e.g. Daily revision reminders"}
+                    placeholder={t("feedbackTitlePlaceholder")}
                     className="w-full rounded-2xl border-2 border-border bg-card px-4 py-3 text-sm font-semibold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors"
                   />
                   <p className="text-[10px] font-bold text-muted-foreground mt-1 text-right">{reqTitle.length}/120</p>
                 </div>
                 <div>
                   <label className="text-xs font-black text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                    {fr ? "Description" : "Description"} <span className="text-danger">*</span>
+                    {t("feedbackDescLabel")} <span className="text-danger">*</span>
                   </label>
                   <textarea value={reqDesc} onChange={e => setReqDesc(e.target.value)} maxLength={2000} rows={4}
-                    placeholder={fr ? "Décrivez la fonctionnalité et pourquoi elle serait utile..." : "Describe the feature and why it would be useful..."}
+                    placeholder={t("feedbackDescPlaceholder")}
                     className="w-full rounded-2xl border-2 border-border bg-card px-4 py-3 text-sm font-semibold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors resize-none"
                   />
                   <p className="text-[10px] font-bold text-muted-foreground mt-1 text-right">{reqDesc.length}/2000</p>
@@ -277,7 +289,7 @@ export default function FeedbackBoard() {
                   className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 font-black text-foreground flex items-center justify-center gap-2 card-shadow active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none"
                 >
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                  {fr ? "Soumettre" : "Submit"}
+                  {t("feedbackSubmit")}
                 </button>
               </div>
             </motion.div>

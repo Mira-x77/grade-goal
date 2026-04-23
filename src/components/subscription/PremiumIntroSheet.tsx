@@ -77,7 +77,7 @@ export function PremiumIntroSheet({ open, onClose, onContinue, subjectName, nudg
         ) : (
           <div className="w-full rounded-2xl bg-muted border-2 border-border py-4 font-black text-muted-foreground flex items-center justify-center gap-2 opacity-60 cursor-not-allowed">
             <Crown className="h-4 w-4" />
-            Coming Soon
+            {t("comingSoon")}
           </div>
         )}
       </div>

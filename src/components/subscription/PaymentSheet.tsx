@@ -46,13 +46,13 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
 
   const handleMobileSubmit = async () => {
     const digits = phone.replace(/\D/g, "");
-    if (digits.length < 8) { toast.error("Enter a valid phone number"); return; }
+    if (digits.length < 8) { toast.error(t("enterValidPhone")); return; }
     setLoading(true);
     try {
       await new Promise(r => setTimeout(r, 1200));
       setMobileSent(true);
     } catch {
-      toast.error("Something went wrong. Try again.");
+      toast.error(t("somethingWentWrong"));
     } finally {
       setLoading(false);
     }
@@ -66,15 +66,15 @@ export function PaymentSheet({ open, onClose, onSuccess, onBack, subjectName, am
   };
 
   const handleCodeActivate = async () => {
-    if (code.replace(/-/g, "").length !== 12) { toast.error("Enter a valid 12-character code"); return; }
+    if (code.replace(/-/g, "").length !== 12) { toast.error(t("enterValidCode")); return; }
     setLoading(true);
     try {
       await subscriptionService.activatePremiumCode(code);
-      toast.success("Access granted!");
+      toast.success(t("accessGranted"));
       onSuccess();
       handleClose();
     } catch (e: any) {
-      toast.error(e.message || "Invalid code. Please try again.");
+      toast.error(e.message || t("invalidCodeRetry"));
     } finally {
       setLoading(false);
     }

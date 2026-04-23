@@ -24,18 +24,6 @@ interface SliderOverride {
   value: number;
 }
 
-const markTypeLabels: Record<string, string> = {
-  interro: "Interro",
-  dev: "Devoir",
-  compo: "Compo",
-};
-
-const markWeights: Record<string, string> = {
-  interro: "×1",
-  dev: "×1",
-  compo: "×2",
-};
-
 const Simulator = () => {
   const state = loadState();
   const subjects = state?.subjects ?? [];
@@ -44,6 +32,18 @@ const Simulator = () => {
   const navigate = useNavigate();
   const { premiumEnabled: PREMIUM_ENABLED } = useAppConfig();
   const [activeSlider, setActiveSlider] = useState<number | null>(null);
+
+  const markTypeLabels: Record<string, string> = {
+    interro: t("interro"),
+    dev: t("devoir"),
+    compo: t("composition"),
+  };
+
+  const markWeights: Record<string, string> = {
+    interro: "×1",
+    dev: "×1",
+    compo: "×2",
+  };
 
   // Premium nudge
   const [activeNudge, setActiveNudge] = useState(false);

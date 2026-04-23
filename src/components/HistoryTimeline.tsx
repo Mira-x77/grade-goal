@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Clock, FileText, File, Clipboard } from "lucide-react";
 import { getHistory } from "@/lib/storage";
 import { format } from "date-fns";
+import { fr as frLocale, enGB } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const markTypeIcon = {
@@ -13,7 +14,8 @@ const markTypeIcon = {
 const HistoryTimeline = () => {
   const history = getHistory();
   const recent = history.slice(-10).reverse();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const dateLocale = language === "fr" ? frLocale : enGB;
 
   if (recent.length === 0) {
     return (
@@ -55,7 +57,7 @@ const HistoryTimeline = () => {
             <div className="flex-1">
               <p className="text-sm font-bold text-foreground">{entry.subjectName}</p>
               <p className="text-[10px] font-semibold text-muted-foreground">
-                {format(new Date(entry.date), "MMM d, HH:mm")}
+                {format(new Date(entry.date), "MMM d, HH:mm", { locale: dateLocale })}
               </p>
             </div>
             <span className={`text-sm font-black ${entry.value >= 14 ? "text-success" : entry.value >= 10 ? "text-warning" : "text-danger"}`}>

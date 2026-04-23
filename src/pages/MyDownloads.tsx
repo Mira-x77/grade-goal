@@ -136,11 +136,6 @@ const MyDownloads = () => {
     countMotion.set(downloadedPapers.length);
   }, [downloadedPapers.length]);
 
-  const usedPct = storageInfo && (storageInfo.used + storageInfo.available) > 0
-    ? Math.min((storageInfo.used / (storageInfo.used + storageInfo.available)) * 100, 100)
-    : 0;
-  const storageWarning = usedPct > 80;
-
   const examTypes = Array.from(new Set(downloadedPapers.map(p => p.examType).filter(Boolean))).sort();
 
   const filteredPapers = downloadedPapers.filter((p) => {
@@ -194,13 +189,7 @@ const MyDownloads = () => {
               </p>
             </div>
           </div>
-          {/* Progress bar flush to bottom edge */}
-          <div className="h-2 w-full bg-muted">
-            <div
-              className={`h-full transition-all duration-500 ${storageWarning ? "bg-destructive" : "bg-primary"}`}
-              style={{ width: `${usedPct}%` }}
-            />
-          </div>
+
         </div>
 
         {downloadedPapers.length > 0 && (
@@ -230,7 +219,7 @@ const MyDownloads = () => {
                       : "bg-card text-foreground border-foreground/30"
                   }`}
                 >
-                  All
+                  {t("all")}
                 </button>
                 {examTypes.map(type => (
                   <button

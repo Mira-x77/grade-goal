@@ -40,7 +40,7 @@ export default function ScheduleManager() {
       setupCompleted: false,
       setupSkipped: false,
     });
-    toast.success("Schedule reset successfully");
+    toast.success(t("scheduleResetSuccess"));
     setScheduleState(loadScheduleState());
   };
 
@@ -62,17 +62,17 @@ export default function ScheduleManager() {
         <Tabs defaultValue="schedule" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 h-12">
             <TabsTrigger value="schedule" className="text-base">
-              Weekly Schedule
+              {t("weeklyScheduleTab")}
             </TabsTrigger>
             <TabsTrigger value="reminders" className="text-base">
-              Reminder Times
+              {t("reminderTimesTab")}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="schedule" className="space-y-4">
             <ScheduleSetup
               onComplete={() => {
-                toast.success("Schedule updated!");
+                toast.success(t("scheduleUpdated"));
                 setScheduleState(loadScheduleState());
               }}
               onSkip={() => navigate(-1)}
@@ -83,20 +83,20 @@ export default function ScheduleManager() {
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" className="w-full h-12 text-base">
                   <Trash2 className="h-5 w-5 mr-2" />
-                  Reset Entire Schedule
+                  {t("resetEntireSchedule")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogTitle>{t("resetScheduleConfirmTitle")}</AlertDialogTitle>
                   <AlertDialogDescription className="text-base">
-                    This will delete all your subjects and turn off all reminders. You'll need to set everything up again.
+                    {t("resetScheduleConfirmDesc")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="text-base">Cancel</AlertDialogCancel>
+                  <AlertDialogCancel className="text-base">{t("cancel")}</AlertDialogCancel>
                   <AlertDialogAction onClick={handleResetSchedule} className="text-base">
-                    Reset Schedule
+                    {t("resetSchedule")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

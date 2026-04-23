@@ -28,6 +28,58 @@ export const LYCEE_SUBJECTS: Record<string, readonly string[]> = {
   G: ["Accounting", "Economics", "Business Studies", "Management", "Marketing", "Mathematics", "Computer Science", "French", "English", "Physical Education"],
 };
 
+/**
+ * French translations for subject names.
+ * Keys are the canonical English subject names stored in the database / localStorage.
+ * Values are the French display names shown in the UI when language === "fr".
+ */
+export const SUBJECT_TRANSLATIONS_FR: Record<string, string> = {
+  // College
+  "French": "Français",
+  "Mathematics": "Mathématiques",
+  "English": "Anglais",
+  "Second Foreign Language": "Deuxième Langue Vivante",
+  "History & Geography": "Histoire-Géographie",
+  "Civic Education": "Éducation Civique",
+  "Physics & Chemistry": "Physique-Chimie",
+  "SVT (Biology)": "SVT (Biologie)",
+  "Technology": "Technologie",
+  "Art": "Arts Plastiques",
+  "Music": "Musique",
+  // Lycée shared
+  "Philosophy": "Philosophie",
+  "Physical Education": "EPS",
+  "Computer Science": "Informatique",
+  "Biology": "Biologie",
+  "Chemistry": "Chimie",
+  "Physics": "Physique",
+  "History": "Histoire",
+  "Geography": "Géographie",
+  // Série A
+  "French / Literature": "Français / Littérature",
+  "Civic Education": "Éducation Civique",
+  // Série E/F
+  "Electrical Technology": "Technologie Électrique",
+  "Mechanical Technology": "Technologie Mécanique",
+  "Technical Drawing": "Dessin Technique",
+  "Electronics": "Électronique",
+  // Série G
+  "Accounting": "Comptabilité",
+  "Economics": "Économie",
+  "Business Studies": "Commerce",
+  "Management": "Gestion",
+  "Marketing": "Marketing",
+};
+
+/**
+ * Returns the translated display name for a subject.
+ * Falls back to the original name if no translation exists.
+ */
+export function translateSubject(name: string, language: string): string {
+  if (language !== "fr") return name;
+  return SUBJECT_TRANSLATIONS_FR[name] ?? name;
+}
+
 export function getSubjectsForLevel(classLevel: string, serie?: string): readonly string[] {
   if (CLASS_LEVELS.college.includes(classLevel as any)) {
     return COLLEGE_SUBJECTS;

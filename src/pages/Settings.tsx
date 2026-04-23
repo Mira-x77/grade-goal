@@ -155,12 +155,12 @@ const Settings = () => {
         <Section title={t("appearance")}>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {([
-              { value: "light",    label: "Light",    icon: Sun },
-              { value: "dark",     label: "Dark",     icon: Moon },
-              { value: "system",   label: "System",   icon: Monitor },
-              { value: "midnight", label: "Midnight", icon: Moon },
-              { value: "ink",      label: "Ink",      icon: Zap },
-            ] as const).map(({ value, label, icon: Icon }) => (
+              { value: "light",    labelKey: "themeLight",    icon: Sun },
+              { value: "dark",     labelKey: "themeDark",     icon: Moon },
+              { value: "system",   labelKey: "themeSystem",   icon: Monitor },
+              { value: "midnight", labelKey: "themeMidnight", icon: Moon },
+              { value: "ink",      labelKey: "themeInk",      icon: Zap },
+            ] as const).map(({ value, labelKey, icon: Icon }) => (
               <button
                 key={value}
                 onClick={() => setTheme(value)}
@@ -171,7 +171,7 @@ const Settings = () => {
                 }`}
               >
                 <Icon className="h-4 w-4" />
-                {label}
+                {t(labelKey)}
               </button>
             ))}
           </div>
@@ -220,7 +220,7 @@ const Settings = () => {
                     >
                       <span className="h-5 w-5 rounded-full border-2 border-foreground/20 shrink-0" style={{ backgroundColor: hex }} />
                       <span className="font-bold text-sm text-foreground">{label}</span>
-                      {key === "orange" && <span className="text-[10px] font-black text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md ml-1">DEFAULT</span>}
+                      {key === "orange" && <span className="text-[10px] font-black text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md ml-1">{t("defaultLabel")}</span>}
                       {accent === key && <Check className="h-4 w-4 text-foreground ml-auto" />}
                     </button>
                   ))}
@@ -439,9 +439,9 @@ const Settings = () => {
             >
               <Lightbulb className="h-4 w-4 text-secondary shrink-0" />
               <div>
-                <p className="text-sm font-black">{language === "fr" ? "Idées & Avis" : "Ideas & Feedback"}</p>
+                <p className="text-sm font-black">{t("ideasFeedback")}</p>
                 <p className="text-[10px] font-semibold text-muted-foreground">
-                  {language === "fr" ? "Votez ou proposez une fonctionnalité" : "Vote, suggest, or share your thoughts"}
+                  {t("ideasFeedbackDesc")}
                 </p>
               </div>
             </Link>

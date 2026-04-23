@@ -238,7 +238,7 @@ export default function SubjectDashboard() {
             <p className="text-[11px] font-semibold text-muted-foreground/70 mt-0.5">{t("premiumStudyTools")}</p>
           </div>
           <span className="text-xs font-black text-muted-foreground bg-muted-foreground/10 px-2.5 py-1 rounded-full border border-muted-foreground/20">
-            Coming Soon
+            {t("comingSoon")}
           </span>
         </div>
         )}

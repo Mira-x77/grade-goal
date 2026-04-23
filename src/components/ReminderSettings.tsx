@@ -5,9 +5,10 @@ import { loadScheduleState, updateReminderSettings } from "@/lib/schedule-storag
 import { scheduleAllReminders, requestNotificationPermission, getScheduledNotificationsCount } from "@/lib/notification-scheduler";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function ReminderSettings() {
+  const { t } = useLanguage();
   const [settings, setSettings] = useState<ReminderSettingsType>({
     eveningEnabled: true,
     morningEnabled: true,
@@ -23,11 +24,11 @@ export function ReminderSettings() {
   const handleSave = async () => {
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (settings.eveningEnabled && !timeRegex.test(settings.eveningTime)) {
-      toast.error("Invalid evening time format. Use HH:MM (e.g., 19:00)");
+      toast.error(t("invalidEveningTime"));
       return;
     }
     if (settings.morningEnabled && !timeRegex.test(settings.morningTime)) {
-      toast.error("Invalid morning time format. Use HH:MM (e.g., 05:00)");
+      toast.error(t("invalidMorningTime"));
       return;
     }
 
@@ -35,7 +36,7 @@ export function ReminderSettings() {
     
     const hasPermission = await requestNotificationPermission();
     if (!hasPermission) {
-      toast.error("Please enable notifications in your device settings");
+      toast.error(t("enableNotificationsDevice"));
       return;
     }
 
@@ -43,24 +44,24 @@ export function ReminderSettings() {
     
     const hasSubjects = Object.values(state.schedule).some(subjects => subjects.length > 0);
     if (!hasSubjects) {
-      toast.error("Please add subjects to your schedule first");
+      toast.error(t("addSubjectsFirst"));
       return;
     }
 
-    const toastId = toast.loading("Scheduling reminders...");
+    const toastId = toast.loading(t("schedulingReminders"));
     
     try {
       const success = await scheduleAllReminders(state.schedule, settings);
       
       if (success) {
         const count = await getScheduledNotificationsCount();
-        toast.success(`Reminder settings saved! ${count} notifications scheduled for the next 4 weeks.`, { id: toastId });
+        toast.success(t("remindersSaved").replace("{count}", String(count)), { id: toastId });
       } else {
-        toast.error("Failed to schedule reminders. Check console for details.", { id: toastId });
+        toast.error(t("failedScheduleReminders"), { id: toastId });
       }
     } catch (error) {
       console.error("Error in handleSave:", error);
-      toast.error("An error occurred while scheduling reminders", { id: toastId });
+      toast.error(t("errorSchedulingReminders"), { id: toastId });
     }
   };
 

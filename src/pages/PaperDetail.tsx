@@ -325,7 +325,7 @@ const PaperDetail = () => {
                     <Crown className="h-5 w-5 text-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-black text-foreground text-sm">{paper.subject} Pack</p>
+                    <p className="font-black text-foreground text-sm">{t("unlockSubjectPack").replace("{subject}", paper.subject)}</p>
                     <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">{t("packLifetime")}</p>
                   </div>
                   <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 -rotate-90" />
@@ -360,7 +360,7 @@ const PaperDetail = () => {
       {showPDFViewer && (
         <InAppPDFViewer
           pdfData={pdfData}
-          fileName={paper?.title || "Exam Paper"}
+          fileName={paper?.title || t("examPaper")}
           subjectName={paper?.subject}
           onClose={() => { setShowPDFViewer(false); setPdfData(''); }}
           onPremiumNudge={() => { setShowPDFViewer(false); setPdfData(''); setPrepOpen(true); }}

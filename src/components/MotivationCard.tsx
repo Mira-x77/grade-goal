@@ -3,53 +3,42 @@ import { Flame, Trophy, Zap } from "lucide-react";
 import { getStreak } from "@/lib/storage";
 import { Subject } from "@/types/exam";
 import { calcYearlyAverage } from "@/lib/exam-logic";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MotivationCardProps {
   subjects: Subject[];
   targetAverage: number;
 }
 
-const encouragements = {
-  great: [
-    "You're crushing it!",
-    "Keep this energy!",
-    "On fire today!",
-    "Unstoppable!",
-  ],
-  good: [
-    "Solid progress!",
-    "You've got this!",
-    "Stay focused!",
-    "Almost there!",
-  ],
-  tough: [
-    "Every point counts!",
-    "Don't give up!",
-    "Push through!",
-    "You can turn this around!",
-  ],
-};
-
-function getRandomMessage(arr: string[]) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
 const MotivationCard = ({ subjects, targetAverage }: MotivationCardProps) => {
+  const { t } = useLanguage();
   const streak = getStreak();
   const currentAvg = calcYearlyAverage(subjects);
-  
+
   const filledMarks = subjects.reduce((acc, s) => {
     return acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0);
   }, 0);
 
-  let message: string;
+  const encourageGreatKeys = ["encourageGreat1", "encourageGreat2", "encourageGreat3", "encourageGreat4"] as const;
+  const encourageGoodKeys  = ["encourageGood1",  "encourageGood2",  "encourageGood3",  "encourageGood4"]  as const;
+  const encourageToughKeys = ["encourageTough1", "encourageTough2", "encourageTough3", "encourageTough4"] as const;
+
+  const pick = <T extends readonly string[]>(arr: T) => arr[Math.floor(Math.random() * arr.length)];
+
+  let messageKey: string;
   if (currentAvg !== null && currentAvg >= targetAverage) {
-    message = getRandomMessage(encouragements.great);
+    messageKey = pick(encourageGreatKeys);
   } else if (currentAvg !== null && currentAvg >= targetAverage - 2) {
-    message = getRandomMessage(encouragements.good);
+    messageKey = pick(encourageGoodKeys);
   } else {
-    message = getRandomMessage(encouragements.tough);
+    messageKey = pick(encourageToughKeys);
   }
+
+  const plural = filledMarks !== 1 ? "s" : "";
+  const statsText = t("marksTracked")
+    .replace("{count}", String(filledMarks))
+    .replace(/\{plural\}/g, plural)
+    + " · " + t("bestStreakDays").replace("{days}", String(streak.bestStreak));
 
   return (
     <motion.div
@@ -65,16 +54,14 @@ const MotivationCard = ({ subjects, targetAverage }: MotivationCardProps) => {
             <Flame className="h-6 w-6 text-accent" />
           </div>
           <span className="text-xs font-black text-foreground">
-            {streak.currentStreak} day{streak.currentStreak !== 1 ? "s" : ""}
+            {streak.currentStreak} {t("streakDays")}
           </span>
         </div>
 
         {/* Message */}
         <div className="flex-1">
-          <p className="font-black text-foreground">{message}</p>
-          <p className="text-xs font-semibold text-muted-foreground">
-            {filledMarks} mark{filledMarks !== 1 ? "s" : ""} tracked · Best streak: {streak.bestStreak} days
-          </p>
+          <p className="font-black text-foreground">{t(messageKey as any)}</p>
+          <p className="text-xs font-semibold text-muted-foreground">{statsText}</p>
         </div>
 
         {/* Trophy */}

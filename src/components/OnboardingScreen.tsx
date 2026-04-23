@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Target, BookOpen, GraduationCap, ChevronDown, Check } from "lucide-react";
 import { GradingSystem } from "@/types/exam";
 import { CLASS_LEVELS, LYCEE_SERIES } from "@/lib/subjects-data";
-import Mascot from "@/components/Mascot";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export type OnboardingStep = "system" | "profile" | "semester" | "target";
@@ -162,7 +161,7 @@ const NIGERIAN_DEPARTMENTS = [
 ];
 
 const FixedNextButton = ({ onClick, disabled = false, label, hint }: { onClick: () => void; disabled?: boolean; label: string; hint?: React.ReactNode }) => (
-  <div className="fixed bottom-0 left-0 right-0 z-30 pb-10 pt-2 bg-gradient-to-t from-background via-background to-transparent">
+  <div className="fixed bottom-0 left-0 right-0 z-30 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-2 bg-gradient-to-t from-background via-background to-transparent">
     <div className="content-col max-w-lg mx-auto">
       {hint && <div className="mb-3 w-full flex justify-center">{hint}</div>}
       <button
@@ -212,17 +211,8 @@ const OnboardingScreen = ({
           exit={{ opacity: 0, x: -50 }}
           className="flex flex-col items-center gap-8 pt-28 pb-36 content-col"
         >
-          <motion.div
-            initial={{ scale: 0.3, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          >
-            <Mascot pose="thinking" size={110} animate />
-          </motion.div>
-
           <div className="text-center">
-            <h1 className="text-3xl font-black text-foreground">{t("gradingSystem")}</h1>
-            <p className="mt-2 text-muted-foreground font-semibold">{t("chooseSystem")}</p>
+            <p className="text-muted-foreground font-semibold">{t("chooseSystem")}</p>
           </div>
 
           <div className="w-full flex flex-col gap-3">
@@ -289,17 +279,8 @@ const OnboardingScreen = ({
           exit={{ opacity: 0, x: -50 }}
           className="flex flex-col items-center gap-6 pt-28 pb-36 overflow-y-auto min-h-screen content-col"
         >
-          <motion.div
-            initial={{ scale: 0.3, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          >
-            <Mascot pose="idle" size={110} animate />
-          </motion.div>
-
           <div className="text-center">
-            <h1 className="text-3xl font-black text-foreground">{t("basicInfo")}</h1>
-            <p className="mt-2 text-muted-foreground font-semibold">
+            <p className="text-muted-foreground font-semibold">
               {isNigerian ? "What should we call you?" : t("tellUsNameClass")}
             </p>
           </div>
@@ -376,7 +357,7 @@ const OnboardingScreen = ({
                             : "text-muted-foreground"
                         }`}
                       >
-                        {tab === "college" ? "Collège" : "Lycée"}
+                        {tab === "college" ? t("collegeTab") : t("lyceeTab")}
                       </button>
                     ))}
                   </div>
@@ -411,7 +392,7 @@ const OnboardingScreen = ({
 
                 {isLycee(classLevel) && (
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
-                    <label className="text-sm font-bold text-muted-foreground mb-1 block">Série</label>
+                    <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("serieLabel")}</label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {LYCEE_SERIES.map((s) => (
                         <button
@@ -421,7 +402,7 @@ const OnboardingScreen = ({
                             serie === s ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
                           }`}
                         >
-                          Série {s}
+                          {t("serieLabel")} {s}
                         </button>
                       ))}
                     </div>
@@ -440,7 +421,7 @@ const OnboardingScreen = ({
                         : [
                             { key: "1st Semester", label: t("firstSemester") },
                             { key: "2nd Semester", label: t("secondSemester") },
-                            { key: "3rd Semester", label: t("thirdSemester") || "3rd Semester" },
+                            { key: "3rd Semester", label: t("thirdSemester") },
                           ]
                       ).map(({ key, label }) => (
                         <button
@@ -463,7 +444,7 @@ const OnboardingScreen = ({
           <FixedNextButton
             onClick={() => isNigerian ? onStepChange("semester") : onStepChange("target")}
             disabled={isNigerian ? !nigerianProfileValid : !profileValid}
-            label={isNigerian ? "Next" : t("next")}
+            label={t("next")}
             hint={
               !isNigerian && !profileValid && (studentName.trim() || classLevel) ? (
                 <p className="text-xs font-bold text-muted-foreground text-center">
@@ -490,17 +471,8 @@ const OnboardingScreen = ({
           exit={{ opacity: 0, x: -50 }}
           className="flex flex-col items-center gap-8 pt-28 pb-36 content-col"
         >
-          <motion.div
-            initial={{ scale: 0.3, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          >
-            <Mascot pose="idle" size={110} animate />
-          </motion.div>
-
           <div className="text-center">
-            <h1 className="text-3xl font-black text-foreground">Current Semester</h1>
-            <p className="mt-2 text-muted-foreground font-semibold">Which semester are you in right now?</p>
+            <p className="text-muted-foreground font-semibold">{t("currentSemesterDesc")}</p>
           </div>
 
           <div className="w-full flex flex-col gap-3">
@@ -520,7 +492,7 @@ const OnboardingScreen = ({
           <FixedNextButton
             onClick={() => onStepChange("target")}
             disabled={!nigerianSemester}
-            label="Next"
+            label={t("next")}
           />
         </motion.div>
       )}
@@ -534,19 +506,8 @@ const OnboardingScreen = ({
           exit={{ opacity: 0, x: -50 }}
           className="flex flex-col items-center gap-8 pt-28 pb-36 content-col"
         >
-          <motion.div
-            initial={{ scale: 0.3, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          >
-            <Mascot pose="pointing" size={110} animate />
-          </motion.div>
-
           <div className="text-center">
-            <h1 className="text-3xl font-black text-foreground">
-              {t("whatsYourTarget")}
-            </h1>
-            <p className="mt-2 text-muted-foreground font-semibold">
+            <p className="text-muted-foreground font-semibold">
               {t("setYearlyAverage")}
             </p>
           </div>

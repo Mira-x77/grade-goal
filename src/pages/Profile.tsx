@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { loadState, saveState } from "@/lib/storage";
 import { AppState, Subject, ApcSemester } from "@/types/exam";
 import { calcYearlyAverage } from "@/lib/exam-logic";
-import { CLASS_LEVELS, LYCEE_SERIES, getSubjectsForLevel } from "@/lib/subjects-data";
+import { CLASS_LEVELS, LYCEE_SERIES, getSubjectsForLevel, translateSubject } from "@/lib/subjects-data";
 import TaskBar from "@/components/TaskBar";
 import ScreenIntro from "@/components/ScreenIntro";
 import ScreenTour from "@/components/ScreenTour";
@@ -29,6 +29,10 @@ import {
 } from "@/lib/grading-nigerian";
 import { NigerianState } from "@/types/nigerian";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { translateSemester } from "@/lib/i18n";
+import { useAuth } from "@/contexts/AuthContext";
+
+const DEVELOPER_EMAIL = "emmanuelnnolim99@gmail.com";
 
 const allLevels = [...CLASS_LEVELS.college, ...CLASS_LEVELS.lycee];
 const isLycee = (level: string) => (CLASS_LEVELS.lycee as readonly string[]).includes(level);
@@ -37,6 +41,8 @@ const Profile = () => {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const { premiumEnabled: PREMIUM_ENABLED } = useAppConfig();
+  const { session } = useAuth();
+  const isDeveloper = session?.user?.email === DEVELOPER_EMAIL;
   const [state, setState] = useState<AppState | null>(null);
   const [editingBasic, setEditingBasic] = useState(false);
   const [editingTarget, setEditingTarget] = useState(false);
@@ -331,7 +337,7 @@ const Profile = () => {
                     </div>
                     {draft.classLevel && isLycee(draft.classLevel) && (
                       <div>
-                        <label className="text-sm font-bold text-muted-foreground mb-1 block">Série</label>
+                        <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("serieLabel")}</label>
                         <select
                           value={draft.serie}
                           onChange={(e) => setDraft((d) => ({ ...d, serie: e.target.value }))}
@@ -346,17 +352,24 @@ const Profile = () => {
                       <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("semester")}</label>
                       <div className={`grid gap-2 ${isLycee(draft.classLevel) ? "grid-cols-2" : "grid-cols-3"}`}>
                         {(isLycee(draft.classLevel)
-                          ? ["1st Semester", "2nd Semester"]
-                          : ["1st Semester", "2nd Semester", "3rd Semester"]
-                        ).map((s) => (
+                          ? [
+                              { key: "1st Semester", label: t("firstSemester") },
+                              { key: "2nd Semester", label: t("secondSemester") },
+                            ]
+                          : [
+                              { key: "1st Semester", label: t("firstSemester") },
+                              { key: "2nd Semester", label: t("secondSemester") },
+                              { key: "3rd Semester", label: t("thirdSemester") },
+                            ]
+                        ).map(({ key, label }) => (
                           <button
-                            key={s}
-                            onClick={() => setDraft((d) => ({ ...d, semester: s }))}
+                            key={key}
+                            onClick={() => setDraft((d) => ({ ...d, semester: key }))}
                             className={`rounded-xl px-2 py-2.5 text-xs font-black transition-all active:scale-95 border-2 border-foreground ${
-                              draft.semester === s ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
+                              draft.semester === key ? "bg-secondary text-foreground card-shadow" : "bg-card text-foreground"
                             }`}
                           >
-                            {s}
+                            {label}
                           </button>
                         ))}
                       </div>
@@ -376,9 +389,9 @@ const Profile = () => {
                   <>
                     <InfoRow label={t("classLevel")} value={state.classLevel || "—"} />
                     {state.classLevel && isLycee(state.classLevel) && (
-                      <InfoRow label="Série" value={state.serie ? `Série ${state.serie}` : "—"} />
+                      <InfoRow label={t("serieLabel")} value={state.serie ? `${t("serieLabel")} ${state.serie}` : "—"} />
                     )}
-                    <InfoRow label={t("semester")} value={state.semester || "—"} />
+                    <InfoRow label={t("semester")} value={state.semester ? translateSemester(state.semester, language) : "—"} />
                   </>
                 )}
               </motion.div>
@@ -475,11 +488,11 @@ const Profile = () => {
               <button onClick={() => setEditingGrading(false)} className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground active:scale-95 transition-transform">
                 <Check className="h-3.5 w-3.5" /> {t("done")}
               </button>
-            ) : (
+            ) : isDeveloper ? (
               <button onClick={() => setEditingGrading(true)} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-1.5 text-xs font-black text-foreground active:scale-95 transition-transform">
                 <Pencil className="h-3.5 w-3.5" /> {t("edit")}
               </button>
-            )}
+            ) : null}
           </div>
 
           <AnimatePresence mode="wait">
@@ -529,7 +542,7 @@ const Profile = () => {
               </div>
               <div className="text-left">
                 <h3 className="font-black text-foreground">{isNigerian ? t("coursesLabel") : t("addSubjects").replace("Add ", "")}</h3>
-                <p className="text-xs text-muted-foreground font-semibold">{subjects.length} {isNigerian ? "course" : "subject"}{subjects.length !== 1 ? "s" : ""}</p>
+                <p className="text-xs text-muted-foreground font-semibold">{subjects.length} {subjects.length !== 1 ? t("subjects") : t("subject")}</p>
               </div>
             </div>
             <motion.div animate={{ rotate: subjectsOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -690,7 +703,7 @@ const Profile = () => {
                               const isSel = subjectSelected.has(name);
                               return (
                                 <button key={name} onClick={() => toggleSubjectSelect(name)} className={`w-full flex items-center justify-between px-3 py-3 rounded-xl mb-1 transition-all active:scale-[0.98] ${isSel ? "bg-primary/15 text-primary" : "hover:bg-muted/60 text-foreground"}`}>
-                                  <span className="text-sm font-bold">{name}</span>
+                                  <span className="text-sm font-bold">{translateSubject(name, language)}</span>
                                   <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${isSel ? "bg-primary border-primary" : "border-border"}`}>
                                     {isSel && <Check className="h-3 w-3 text-primary-foreground" />}
                                   </div>

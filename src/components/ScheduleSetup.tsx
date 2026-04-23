@@ -5,14 +5,14 @@ import { updateSchedule, markSetupCompleted, loadScheduleState } from "@/lib/sch
 import { scheduleAllReminders, requestNotificationPermission } from "@/lib/notification-scheduler";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const DAYS: { key: DayOfWeek; label: () => string }[] = [
-  { key: "monday", label: () => t("monday") },
-  { key: "tuesday", label: () => t("tuesday") },
-  { key: "wednesday", label: () => t("wednesday") },
-  { key: "thursday", label: () => t("thursday") },
-  { key: "friday", label: () => t("friday") },
+const DAYS: { key: DayOfWeek; labelKey: keyof typeof import("@/lib/i18n").translations.en }[] = [
+  { key: "monday",    labelKey: "monday" },
+  { key: "tuesday",  labelKey: "tuesday" },
+  { key: "wednesday",labelKey: "wednesday" },
+  { key: "thursday", labelKey: "thursday" },
+  { key: "friday",   labelKey: "friday" },
 ];
 
 interface ScheduleSetupProps {
@@ -22,6 +22,7 @@ interface ScheduleSetupProps {
 }
 
 export function ScheduleSetup({ onComplete, onSkip, initialSchedule }: ScheduleSetupProps) {
+  const { t } = useLanguage();
   const [schedule, setSchedule] = useState<WeeklySchedule>(
     initialSchedule || {
       monday: [],
@@ -68,12 +69,12 @@ export function ScheduleSetup({ onComplete, onSkip, initialSchedule }: ScheduleS
       if (hasPermission) {
         const state = loadScheduleState();
         await scheduleAllReminders(state.schedule, state.reminderSettings);
-        toast.success("Schedule saved and reminders scheduled!");
+        toast.success(t("scheduleSavedWithReminders"));
       } else {
-        toast.success("Schedule saved! Enable notifications in settings to get reminders.");
+        toast.success(t("scheduleSavedEnableNotifications"));
       }
     } else {
-      toast.success("Schedule saved!");
+      toast.success(t("scheduleSaved"));
     }
     
     onComplete();
@@ -94,14 +95,14 @@ export function ScheduleSetup({ onComplete, onSkip, initialSchedule }: ScheduleS
       </div>
 
       <div className="flex flex-col gap-4 px-6 pb-8">
-        {DAYS.map(({ key, label }) => (
+        {DAYS.map(({ key, labelKey }) => (
           <motion.div
             key={key}
             initial={{ y: 15, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             className="rounded-2xl bg-card p-4 border-2 border-border"
           >
-            <h3 className="font-black text-foreground text-sm mb-3">{label()}</h3>
+            <h3 className="font-black text-foreground text-sm mb-3">{t(labelKey)}</h3>
             
             <div className="flex gap-2 mb-3">
               <input

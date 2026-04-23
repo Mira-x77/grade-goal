@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AppConfigProvider } from "@/contexts/AppConfigContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import React from "react";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { useEffect, useState } from "react";
 import { restoreFromNative } from "@/lib/nativeStorage";
@@ -66,7 +67,7 @@ const App = () => {
         </defs>
       </svg>
       <Toaster />
-      <Sonner position="top-center" offset="max(3.5rem, calc(env(safe-area-inset-top) + 1rem))" />
+      <Sonner position="top-center" style={{ "--offset": "max(3.5rem, calc(env(safe-area-inset-top) + 1rem))" } as React.CSSProperties} />
       <BrowserRouter>
         <AppInner />
         <AuthProvider>

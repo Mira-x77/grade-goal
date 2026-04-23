@@ -17,17 +17,17 @@ interface MarksInputProps {
   isNigerian?: boolean;
 }
 
-const markLabels = {
-  interro: { label: "Interro", weight: "×1", icon: <FileText className="h-4 w-4" /> },
-  dev:     { label: "Devoir",  weight: "×1", icon: <File className="h-4 w-4" /> },
-  compo:   { label: "Compo",   weight: "×2", icon: <Clipboard className="h-4 w-4" /> },
-} as const;
-
 const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, classLevel, serie, isNigerian }: MarksInputProps) => {
   const [expanded, setExpanded] = useState<string | null>(
     subjects.length > 0 ? subjects[0].id : null
   );
   const { t } = useLanguage();
+
+  const markLabels = {
+    interro: { label: t("interro"), weight: "×1", icon: <FileText className="h-4 w-4" /> },
+    dev:     { label: t("devoir"),  weight: "×1", icon: <File className="h-4 w-4" /> },
+    compo:   { label: t("composition"), weight: "×2", icon: <Clipboard className="h-4 w-4" /> },
+  } as const;
 
   const updateMark = (subjectId: string, markType: keyof Subject["marks"], value: string) => {
     const numValue = value === "" ? null : Math.min(20, Math.max(0, parseFloat(value)));
@@ -41,20 +41,22 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
     if (finalValue !== null && oldValue === null && oldSubject) {
       addHistoryEntry({ date: new Date().toISOString(), subjectName: oldSubject.name, markType, value: finalValue });
     }
-    // Auto-collapse and move to next subject when all 3 marks are filled
-    const updatedSub = updatedSubjects.find(s => s.id === subjectId);
-    if (updatedSub) {
-      const allFilled = updatedSub.marks.interro !== null && updatedSub.marks.dev !== null && updatedSub.marks.compo !== null;
-      if (allFilled) {
-        const currentIdx = updatedSubjects.findIndex(s => s.id === subjectId);
-        const nextIncomplete = updatedSubjects.slice(currentIdx + 1).find(
-          s => s.marks.interro === null || s.marks.dev === null || s.marks.compo === null
-        );
-        if (nextIncomplete) {
-          setExpanded(nextIncomplete.id);
-        } else {
-          setExpanded(null);
-        }
+    // Auto-collapse is handled in onBlur to avoid closing while the user is still typing
+  };
+
+  const handleMarkBlur = (subjectId: string) => {
+    const updatedSub = subjects.find(s => s.id === subjectId);
+    if (!updatedSub) return;
+    const allFilled = updatedSub.marks.interro !== null && updatedSub.marks.dev !== null && updatedSub.marks.compo !== null;
+    if (allFilled) {
+      const currentIdx = subjects.findIndex(s => s.id === subjectId);
+      const nextIncomplete = subjects.slice(currentIdx + 1).find(
+        s => s.marks.interro === null || s.marks.dev === null || s.marks.compo === null
+      );
+      if (nextIncomplete) {
+        setExpanded(nextIncomplete.id);
+      } else {
+        setExpanded(null);
       }
     }
   };
@@ -200,6 +202,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
                                 placeholder="—"
                                 value={sub.marks[type] ?? ""}
                                 onChange={(e) => updateMark(sub.id, type, e.target.value)}
+                                onBlur={() => handleMarkBlur(sub.id)}
                                 className="w-full rounded-xl border-2 border-border bg-background px-2 py-2 text-center font-bold text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none transition-colors"
                               />
                               <span className="text-[10px] font-bold text-muted-foreground">
@@ -223,7 +226,7 @@ const MarksInput = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack, c
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 28, delay: 0.3 }}
-        className="fixed bottom-0 left-0 right-0 z-30 pb-10 pt-8"
+        className="fixed bottom-0 left-0 right-0 z-30 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-8"
       >
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background to-transparent z-[-1]" />
         <div className="content-col max-w-lg mx-auto">

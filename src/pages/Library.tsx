@@ -282,7 +282,7 @@ const Library = () => {
             {!loading && (
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs text-muted-foreground/70 tracking-wide">
-                  About {filteredPapers.length.toLocaleString()} {filteredPapers.length === 1 ? t("paperFound") : t("papersFound")}
+                  {t("aboutResults")} {filteredPapers.length.toLocaleString()} {filteredPapers.length === 1 ? t("paperFound") : t("papersFound")}
                   {showPagination && (
                     <span className="ml-1">
                       &middot; {t("page")} {currentPage} {t("of")} {totalPages}

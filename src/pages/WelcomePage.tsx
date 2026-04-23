@@ -8,19 +8,19 @@ import { toast } from "sonner";
 import AuthSheet from "@/components/AuthSheet";
 import { Link } from "react-router-dom";
 
-const BENEFITS = [
-  { en: "Track every score.\nSee your average live.", fr: "Suivez chaque note.\nVoyez votre moyenne en direct." },
-  { en: "Know exactly what\nyou need to pass.", fr: "Sachez exactement\nce qu'il vous faut pour réussir." },
-  { en: "Plan your strategy.\nHit your target.", fr: "Planifiez votre stratégie.\nAtteignez votre objectif." },
-  { en: "Past papers.\nRight in your pocket.", fr: "Anciens sujets.\nDirectement dans votre poche." },
-];
-
 function BenefitText({ language }: { language: string }) {
+  const { t } = useLanguage();
+  const BENEFITS_KEYS = [
+    { en: "benefit1En" as const, fr: "benefit1Fr" as const },
+    { en: "benefit2En" as const, fr: "benefit2Fr" as const },
+    { en: "benefit3En" as const, fr: "benefit3Fr" as const },
+    { en: "benefit4En" as const, fr: "benefit4Fr" as const },
+  ];
   const [idx, setIdx] = useState(0);
   const fr = language === "fr";
 
   useEffect(() => {
-    const id = setInterval(() => setIdx(i => (i + 1) % BENEFITS.length), 3200);
+    const id = setInterval(() => setIdx(i => (i + 1) % BENEFITS_KEYS.length), 3200);
     return () => clearInterval(id);
   }, []);
 
@@ -33,9 +33,8 @@ function BenefitText({ language }: { language: string }) {
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
         className="text-center font-black text-white leading-snug whitespace-pre-line drop-shadow-md text-base md:text-xl"
-        style={{}}
       >
-        {fr ? BENEFITS[idx].fr : BENEFITS[idx].en}
+        {t(fr ? BENEFITS_KEYS[idx].fr : BENEFITS_KEYS[idx].en)}
       </motion.p>
     </AnimatePresence>
   );
@@ -46,20 +45,14 @@ export default function WelcomePage() {
   const { language, setLang, t } = useLanguage();
   const [showAuthSheet, setShowAuthSheet] = useState(false);
   const [guestLoading, setGuestLoading] = useState(false);
-  const [agreed, setAgreed] = useState(false);
 
   const handleGuest = async () => {
     setGuestLoading(true);
     try {
-      // Mark as guest so ProtectedRoute lets them through without a session
       localStorage.setItem("guest_mode", "true");
       navigate("/onboarding", { replace: true });
-
-      // Fire-and-forget anonymous sign-in in the background (best effort)
       if (navigator.onLine) {
-        supabase.auth.signInAnonymously().catch(() => {
-          // Silently ignore — user is already on onboarding
-        });
+        supabase.auth.signInAnonymously().catch(() => {});
       }
     } finally {
       setGuestLoading(false);
@@ -128,45 +121,19 @@ export default function WelcomePage() {
         transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 24 }}
         className="relative z-10 flex flex-col pb-[max(2.5rem,env(safe-area-inset-bottom))] md:pb-16"
       >
-        {/* Consent checkbox — hidden when sign-in sheet is open */}
-        {!showAuthSheet && (
-        <label className="flex items-start gap-3 px-6 md:px-16 pb-4 cursor-pointer select-none max-w-lg md:mx-auto w-full">
-          <button
-            type="button"
-            onClick={() => setAgreed(a => !a)}
-            className={`mt-0.5 h-5 w-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-colors ${agreed ? "bg-white border-white" : "border-white/50 bg-transparent"}`}
-            aria-checked={agreed}
-            role="checkbox"
-          >
-            {agreed && <svg className="h-3 w-3 text-primary" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-          </button>
-          <span className="text-xs md:text-sm font-semibold text-white/80 leading-relaxed">
-            {t("consentText")}{" "}
-            <Link to="/terms" className="text-white font-black underline">
-              {t("termsTitle")}
-            </Link>
-            {" "}{t("consentAnd")}{" "}
-            <Link to="/privacy" className="text-white font-black underline">
-              {t("privacyPolicyTitle")}
-            </Link>
-          </span>
-        </label>
-        )}
-
         <div className="flex items-end md:max-w-lg md:mx-auto md:w-full md:px-0 md:gap-4 md:rounded-2xl md:overflow-hidden">
           <button
             onClick={handleGuest}
-            disabled={guestLoading || !agreed}
+            disabled={guestLoading}
             className="flex-1 py-5 text-sm font-black text-white/70 active:text-white transition-colors disabled:opacity-40"
           >
-            {guestLoading ? "…" : (language === "fr" ? "Continuer sans connexion" : "Continue without signing")}
+            {guestLoading ? "…" : t("continueWithoutSigning")}
           </button>
           <button
             onClick={() => setShowAuthSheet(true)}
-            disabled={!agreed}
-            className="flex-1 bg-card rounded-tl-3xl md:rounded-2xl py-5 text-base font-black text-primary active:opacity-80 transition-opacity disabled:opacity-40"
+            className="flex-1 bg-card rounded-tl-3xl md:rounded-2xl py-5 text-base font-black text-primary active:opacity-80 transition-opacity"
           >
-            {language === "fr" ? "Se connecter" : "Sign In"}
+            {t("signIn")}
           </button>
         </div>
       </motion.div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
@@ -107,7 +108,7 @@ export default function AuthSheet({ open, onClose }: Props) {
             {/* Title */}
             <div className="text-center mb-8">
               <p className="text-sm font-semibold text-muted-foreground mt-1">
-                {language === "fr" ? "Connectez-vous pour continuer" : "Sign in to continue"}
+                {t("signInToContinue")}
               </p>
             </div>
 
@@ -150,6 +151,18 @@ export default function AuthSheet({ open, onClose }: Props) {
                 <p className="text-xs font-bold text-danger bg-danger/10 border-2 border-danger/30 rounded-xl px-4 py-3 text-center">{error}</p>
               )}
             </div>
+
+            {/* Passive consent notice */}
+            <p className="text-[11px] font-semibold text-muted-foreground text-center mt-6 leading-relaxed px-2">
+              {t("consentPassive")}{" "}
+              <Link to="/terms" className="underline text-foreground/70" onClick={onClose}>
+                {t("termsTitle")}
+              </Link>
+              {" "}{t("consentAnd")}{" "}
+              <Link to="/privacy" className="underline text-foreground/70" onClick={onClose}>
+                {t("privacyPolicyTitle")}
+              </Link>
+            </p>
           </motion.div>
           </div>
         </>

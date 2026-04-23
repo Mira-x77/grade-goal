@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, Flame, AlertTriangle, ChevronRight, ChevronDown, BookOpen, BarChart3, TrendingUp, Settings as SettingsIcon, User, Trophy, FileDown, PenLine, Zap, Plus, X, Check, Clock, ArrowUpRight, Trash2, Pencil, Crown, Bell, ArrowLeft, Lightbulb, GraduationCap, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { loadState, saveState, getStreak, getHistory, HistoryEntry } from "@/lib/storage";
+import { loadState, saveState, getStreak, getHistory, addHistoryEntry, HistoryEntry } from "@/lib/storage";
+import { supabase } from "@/integrations/supabase/client";
 import { downloadService } from "@/services/downloadService";
 import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds, calcSubjectAverage, fmtAvg, fmtFinalAvg, getRounding } from "@/lib/exam-logic";
 import { calcAPCYearlyAverage, getPerformanceAlerts } from "@/lib/grading-apc";
@@ -25,6 +26,7 @@ import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
 import { Subject } from "@/types/exam";
 import { NigerianState } from "@/types/nigerian";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { translateSemester } from "@/lib/i18n";
 import NigerianAssessmentSheet from "@/components/NigerianAssessmentSheet";
 import { useIsTablet } from "@/hooks/useIsTablet";
 import { usePremiumNudge, nudgeSubtext, NudgeTrigger } from "@/hooks/usePremiumNudge";
@@ -35,12 +37,6 @@ import {
   validateCreditUnits,
   computeIntegratedSubjectScore,
 } from "@/lib/grading-nigerian";
-
-const markTypeLabels: Record<string, string> = {
-  interro: "Interro",
-  dev: "Devoir",
-  compo: "Compo",
-};
 
 // ── Nigerian helpers ──────────────────────────────────────────────────────────
 
@@ -107,10 +103,16 @@ function SubjectsGlanceCard({ subjects, title }: { subjects: Subject[]; title: s
 
 const Home = () => {
   const streak = getStreak();
-  const history = getHistory();
+  const [history, setHistory] = useState<ReturnType<typeof getHistory>>(() => getHistory());
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const isTablet = useIsTablet();
+
+  const markTypeLabels: Record<string, string> = {
+    interro: t("interro"),
+    dev: t("devoir"),
+    compo: t("composition"),
+  };
 
   // ── Premium nudge ──────────────────────────────────────────────────────────
   const [activeNudge, setActiveNudge] = useState<NudgeTrigger | null>(null);
@@ -154,6 +156,9 @@ const Home = () => {
 
   const [showResultsSheet, setShowResultsSheet] = useState(false);
   const [showAllActivity, setShowAllActivity] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyFilterSubject, setHistoryFilterSubject] = useState<string>("all");
+  const [historyFilterType, setHistoryFilterType] = useState<string>("all");
   const [showEditMarksSheet, setShowEditMarksSheet] = useState(false);
   const [strategyOpen, setStrategyOpen] = useState(false);
   const [showPlanSelect, setShowPlanSelect] = useState(false);
@@ -245,6 +250,8 @@ const Home = () => {
     };
     saveState(updated);
     setAppState(updated);
+    addHistoryEntry({ date: new Date().toISOString(), subjectName: selectedSubject.name, markType, value: val });
+    setHistory(getHistory());
     const updatedSubject = updated.subjects.find((s) => s.id === selectedSubject.id)!;
     setSelectedSubject(updatedSubject);
     // Auto-advance to the next unfilled mark type
@@ -285,8 +292,24 @@ const Home = () => {
     setAppState(updated);
   };
 
+  const [hasNewFeedback, setHasNewFeedback] = useState(false);
+
   useEffect(() => {
-    downloadService.getDownloadedPapers().then((papers) => setDownloadedCount(papers.length));
+    const gradingSystem = appState?.settings?.gradingSystem ?? "apc";
+    supabase
+      .from("feedback_with_votes")
+      .select("created_at")
+      .eq("grading_system", gradingSystem)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (!data || data.length === 0) return;
+        const latest = data[0].created_at as string;
+        const seen = localStorage.getItem("gostudy_feedback_seen");
+        if (!seen || new Date(latest) > new Date(seen)) {
+          setHasNewFeedback(true);
+        }
+      });
   }, []);
 
   // Fire at_risk nudge on mount when avg is below target but recovery is possible
@@ -430,7 +453,7 @@ const Home = () => {
             </h1>
             {(appState?.classLevel || appState?.semester) && (
               <p className="text-xs font-bold text-muted-foreground mt-0.5 truncate">
-                {[appState?.classLevel, appState?.serie ? `Série ${appState.serie}` : null, appState?.semester].filter(Boolean).join(" · ")}
+                {[appState?.classLevel, appState?.serie ? `${t("serieLabel")} ${appState.serie}` : null, appState?.semester ? translateSemester(appState.semester, language) : null].filter(Boolean).join(" · ")}
               </p>
             )}
           </div>
@@ -797,13 +820,13 @@ const Home = () => {
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-black text-foreground text-sm">{t("recentActivity")}</h3>
               {history.length > 5 && (
-                <button onClick={() => setShowAllActivity(v => !v)} className="text-[10px] font-black text-primary active:scale-95 transition-transform">
-                  {showAllActivity ? t("showLess") : `${t("seeAll")} ${history.length}`}
+                <button onClick={() => setShowHistoryModal(true)} className="text-[10px] font-black text-primary active:scale-95 transition-transform">
+                  {t("seeAll")} {history.length}
                 </button>
               )}
             </div>
             <div className="flex flex-col gap-2">
-              {(showAllActivity ? [...history].reverse() : recentHistory).map((entry) => (
+              {recentHistory.map((entry) => (
                 <div key={entry.id} className="flex items-center gap-3 rounded-xl bg-muted/50 px-3 py-2">
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
                     <PenLine className="h-3.5 w-3.5 text-primary" />
@@ -844,9 +867,19 @@ const Home = () => {
         {/* Ideas & Feedback — both systems */}
         {appState && (
           <motion.div initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }}>
-            <Link to="/feedback-board" className="tour-feedback flex items-center gap-3 rounded-2xl bg-card border-2 border-border p-4 active:scale-[0.98] transition-transform">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/20 border border-secondary/30 shrink-0">
+            <Link
+              to="/feedback-board"
+              onClick={() => {
+                localStorage.setItem("gostudy_feedback_seen", new Date().toISOString());
+                setHasNewFeedback(false);
+              }}
+              className="tour-feedback flex items-center gap-3 rounded-2xl bg-card border-2 border-border p-4 active:scale-[0.98] transition-transform"
+            >
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/20 border border-secondary/30 shrink-0">
                 <Lightbulb className="h-5 w-5 text-secondary" />
+                {hasNewFeedback && (
+                  <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-danger border-2 border-background" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-black text-foreground">{language === "fr" ? "Idées & Avis" : "Ideas & Feedback"}</p>
@@ -1464,6 +1497,122 @@ const Home = () => {
             </motion.div>
           </>
         )}
+      </AnimatePresence>
+
+      {/* History modal */}
+      <AnimatePresence>
+        {showHistoryModal && (() => {
+          const subjectOptions = Array.from(new Set([...history].map(e => e.subjectName))).sort();
+          const filtered = [...history].reverse().filter(e => {
+            const matchSubject = historyFilterSubject === "all" || e.subjectName === historyFilterSubject;
+            const matchType = historyFilterType === "all" || e.markType === historyFilterType;
+            return matchSubject && matchType;
+          });
+          return (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setShowHistoryModal(false)}
+                className="fixed inset-0 z-50 bg-black/50"
+              />
+              <motion.div
+                initial={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+                animate={isTablet ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 } : { y: 0 }}
+                exit={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="sheet z-50 flex flex-col"
+                style={{ maxHeight: "85vh" }}
+              >
+                {/* Handle */}
+                <div className="flex justify-center pt-3 pb-1 shrink-0">
+                  <div className="w-10 h-1.5 rounded-full bg-foreground/30" />
+                </div>
+
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-3 border-b border-border shrink-0">
+                  <div>
+                    <h2 className="text-lg font-black text-foreground">{t("recentActivity")}</h2>
+                    <p className="text-xs font-semibold text-muted-foreground">{filtered.length} {filtered.length === 1 ? "entry" : "entries"}</p>
+                  </div>
+                  <button onClick={() => setShowHistoryModal(false)}>
+                    <X className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                </div>
+
+                {/* Filters */}
+                <div className="px-4 py-3 flex flex-col gap-2 border-b border-border shrink-0">
+                  <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+                    {["all", ...subjectOptions].map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => setHistoryFilterSubject(opt)}
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black transition-all border-2 ${
+                          historyFilterSubject === opt
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-muted text-muted-foreground border-transparent"
+                        }`}
+                      >
+                        {opt === "all" ? "All subjects" : opt}
+                      </button>
+                    ))}
+                  </div>
+                  {!isNigerian && (
+                    <div className="flex gap-2">
+                      {[
+                        { key: "all", label: "All types" },
+                        { key: "interro", label: t("interro") },
+                        { key: "dev", label: t("devoir") },
+                        { key: "compo", label: t("composition") },
+                      ].map(opt => (
+                        <button
+                          key={opt.key}
+                          onClick={() => setHistoryFilterType(opt.key)}
+                          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black transition-all border-2 ${
+                            historyFilterType === opt.key
+                              ? "bg-secondary text-secondary-foreground border-secondary"
+                              : "bg-muted text-muted-foreground border-transparent"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* List */}
+                <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2">
+                  {filtered.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 gap-2">
+                      <p className="text-2xl">📭</p>
+                      <p className="text-sm font-black text-foreground">No entries found</p>
+                      <p className="text-xs font-semibold text-muted-foreground">Try changing the filters</p>
+                    </div>
+                  ) : (
+                    filtered.map((entry) => (
+                      <div key={entry.id} className="flex items-center gap-3 rounded-xl bg-muted/50 px-3 py-2.5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                          <PenLine className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-foreground truncate">
+                            {entry.subjectName}{!isNigerian ? ` · ${markTypeLabels[entry.markType] ?? entry.markType}` : ""}
+                          </p>
+                          <p className="text-[10px] font-semibold text-muted-foreground">
+                            {new Date(entry.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                          </p>
+                        </div>
+                        <span className="text-sm font-black text-foreground shrink-0">
+                          {entry.value.toFixed(1)}{isNigerian ? "/100" : "/20"}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            </>
+          );
+        })()}
       </AnimatePresence>
     </div>
   );

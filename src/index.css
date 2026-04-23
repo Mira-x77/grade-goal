@@ -5,6 +5,13 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
   :root {
     /* Premium gold — fixed, never changes with accent, universally luxury */
     --premium: 43 74% 49%;           /* #C9960C — deep metallic gold */

@@ -16,17 +16,8 @@ interface OnboardingChecklistProps {
   steps: ChecklistStep[];
 }
 
-const MOTIVATIONAL: Record<string, { en: string; fr: string }> = {
-  "0": { en: "Let's get you set up — 5 quick steps.", fr: "Configurons tout — 5 étapes rapides." },
-  "1": { en: "Good start! Keep going.", fr: "Bon début ! Continuez." },
-  "2": { en: "Halfway there. You're doing great.", fr: "À mi-chemin. Vous vous en sortez bien." },
-  "3": { en: "Almost ready. Just a couple more.", fr: "Presque prêt. Encore deux étapes." },
-  "4": { en: "One last step — you're so close!", fr: "Une dernière étape — vous y êtes presque !" },
-};
-
 export default function OnboardingChecklist({ steps }: OnboardingChecklistProps) {
-  const { language } = useLanguage();
-  const fr = language === "fr";
+  const { t } = useLanguage();
   const doneCount = steps.filter(s => s.done).length;
   const allDone = doneCount === steps.length;
 
@@ -34,7 +25,11 @@ export default function OnboardingChecklist({ steps }: OnboardingChecklistProps)
 
   const progress = doneCount / steps.length;
   const pct = Math.round(progress * 100);
-  const motivational = MOTIVATIONAL[String(doneCount)] ?? MOTIVATIONAL["0"];
+
+  const motivationalKeys = [
+    "motivational0", "motivational1", "motivational2", "motivational3", "motivational4",
+  ] as const;
+  const motivationalKey = motivationalKeys[doneCount] ?? motivationalKeys[0];
 
   // First incomplete step index — gets the highlight treatment
   const nextIdx = steps.findIndex(s => !s.done);
@@ -86,11 +81,11 @@ export default function OnboardingChecklist({ steps }: OnboardingChecklistProps)
           <div className="flex items-center gap-1.5 mb-0.5">
             <Zap className="h-3.5 w-3.5 text-secondary shrink-0" />
             <p className="text-sm font-black text-foreground">
-              {fr ? "Démarrage rapide" : "Quick Setup"}
+              {t("quickSetup")}
             </p>
           </div>
           <p className="text-xs font-semibold text-muted-foreground leading-snug">
-            {fr ? motivational.fr : motivational.en}
+            {t(motivationalKey)}
           </p>
         </div>
 

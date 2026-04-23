@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, Check, X, Search } from "lucide-react";
 import { Subject } from "@/types/exam";
-import { getSubjectsForLevel, CLASS_LEVELS } from "@/lib/subjects-data";
+import { getSubjectsForLevel, translateSubject } from "@/lib/subjects-data";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { createNigerianSubject } from "@/lib/nigerian-defaults";
 
@@ -44,28 +44,10 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
   const [customName, setCustomName] = useState("");
   // "list" = main modal view, "custom" = custom subject name input view
   const [modalView, setModalView] = useState<"list" | "custom">("list");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const kbHeight = useKeyboardHeight();
 
-  // Pre-populate with preset subjects when first arriving at this step
-  useEffect(() => {
-    if (isNigerian) return; // No presets for Nigerian users
-    if (subjects.length === 0 && classLevel) {
-      const isLycee = CLASS_LEVELS.lycee.includes(classLevel as any);
-      // For lycée, only pre-populate if we have a série — otherwise we'd dump all subjects from all séries
-      if (isLycee && !serie) return;
-      const presets = getSubjectsForLevel(classLevel, serie);
-      const prePopulated: Subject[] = presets.map((name) => ({
-        id: crypto.randomUUID(),
-        name,
-        coefficient: 1,
-        marks: { interro: null, dev: null, compo: null },
-      }));
-      if (prePopulated.length > 0) onSubjectsChange(prePopulated);
-    }
-    // Only run on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   const allSuggested = (!isNigerian && classLevel) ? getSubjectsForLevel(classLevel, serie) : [];
   const existingNames = new Set(subjects.map((s) => s.name.toLowerCase()));
@@ -290,7 +272,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
                                 isSelected ? "bg-primary/15 text-primary" : "hover:bg-muted/60 text-foreground"
                               }`}
                             >
-                              <span className="text-sm font-bold">{name}</span>
+                              <span className="text-sm font-bold">{translateSubject(name, language)}</span>
                               <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${
                                 isSelected ? "bg-primary border-primary" : "border-border"
                               }`}>
@@ -408,7 +390,7 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 pb-10 pt-4 bg-background">
+      <div className="fixed bottom-0 left-0 right-0 z-30 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-4 bg-background">
         <div className="content-col max-w-lg mx-auto flex items-center gap-3">
         <motion.button
           layout
