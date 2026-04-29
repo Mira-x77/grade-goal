@@ -349,15 +349,26 @@ const SubjectsSetup = ({ subjects, onSubjectsChange, onContinue, onBack: _onBack
     <div className="flex flex-col h-screen bg-background w-full overflow-hidden">
 
       {hasSubjects && (
-        <div className="px-6 pb-2 flex-shrink-0 safe-area-top" style={{ paddingTop: "calc(5rem + env(safe-area-inset-top))" }}>
-          <div className="flex items-center border-b border-border pb-1">
-            <span className="flex-1 text-xs font-black text-muted-foreground uppercase tracking-wider">{isNigerian ? "Course" : t("subject")}</span>
-            <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-10">{isNigerian ? "Credit Units" : t("coefficient")}</span>
+        <div className="fixed top-0 left-0 right-0 z-20 bg-background safe-area-top">
+          {/* spacer to push below the OnboardingHeader (h-9 + pt-3 + pb-4 = ~64px) */}
+          <div className="h-16" />
+          <div className="flex items-center justify-between px-6 pb-2 border-b border-border max-w-lg mx-auto">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-muted-foreground uppercase tracking-wider">
+                {isNigerian ? "Course" : t("subject")}
+              </span>
+              <span className="text-[10px] font-black text-primary-foreground bg-primary px-2 py-0.5 rounded-full">
+                {subjects.length}
+              </span>
+            </div>
+            <span className="text-xs font-black text-muted-foreground uppercase tracking-wider pr-10">
+              {isNigerian ? "Credit Units" : t("coefficient")}
+            </span>
           </div>
         </div>
       )}
 
-      <div className={`flex-1 px-6 ${hasSubjects ? "overflow-y-auto" : "overflow-hidden flex flex-col items-center justify-center"}`} style={{ paddingTop: hasSubjects ? 0 : 0 }}>
+      <div className={`flex-1 px-6 ${hasSubjects ? "overflow-y-auto pt-36" : "overflow-hidden flex flex-col items-center justify-center"}`}>
         <AnimatePresence>
           {subjects.map((sub, i) => (
             <motion.div

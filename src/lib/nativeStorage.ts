@@ -26,19 +26,12 @@ export async function restoreFromNative(): Promise<void> {
   for (const key of KEYS) {
     const localVal = localStorage.getItem(key);
     if (!localVal) {
-      // localStorage is empty — restore from native storage
       const { value } = await Preferences.get({ key });
       if (value) localStorage.setItem(key, value);
     }
   }
-  // Also restore any intro_seen keys
-  const { keys } = await Preferences.keys();
-  for (const key of keys) {
-    if (key.startsWith("scoretarget_intro_seen_") && !localStorage.getItem(key)) {
-      const { value } = await Preferences.get({ key });
-      if (value) localStorage.setItem(key, value);
-    }
-  }
+  // Skip restoring intro_seen keys — they're non-critical UI state
+  // and iterating all native keys causes hundreds of Preferences.get calls
 }
 
 export async function mirrorToNative(key: string, value: string | null): Promise<void> {

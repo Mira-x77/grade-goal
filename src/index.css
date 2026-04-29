@@ -1,17 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+/* Self-hosted Nunito — works offline */
+@font-face { font-family: 'Nunito'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/nunito-400.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/nunito-600.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/nunito-700.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-style: normal; font-weight: 800; font-display: swap; src: url('/fonts/nunito-800.woff2') format('woff2'); }
+@font-face { font-family: 'Nunito'; font-style: normal; font-weight: 900; font-display: swap; src: url('/fonts/nunito-900.woff2') format('woff2'); }
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  html, body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-
   :root {
     /* Premium gold — fixed, never changes with accent, universally luxury */
     --premium: 43 74% 49%;           /* #C9960C — deep metallic gold */

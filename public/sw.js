@@ -4,13 +4,21 @@
 //   - Supabase API / auth calls: Network-first, no caching
 //   - Everything else: Network-first with cache fallback
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v5';
 const SHELL_CACHE = `app-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 
 // These are replaced at build time by the Vite plugin with hashed asset URLs.
 // Falls back to caching whatever the browser requests if not injected.
 const PRECACHE_ASSETS = self.__PRECACHE_ASSETS__ || ['/'];
+
+const FONT_ASSETS = [
+  '/fonts/nunito-400.woff2',
+  '/fonts/nunito-600.woff2',
+  '/fonts/nunito-700.woff2',
+  '/fonts/nunito-800.woff2',
+  '/fonts/nunito-900.woff2',
+];
 
 // ── Skip waiting on demand (triggered by update toast) ───────────────────────
 self.addEventListener('message', (event) => {
@@ -19,10 +27,11 @@ self.addEventListener('message', (event) => {
 
 // ── Install: pre-cache the app shell ─────────────────────────────────────────
 self.addEventListener('install', (event) => {
+  // Skip waiting immediately — don't hold back new versions
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) => cache.addAll(PRECACHE_ASSETS))
+    caches.open(SHELL_CACHE).then((cache) => cache.addAll([...PRECACHE_ASSETS, ...FONT_ASSETS]))
   );
-  // Don't skipWaiting here — let the update toast handle it
 });
 
 // ── Activate: clean up old caches ────────────────────────────────────────────

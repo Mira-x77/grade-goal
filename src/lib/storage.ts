@@ -61,25 +61,28 @@ export function saveState(state: AppState) {
 
 export function loadState(): AppState | null {
   const raw = localStorage.getItem(STORAGE_KEY);
-  console.log("loadState called, raw data:", raw ? raw.substring(0, 100) + "..." : null);
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as AppState;
-    console.log("loadState parsed successfully, step:", parsed.step);
+    let migrated = false;
+
     // Migration: old class levels
     const CLASS_MAPPINGS: Record<string, string> = {
       "6ème": "Sixième", "5ème": "Cinquième", "4ème": "Quatrième", "3ème": "Troisième",
     };
     if (parsed.classLevel && CLASS_MAPPINGS[parsed.classLevel]) {
       parsed.classLevel = CLASS_MAPPINGS[parsed.classLevel];
+      migrated = true;
     }
-    // Migration: normalize old "results" / "done" step — treat as completed onboarding
+    // Migration: normalize old "results" / "done" step
     if ((parsed.step as string) === "results" || (parsed.step as string) === "done") {
       parsed.step = "marks";
+      migrated = true;
     }
     // Migration: targetMin from old targetAverage
     if (parsed.targetMin === undefined || parsed.targetMin === null) {
       parsed.targetMin = parsed.targetAverage ?? 16;
+      migrated = true;
     }
     // Safety: reset malformed nigerianState
     if (parsed.nigerianState !== undefined) {
@@ -92,20 +95,27 @@ export function loadState(): AppState | null {
           targetCGPA: null,
           remainingCreditUnits: 0,
         };
+        migrated = true;
       }
     }
-    
     // Safety: ensure Nigerian subjects have customAssessments
     if (parsed.settings?.gradingSystem === "nigerian_university" && parsed.subjects) {
-      parsed.subjects = parsed.subjects.map(ensureNigerianAssessments);
+      const fixed = parsed.subjects.map(ensureNigerianAssessments);
+      if (JSON.stringify(fixed) !== JSON.stringify(parsed.subjects)) {
+        parsed.subjects = fixed;
+        migrated = true;
+      }
     }
-
     // Sync accent color from AppState to localStorage so ThemeContext picks it up
     if (parsed.settings?.accentColor) {
       localStorage.setItem("gostudy_accent", parsed.settings.accentColor);
     }
-    
-    saveState(parsed);
+
+    // Only write back if something actually changed
+    if (migrated) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    }
+
     return parsed;
   } catch (error) {
     console.error("loadState error:", error);

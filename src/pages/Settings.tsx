@@ -8,6 +8,7 @@ import { loadState, saveState } from "@/lib/storage";
 import { AppSettings, DEFAULT_SETTINGS, AppState, RoundingMode } from "@/types/exam";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import TaskBar from "@/components/TaskBar";
 import { cacheService } from "@/services/cacheService";
 import { downloadService } from "@/services/downloadService";
@@ -113,6 +114,11 @@ const Settings = () => {
     localStorage.removeItem("scoretarget_history");
     localStorage.removeItem("scoretarget_streak");
     localStorage.removeItem("scoretarget_tour_seen");
+
+    // Delete cloud history for signed-in users
+    if (user) {
+      supabase.from("user_history").delete().eq("user_id", user.id).then(() => {});
+    }
     
     // Clear all per-screen intro seen states
     Object.keys(localStorage).forEach(key => {

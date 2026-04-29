@@ -103,7 +103,7 @@ function SubjectsGlanceCard({ subjects, title }: { subjects: Subject[]; title: s
 
 const Home = () => {
   const streak = getStreak();
-  const [history, setHistory] = useState<ReturnType<typeof getHistory>>(() => getHistory());
+  const [history, setHistory] = useState<import("@/lib/storage").HistoryEntry[]>(() => getHistory());
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const isTablet = useIsTablet();
@@ -119,12 +119,7 @@ const Home = () => {
   const { fire: fireNudge } = usePremiumNudge((trigger) => setActiveNudge(trigger));
 
   const [downloadedCount, setDownloadedCount] = useState(0);
-  const [appState, setAppState] = useState(() => {
-    const state = loadState();
-    console.log("Home component loadState returned:", state);
-    console.log("Home component initial appState will be:", state);
-    return state;
-  });
+  const [appState, setAppState] = useState(() => loadState());
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ADAPTER INTEGRATION: Get system-agnostic dashboard data
@@ -269,7 +264,7 @@ const Home = () => {
     // Fire bad_score nudge if the mark is low (below 10 or below the target avg)
     const threshold = heroTarget ? Math.min(10, heroTarget - 2) : 10;
     if (val < threshold) {
-      setTimeout(() => fireNudge("bad_score"), 800);
+      setTimeout(() => { if (mountedRef.current) fireNudge("bad_score"); }, 800);
     }
   };
 
@@ -291,6 +286,27 @@ const Home = () => {
     saveState(updated);
     setAppState(updated);
   };
+
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  // Load downloaded papers count
+  useEffect(() => {
+    const loadDownloadedCount = async () => {
+      try {
+        const { cacheService } = await import("@/services/cacheService");
+        const cachedPapers = await cacheService.getCachedPapers();
+        const downloaded = cachedPapers.filter(p => p.isDownloaded);
+        setDownloadedCount(downloaded.length);
+      } catch (error) {
+        console.error("Failed to load downloaded count:", error);
+      }
+    };
+    loadDownloadedCount();
+  }, []);
 
   const [hasNewFeedback, setHasNewFeedback] = useState(false);
 
@@ -321,7 +337,7 @@ const Home = () => {
     const minGap = heroMax === 5 ? 0.1 : 0.4;
     const maxGap = heroMax === 5 ? 1.0 : 4.0;
     if (gap > minGap && gap <= maxGap) {
-      const timer = setTimeout(() => fireNudge("at_risk"), 3000);
+      const timer = setTimeout(() => { if (mountedRef.current) fireNudge("at_risk"); }, 3000);
       return () => clearTimeout(timer);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -424,8 +440,8 @@ const Home = () => {
     : 0;
   const totalMarks = hasData ? appState!.subjects.length * 3 : 0;
 
-  // Recent activity (last 5)
-  const recentHistory = history.slice(-5).reverse();
+  // Recent activity (last 3)
+  const recentHistory = history.slice(-3).reverse();
 
   // Strategy data
   const savedStrategy = appState?.savedStrategy;

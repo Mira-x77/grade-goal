@@ -7,7 +7,6 @@ import { simulateYearlyAverage, fmtFinalAvg, getRounding } from "@/lib/exam-logi
 import { SavedStrategy, StrategyMark } from "@/types/exam";
 import TaskBar from "@/components/TaskBar";
 import ScreenIntro from "@/components/ScreenIntro";
-import ScreenTour from "@/components/ScreenTour";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { usePremiumNudge } from "@/hooks/usePremiumNudge";
@@ -25,7 +24,7 @@ interface SliderOverride {
 }
 
 const Simulator = () => {
-  const state = loadState();
+  const [state] = useState(() => loadState());
   const subjects = state?.subjects ?? [];
   const targetAvg = state?.targetMin ?? state?.targetAverage ?? 16;
   const { t, language } = useLanguage();
@@ -330,18 +329,6 @@ const Simulator = () => {
         screenKey="simulator"
         title={t("simIntroTitle")}
         description={t("simIntroDesc")}
-        mascotPose="thinking"
-        ctaLabel={t("simIntroCta")}
-      />
-
-      <ScreenTour
-        storageKey="scoretarget_tour_simulator"
-        introKey="simulator"
-        delay={1000}
-        steps={[
-          { target: ".tour-simulator-hero", titleKey: "tourSimulatorHeroTitle", contentKey: "tourSimulatorHeroContent", duration: 4500 },
-          { target: ".tour-simulator-sliders", titleKey: "tourSimulatorSlidersTitle", contentKey: "tourSimulatorSlidersContent", duration: 4500, actionKey: "tourSimulatorSlidersAction" },
-        ]}
       />
 
       <TaskBar showBack action={

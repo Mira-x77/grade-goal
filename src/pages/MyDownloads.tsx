@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, FileText, HardDrive, Search, X } from "lucide-react";
+import { Trash2, FileText, HardDrive, Search, X, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { downloadService } from "@/services/downloadService";
@@ -13,7 +13,6 @@ import { readFileAsBase64, getAvailableSpace } from "@/lib/filesystem";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import TaskBar from "@/components/TaskBar";
-import ScreenTour from "@/components/ScreenTour";
 
 const MyDownloads = () => {
   const navigate = useNavigate();
@@ -30,8 +29,24 @@ const MyDownloads = () => {
   const [currentPDF, setCurrentPDF] = useState<{ data: string; title: string } | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(80);
+  
+  // Check if we were redirected here due to offline status
+  const urlParams = new URLSearchParams(window.location.search);
+  const wasOffline = urlParams.get('offline') === 'true';
+  const [isOffline, setIsOffline] = useState(wasOffline || !navigator.onLine);
 
   useEffect(() => { loadDownloads(); }, []);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     if (!headerRef.current) return;
@@ -241,10 +256,37 @@ const MyDownloads = () => {
         </div>{/* /header-inner */}
       </div>
 
+      {/* Offline banner */}
+      <AnimatePresence>
+        {isOffline && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed left-0 right-0 z-10"
+            style={{ top: headerHeight + 12 }}
+          >
+            <div className="header-inner">
+              <div className="rounded-2xl bg-warning/15 border-2 border-warning/40 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/20 shrink-0">
+                    <AlertTriangle className="h-4 w-4 text-warning" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-black text-foreground leading-tight">{t("offlineTitle")}</p>
+                    <p className="text-xs font-semibold text-muted-foreground mt-0.5">{t("offlineHasDownloads")}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Scrollable list */}
       <div
         className="content-col pb-24"
-        style={{ paddingTop: headerHeight + 12 }}
+        style={{ paddingTop: headerHeight + 12 + (isOffline ? 80 : 0) }}
         onClick={() => setRevealedDelete(null)}
       >
         {downloadedPapers.length === 0 ? (
@@ -338,15 +380,6 @@ const MyDownloads = () => {
       )}
 
       {!showPDFViewer && <TaskBar showBack />}
-
-      <ScreenTour
-        storageKey="scoretarget_tour_downloads"
-        delay={1000}
-        steps={[
-          { target: ".tour-downloads-list", titleKey: "tourDownloadsListTitle", contentKey: "tourDownloadsListContent", duration: 4500 },
-          { target: ".tour-downloads-swipe", titleKey: "tourDownloadsSwipeTitle", contentKey: "tourDownloadsSwipeContent", duration: 4500 },
-        ]}
-      />
     </div>
   );
 };

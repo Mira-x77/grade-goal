@@ -165,9 +165,10 @@ export default function ScreenTour({ storageKey, steps, introKey, delay = 600 }:
     startTimer(elapsedRef.current);
   }, [run, paused, startTimer]);
 
-  if (!run) return null;
-
+  // MUST call hooks before any conditional returns (React Rules of Hooks)
   const isTablet = useIsTablet();
+
+  if (!run) return null;
   const current = steps[step];
   const title = t(current.titleKey as Parameters<typeof t>[0]);
   const content = t(current.contentKey as Parameters<typeof t>[0]);

@@ -9,7 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 export default function ExamPrep() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const state = loadState();
+  const [state] = useState(() => loadState());
   const userSubjects = state?.subjects.map(s => s.name) ?? [];
 
   return (

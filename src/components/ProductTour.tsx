@@ -245,7 +245,7 @@ export default function ProductTour() {
     startTimer(elapsedRef.current);
   }, [run, step, paused, startTimer, advance]);
 
-  if (!run) return null;
+  const isTablet = useIsTablet();
 
   const nigerianFallbacks: Record<string, string> = {
     tourNigerianGpaTitle: "Your GPA",
@@ -256,7 +256,7 @@ export default function ProductTour() {
     tourNigerianAddScoreContent: "Tap + to add or update assessment scores for any course.",
   };
 
-  const isTablet = useIsTablet();
+  if (!run) return null;
   const current = steps[step];
   const title = tSafe(current.titleKey, nigerianFallbacks[current.titleKey] ?? current.titleKey);
   const content = tSafe(current.contentKey, nigerianFallbacks[current.contentKey] ?? current.contentKey);

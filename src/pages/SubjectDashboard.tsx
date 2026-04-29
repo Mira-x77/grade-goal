@@ -190,7 +190,7 @@ export default function SubjectDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   const title = subjectName || "Subject";
-  const classLevel = loadState()?.classLevel ?? "";
+  const classLevel = useState(() => loadState()?.classLevel ?? "")[0];
   const activeTool = TOOLS.find(t => t.key === activeSheet);
 
   useEffect(() => {

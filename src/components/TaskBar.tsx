@@ -3,8 +3,15 @@ import { useLocation, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ReactNode } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 const HOME_ROUTES = ["/", "/profile", "/settings", "/simulator", "/planner", "/subject"];
+
+function haptic() {
+  Haptics.impact({ style: ImpactStyle.Light }).catch(() => {
+    try { navigator.vibrate?.(8); } catch {}
+  });
+}
 
 function getIsNigerian(): boolean {
   try {
@@ -85,9 +92,41 @@ const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
           {tabs.map((tab) => {
             const isActive = activeTab === tab.path;
             const Icon = tab.icon;
+            
+            // For Library tab, use button with conditional navigation
+            if (tab.path === "/library") {
+              return (
+                <button
+                  key={tab.path}
+                  onClick={() => {
+                    navigate("/library");
+                    if (!isActive) haptic();
+                  }}
+                  className="tour-library relative flex flex-col items-center gap-0.5 px-4 py-2 rounded-full transition-colors"
+                >
+                  {isActive && (
+                    <motion.div layoutId="taskbar-active"
+                      className="absolute inset-0 bg-secondary rounded-full border border-foreground/20"
+                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    />
+                  )}
+                  <Icon
+                    className={`h-5 w-5 relative z-10 transition-all ${
+                      isActive
+                        ? "text-foreground fill-foreground stroke-[1.5]"
+                        : "text-muted-foreground fill-none stroke-2"
+                    }`}
+                  />
+                  <span className={`text-[10px] font-black relative z-10 ${isActive ? "text-foreground" : "text-muted-foreground"}`}>{tab.label}</span>
+                </button>
+              );
+            }
+            
+            // For other tabs, use Link as normal
             return (
               <Link key={tab.path} to={tab.path}
-                className={`${tab.path === '/library' ? 'tour-library' : ''} relative flex flex-col items-center gap-0.5 px-4 py-2 rounded-full transition-colors`}
+                onClick={() => { if (!isActive) haptic(); }}
+                className="relative flex flex-col items-center gap-0.5 px-4 py-2 rounded-full transition-colors"
               >
                 {isActive && (
                   <motion.div layoutId="taskbar-active"

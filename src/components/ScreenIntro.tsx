@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Mascot from "@/components/Mascot";
 
 interface ScreenIntroProps {
   screenKey: string;
@@ -11,7 +10,7 @@ interface ScreenIntroProps {
 
 const STORAGE_PREFIX = "scoretarget_intro_seen_";
 
-export default function ScreenIntro({ screenKey, title, description, mascotPose = "pointing" }: ScreenIntroProps) {
+export default function ScreenIntro({ screenKey, title, description }: ScreenIntroProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -38,18 +37,13 @@ export default function ScreenIntro({ screenKey, title, description, mascotPose 
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="w-full max-w-md bg-card rounded-t-3xl md:rounded-3xl pb-[max(2rem,env(safe-area-inset-bottom))] md:pb-8 pt-4"
+              className="w-full max-w-md bg-card rounded-t-3xl md:rounded-3xl pb-[max(2rem,env(safe-area-inset-bottom))] md:pb-8 pt-6"
               onClick={dismiss}
             >
               <div className="w-10 h-1.5 rounded-full bg-foreground/20 mx-auto mb-5 md:hidden" />
-              <div className="flex items-start gap-4 px-5 pb-2 pt-2">
-                <div className="shrink-0">
-                  <Mascot pose={mascotPose} size={72} animate />
-                </div>
-                <div className="flex-1 pt-1">
-                  <h2 className="text-lg font-black text-foreground leading-tight mb-1">{title}</h2>
-                  <p className="text-sm font-semibold text-muted-foreground leading-relaxed">{description}</p>
-                </div>
+              <div className="px-6 pb-2">
+                <h2 className="text-xl font-black text-foreground leading-tight mb-2">{title}</h2>
+                <p className="text-sm font-semibold text-muted-foreground leading-relaxed">{description}</p>
               </div>
             </motion.div>
           </div>

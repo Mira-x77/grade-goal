@@ -8,7 +8,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AppConfigProvider } from "@/contexts/AppConfigContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import React from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { useEffect, useState } from "react";
 import { restoreFromNative } from "@/lib/nativeStorage";
@@ -67,10 +67,11 @@ const App = () => {
         </defs>
       </svg>
       <Toaster />
-      <Sonner position="top-center" style={{ "--offset": "max(3.5rem, calc(env(safe-area-inset-top) + 1rem))" } as React.CSSProperties} />
+      <Sonner position="top-center" offset={60} />
       <BrowserRouter>
         <AppInner />
         <AuthProvider>
+          <ErrorBoundary>
           <Routes>
             {/* Public */}
             <Route path="/welcome" element={<WelcomePage />} />
@@ -101,6 +102,7 @@ const App = () => {
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsAndConditions />} />
           </Routes>
+          </ErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

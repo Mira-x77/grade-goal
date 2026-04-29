@@ -521,7 +521,9 @@ const SubjectBreakdownItem = ({ data, targetAverage, t, markLabel, isNigerian }:
             <span className="text-xs font-black text-foreground">
               {currentSubAvg !== null ? fmtAvg(currentSubAvg, getRounding()) : "—"} <span className="opacity-60 font-semibold text-[10px]">/20</span>
             </span>
-            <span className={`text-[9px] font-bold ${bestSubAvg >= targetAverage ? "text-success/80" : "text-muted-foreground"}`}>{fmtAvg(bestSubAvg, getRounding())} max</span>
+            <span className={`text-[9px] font-bold ${bestSubAvg >= targetAverage ? "text-success/80" : "text-muted-foreground"}`}>
+              {currentSubAvg !== null ? `${fmtAvg(bestSubAvg, getRounding())} max` : "—"}
+            </span>
           </div>
           <motion.div animate={{ rotate: isOpen ? 180 : 0 }}>
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -538,8 +540,8 @@ const SubjectBreakdownItem = ({ data, targetAverage, t, markLabel, isNigerian }:
                 <div className={`absolute left-0 top-0 h-full rounded-full transition-all duration-500 ${status === "critical" ? "bg-danger" : status === "recoverable" ? "bg-warning" : status === "pending" ? "bg-muted-foreground/30" : "bg-success"}`} style={{ width: `${currentPct}%` }} />
               </div>
               <div className="flex justify-between mt-1">
-                <span className="text-[9px] font-bold text-muted-foreground">{currentSubAvg !== null ? `${fmtAvg(currentSubAvg, getRounding())} ${t("nowLabel")}` : t("noMarksYet")}</span>
-                <span className="text-[9px] font-bold text-success">{fmtAvg(bestSubAvg, getRounding())} {t("bestCase")}</span>
+                <span className="text-[9px] font-bold text-muted-foreground">{currentSubAvg !== null ? `${fmtAvg(currentSubAvg, getRounding())} ${t("nowLabel")}` : "—"}</span>
+                <span className="text-[9px] font-bold text-success">{currentSubAvg !== null ? `${fmtAvg(bestSubAvg, getRounding())} ${t("bestCase")}` : "—"}</span>
               </div>
             </div>
           </motion.div>

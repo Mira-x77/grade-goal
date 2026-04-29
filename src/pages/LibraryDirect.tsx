@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +8,6 @@ import { cacheService } from '@/services/cacheService';
 import { loadState } from '@/lib/storage';
 import TaskBar from '@/components/TaskBar';
 import ScreenIntro from '@/components/ScreenIntro';
-import ScreenTour from '@/components/ScreenTour';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePremiumNudge } from '@/hooks/usePremiumNudge';
 import { PREMIUM_ENABLED } from '@/config/premium';
@@ -73,17 +72,15 @@ export default function LibraryDirect() {
   const { premiumEnabled: PREMIUM_ENABLED } = useAppConfig();
   const headerRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(80);
-
-  useEffect(() => {
-    if (!headerRef.current) return;
-    const ro = new ResizeObserver(() => {
-      setHeaderHeight(headerRef.current?.getBoundingClientRect().height ?? 0);
-    });
-    ro.observe(headerRef.current);
-    return () => ro.disconnect();
+  const userState = useMemo(() => {
+    try {
+      const state = loadState();
+      return state;
+    } catch (error) {
+      console.error('[LibraryDirect] ERROR in loadState:', error);
+      return null;
+    }
   }, []);
-
-  const userState = loadState();
   const userClassLevel = userState?.classLevel ?? null;
   const userSubjectNames = userState?.subjects?.map(s => s.name) ?? [];
 
@@ -93,7 +90,15 @@ export default function LibraryDirect() {
   const [papers, setPapers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      setHeaderHeight(headerRef.current?.getBoundingClientRect().height ?? 0);
+    });
+    ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, []);  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [searchQuery, setSearchQuery] = useState('');
   const [downloadedPaperIds, setDownloadedPaperIds] = useState<Set<string>>(new Set());
   const queryParams = new URLSearchParams(window.location.search);
@@ -157,11 +162,26 @@ export default function LibraryDirect() {
         .from('exam_papers')
         .select('*')
         .order('created_at', { ascending: false });
-      if (fetchError) { setError(`Error: ${fetchError.message}`); return; }
+      if (fetchError) { 
+        const errorMsg = `Error: ${fetchError.message}`;
+        setError(errorMsg);
+        // If it's a network error, navigate to downloads with offline flag
+        if (errorMsg.includes('Failed to fetch') || errorMsg.includes('TypeError')) {
+          console.log('[LibraryDirect] Network error detected, navigating to downloads');
+          navigate('/my-downloads?offline=true');
+        }
+        return;
+      }
       if (!data || data.length === 0) { setError('No papers found in database'); setPapers([]); return; }
       setPapers(data);
     } catch (err) {
-      setError(`Exception: ${err instanceof Error ? err.message : 'Unknown'}`);
+      const errorMsg = `Exception: ${err instanceof Error ? err.message : 'Unknown'}`;
+      setError(errorMsg);
+      // If it's a network error, navigate to downloads with offline flag
+      if (errorMsg.includes('Failed to fetch') || errorMsg.includes('TypeError') || errorMsg.includes('NetworkError')) {
+        console.log('[LibraryDirect] Network error detected, navigating to downloads');
+        navigate('/my-downloads?offline=true');
+      }
     } finally {
       setLoading(false);
     }
@@ -574,19 +594,6 @@ export default function LibraryDirect() {
         screenKey="library"
         title={t("examLibrary")}
         description={t("browseDownloadPapers")}
-        mascotPose="reading"
-        ctaLabel={t("browseLibrary")}
-      />
-
-      <ScreenTour
-        storageKey="scoretarget_tour_library"
-        introKey="library"
-        delay={1200}
-        steps={[
-          { target: ".tour-library-tabs", titleKey: "tourLibraryTabsTitle", contentKey: "tourLibraryTabsContent", duration: 4500, actionKey: "tourLibraryTabsAction" },
-          { target: ".tour-library-search", titleKey: "tourLibrarySearchTitle", contentKey: "tourLibrarySearchContent", duration: 4500 },
-          { target: ".tour-library-grid", titleKey: "tourLibraryGridTitle", contentKey: "tourLibraryGridContent", duration: 4000 },
-        ]}
       />
     </div>
   );

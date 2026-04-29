@@ -48,8 +48,16 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+  build: {
+    sourcemap: false,
+    minify: true,
+  },
   plugins: [
-    react(),
+    react({
+      jsxRuntime: 'automatic',
+      // Use React development build for readable errors
+      jsxImportSource: undefined,
+    }),
     mode === "development" && componentTagger(),
     swAssetInjector(),
   ].filter(Boolean),

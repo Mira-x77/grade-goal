@@ -9,7 +9,6 @@ import { calcYearlyAverage } from "@/lib/exam-logic";
 import { CLASS_LEVELS, LYCEE_SERIES, getSubjectsForLevel, translateSubject } from "@/lib/subjects-data";
 import TaskBar from "@/components/TaskBar";
 import ScreenIntro from "@/components/ScreenIntro";
-import ScreenTour from "@/components/ScreenTour";
 import ArchiveWarningModal from "@/components/ArchiveWarningModal";
 import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
 import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
@@ -1148,19 +1147,6 @@ const Profile = () => {
         screenKey="profile"
         title={t("profileIntroTitle")}
         description={t("profileIntroDesc")}
-        mascotPose="idle"
-        ctaLabel={t("profileIntroCta")}
-      />
-
-      <ScreenTour
-        storageKey="scoretarget_tour_profile"
-        introKey="profile"
-        delay={1000}
-        steps={[
-          { target: ".tour-profile-info", titleKey: "tourProfileInfoTitle", contentKey: "tourProfileInfoContent", duration: 4500 },
-          { target: ".tour-profile-target", titleKey: "tourProfileTargetTitle", contentKey: "tourProfileTargetContent", duration: 4500 },
-          { target: ".tour-profile-subjects", titleKey: "tourProfileSubjectsTitle", contentKey: "tourProfileSubjectsContent", duration: 4500 },
-        ]}
       />
 
       <>

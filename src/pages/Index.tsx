@@ -8,6 +8,7 @@ import { OnboardingHeader } from "@/components/OnboardingHeader";
 import OnboardingScreen, { OnboardingStep } from "@/components/OnboardingScreen";
 import SubjectsSetup from "@/components/SubjectsSetup";
 import MarksInput from "@/components/MarksInput";
+import NigerianMarksInput from "@/components/NigerianMarksInput";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
@@ -169,12 +170,11 @@ const Index = () => {
             />
           )}
           {state.step === "marks" && (
-            <MarksInput
-              subjects={state.subjects}
-              onSubjectsChange={setSubjects}
-              onContinue={() => {
-                const isNigerian = state.settings?.gradingSystem === "nigerian_university";
-                if (isNigerian) {
+            isNigerianOnboarding ? (
+              <NigerianMarksInput
+                subjects={state.subjects}
+                onSubjectsChange={setSubjects}
+                onContinue={() => {
                   const semId = crypto.randomUUID();
                   const firstSem = {
                     id: semId,
@@ -200,8 +200,13 @@ const Index = () => {
                   };
                   saveState(finalState);
                   navigate("/", { replace: true });
-                } else {
-                  // Seed first APC semester from onboarding selection
+                }}
+              />
+            ) : (
+            <MarksInput
+              subjects={state.subjects}
+              onSubjectsChange={setSubjects}
+              onContinue={() => {
                   const semId = crypto.randomUUID();
                   const firstApcSem = {
                     id: semId,
@@ -220,13 +225,13 @@ const Index = () => {
                   };
                   saveState(finalState);
                   navigate("/", { replace: true });
-                }
               }}
               onBack={() => setStep("subjects")}
               classLevel={state.classLevel}
               serie={state.serie}
-              isNigerian={state.settings?.gradingSystem === "nigerian_university"}
+              isNigerian={false}
             />
+            )
           )}
         </motion.div>
       </AnimatePresence>

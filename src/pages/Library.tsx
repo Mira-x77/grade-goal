@@ -21,7 +21,7 @@ const Library = () => {
   const navigate = useNavigate();
 
   // Load user profile once — class level and subject names
-  const userState = loadState();
+  const [userState] = useState(() => loadState());
   const userClassLevel = userState?.classLevel ?? null;
   const userSubjectNames = userState?.subjects?.map(s => s.name) ?? [];
 
@@ -117,13 +117,13 @@ const Library = () => {
     }
   };
 
-  const loadDownloadedPapers = async () => {
+  const loadDownloadedPapers = useCallback(async () => {
     const cachedPapers = await cacheService.getCachedPapers();
     const downloaded = new Set(
       cachedPapers.filter(p => p.isDownloaded).map(p => p.id)
     );
     setDownloadedPaperIds(downloaded);
-  };
+  }, []);
 
   const applyFiltersAndSearch = useCallback(() => {
     let result = [...papers];
