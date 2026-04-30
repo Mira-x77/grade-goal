@@ -114,6 +114,11 @@ export interface AppState {
   // Multi-semester history for APC/French
   apcSemesters?: ApcSemester[];
   activeApcSemesterId?: string;
+  // Quick setup completion flags (persist once completed)
+  hasEverSetTarget?: boolean;
+  hasEverAddedSubjects?: boolean;
+  hasEverLoggedMark?: boolean;
+  hasEverDownloadedPaper?: boolean;
 }
 
 /** A single archived or active APC/French semester snapshot */

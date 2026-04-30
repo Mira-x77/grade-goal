@@ -188,6 +188,7 @@ export default function SubjectDashboard() {
   const [content, setContent] = useState<StudyToolContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const title = subjectName || "Subject";
   const classLevel = useState(() => loadState()?.classLevel ?? "")[0];
@@ -203,45 +204,61 @@ export default function SubjectDashboard() {
       .finally(() => setLoading(false));
   }, [subjectName, classLevel]);
 
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      const header = document.getElementById('subject-header');
+      if (header) setHeaderHeight(header.offsetHeight);
+    };
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+    return () => window.removeEventListener('resize', updateHeaderHeight);
+  }, [PREMIUM_ENABLED]);
+
   return (
     <div className="min-h-screen bg-background pb-28">
-      <div className="content-col safe-area-top">
+      {/* Fixed Header */}
+      <div id="subject-header" className="fixed top-0 left-0 right-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/50 safe-area-top">
+        <div className="content-col">
+          {/* Page header */}
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="pt-4 mb-5">
+            <h1 className="text-3xl font-black text-foreground">{title}</h1>
+            <p className="text-sm font-semibold text-muted-foreground mt-0.5">{t("masterSubjectTitle")}</p>
+          </motion.div>
 
-        {/* Page header */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="pt-4 mb-5">
-          <h1 className="text-3xl font-black text-foreground">{title}</h1>
-          <p className="text-sm font-semibold text-muted-foreground mt-0.5">{t("masterSubjectTitle")}</p>
-        </motion.div>
-
-        {/* Unlock banner — active or Coming Soon based on admin toggle */}
-        {PREMIUM_ENABLED ? (
-        <motion.button
-          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => setShowPaywall(true)}
-          className="w-full mb-5 rounded-2xl bg-premium border-2 border-premium px-4 py-3.5 flex items-center gap-3 card-shadow active:translate-y-0.5 active:shadow-none transition-all"
-        >
-          <Crown className="h-5 w-5 text-premium-foreground shrink-0" />
-          <div className="flex-1 text-left">
-            <p className="font-black text-premium-foreground text-sm">{t("passSmarter")}</p>
-            <p className="text-[11px] font-semibold text-premium-foreground/70 mt-0.5">{t("premiumStudyTools")}</p>
+          {/* Unlock banner — active or Coming Soon based on admin toggle */}
+          {PREMIUM_ENABLED ? (
+          <motion.button
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowPaywall(true)}
+            className="w-full mb-5 rounded-2xl bg-premium border-2 border-premium px-4 py-3.5 flex items-center gap-3 card-shadow active:translate-y-0.5 active:shadow-none transition-all"
+          >
+            <Crown className="h-5 w-5 text-premium-foreground shrink-0" />
+            <div className="flex-1 text-left">
+              <p className="font-black text-premium-foreground text-sm">{t("passSmarter")}</p>
+              <p className="text-[11px] font-semibold text-premium-foreground/70 mt-0.5">{t("premiumStudyTools")}</p>
+            </div>
+            <span className="text-xs font-black text-premium-foreground bg-white/15 px-2.5 py-1 rounded-full border border-white/20">
+              {t("unlockNowBtn")}
+            </span>
+          </motion.button>
+          ) : (
+          <div className="w-full mb-5 rounded-2xl bg-muted border-2 border-border px-4 py-3.5 flex items-center gap-3 opacity-60 cursor-not-allowed">
+            <Crown className="h-5 w-5 text-muted-foreground shrink-0" />
+            <div className="flex-1 text-left">
+              <p className="font-black text-muted-foreground text-sm">{t("passSmarter")}</p>
+              <p className="text-[11px] font-semibold text-muted-foreground/70 mt-0.5">{t("premiumStudyTools")}</p>
+            </div>
+            <span className="text-xs font-black text-muted-foreground bg-muted-foreground/10 px-2.5 py-1 rounded-full border border-muted-foreground/20">
+              {t("comingSoon")}
+            </span>
           </div>
-          <span className="text-xs font-black text-premium-foreground bg-white/15 px-2.5 py-1 rounded-full border border-white/20">
-            {t("unlockNowBtn")}
-          </span>
-        </motion.button>
-        ) : (
-        <div className="w-full mb-5 rounded-2xl bg-muted border-2 border-border px-4 py-3.5 flex items-center gap-3 opacity-60 cursor-not-allowed">
-          <Crown className="h-5 w-5 text-muted-foreground shrink-0" />
-          <div className="flex-1 text-left">
-            <p className="font-black text-muted-foreground text-sm">{t("passSmarter")}</p>
-            <p className="text-[11px] font-semibold text-muted-foreground/70 mt-0.5">{t("premiumStudyTools")}</p>
-          </div>
-          <span className="text-xs font-black text-muted-foreground bg-muted-foreground/10 px-2.5 py-1 rounded-full border border-muted-foreground/20">
-            {t("comingSoon")}
-          </span>
+          )}
         </div>
-        )}
+      </div>
+
+      {/* Content with padding for fixed header */}
+      <div className="content-col" style={{ paddingTop: headerHeight }}>
 
         {/* Error state */}
         {error && (
@@ -255,7 +272,7 @@ export default function SubjectDashboard() {
         )}
 
         {/* Tool cards */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 pt-4">
           {TOOLS.map(({ key, descKey, emoji }, i) => (
             <motion.div
               key={key}

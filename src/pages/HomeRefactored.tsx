@@ -76,9 +76,56 @@ const Home = () => {
   // Recent activity
   const recentHistory = history.slice(-5).reverse();
 
+  // Check and set quick setup completion flags
   useEffect(() => {
-    downloadService.getDownloadedPapers().then((papers) => setDownloadedCount(papers.length));
-  }, []);
+    if (!appState) return;
+    
+    let updated = false;
+    const newState = { ...appState };
+    
+    // Set target flag
+    if (!appState.hasEverSetTarget && appState.targetMin && appState.targetMin > 0) {
+      newState.hasEverSetTarget = true;
+      updated = true;
+    }
+    
+    // Set subjects flag
+    if (!appState.hasEverAddedSubjects && appState.subjects && appState.subjects.length > 0) {
+      newState.hasEverAddedSubjects = true;
+      updated = true;
+    }
+    
+    // Set mark flag (check if any subject has marks)
+    const hasMarks = appState.subjects?.some(s => 
+      (s.interros && s.interros.length > 0) || 
+      (s.devoirs && s.devoirs.length > 0) || 
+      (s.compos && s.compos.length > 0)
+    );
+    if (!appState.hasEverLoggedMark && hasMarks) {
+      newState.hasEverLoggedMark = true;
+      updated = true;
+    }
+    
+    if (updated) {
+      setAppState(newState);
+      saveState(newState);
+    }
+  }, [appState]);
+
+  useEffect(() => {
+    const loadDownloadedCount = async () => {
+      const papers = await downloadService.getDownloadedPapers();
+      setDownloadedCount(papers.length);
+      
+      // Mark as having downloaded a paper if count > 0 and not already marked
+      if (papers.length > 0 && appState && !appState.hasEverDownloadedPaper) {
+        const updatedState = { ...appState, hasEverDownloadedPaper: true };
+        setAppState(updatedState);
+        saveState(updatedState);
+      }
+    };
+    loadDownloadedCount();
+  }, [appState]);
 
   useEffect(() => {
     if (!avgCardRef.current) return;
@@ -265,21 +312,21 @@ const Home = () => {
                   key: "target",
                   label: dashboard.system === "NIGERIAN" ? "Set target GPA" : t("checklistSetTarget"),
                   description: dashboard.system === "NIGERIAN" ? "Set the GPA you're aiming for" : t("checklistSetTargetDesc"),
-                  done: !!(heroTarget && heroTarget > 0),
+                  done: !!(heroTarget && heroTarget > 0) || appState?.hasEverSetTarget === true,
                   href: "/profile",
                 },
                 {
                   key: "subjects",
                   label: dashboard.system === "NIGERIAN" ? "Add your courses" : t("checklistAddSubjects"),
                   description: dashboard.system === "NIGERIAN" ? "Add the courses you're taking" : t("checklistAddSubjectsDesc"),
-                  done: !isEmpty,
+                  done: !isEmpty || appState?.hasEverAddedSubjects === true,
                   href: dashboard.system === "NIGERIAN" ? "/profile" : "/planner",
                 },
                 {
                   key: "mark",
                   label: dashboard.system === "NIGERIAN" ? "Log a score" : t("checklistLogMark"),
                   description: dashboard.system === "NIGERIAN" ? "Enter your first assessment score" : t("checklistLogMarkDesc"),
-                  done: hasData,
+                  done: hasData || appState?.hasEverLoggedMark === true,
                   onClick: () => {}, // TODO: Open mark sheet
                 },
                 ...(dashboard.system !== "NIGERIAN" ? [
@@ -287,14 +334,14 @@ const Home = () => {
                     key: "simulator",
                     label: t("checklistSimulator"),
                     description: t("checklistSimulatorDesc"),
-                    done: !!(appState?.savedStrategy && appState.savedStrategy.marks.length > 0),
+                    done: !!(appState?.savedStrategy && appState.savedStrategy.marks.length > 0) || !!(appState as any)?.strategyDeleted,
                     href: "/simulator",
                   },
                   {
                     key: "library",
                     label: t("checklistLibrary"),
                     description: t("checklistLibraryDesc"),
-                    done: downloadedCount > 0,
+                    done: downloadedCount > 0 || appState?.hasEverDownloadedPaper === true,
                     href: "/library",
                   },
                 ] : []),

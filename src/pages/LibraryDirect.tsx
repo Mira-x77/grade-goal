@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Download, Search, Eye, X, LayoutGrid, List, FileText, ChevronDown, Check, ChevronRight, Sparkles, Crown } from 'lucide-react';
+import { Download, Search, Eye, X, LayoutGrid, List, FileText, ChevronDown, Check, ChevronRight, Sparkles, Crown, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cacheService } from '@/services/cacheService';
 import { loadState } from '@/lib/storage';
@@ -16,6 +16,7 @@ import { PaymentSheet } from '@/components/subscription/PaymentSheet';
 import { PlanSelectSheet } from '@/components/subscription/PlanSelectSheet';
 import { PremiumIntroSheet } from '@/components/subscription/PremiumIntroSheet';
 import { SubjectPackSheet } from '@/components/subscription/SubjectPackSheet';
+import { useIsTablet } from '@/hooks/useIsTablet';
 
 type LibraryTab = 'papers' | 'prep';
 
@@ -70,6 +71,7 @@ export default function LibraryDirect() {
   const location = useLocation();
   const { t, language } = useLanguage();
   const { premiumEnabled: PREMIUM_ENABLED } = useAppConfig();
+  const isTablet = useIsTablet();
   const headerRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(80);
   const userState = useMemo(() => {
@@ -104,6 +106,7 @@ export default function LibraryDirect() {
   const queryParams = new URLSearchParams(window.location.search);
   const initialSubject = queryParams.get('subject') || '';
   const [viewLayout, setViewLayout] = useState<'grid' | 'list'>('grid');
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
 
   const [filters, setFilters] = useState({
     classLevel: userClassLevel ?? '',
@@ -271,6 +274,12 @@ export default function LibraryDirect() {
                     />
                   </div>
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowFilterSheet(true)}
+                      className="shrink-0 p-2 rounded-xl bg-muted border border-border text-muted-foreground active:scale-95 transition-all"
+                    >
+                      <SlidersHorizontal className="h-4 w-4" />
+                    </button>
                     <div className="flex gap-2 overflow-x-auto hide-scrollbar flex-1">
                       <FilterPill label={t("classLevel")} value={filters.classLevel} options={Array.from(new Set(papers.map(p => p.class_level))).filter(Boolean).sort() as string[]} onSelect={(v) => setFilters({ ...filters, classLevel: v })} />
                       <FilterPill label={t("subject")} value={filters.subject} options={uniqueSubjects} onSelect={(v) => setFilters({ ...filters, subject: v })} />
@@ -282,12 +291,6 @@ export default function LibraryDirect() {
                         </button>
                       )}
                     </div>
-                    <button
-                      onClick={() => setViewLayout(prev => prev === 'grid' ? 'list' : 'grid')}
-                      className="tour-library-grid shrink-0 p-2 rounded-xl bg-muted border border-border text-muted-foreground active:scale-95 transition-all"
-                    >
-                      {viewLayout === 'grid' ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
-                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -385,9 +388,17 @@ export default function LibraryDirect() {
 
               {!isOffline && !loading && !error && filteredPapers.length > 0 && (
                 <div className="content-col pt-3">
-                  <p className="text-xs text-muted-foreground font-bold mb-3">
-                    {filteredPapers.length} {filteredPapers.length === 1 ? t("paper") : t("papersFound")}
-                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs text-muted-foreground font-bold">
+                      {filteredPapers.length} {filteredPapers.length === 1 ? t("paper") : t("papersFound")}
+                    </p>
+                    <button
+                      onClick={() => setViewLayout(prev => prev === 'grid' ? 'list' : 'grid')}
+                      className="tour-library-grid shrink-0 p-2 rounded-xl bg-muted border border-border text-muted-foreground active:scale-95 transition-all"
+                    >
+                      {viewLayout === 'grid' ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+                    </button>
+                  </div>
                   <div className={viewLayout === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-2' : 'flex flex-col gap-3'}>
                     {filteredPapers.map((paper) => {
                       const isSaved = downloadedPaperIds.has(paper.id);
@@ -487,10 +498,12 @@ export default function LibraryDirect() {
               <div className="content-col pt-4 pb-4">
                 <>
                     {/* Hero */}
-                    <div className="rounded-2xl bg-premium border-2 border-premium px-4 py-4 mb-4 flex items-center gap-3">
-                      <Crown className="h-6 w-6 text-premium-foreground shrink-0" />
+                    <div className="rounded-2xl bg-premium border-2 border-premium px-5 py-5 mb-6 flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-premium-foreground/10 shrink-0">
+                        <Crown className="h-7 w-7 text-premium-foreground" />
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-premium-foreground text-sm">{t("passNotHarder")}</p>
+                        <p className="font-black text-premium-foreground text-base">{t("passNotHarder")}</p>
                         <CyclingSubtext />
                       </div>
                     </div>
@@ -501,27 +514,28 @@ export default function LibraryDirect() {
                         <p className="text-xs text-muted-foreground mt-1">{t("completeOnboarding")}</p>
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest px-1">{t("selectSubjectUnlock")}</p>
-                        {prepSubjects.map((subject, i) => (
-                          <motion.div
-                            key={subject}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.04 }}
-                            onClick={() => navigate(`/subject/${encodeURIComponent(subject)}`)}
-                            className="bg-card border-2 border-foreground rounded-2xl p-4 flex items-center gap-4 cursor-pointer card-shadow active:scale-[0.98] active:translate-y-0.5 active:shadow-none transition-all"
-                          >
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-premium/10 border border-premium/20 shrink-0">
-                              <Crown className="h-5 w-5 text-premium" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-black text-foreground text-sm">{subject}</h3>
-                              <p className="text-[10px] font-semibold text-muted-foreground mt-0.5">{t("unlockSpecificPrep")}</p>
-                            </div>
-                            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                          </motion.div>
-                        ))}
+                      <div>
+                        <div className={`gap-3 ${isTablet ? 'grid grid-cols-2' : 'space-y-3'}`}>
+                          {prepSubjects.map((subject, i) => (
+                            <motion.div
+                              key={subject}
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: i * 0.04 }}
+                              onClick={() => navigate(`/subject/${encodeURIComponent(subject)}`)}
+                              className="bg-card border-2 border-foreground rounded-2xl p-4 flex items-center gap-4 cursor-pointer card-shadow active:scale-[0.98] active:translate-y-0.5 active:shadow-none transition-all hover:bg-muted/30"
+                            >
+                              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-premium/10 border-2 border-premium/30 shrink-0">
+                                <Crown className="h-5 w-5 text-premium" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-black text-foreground text-sm truncate">{subject}</h3>
+                                <p className="text-[10px] font-semibold text-muted-foreground mt-0.5 line-clamp-1">{t("unlockSpecificPrep")}</p>
+                              </div>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                            </motion.div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </>
@@ -575,6 +589,200 @@ export default function LibraryDirect() {
             amount={(window as any).__packAmount ?? undefined}
           />
         </>
+
+      {/* Filter Sheet Overlay */}
+      <AnimatePresence>
+        {showFilterSheet && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[200] bg-black/40"
+              onClick={() => setShowFilterSheet(false)}
+            />
+            <motion.div
+              initial={isTablet ? { opacity: 0, scale: 0.95, x: '-50%', y: '-50%' } : { y: '100%' }}
+              animate={isTablet ? { opacity: 1, scale: 1, x: '-50%', y: '-50%' } : { y: 0 }}
+              exit={isTablet ? { opacity: 0, scale: 0.95, x: '-50%', y: '-50%' } : { y: '100%' }}
+              transition={isTablet ? { duration: 0.2 } : { type: 'spring', damping: 30, stiffness: 300 }}
+              className={`fixed z-[201] bg-background border-2 border-foreground overflow-hidden flex flex-col ${
+                isTablet
+                  ? 'left-1/2 top-1/2 w-[90vw] max-w-2xl max-h-[80vh] rounded-3xl'
+                  : 'left-0 right-0 bottom-0 rounded-t-3xl max-h-[85vh]'
+              }`}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+                <h2 className={`font-black text-foreground ${isTablet ? 'text-xl' : 'text-lg'}`}>{t("filters")}</h2>
+                <button
+                  onClick={() => setShowFilterSheet(false)}
+                  className="p-2 rounded-xl bg-muted border border-border active:scale-95 transition-transform"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Filter Options */}
+              <div className={`flex-1 overflow-y-auto p-6 ${isTablet ? 'grid grid-cols-2 gap-6' : 'space-y-5'}`}>
+                {/* Class Level */}
+                <div>
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-wide mb-3 block">
+                    {t("classLevel")}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setFilters({ ...filters, classLevel: '' })}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all active:scale-95 ${
+                        !filters.classLevel
+                          ? 'bg-primary/10 border-primary text-primary'
+                          : 'bg-card border-border text-foreground'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {Array.from(new Set(papers.map(p => p.class_level))).filter(Boolean).sort().map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => setFilters({ ...filters, classLevel: level as string })}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all active:scale-95 ${
+                          filters.classLevel === level
+                            ? 'bg-primary/10 border-primary text-primary'
+                            : 'bg-card border-border text-foreground'
+                        }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subject */}
+                <div>
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-wide mb-3 block">
+                    {t("subject")}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setFilters({ ...filters, subject: '' })}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all active:scale-95 ${
+                        !filters.subject
+                          ? 'bg-primary/10 border-primary text-primary'
+                          : 'bg-card border-border text-foreground'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {uniqueSubjects.map((subject) => (
+                      <button
+                        key={subject}
+                        onClick={() => setFilters({ ...filters, subject })}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all active:scale-95 ${
+                          filters.subject === subject
+                            ? 'bg-primary/10 border-primary text-primary'
+                            : 'bg-card border-border text-foreground'
+                        }`}
+                      >
+                        {subject}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Year */}
+                <div>
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-wide mb-3 block">
+                    {t("year")}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setFilters({ ...filters, year: '' })}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all active:scale-95 ${
+                        !filters.year
+                          ? 'bg-primary/10 border-primary text-primary'
+                          : 'bg-card border-border text-foreground'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {uniqueYears.map((year) => (
+                      <button
+                        key={year}
+                        onClick={() => setFilters({ ...filters, year: String(year) })}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all active:scale-95 ${
+                          filters.year === String(year)
+                            ? 'bg-primary/10 border-primary text-primary'
+                            : 'bg-card border-border text-foreground'
+                        }`}
+                      >
+                        {year}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Exam Type */}
+                <div>
+                  <label className="text-xs font-black text-muted-foreground uppercase tracking-wide mb-3 block">
+                    {t("examType")}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setFilters({ ...filters, examType: '' })}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all active:scale-95 ${
+                        !filters.examType
+                          ? 'bg-primary/10 border-primary text-primary'
+                          : 'bg-card border-border text-foreground'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {uniqueExamTypes.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setFilters({ ...filters, examType: type })}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all active:scale-95 ${
+                          filters.examType === type
+                            ? 'bg-primary/10 border-primary text-primary'
+                            : 'bg-card border-border text-foreground'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className={`border-t border-border p-5 flex gap-3 ${isTablet ? 'justify-end' : ''}`}>
+                {hasActiveFilters && (
+                  <button
+                    onClick={() => {
+                      clearFilters();
+                      setShowFilterSheet(false);
+                    }}
+                    className={`py-3 rounded-xl text-sm font-black bg-muted border-2 border-border text-foreground active:scale-95 transition-transform ${
+                      isTablet ? 'px-6' : 'flex-1'
+                    }`}
+                  >
+                    {t("clearAll")}
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowFilterSheet(false)}
+                  className={`py-3 rounded-xl text-sm font-black bg-primary border-2 border-foreground text-primary-foreground card-shadow active:scale-95 transition-transform ${
+                    isTablet ? 'px-8' : 'flex-1'
+                  }`}
+                >
+                  {t("apply")}
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <TaskBar action={
         downloadedPaperIds.size > 0 ? (

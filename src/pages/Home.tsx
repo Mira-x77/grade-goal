@@ -121,6 +121,42 @@ const Home = () => {
   const [downloadedCount, setDownloadedCount] = useState(0);
   const [appState, setAppState] = useState(() => loadState());
 
+  // Check and set quick setup completion flags
+  useEffect(() => {
+    if (!appState) return;
+    
+    let updated = false;
+    const newState = { ...appState };
+    
+    // Set target flag
+    if (!appState.hasEverSetTarget && appState.targetMin && appState.targetMin > 0) {
+      newState.hasEverSetTarget = true;
+      updated = true;
+    }
+    
+    // Set subjects flag
+    if (!appState.hasEverAddedSubjects && appState.subjects && appState.subjects.length > 0) {
+      newState.hasEverAddedSubjects = true;
+      updated = true;
+    }
+    
+    // Set mark flag (check if any subject has marks)
+    const hasMarks = appState.subjects?.some(s => 
+      (s.interros && s.interros.length > 0) || 
+      (s.devoirs && s.devoirs.length > 0) || 
+      (s.compos && s.compos.length > 0)
+    );
+    if (!appState.hasEverLoggedMark && hasMarks) {
+      newState.hasEverLoggedMark = true;
+      updated = true;
+    }
+    
+    if (updated) {
+      setAppState(newState);
+      saveState(newState);
+    }
+  }, [appState]);
+
   // ═══════════════════════════════════════════════════════════════════════════
   // ADAPTER INTEGRATION: Get system-agnostic dashboard data
   // ═══════════════════════════════════════════════════════════════════════════
@@ -301,12 +337,19 @@ const Home = () => {
         const cachedPapers = await cacheService.getCachedPapers();
         const downloaded = cachedPapers.filter(p => p.isDownloaded);
         setDownloadedCount(downloaded.length);
+        
+        // Mark as having downloaded a paper if count > 0 and not already marked
+        if (downloaded.length > 0 && appState && !appState.hasEverDownloadedPaper) {
+          const updatedState = { ...appState, hasEverDownloadedPaper: true };
+          setAppState(updatedState);
+          saveState(updatedState);
+        }
       } catch (error) {
         console.error("Failed to load downloaded count:", error);
       }
     };
     loadDownloadedCount();
-  }, []);
+  }, [appState]);
 
   const [hasNewFeedback, setHasNewFeedback] = useState(false);
 
@@ -628,21 +671,21 @@ const Home = () => {
                 key: "target",
                 label: t("checklistSetTarget"),
                 description: t("checklistSetTargetDesc"),
-                done: !!(appState?.targetMin && appState.targetMin > 0),
+                done: !!(appState?.targetMin && appState.targetMin > 0) || appState?.hasEverSetTarget === true,
                 href: "/profile",
               },
               {
                 key: "subjects",
                 label: t("checklistAddSubjects"),
                 description: t("checklistAddSubjectsDesc"),
-                done: (appState?.subjects?.length ?? 0) > 0,
+                done: (appState?.subjects?.length ?? 0) > 0 || appState?.hasEverAddedSubjects === true,
                 href: "/planner",
               },
               {
                 key: "mark",
                 label: t("checklistLogMark"),
                 description: t("checklistLogMarkDesc"),
-                done: filledMarks > 0,
+                done: filledMarks > 0 || appState?.hasEverLoggedMark === true,
                 onClick: openMarkSheet,
               },
               {
@@ -656,7 +699,7 @@ const Home = () => {
                 key: "library",
                 label: t("checklistLibrary"),
                 description: t("checklistLibraryDesc"),
-                done: downloadedCount > 0,
+                done: downloadedCount > 0 || appState?.hasEverDownloadedPaper === true,
                 href: "/library",
               },
             ]}

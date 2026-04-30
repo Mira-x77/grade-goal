@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, FileText, HardDrive, Search, X, AlertTriangle } from "lucide-react";
+import { Trash2, FileText, HardDrive, Search, X, AlertTriangle, Share2, CheckCircle2, Circle } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
+import { Share } from "@capacitor/share";
 import { downloadService } from "@/services/downloadService";
 import { cacheService } from "@/services/cacheService";
 import { examService } from "@/services/examService";
@@ -12,11 +13,13 @@ import { InAppPDFViewer } from "@/components/exam/InAppPDFViewer";
 import { readFileAsBase64, getAvailableSpace } from "@/lib/filesystem";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsTablet } from "@/hooks/useIsTablet";
 import TaskBar from "@/components/TaskBar";
 
 const MyDownloads = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const isTablet = useIsTablet();
   const [downloadedPapers, setDownloadedPapers] = useState<CachedPaper[]>([]);
   const [loading, setLoading] = useState(true);
   const [storageInfo, setStorageInfo] = useState<{ available: number; used: number; total: number } | null>(null);
@@ -30,12 +33,26 @@ const MyDownloads = () => {
   const headerRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(80);
   
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [selectedPapers, setSelectedPapers] = useState<Set<string>>(new Set());
+  const [isSheetExpanded, setIsSheetExpanded] = useState(false);
+  
+  // Track filter changes for Apply button
+  const [tempFilters, setTempFilters] = useState({ examType: '' });
+  const [appliedFilters, setAppliedFilters] = useState({ examType: '' });
+  const hasFilterChanges = tempFilters.examType !== appliedFilters.examType;
+  
   // Check if we were redirected here due to offline status
   const urlParams = new URLSearchParams(window.location.search);
   const wasOffline = urlParams.get('offline') === 'true';
   const [isOffline, setIsOffline] = useState(wasOffline || !navigator.onLine);
 
   useEffect(() => { loadDownloads(); }, []);
+
+  useEffect(() => {
+    setTempFilters({ examType: examTypeFilter });
+    setAppliedFilters({ examType: examTypeFilter });
+  }, [examTypeFilter]);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -85,6 +102,10 @@ const MyDownloads = () => {
   };
 
   const handlePaperClick = async (paper: CachedPaper) => {
+    if (isMultiSelectMode) {
+      togglePaperSelection(paper.id);
+      return;
+    }
     if (revealedDelete === paper.id) { setRevealedDelete(null); return; }
     const isWeb = Capacitor.getPlatform() === "web";
     try {
@@ -115,8 +136,98 @@ const MyDownloads = () => {
     }
   };
 
+  const togglePaperSelection = (paperId: string) => {
+    setSelectedPapers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(paperId)) {
+        newSet.delete(paperId);
+        // Auto-close if no papers selected
+        if (newSet.size === 0) {
+          exitMultiSelectMode();
+        }
+      } else {
+        newSet.add(paperId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedPapers(new Set(filteredPapers.map(p => p.id)));
+    setIsSheetExpanded(false);
+  };
+
+  const deselectAll = () => {
+    setSelectedPapers(new Set());
+    exitMultiSelectMode();
+  };
+
+  const exitMultiSelectMode = () => {
+    setIsMultiSelectMode(false);
+    setSelectedPapers(new Set());
+    setIsSheetExpanded(false);
+  };
+
+  const handleMultiDelete = async () => {
+    if (selectedPapers.size === 0) return;
+    
+    const count = selectedPapers.size;
+    const paperIds = Array.from(selectedPapers);
+    
+    try {
+      for (const paperId of paperIds) {
+        setDeletingId(paperId);
+        await downloadService.deletePaper(paperId);
+      }
+      toast.success(t("papersDeleted").replace("{count}", String(count)));
+      exitMultiSelectMode();
+      loadDownloads();
+    } catch (error) {
+      console.error("Failed to delete papers:", error);
+      toast.error(t("failedDeletePapers"));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleMultiShare = async () => {
+    if (selectedPapers.size === 0) return;
+    
+    const isWeb = Capacitor.getPlatform() === "web";
+    if (isWeb) {
+      toast.error(t("shareNotAvailableWeb"));
+      return;
+    }
+
+    try {
+      const selectedPapersList = downloadedPapers.filter(p => selectedPapers.has(p.id));
+      const files = selectedPapersList
+        .filter(p => p.localPath)
+        .map(p => p.localPath!);
+
+      if (files.length === 0) {
+        toast.error(t("noFilesToShare"));
+        return;
+      }
+
+      await Share.share({
+        title: t("sharePapers"),
+        text: `${files.length} ${files.length === 1 ? t("paper") : t("papers")}`,
+        files: files,
+      });
+      
+      exitMultiSelectMode();
+    } catch (error) {
+      console.error("Failed to share papers:", error);
+      toast.error(t("failedSharePapers"));
+    }
+  };
+
   const startLongPress = useCallback((paperId: string) => {
-    longPressTimer.current = setTimeout(() => setRevealedDelete(paperId), 500);
+    longPressTimer.current = setTimeout(() => {
+      setIsMultiSelectMode(true);
+      setSelectedPapers(new Set([paperId]));
+    }, 500);
   }, []);
 
   const cancelLongPress = useCallback(() => {
@@ -179,32 +290,45 @@ const MyDownloads = () => {
       {/* Fixed header — bleeds edge-to-edge, inner content constrained */}
       <div ref={headerRef} className="fixed top-0 left-0 right-0 z-20 bg-background/90 backdrop-blur-lg border-b border-border pb-3 safe-area-top">
         <div className="header-inner">
-        <div className="mt-3 rounded-2xl bg-card border-2 border-border overflow-hidden">
-          {/* Top row: icon + used + free + papers count */}
-          <div className="flex items-center gap-3 px-4 pt-3 pb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-              <HardDrive className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("usedStorage")}</p>
-              <p className="text-base font-black text-foreground leading-tight">{formatBytes(storageInfo?.used ?? 0)}</p>
-            </div>
-            <div className="h-8 w-px bg-border mx-1" />
-            <div className="flex-1 min-w-0 text-right">
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("freeStorage")}</p>
-              <p className="text-base font-black text-foreground leading-tight">
-                {storageInfo && storageInfo.available > 0 ? formatBytes(storageInfo.available) : "—"}
-              </p>
-            </div>
-            <div className="h-8 w-px bg-border mx-1" />
-            <div className="text-center shrink-0 px-2">
-              <motion.p className="text-2xl font-black text-foreground leading-none">{countRounded}</motion.p>
-              <p className="text-[10px] font-bold text-muted-foreground mt-0.5">
-                {downloadedPapers.length === 1 ? t("paper") : t("papers")}
-              </p>
-            </div>
-          </div>
-
+        {/* Storage info - hidden when in multi-select mode, but maintains space */}
+        <div className="mt-3 rounded-2xl overflow-hidden" style={{ minHeight: isMultiSelectMode ? '72px' : 'auto' }}>
+          <AnimatePresence mode="wait">
+            {!isMultiSelectMode && (
+              <motion.div
+                key="storage"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="bg-card border-2 border-border rounded-2xl"
+              >
+                {/* Top row: icon + used + free + papers count */}
+                <div className="flex items-center gap-3 px-4 pt-3 pb-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+                    <HardDrive className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("usedStorage")}</p>
+                    <p className="text-base font-black text-foreground leading-tight">{formatBytes(storageInfo?.used ?? 0)}</p>
+                  </div>
+                  <div className="h-8 w-px bg-border mx-1" />
+                  <div className="flex-1 min-w-0 text-right">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("freeStorage")}</p>
+                    <p className="text-base font-black text-foreground leading-tight">
+                      {storageInfo && storageInfo.available > 0 ? formatBytes(storageInfo.available) : "—"}
+                    </p>
+                  </div>
+                  <div className="h-8 w-px bg-border mx-1" />
+                  <div className="text-center shrink-0 px-2">
+                    <motion.p className="text-2xl font-black text-foreground leading-none">{countRounded}</motion.p>
+                    <p className="text-[10px] font-bold text-muted-foreground mt-0.5">
+                      {downloadedPapers.length === 1 ? t("paper") : t("papers")}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {downloadedPapers.length > 0 && (
@@ -320,12 +444,37 @@ const MyDownloads = () => {
                     : { duration: 0.22 }
                   }
                   className={`bg-card rounded-2xl overflow-hidden card-shadow select-none ${idx === 0 ? 'tour-downloads-swipe' : ''}`}
-                  onContextMenu={(e) => { e.preventDefault(); setRevealedDelete(paper.id); }}
-                  onTouchStart={() => startLongPress(paper.id)}
+                  onContextMenu={(e) => { 
+                    e.preventDefault(); 
+                    if (!isMultiSelectMode) {
+                      setIsMultiSelectMode(true);
+                      setSelectedPapers(new Set([paper.id]));
+                    }
+                  }}
+                  onTouchStart={() => !isMultiSelectMode && startLongPress(paper.id)}
                   onTouchEnd={cancelLongPress}
                   onTouchMove={cancelLongPress}
                 >
                   <div className="flex items-stretch">
+                    {/* Selection checkbox in multi-select mode */}
+                    {isMultiSelectMode && (
+                      <div className="flex items-center justify-center px-4">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            togglePaperSelection(paper.id);
+                          }}
+                          className="active:scale-95 transition-transform"
+                        >
+                          {selectedPapers.has(paper.id) ? (
+                            <CheckCircle2 className="h-6 w-6 text-primary" />
+                          ) : (
+                            <Circle className="h-6 w-6 text-muted-foreground" />
+                          )}
+                        </button>
+                      </div>
+                    )}
+
                     <div
                       className="flex-1 flex items-center gap-4 p-4 cursor-pointer active:bg-muted/40 transition-colors"
                       onClick={(e) => { e.stopPropagation(); handlePaperClick(paper); }}
@@ -348,21 +497,23 @@ const MyDownloads = () => {
                       </div>
                     </div>
 
-                    {/* Delete panel — revealed on long press, tap to delete immediately */}
-                    <AnimatePresence>
-                      {revealedDelete === paper.id && (
-                        <motion.button
-                          initial={{ width: 0, opacity: 0 }}
-                          animate={{ width: 64, opacity: 1 }}
-                          exit={{ width: 0, opacity: 0 }}
-                          transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                          className="flex items-center justify-center bg-destructive shrink-0 overflow-hidden active:brightness-90"
-                          onClick={(e) => { e.stopPropagation(); handleDelete(paper.id); }}
-                        >
-                          <Trash2 className="h-5 w-5 text-destructive-foreground" />
-                        </motion.button>
-                      )}
-                    </AnimatePresence>
+                    {/* Delete panel — revealed on long press, tap to delete immediately (only in single-select mode) */}
+                    {!isMultiSelectMode && (
+                      <AnimatePresence>
+                        {revealedDelete === paper.id && (
+                          <motion.button
+                            initial={{ width: 0, opacity: 0 }}
+                            animate={{ width: 64, opacity: 1 }}
+                            exit={{ width: 0, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                            className="flex items-center justify-center bg-destructive shrink-0 overflow-hidden active:brightness-90"
+                            onClick={(e) => { e.stopPropagation(); handleDelete(paper.id); }}
+                          >
+                            <Trash2 className="h-5 w-5 text-destructive-foreground" />
+                          </motion.button>
+                        )}
+                      </AnimatePresence>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -379,7 +530,81 @@ const MyDownloads = () => {
         />
       )}
 
-      {!showPDFViewer && <TaskBar showBack />}
+      {/* Multi-select bottom sheet (Google Photos style) */}
+      <AnimatePresence>
+        {isMultiSelectMode && selectedPapers.size > 0 && (
+          <>
+            {/* Backdrop overlay when expanded */}
+            {isSheetExpanded && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100] bg-black/50"
+                onClick={() => setIsSheetExpanded(false)}
+              />
+            )}
+
+            {/* Top pill (visible when any paper is selected) */}
+            <AnimatePresence>
+              {selectedPapers.size > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
+                  className="fixed top-4 left-4 z-[110] safe-area-top"
+                >
+                  <div className="flex items-center gap-3 bg-card border-2 border-foreground rounded-full px-4 py-2.5 card-shadow">
+                    <button
+                      onClick={exitMultiSelectMode}
+                      className="p-1 -ml-1 active:scale-95 transition-transform"
+                    >
+                      <X className="h-5 w-5 text-foreground" />
+                    </button>
+                    <p className="text-sm font-black text-foreground">
+                      {selectedPapers.size} {selectedPapers.size === 1 ? t("selected") : t("selected")}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Bottom sheet - overlays TaskBar */}
+            <motion.div
+              initial={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              animate={isTablet ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className={`fixed z-[105] bg-background border-t-2 border-foreground rounded-t-3xl overflow-hidden bottom-0 ${
+                isTablet ? 'left-1/2 top-1/2 w-[90vw] max-w-2xl rounded-3xl border-2' : 'left-0 right-0'
+              }`}
+            >
+              {/* Action buttons */}
+              <div className="px-5 py-4">
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleMultiShare}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-primary border-2 border-foreground text-primary-foreground font-black text-sm card-shadow active:scale-95 transition-transform"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    {t("share")}
+                  </button>
+                  <button
+                    onClick={handleMultiDelete}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-destructive border-2 border-foreground text-destructive-foreground font-black text-sm card-shadow active:scale-95 transition-transform"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {t("delete")}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {!showPDFViewer && !isMultiSelectMode && <TaskBar showBack />}
     </div>
   );
 };
