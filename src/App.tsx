@@ -67,7 +67,13 @@ const App = () => {
         </defs>
       </svg>
       <Toaster />
-      <Sonner position="top-center" offset={60} />
+      <Sonner 
+        position="top-center" 
+        offset={0}
+        style={{
+          top: 'calc(env(safe-area-inset-top) + 8px)'
+        }}
+      />
       <BrowserRouter>
         <AppInner />
         <AuthProvider>

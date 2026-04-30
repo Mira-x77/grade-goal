@@ -70,10 +70,10 @@ const MyDownloads = () => {
       // Get device available space
       const deviceInfo = await getAvailableSpace();
 
-      // On mobile, getAvailableSpace returns 0 used — use our calculated value instead
-      const used = usedBytes > 0 ? usedBytes : deviceInfo.used;
-      const available = deviceInfo.available > 0 ? deviceInfo.available : deviceInfo.total - used;
-      const total = deviceInfo.total > 0 ? deviceInfo.total : used + available;
+      // Use our calculated value (usedBytes) for app storage, not device storage
+      const used = usedBytes; // Always use our calculated value
+      const available = deviceInfo.available > 0 ? deviceInfo.available : deviceInfo.total - deviceInfo.used;
+      const total = deviceInfo.total > 0 ? deviceInfo.total : 0;
 
       setStorageInfo({ used, available, total });
     } catch (error) {
