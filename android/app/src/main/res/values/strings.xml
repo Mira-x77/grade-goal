@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">GoStudy!</string>
+    <string name="title_activity_main">GoStudy!</string>
+    <string name="package_name">com.gostudy.student</string>
+    <string name="custom_url_scheme">com.gostudy.student</string>
+</resources>

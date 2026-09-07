@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "examPapers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "classLevel", "order": "ASCENDING" },
+        { "fieldPath": "subject", "order": "ASCENDING" },
+        { "fieldPath": "year", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "examPapers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "examType", "order": "ASCENDING" },
+        { "fieldPath": "year", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "examPapers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "downloads", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

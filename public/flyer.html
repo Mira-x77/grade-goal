@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GO STUDY! - Prospectus de l'Application</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0f1e40;
+            --primary-gradient: linear-gradient(135deg, #07122a 0%, #112d6c 100%);
+            --accent-blue: #2563eb;
+            --light-gray: #f8fafc;
+            --text-dark: #0f172a;
+            --text-muted: #475569;
+            --text-white: #ffffff;
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-dark);
+            padding: 0;
+            margin: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .flyer-a4 {
+            width: 210mm;
+            height: 297mm;
+            background-color: #ffffff;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        @media print {
+            body {
+                background: none;
+                padding: 0;
+                margin: 0;
+            }
+            .flyer-a4 {
+                box-shadow: none;
+                width: 210mm;
+                height: 297mm;
+            }
+        }
+
+        /* Top Section */
+        .top-section {
+            background: var(--primary-gradient);
+            height: 130mm;
+            padding: 15mm 15mm 10mm 15mm;
+            border-bottom-right-radius: 40mm;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            overflow: hidden;
+        }
+
+        /* Subtle Background pattern */
+        .top-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1.5px, transparent 1.5px);
+            background-size: 20px 20px;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .brand-content {
+            max-width: 55%;
+            z-index: 2;
+        }
+
+        .logo-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 8mm;
+        }
+
+        .logo-img {
+            width: 56px;
+            height: 56px;
+            background-color: #ffffff;
+            border-radius: 14px;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+        }
+
+        .logo-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .brand-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 38px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-white);
+            text-transform: uppercase;
+        }
+
+        .app-description {
+            font-size: 15px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.88);
+            margin-bottom: 6mm;
+            font-weight: 400;
+        }
+
+        .highlight-text {
+            border-top: 1.5px dashed rgba(255, 255, 255, 0.25);
+            border-bottom: 1.5px dashed rgba(255, 255, 255, 0.25);
+            padding: 4mm 0;
+            margin-bottom: 8mm;
+        }
+
+        .highlight-text h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.98);
+        }
+
+        .highlight-text p {
+            font-size: 16px;
+            font-weight: 600;
+            color: #38bdf8;
+            margin-top: 4px;
+        }
+
+        .website-badge {
+            display: inline-flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 10px 18px;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .website-badge:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Top Mockup (Phone) */
+        .top-mockup-wrapper {
+            width: 38%;
+            height: 105mm;
+            position: relative;
+            z-index: 10;
+        }
+
+        .phone-mockup {
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            border: 10px solid #1e293b;
+            border-radius: 36px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(12px);
+        }
+
+        .phone-notch {
+            width: 100px;
+            height: 16px;
+            background: #1e293b;
+            align-self: center;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            z-index: 20;
+        }
+
+        .phone-header {
+            background: #111e38;
+            color: #ffffff;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .phone-content {
+            background: #f8fafc;
+            flex: 1;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .search-bar {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 11px;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .exam-item {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 10px;
+            border-left: 4px solid var(--accent-blue);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .exam-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .exam-desc {
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        .exam-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-size: 9px;
+            color: var(--accent-blue);
+            font-weight: 500;
+        }
+
+        /* Bottom Section */
+        .bottom-section {
+            background: #ffffff;
+            height: 135mm;
+            padding: 12mm 15mm 10mm 15mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .features-wrapper {
+            max-width: 60%;
+        }
+
+        .features-header {
+            margin-bottom: 6mm;
+        }
+
+        .features-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary-blue);
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .features-header h3::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 42px;
+            height: 4px;
+            background-color: var(--accent-blue);
+            border-radius: 2px;
+        }
+
+        .features-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5mm;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            background-color: #eff6ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid rgba(37, 99, 235, 0.12);
+        }
+
+        .feature-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: var(--accent-blue);
+        }
+
+        .feature-text {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .feature-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .feature-desc {
+            font-size: 12.5px;
+            line-height: 1.45;
+            color: var(--text-muted);
+        }
+
+        /* Right tilted mockup - now using the flying papers image */
+        .bottom-mockups {
+            width: 34%;
+            height: 110mm;
+            position: relative;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .papers-image {
+            width: 100%;
+            height: auto;
+            max-height: 100mm;
+            object-fit: contain;
+            border-radius: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        /* Footer */
+        .footer-section {
+            background: #f8fafc;
+            border-top: 1.5px solid #e2e8f0;
+            height: 32mm;
+            padding: 4mm 15mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .contact-details {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .contact-item {
+            font-size: 13.5px;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .contact-item span {
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .qr-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .qr-desc {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        .qr-desc strong {
+            color: var(--primary-blue);
+            display: block;
+        }
+
+        .qr-code {
+            width: 72px;
+            height: 72px;
+            background: #ffffff;
+            padding: 2px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+
+<div class="flyer-a4">
+    <!-- Top Half -->
+    <div class="top-section">
+        <div class="brand-content">
+            <div class="logo-wrapper">
+                <div class="logo-img">
+                    <img src="icon-96.png" alt="Logo">
+                </div>
+                <span class="brand-name">GO STUDY!</span>
+            </div>
+            
+            <p class="app-description">
+                L'application de révision tout-en-un pour les étudiants. Accédez instantanément à toutes les ressources nécessaires pour maximiser vos performances aux examens.
+            </p>
+
+            <div class="highlight-text">
+                <h2>Révisez, calculez, réussissez !</h2>
+                <p>Simple • Rapide • Efficace</p>
+            </div>
+
+            <a href="https://goostudy.vercel.app/" class="website-badge" target="_blank">
+                https://goostudy.vercel.app/
+            </a>
+        </div>
+
+        <div class="top-mockup-wrapper">
+            <div class="phone-mockup">
+                <div class="phone-notch"></div>
+                <div class="phone-header">
+                    <span>GO STUDY!</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </div>
+                <div class="phone-content">
+                    <div class="search-bar">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <span>Rechercher une matière...</span>
+                    </div>
+                    
+                    <div class="exam-item">
+                        <span class="exam-title">Mathématiques</span>
+                        <span class="exam-desc">Épreuves et Corrigés</span>
+                        <div class="exam-meta">
+                            <span>Classe 3ème</span>
+                            <span>Session 2024</span>
+                        </div>
+                    </div>
+
+                    <div class="exam-item">
+                        <span class="exam-title">Physique-Chimie (PCT)</span>
+                        <span class="exam-desc">Exercices & Cours</span>
+                        <div class="exam-meta">
+                            <span>Classe Terminale</span>
+                            <span>Sujets types</span>
+                        </div>
+                    </div>
+
+                    <div class="exam-item">
+                        <span class="exam-title">Français & Littérature</span>
+                        <span class="exam-desc">Fiches de lecture</span>
+                        <div class="exam-meta">
+                            <span>Classe 3ème</span>
+                            <span>Méthodologie</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Half -->
+    <div class="bottom-section">
+        <div class="features-wrapper">
+            <div class="features-header">
+                <h3>Fonctionnalités Clés</h3>
+            </div>
+
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V5H19V19M17,17H7V15H17V17M17,13H7V11H17V13M17,9H7V7H17V9Z"/>
+                        </svg>
+                    </div>
+                    <div class="feature-text">
+                        <span class="feature-title">Anciennes Épreuves & Supports</span>
+                        <span class="feature-desc">Accédez à une large bibliothèque d'anciennes épreuves d'examens et des supports de cours complets pour réviser à tout moment.</span>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,14L8,11L9.41,9.59L11,11.17L14.59,7.58L16,9L11,14Z"/>
+                        </svg>
+                    </div>
+                    <div class="feature-text">
+                        <span class="feature-title">Calculateur de Score</span>
+                        <span class="feature-desc">Calculez vos notes en direct et découvrez immédiatement le minimum requis pour atteindre vos objectifs d'excellence.</span>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11.03L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.47,5.34 14.86,5.08L14.47,2.42C14.43,2.18 14.22,2 13.97,2H9.97C9.72,2 9.51,2.18 9.47,2.42L9.08,5.08C8.47,5.34 7.9,5.66 7.38,6.05L4.89,5.05C4.67,4.96 4.4,5.05 4.28,5.27L2.28,8.73C2.16,8.95 2.21,9.22 2.4,9.37L4.51,11.03C4.47,11.34 4.44,11.67 4.44,12C4.44,12.33 4.47,12.65 4.51,12.97L2.4,14.63C2.21,14.78 2.16,15.05 2.28,15.27L4.28,18.73C4.4,18.95 4.67,19.04 4.89,18.95L7.38,17.95C7.9,18.34 8.47,18.66 9.08,18.92L9.47,21.58C9.51,21.82 9.72,22 9.97,22H13.97C14.22,22 14.43,21.82 14.47,21.58L14.86,18.92C15.47,18.66 16.04,18.34 16.56,17.95L19.05,18.95C19.27,19.04 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                        </svg>
+                    </div>
+                    <div class="feature-text">
+                        <span class="feature-title">Configuration Simple & Rapide</span>
+                        <span class="feature-desc">Pas de réglages complexes ! L'application intègre automatiquement toutes les matières et coefficients de votre classe.</span>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,14L8,11L9.41,9.59L11,11.17L14.59,7.58L16,9L11,14Z"/>
+                        </svg>
+                    </div>
+                    <div class="feature-text">
+                        <span class="feature-title">Support APC Inclus</span>
+                        <span class="feature-desc">Prise en charge intégrale de l'Approche Par Compétences (APC) pour un accompagnement moderne et adapté.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-mockups">
+            <img class="papers-image" src="flying_papers.png" alt="Supports">
+        </div>
+    </div>
+
+    <!-- Footer Area -->
+    <div class="footer-section">
+        <div class="contact-details">
+            <div class="contact-item">
+                <span>Appelez-nous :</span> 90676722
+            </div>
+            <div class="contact-item">
+                <span>Site Web :</span> goostudy.vercel.app
+            </div>
+        </div>
+
+        <div class="qr-wrapper">
+            <div class="qr-code">
+                <img src="QR Code 72909206.png" alt="QR Code">
+            </div>
+            <div class="qr-desc">
+                <strong>Scannez & Réussissez</strong>
+                <span>Essayez GO STUDY! dès aujourd'hui</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

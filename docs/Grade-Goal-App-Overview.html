@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Grade Goal — Full Application Overview</title>
+  <style>
+    @page { margin: 2cm; size: A4; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 11pt;
+      line-height: 1.5;
+      color: #1a1a1a;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    h1 { font-size: 22pt; border-bottom: 2px solid #6366f1; padding-bottom: 8px; }
+    h2 { font-size: 16pt; margin-top: 1.5em; color: #4338ca; }
+    h3 { font-size: 13pt; margin-top: 1.2em; }
+    table { font-size: 10pt; }
+    code { background: #f4f4f5; padding: 2px 6px; border-radius: 4px; font-size: 10pt; }
+    pre { background: #f4f4f5; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 9pt; }
+    pre.mermaid { background: #fff; border: 1px solid #e5e7eb; text-align: center; }
+    li { margin: 4px 0; }
+    hr { border: none; border-top: 1px solid #e5e7eb; margin: 2em 0; }
+    p { margin: 0.5em 0; }
+  </style>
+</head>
+<body>
+<h1>Grade Goal — Full Application Overview</h1>
+<br/>
+<p><strong>Grade Goal</strong> (branded in the UI as <strong>Go Study!</strong>, with internal/package names like <strong>ScoreTarget</strong>) is a student grade-tracking and study platform aimed at Francophone African and Nigerian university students. It combines a <strong>grade planner</strong>, <strong>what-if simulator</strong>, <strong>exam paper & book library</strong>, <strong>courses catalog</strong>, and <strong>premium subscription</strong> mechanics, backed by <strong>Supabase</strong> and shipped as a <strong>web app + Android APK</strong> via Capacitor.</p>
+<br/>
+<hr/>
+<br/>
+<h2>What it is at a glance</h2>
+<br/>
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;margin:1em 0;">
+<tr><th style="background:#f0f0f0;">Layer</th><th style="background:#f0f0f0;">Role</th></tr>
+<tr><td><strong>Main app</strong> (<code>src/</code>, port 8080)</td><td>Student-facing PWA/mobile app: track grades, plan targets, browse/download PDFs, take courses links, give feedback</td></tr>
+<tr><td><strong>Admin panel</strong> (<code>exam-library-admin/</code>, port 5173)</td><td>Internal <strong>Exam Library Admin</strong> for content, notifications, subscriptions, and app releases</td></tr>
+<tr><td><strong>Backend</strong></td><td>Supabase (auth, PostgreSQL, storage) + optional Node routes for APK updates</td></tr>
+</table>
+<br/>
+<hr/>
+<br/>
+<h2>Main student app</h2>
+<br/>
+<h3>Authentication & onboarding</h3>
+<br/>
+<li><strong>Welcome</strong> (<code>/welcome</code>): language toggle (French/English), sign-in or <strong>guest</strong> mode.</li>
+<li><strong>Auth</strong> (<code>/auth</code>, OAuth callback): Supabase auth; data can sync to cloud (<code>user_profile</code>, <code>user_app_state</code>).</li>
+<li><strong>Onboarding</strong> (<code>/onboarding</code>, also <code>/planner</code>): multi-step setup:</li>
+<p>  - Choose <strong>grading system</strong> (APC, French, or Nigerian university)</p>
+<p>  - Profile (name, class level, série, semester, department, etc.)</p>
+<p>  - Set <strong>target average</strong> (e.g. /20 for APC/French, CGPA scale for Nigerian)</p>
+<p>  - Add <strong>subjects</strong> and enter <strong>marks</strong></p>
+<br/>
+<p>Protected routes require login + completed onboarding.</p>
+<br/>
+<hr/>
+<br/>
+<h3>Three grading systems (core differentiator)</h3>
+<br/>
+<p>The app adapts its entire UI and math based on <code>gradingSystem</code>:</p>
+<br/>
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;margin:1em 0;">
+<tr><th style="background:#f0f0f0;">System</th><th style="background:#f0f0f0;">Typical users</th><th style="background:#f0f0f0;">Mark model</th><th style="background:#f0f0f0;">Averages</th></tr>
+<tr><td><strong>APC</strong> (Cameroon)</td><td>Lycée / secondary</td><td><strong>Interro</strong>, <strong>Devoir</strong>, <strong>Composition</strong> per subject, with coefficients</td><td>Classwork average + compo (optional 40/60 split); yearly average weighted by coefficient</td></tr>
+<tr><td><strong>French</strong></td><td>French-style schools</td><td>Same three mark types + optional <strong>class average</strong>, min/max, <strong>appreciation</strong> (1–5)</td><td>Student vs class comparison, percentiles, French summary views</td></tr>
+<tr><td><strong>Nigerian university</strong></td><td>University</td><td><strong>Credit units</strong>, scores 0–100, <strong>custom weighted assessments</strong></td><td>GPA/CGPA, letter grades, degree classification (First Class, etc.)</td></tr>
+</table>
+<br/>
+<p><strong>Settings</strong> let users tune mark weights (interro/dev/compo), rounding mode, color thresholds for "on track" alerts, and APC 40/60 split.</p>
+<br/>
+<hr/>
+<br/>
+<h3>Home dashboard (<code>/</code>)</h3>
+<br/>
+<p>The main hub after onboarding:</p>
+<br/>
+<li><strong>Current average</strong> vs <strong>target</strong>, progress visuals, mascot/UI polish</li>
+<li><strong>Per-subject breakdown</strong> (marks, coefficients, averages)</li>
+<li><strong>Performance alerts</strong> (subjects below target, unreachable goals)</li>
+<li><strong>Streak</strong> and <strong>mark history</strong> (log of past entries, filterable)</li>
+<li><strong>Semester management</strong> (APC/French: multiple semesters; Nigerian: semester GPA/CGPA)</li>
+<li><strong>Admin push notifications</strong> (bell sheet; targeted by grading system)</li>
+<li><strong>Onboarding checklist</strong> and <strong>product tour</strong> for new users</li>
+<li>Links to <strong>library</strong>, <strong>simulator</strong>, <strong>profile</strong>, <strong>settings</strong>, <strong>feedback</strong></li>
+<li><strong>Premium upsell</strong> sheets (when enabled remotely)</li>
+<br/>
+<hr/>
+<br/>
+<h3>Grade simulator (<code>/simulator</code>)</h3>
+<br/>
+<p>"What-if" tool:</p>
+<br/>
+<li>Sliders for <strong>missing</strong> interro/dev/compo marks</li>
+<li>Live <strong>simulated yearly average</strong> vs target</li>
+<li><strong>Save strategies</strong> (planned marks to hit a goal)</li>
+<li>Premium nudges on certain actions (when premium is on)</li>
+<br/>
+<hr/>
+<br/>
+<h3>Planner / marks entry (<code>/planner</code>, <code>/onboarding</code>)</h3>
+<br/>
+<li>Add/edit subjects and enter marks</li>
+<li>Separate flows for <strong>Nigerian</strong> vs APC/French mark inputs</li>
+<li>State persisted in <code>localStorage</code> (<code>scoretarget_state</code>) and optionally synced to Supabase</li>
+<br/>
+<hr/>
+<br/>
+<h3>Profile (<code>/profile</code>)</h3>
+<br/>
+<li>Edit student info, class level, série, target</li>
+<li>Manage <strong>subjects</strong> (add/remove, search preset subject lists by level)</li>
+<li><strong>Multi-semester archive</strong> (APC/French and Nigerian)</li>
+<li>Nigerian: <strong>CGPA</strong>, classification, credit-unit tracking</li>
+<li>Premium subscription UI (plans, subject packs, payment sheet)</li>
+<li>Developer-only extras for a configured admin email</li>
+<br/>
+<hr/>
+<br/>
+<h3>Exam library (<code>/library</code>, <code>/library/papers</code>, <code>/library/books</code>)</h3>
+<br/>
+<p><strong>Exam papers</strong></p>
+<br/>
+<li>Browse Supabase-backed <strong>exam papers</strong> (PDFs): filter by class level, subject, year, exam type (Baccalauréat, Composition, Devoir, Interro, etc.)</li>
+<li>Cameroon/French class levels from <strong>6ème</strong> through <strong>Tle</strong> with série variants</li>
+<li><strong>Search</strong>, grid/list views, preview</li>
+<li><strong>Download</strong> for offline use; download counts tracked</li>
+<li><strong>In-app PDF viewer</strong></li>
+<li>Caching via IndexedDB (<code>cacheService</code>)</li>
+<br/>
+<p><strong>Books</strong> (<code>/library/books</code>)</p>
+<br/>
+<li>Separate <strong>library books</strong> catalog</li>
+<li>Download, offline open, <strong>share</strong> files (native share on mobile)</li>
+<li>Book detail page (<code>/book/:bookId</code>)</li>
+<br/>
+<p><strong>My downloads</strong> (<code>/my-downloads</code>)</p>
+<br/>
+<li>All offline papers and books</li>
+<li>Storage usage, delete, multi-select, re-download from cloud</li>
+<li>Share exported PDFs</li>
+<br/>
+<p><strong>Subject dashboard</strong> (<code>/subject/:subjectName</code>)</p>
+<br/>
+<li><strong>Study prep / premium tools</strong> per subject (when content exists):</li>
+<p>  - Top questions, key topics, cheat sheet, step-by-step solutions, practice tests, weak spots</p>
+<li>Often gated behind premium subscription</li>
+<br/>
+<hr/>
+<br/>
+<h3>Courses (<code>/courses</code>)</h3>
+<br/>
+<li>Catalog of <strong>course posts</strong> from Supabase (<code>course_posts</code>)</li>
+<li>Filter by category (Math, Science, Languages, etc.) and level</li>
+<li>Featured courses, external <strong>link_url</strong> to enroll/view</li>
+<li>View tracking per user</li>
+<br/>
+<hr/>
+<br/>
+<h3>Feedback board (<code>/feedback</code>)</h3>
+<br/>
+<li>Students submit <strong>feature requests / ideas</strong></li>
+<li><strong>Upvote</strong> others' items</li>
+<li>Status labels: Under review → Planned → In progress → Completed</li>
+<li>Users can delete their own posts</li>
+<br/>
+<hr/>
+<br/>
+<h3>Settings (<code>/settings</code>)</h3>
+<br/>
+<li>Theme: light / dark / system + <strong>accent colors</strong></li>
+<li>Language: <strong>French / English</strong></li>
+<li>Grading weights, rounding, notification preferences</li>
+<li>Sign out, wipe local data & downloads</li>
+<li>Account email display</li>
+<br/>
+<hr/>
+<br/>
+<h3>Other pages</h3>
+<br/>
+<li><strong>Privacy</strong> & <strong>Terms</strong> (public legal)</li>
+<li><strong>Debug</strong> / <strong>Fix state</strong> (dev utilities)</li>
+<li><strong>Splash screen</strong> on native launch</li>
+<li><strong>App update dialog</strong>: checks for newer <strong>APK</strong> versions (Android), download & install via custom Capacitor plugin</li>
+<br/>
+<hr/>
+<br/>
+<h3>Mobile / native (Android)</h3>
+<br/>
+<p>Built with <strong>Capacitor</strong>:</p>
+<br/>
+<li>Filesystem storage for downloads</li>
+<li>Haptics, status bar, splash screen, screen orientation</li>
+<li>Share, file opener, local notifications</li>
+<li><strong>APK sideload updates</strong> (admin uploads APK; app prompts users)</li>
+<li>Package id: <code>com.scoretarget</code> (ScoreTarget)</li>
+<br/>
+<p>Works as a <strong>responsive web app</strong> in the browser too.</p>
+<br/>
+<hr/>
+<br/>
+<h3>Premium & subscriptions (optional)</h3>
+<br/>
+<p>Controlled by:</p>
+<br/>
+<li>Local flag <code>PREMIUM_ENABLED</code> (currently <strong>false</strong> → full free behavior)</li>
+<li>Remote <code>app_config.premium_enabled</code> from Supabase (admin toggle)</li>
+<br/>
+<p>When enabled:</p>
+<br/>
+<li>Subscription <strong>codes</strong> (redeem in app)</li>
+<li>Plans, subject packs, payment sheets</li>
+<li>Locked previews for library prep tools</li>
+<li>Admin generates/prints codes</li>
+<br/>
+<hr/>
+<br/>
+<h3>Data & sync</h3>
+<br/>
+<li>Primary state: <strong>localStorage</strong> + optional <strong>Supabase</strong> hybrid sync on login</li>
+<li>Library metadata in Supabase; files in <strong>storage buckets</strong></li>
+<li>Offline-first for downloaded PDFs</li>
+<br/>
+<hr/>
+<br/>
+<h2>Admin panel (Exam Library Admin)</h2>
+<br/>
+<p>Login required (Supabase admin users). Sidebar sections:</p>
+<br/>
+<h3>Dashboard (<code>/</code>)</h3>
+<br/>
+<li>Total papers, total downloads, storage used, today's downloads</li>
+<li>Recent uploads list</li>
+<li>Storage quota indicator (~1 GB)</li>
+<br/>
+<h3>Upload (<code>/upload</code>)</h3>
+<br/>
+<p>Three tabs:</p>
+<br/>
+<li><strong>Mass upload</strong> – batch exam PDFs with metadata</li>
+<li><strong>Single paper</strong> – one exam at a time</li>
+<li><strong>Books</strong> – upload library books (PDF + metadata)</li>
+<br/>
+<h3>Papers (<code>/papers</code>)</h3>
+<br/>
+<li>Table of all exam papers</li>
+<li><strong>Edit</strong> metadata, <strong>delete</strong> papers (and storage)</li>
+<br/>
+<h3>Courses (<code>/courses</code>)</h3>
+<br/>
+<li>CRUD for <strong>course posts</strong>: title, description, instructor, price, duration, level, category, image, external link, featured flag, active/inactive, expiry</li>
+<br/>
+<h3>Analytics (<code>/analytics</code>)</h3>
+<br/>
+<li>Download analytics, storage stats, bandwidth usage</li>
+<li>Top papers by downloads, per-subject breakdown</li>
+<br/>
+<h3>Notifications (<code>/notifications</code>)</h3>
+<br/>
+<li>Create <strong>push-style in-app notifications</strong> for students</li>
+<li>Target: <strong>all</strong>, <strong>APC</strong>, <strong>French</strong>, or <strong>Nigerian</strong> users</li>
+<li>Title, body, icon, optional <strong>image</strong>, action URL, expiry</li>
+<li>List and delete sent notifications</li>
+<br/>
+<h3>Feedback (<code>/feedback</code>)</h3>
+<br/>
+<li>Moderate student feedback board</li>
+<li>Change status, filter by grading system, delete items</li>
+<li>See vote counts</li>
+<br/>
+<h3>App Updates (<code>/app-updates</code>)</h3>
+<br/>
+<li>Upload <strong>APK</strong> builds (version name/code, release notes, bug fixes, features)</li>
+<li>Mandatory update flag, min supported version</li>
+<li>Publish/hide/delete update records</li>
+<li>Students get update prompts in the main app</li>
+<br/>
+<h3>Subscription codes (<code>/subscription-codes</code>)</h3>
+<br/>
+<li><strong>Generate</strong> premium codes in bulk</li>
+<li>Stats cards (usage, active, etc.)</li>
+<li><strong>Printable CSV/sheet</strong> for physical distribution</li>
+<li>Codes table with redemption status</li>
+<br/>
+<h3>App settings (<code>/app-settings</code>)</h3>
+<br/>
+<li><strong>Toggle premium features</strong> globally (<code>premium_enabled</code> in <code>app_config</code>)</li>
+<br/>
+<h3>Debug (<code>/debug</code>)</h3>
+<br/>
+<li>Internal diagnostics (admin-only tooling)</li>
+<br/>
+<hr/>
+<br/>
+<h2>Architecture summary</h2>
+<br/>
+<div class="diagram"><img src="architecture.svg" alt="Architecture diagram" style="max-width:100%;height:auto;display:block;margin:1em auto;"/></div>
+<br/>
+<hr/>
+<br/>
+<h2>What students can do (checklist)</h2>
+<br/>
+<li>Sign up / guest / sync grades across devices</li>
+<li>Track grades in APC, French, or Nigerian university systems</li>
+<li>Set targets and see if they're on track</li>
+<li>Simulate future marks to hit goals</li>
+<li>Browse, download, and read exam PDFs and books offline</li>
+<li>Share downloaded files on mobile</li>
+<li>Browse recommended external courses</li>
+<li>Vote on and submit product feedback</li>
+<li>Receive admin announcements</li>
+<li>Update the Android app when admins publish a new APK</li>
+<br/>
+<h2>What admins can do (checklist)</h2>
+<br/>
+<li>Upload and manage exam papers and books</li>
+<li>Manage course catalog entries</li>
+<li>View download/storage analytics</li>
+<li>Send targeted notifications</li>
+<li>Moderate feedback and roadmap statuses</li>
+<li>Publish APK updates</li>
+<li>Generate and print premium subscription codes</li>
+<li>Enable/disable premium paywall globally</li>
+<br/>
+<hr/>
+<br/>
+<p>*Document generated from Grade Goal / Go Study! codebase overview.*</p>
+<br/>
+
+</body>
+</html>

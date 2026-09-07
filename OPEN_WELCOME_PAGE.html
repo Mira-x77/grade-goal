@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Open Welcome Page</title>
+</head>
+<body>
+    <h1>Opening Welcome Page...</h1>
+    <script>
+        // Clear storage and redirect
+        localStorage.clear();
+        sessionStorage.clear();
+        setTimeout(() => {
+            window.location.href = 'http://127.0.0.1:5174/welcome';
+        }, 500);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1967 @@
+﻿import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Target, Flame, AlertTriangle, ChevronRight, ChevronDown, BookOpen, BarChart3, TrendingUp, Settings as SettingsIcon, User, Trophy, FileDown, PenLine, Zap, Plus, X, Check, Clock, ArrowUpRight, Trash2, Pencil, Crown, Bell, ArrowLeft, Lightbulb, GraduationCap, Sparkles } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { loadState, saveState, getStreak, getHistory, addHistoryEntry, HistoryEntry } from "@/lib/storage";
+import { fetchNotifications, markNotificationRead, markAllNotificationsRead, AppNotification } from "@/services/notificationService";
+import { vibrateNotification, vibrateLongPress } from "@/lib/vibration";
+import { useAuth } from "@/contexts/AuthContext";
+import { downloadService } from "@/services/downloadService";
+import { calcYearlyAverage, getPredictedRange, getAbsoluteBounds, calcSubjectAverage, fmtAvg, fmtFinalAvg, getRounding } from "@/lib/exam-logic";
+import { calcAPCYearlyAverage, getPerformanceAlerts } from "@/lib/grading-apc";
+import { getAdapter } from "@/adapters/AdapterFactory";
+import { DashboardData } from "@/types/dashboard";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import FrenchClassView from "@/components/FrenchClassView";
+import TaskBar from "@/components/TaskBar";
+import Mascot from "@/components/Mascot";
+import ProductTour from "@/components/ProductTour";
+import ScreenIntro from "@/components/ScreenIntro";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
+import ResultsScreen from "@/components/ResultsScreen";
+import HeroCard from "@/components/HeroCard";
+import TargetProgressCard from "@/components/TargetProgressCard";
+import { TargetAdjustmentDialog } from "@/components/TargetAdjustmentDialog";
+import { PaymentSheet } from "@/components/subscription/PaymentSheet";
+import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
+import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
+import { SubjectPackSheet } from "@/components/subscription/SubjectPackSheet";
+import { Subject } from "@/types/exam";
+import { NigerianState } from "@/types/nigerian";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { translateSemester } from "@/lib/i18n";
+import NigerianAssessmentSheet from "@/components/NigerianAssessmentSheet";
+import { useIsTablet } from "@/hooks/useIsTablet";
+import { usePremiumNudge, nudgeSubtext, NudgeTrigger } from "@/hooks/usePremiumNudge";
+import { useAppConfig } from "@/contexts/AppConfigContext";
+import { usePremium } from "@/hooks/usePremium";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  scoreToGrade,
+  validateScore,
+  validateCreditUnits,
+  computeIntegratedSubjectScore,
+} from "@/lib/grading-nigerian";
+
+// ── Nigerian helpers ──────────────────────────────────────────────────────────
+
+function SubjectsGlanceCard({ subjects, title }: { subjects: Subject[]; title: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="carousel-card rounded-2xl bg-card border-2 border-border flex-shrink-0 overflow-hidden">
+      {/* Collapsible header — same pattern as Subject Comparison */}
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/50 transition-colors"
+      >
+        <h3 className="font-black text-foreground text-sm">{title}</h3>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        </motion.div>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-col gap-2 px-4 pb-4">
+              {[...subjects].sort((a, b) => a.name.localeCompare(b.name)).map((sub) => {
+                const marks = [
+                  { label: "I", value: sub.marks.interro },
+                  { label: "D", value: sub.marks.dev },
+                  { label: "C", value: sub.marks.compo },
+                ];
+                const avg = calcSubjectAverage(sub.marks, sub.markStatuses);
+                return (
+                  <div key={sub.id} className="rounded-xl bg-muted/50 px-3 py-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-foreground">{sub.name}</span>
+                        <span className="text-xs font-bold text-muted-foreground">×{sub.coefficient}</span>
+                      </div>
+                      <span className="text-sm font-black text-foreground">
+                        {avg !== null ? fmtAvg(avg, getRounding()) : "—"}<span className="text-xs font-bold text-muted-foreground">/20</span>
+                      </span>
+                    </div>
+                    <div className="flex gap-1.5 mt-1.5">
+                      {marks.map((m) => (
+                        <div key={m.label} className={`flex-1 rounded-lg py-1 text-center text-[10px] font-black ${m.value !== null ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground/40"}`}>
+                          {m.value !== null ? m.value.toFixed(1) : m.label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+const Home = () => {
+  const streak = getStreak();
+  const [history, setHistory] = useState<import("@/lib/storage").HistoryEntry[]>(() => getHistory());
+  const { t, language } = useLanguage();
+  const navigate = useNavigate();
+  const isTablet = useIsTablet();
+
+  const markTypeLabels: Record<string, string> = {
+    interro: t("interro"),
+    dev: t("devoir"),
+    compo: t("composition"),
+  };
+
+  // ── Premium nudge ──────────────────────────────────────────────────────────
+  const [activeNudge, setActiveNudge] = useState<NudgeTrigger | null>(null);
+  const { fire: fireNudge } = usePremiumNudge((trigger) => setActiveNudge(trigger));
+
+  const [downloadedCount, setDownloadedCount] = useState(0);
+  const [appState, setAppState] = useState(() => loadState());
+
+  // Check and set quick setup completion flags
+  useEffect(() => {
+    if (!appState) return;
+    
+    let updated = false;
+    const newState = { ...appState };
+    
+    // Set target flag
+    if (!appState.hasEverSetTarget && appState.targetMin && appState.targetMin > 0) {
+      newState.hasEverSetTarget = true;
+      updated = true;
+    }
+    
+    // Set subjects flag
+    if (!appState.hasEverAddedSubjects && appState.subjects && appState.subjects.length > 0) {
+      newState.hasEverAddedSubjects = true;
+      updated = true;
+    }
+    
+    // Set mark flag (check if any subject has marks)
+    const hasMarks = appState.subjects?.some(s => 
+      s.marks?.interro !== null || 
+      s.marks?.dev !== null || 
+      s.marks?.compo !== null
+    );
+    if (!appState.hasEverLoggedMark && hasMarks) {
+      newState.hasEverLoggedMark = true;
+      updated = true;
+    }
+    
+    if (updated) {
+      setAppState(newState);
+      saveState(newState);
+    }
+  }, [appState]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ADAPTER INTEGRATION: Get system-agnostic dashboard data
+  // ═══════════════════════════════════════════════════════════════════════════
+  const gradingSystem = appState?.settings?.gradingSystem ?? "apc";
+  const weightedSplit = appState?.settings?.apcWeightedSplit ?? false;
+  const isNigerian = gradingSystem === "nigerian_university";
+  const { premiumEnabled: PREMIUM_ENABLED } = useAppConfig();
+  const { isPremium, openPremiumGate } = usePremium();
+  
+  const dashboard: DashboardData | null = appState ? (() => {
+    try {
+      const adapter = getAdapter(gradingSystem);
+      return adapter.toDashboardData(appState);
+    } catch (error) {
+      console.error('Adapter error:', error);
+      return null;
+    }
+  })() : null;
+
+  const hasData = dashboard?.hasData ?? false;
+  const isEmpty = dashboard?.isEmpty ?? true;
+
+  // Mark entry flow
+  const [showMarkSheet, setShowMarkSheet] = useState(false);
+  const [markStep, setMarkStep] = useState<"subject" | "score">("subject");
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [markType, setMarkType] = useState<"interro" | "dev" | "compo">("interro");
+  const [markValue, setMarkValue] = useState("");
+
+  const [showResultsSheet, setShowResultsSheet] = useState(false);
+  const [showAllActivity, setShowAllActivity] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyFilterSubject, setHistoryFilterSubject] = useState<string>("all");
+  const [historyFilterType, setHistoryFilterType] = useState<string>("all");
+  const [showEditMarksSheet, setShowEditMarksSheet] = useState(false);
+  const [strategyOpen, setStrategyOpen] = useState(false);
+  const [showPlanSelect, setShowPlanSelect] = useState(false);
+  const [showPaymentSheet, setShowPaymentSheet] = useState(false);
+  const [showPremiumIntro, setShowPremiumIntro] = useState(false);
+  const [showSubjectPack, setShowSubjectPack] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [appNotifications, setAppNotifications] = useState<AppNotification[]>([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
+  const [longPressNotifId, setLongPressNotifId] = useState<string | null>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const { user } = useAuth();
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [paymentPlan, setPaymentPlan] = useState<"single" | "all">("all");
+  const [avgCardVisible, setAvgCardVisible] = useState(true);
+  const avgCardRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  // Analytics: Track page view (lazy loaded to not block render)
+  useEffect(() => {
+    import('@/services/analyticsService')
+      .then(({ analyticsService }) => {
+        analyticsService.trackPageView('home', '/').catch(() => {});
+      })
+      .catch(() => {});
+  }, []);
+  // Local editable marks state for the edit sheet
+  const [editMarksState, setEditMarksState] = useState<Record<string, { interro: string; dev: string; compo: string; coefficient: string }>>({});
+
+  const openEditMarksSheet = () => {
+    if (!appState) return;
+    const initial: Record<string, { interro: string; dev: string; compo: string; coefficient: string }> = {};
+    appState.subjects.forEach((s) => {
+      initial[s.id] = {
+        interro: s.marks.interro !== null ? String(s.marks.interro) : "",
+        dev: s.marks.dev !== null ? String(s.marks.dev) : "",
+        compo: s.marks.compo !== null ? String(s.marks.compo) : "",
+        coefficient: String(s.coefficient),
+      };
+    });
+    setEditMarksState(initial);
+    setShowEditMarksSheet(true);
+  };
+
+  const handleSaveEditMarks = () => {
+    if (!appState) return;
+    const updated = {
+      ...appState,
+      subjects: appState.subjects.map((s) => {
+        const vals = editMarksState[s.id];
+        if (!vals) return s;
+        const parse = (v: string) => {
+          const n = parseFloat(v);
+          return !isNaN(n) && n >= 0 && n <= 20 ? n : null;
+        };
+        const coeff = parseInt(vals.coefficient);
+        return {
+          ...s,
+          coefficient: !isNaN(coeff) && coeff >= 1 ? coeff : s.coefficient,
+          marks: {
+            interro: parse(vals.interro),
+            dev: parse(vals.dev),
+            compo: parse(vals.compo),
+          },
+        };
+      }),
+    };
+    saveState(updated);
+    setAppState(updated);
+    setShowEditMarksSheet(false);
+  };
+
+  const openMarkSheet = () => {
+    setMarkStep("subject");
+    setSelectedSubject(null);
+    setMarkValue("");
+    setMarkType("interro");
+    setShowMarkSheet(true);
+  };
+
+  const handleSelectSubject = (sub: Subject) => {
+    setSelectedSubject(sub);
+    // Auto-select the first unfilled mark type, or interro if all filled
+    const order: ("interro" | "dev" | "compo")[] = ["interro", "dev", "compo"];
+    const nextUnfilled = order.find(t => sub.marks[t] === null) ?? "interro";
+    setMarkType(nextUnfilled);
+    // Pre-fill value if the auto-selected type already has a value
+    const existing = sub.marks[nextUnfilled];
+    setMarkValue(existing !== null ? String(existing) : "");
+    setMarkStep("score");
+  };
+
+  const handleSaveMark = () => {
+    const val = parseFloat(markValue);
+    if (isNaN(val) || val < 0 || val > 20 || !selectedSubject || !appState) return;
+    const updated = {
+      ...appState,
+      subjects: appState.subjects.map((s) =>
+        s.id === selectedSubject.id
+          ? { ...s, marks: { ...s.marks, [markType]: val } }
+          : s
+      ),
+    };
+    saveState(updated);
+    setAppState(updated);
+    addHistoryEntry({ date: new Date().toISOString(), subjectName: selectedSubject.name, markType, value: val });
+    setHistory(getHistory());
+    const updatedSubject = updated.subjects.find((s) => s.id === selectedSubject.id)!;
+    setSelectedSubject(updatedSubject);
+    // Auto-advance to the next unfilled mark type
+    const order: ("interro" | "dev" | "compo")[] = ["interro", "dev", "compo"];
+    const nextUnfilled = order.find(t => updatedSubject.marks[t] === null || updatedSubject.marks[t] === undefined);
+    if (nextUnfilled) {
+      setMarkType(nextUnfilled);
+      setMarkValue("");
+    } else {
+      // All 3 marks filled — go back to subject picker
+      setMarkStep("subject");
+      setSelectedSubject(null);
+      setMarkValue("");
+    }
+    // Fire bad_score nudge if the mark is low (below 10 or below the target avg)
+    const threshold = heroTarget ? Math.min(10, heroTarget - 2) : 10;
+    if (val < threshold) {
+      setTimeout(() => { if (mountedRef.current) fireNudge("bad_score"); }, 800);
+    }
+  };
+
+  const [showDeleteStrategyConfirm, setShowDeleteStrategyConfirm] = useState(false);
+  const [showTargetAdjustDialog, setShowTargetAdjustDialog] = useState(false);
+  const [targetAdjustData, setTargetAdjustData] = useState<{ currentTarget: number; maxPossible: number } | null>(null);
+  const [coursesOpen, setCoursesOpen] = useState(true);
+
+  const handleNigerianStateChange = (nigerianState: NigerianState) => {
+    if (!appState) return;
+    const updated = { ...appState, nigerianState };
+    saveState(updated);
+    setAppState(updated);
+  };
+
+  const handleClearStrategy = () => {
+    if (!appState) return;
+    const updated = { ...appState, savedStrategy: undefined, strategyDeleted: true };
+    saveState(updated);
+    setAppState(updated);
+  };
+
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  // Load downloaded papers count
+  useEffect(() => {
+    const loadDownloadedCount = async () => {
+      try {
+        const { cacheService } = await import("@/services/cacheService");
+        const cachedPapers = await cacheService.getCachedPapers();
+        const downloaded = cachedPapers.filter(p => p.isDownloaded);
+        setDownloadedCount(downloaded.length);
+        
+        // Mark as having downloaded a paper if count > 0 and not already marked
+        if (downloaded.length > 0 && appState && !appState.hasEverDownloadedPaper) {
+          const updatedState = { ...appState, hasEverDownloadedPaper: true };
+          setAppState(updatedState);
+          saveState(updatedState);
+        }
+      } catch (error) {
+        console.error("Failed to load downloaded count:", error);
+      }
+    };
+    loadDownloadedCount();
+  }, [appState]);
+
+  const [hasNewFeedback, setHasNewFeedback] = useState(false);
+
+  // Load notifications when sheet opens
+  const openNotifications = async () => {
+    setShowNotifications(true);
+    setNotifLoading(true);
+    const notifs = await fetchNotifications(user?.id ?? null, gradingSystem);
+    
+    // Vibrate if there are unread notifications
+    const unreadCount = notifs.filter(n => !n.is_read).length;
+    if (unreadCount > 0) {
+      vibrateNotification();
+    }
+    
+    setAppNotifications(notifs);
+    setNotifLoading(false);
+  };
+
+  const handleMarkRead = async (id: string) => {
+    await markNotificationRead(user?.id ?? null, id);
+    setAppNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+  };
+
+  const handleMarkAllRead = async () => {
+    const unreadIds = appNotifications.filter(n => !n.is_read).map(n => n.id);
+    await markAllNotificationsRead(user?.id ?? null, unreadIds);
+    setAppNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+  };
+
+  const handleDeleteNotification = async (id: string) => {
+    setAppNotifications(prev => prev.filter(n => n.id !== id));
+    // Mark as read so it won't show up again
+    await markNotificationRead(user?.id ?? null, id);
+    toast.success('Notification deleted');
+    setLongPressNotifId(null);
+  };
+
+  const handleNotificationPress = (notif: AppNotification) => {
+    handleMarkRead(notif.id);
+    setSelectedNotification(notif);
+  };
+
+  const handleNotificationLongPressStart = (id: string) => {
+    longPressTimerRef.current = setTimeout(() => {
+      setLongPressNotifId(id);
+      // Haptic feedback
+      vibrateLongPress();
+    }, 500); // 500ms long press
+  };
+
+  const handleNotificationLongPressEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const unreadCount = appNotifications.filter(n => !n.is_read).length;
+
+  useEffect(() => {
+    const gradingSystem = appState?.settings?.gradingSystem ?? "apc";
+    supabase
+      .from("feedback_with_votes")
+      .select("created_at")
+      .eq("grading_system", gradingSystem)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (!data || data.length === 0) return;
+        const latest = data[0].created_at as string;
+        const seen = localStorage.getItem("gostudy_feedback_seen");
+        if (!seen || new Date(latest) > new Date(seen)) {
+          setHasNewFeedback(true);
+        }
+      });
+  }, []);
+
+  // Fire at_risk nudge on mount when avg is below target but recovery is possible
+  useEffect(() => {
+    if (isNigerian || !hasData || heroValue === null || heroTarget === null) return;
+    const gap = heroTarget - heroValue;
+    // Only nudge if behind by 0.5–4 points (still recoverable, not hopeless)
+    // Scale the gap check based on the max value (5 for Nigerian, 20 for APC/French)
+    const minGap = heroMax === 5 ? 0.1 : 0.4;
+    const maxGap = heroMax === 5 ? 1.0 : 4.0;
+    if (gap > minGap && gap <= maxGap) {
+      const timer = setTimeout(() => { if (mountedRef.current) fireNudge("at_risk"); }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ADAPTER-BASED DATA ACCESS: Use dashboard instead of direct calculations
+  // ═══════════════════════════════════════════════════════════════════════════
+  const performance = dashboard?.performance;
+  const heroValue = performance?.value ?? null;
+  const heroMax = performance?.max ?? 20;
+  const heroTarget = performance?.target ?? null;
+  const heroLabel = performance?.label ?? (isNigerian
+    ? ((appState?.nigerianState?.semesters ?? []).filter(s => s.archived && s.courses.length > 0).length > 0 ? t("cgpaLabel") : t("gpaLabel"))
+    : t("currentAverage"));
+  const heroSuffix = performance?.suffix ?? "/20";
+  const heroTargetLabel = performance?.targetLabel ?? "";
+  const heroBarColor = heroValue === null ? "bg-muted-foreground/30"
+    : heroTarget && heroValue >= heroTarget ? "bg-success"
+    : heroTarget && heroValue >= heroTarget - (heroMax === 5 ? 0.5 : 2) ? "bg-warning"
+    : "bg-danger";
+  const heroHasData = hasData && heroValue !== null;
+
+  // Data completeness for the hero card progress bar
+  const heroBarWidth = (() => {
+    if (!appState) return 0;
+    const subjects = appState.subjects ?? [];
+    if (isNigerian) {
+      // Nigerian: courses with at least one score entered / total courses
+      const total = subjects.length;
+      if (total === 0) return 0;
+      const filled = subjects.filter(s =>
+        (s.customAssessments ?? []).some(a => a.value !== null)
+      ).length;
+      return (filled / total) * 100;
+    }
+    // APC: filled marks / (subjects × 3)
+    const total = subjects.length * 3;
+    if (total === 0) return 0;
+    const filled = subjects.reduce((acc, s) =>
+      acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0), 0);
+    return (filled / total) * 100;
+  })();
+  
+  // Legacy values for backward compatibility (simulator, alerts, etc.)
+  const currentAvg = !isNigerian ? heroValue : null;
+  const targetAvg = appState?.targetMin ?? appState?.targetAverage ?? 16;
+  const range = hasData && !isNigerian ? getPredictedRange(appState!.subjects) : null;
+  const bounds = hasData && !isNigerian ? getAbsoluteBounds(appState!.subjects) : null;
+
+  // Nigerian-specific derived values (for semester management UI)
+  const nigerianState: NigerianState = appState?.nigerianState ?? {
+    semesters: [], cgpa: 0, classOfDegree: "Fail", targetCGPA: null, remainingCreditUnits: 0,
+  };
+  const nigerianClass = dashboard?.classification?.label ?? "";
+
+  useEffect(() => {
+    if (!avgCardRef.current) return;
+
+    // Use IntersectionObserver with a negative top rootMargin equal to the header height.
+    // We measure the header height once (it's fixed) and set rootMargin so the threshold
+    // fires exactly when the card's bottom edge passes behind the header's bottom edge.
+    const getHeaderHeight = () => headerRef.current?.getBoundingClientRect().height ?? 0;
+
+    let observer: IntersectionObserver | null = null;
+
+    const setup = () => {
+      if (observer) observer.disconnect();
+      const headerH = getHeaderHeight();
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          // visible = card bottom is still below the header bottom
+          setAvgCardVisible(entry.isIntersecting);
+        },
+        {
+          root: null,
+          // Shrink the top of the viewport by the header height so the card is
+          // considered "out of view" the moment its bottom crosses the header bottom.
+          rootMargin: `-${headerH}px 0px 0px 0px`,
+          // threshold 0 = fires as soon as any part enters/leaves the adjusted root
+          threshold: 0,
+        }
+      );
+      if (avgCardRef.current) observer.observe(avgCardRef.current);
+    };
+
+    // Small delay to let the header render and get its real height
+    const raf = requestAnimationFrame(setup);
+    return () => {
+      cancelAnimationFrame(raf);
+      observer?.disconnect();
+    };
+  }, [hasData, heroValue]);
+
+  const alerts = hasData ? getPerformanceAlerts(appState!.subjects, weightedSplit) : [];
+
+  const filledMarks = hasData
+    ? appState!.subjects.reduce((acc, s) => {
+        return acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0);
+      }, 0)
+    : 0;
+  const totalMarks = hasData ? appState!.subjects.length * 3 : 0;
+
+  // Recent activity (last 3)
+  const recentHistory = history.slice(-3).reverse();
+
+  // Strategy data
+  const savedStrategy = appState?.savedStrategy;
+
+  // Guard: if state hasn't loaded yet, show spinner
+  if (!appState) return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-background w-full pb-20">
+      {/* Header — bleeds edge-to-edge, inner content constrained */}
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top pb-4">
+        <div className="header-inner">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between pt-2 gap-3"
+        >
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-black text-foreground truncate">
+              {appState?.studentName ? `${t("hey")} ${appState?.studentName}!` : t("scoreTarget")}
+            </h1>
+            {(appState?.classLevel || appState?.semester) && (
+              <p className="text-xs font-bold text-muted-foreground mt-0.5 truncate">
+                {[appState?.classLevel, appState?.serie ? `${t("serieLabel")} ${appState.serie}` : null, appState?.semester ? translateSemester(appState.semester, language) : null].filter(Boolean).join(" · ")}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {!isNigerian && !isPremium && (
+              <button
+                onClick={() => openPremiumGate()}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-premium bg-premium text-premium-foreground active:scale-95 transition-all card-shadow"
+                title={t("unlockPremium")}
+              >
+                <Crown className="h-5 w-5" />
+              </button>
+            )}
+            {/* Bell + Profile grouped in a single pill — like the reference */}
+            <div className="tour-header-actions flex items-center bg-card border-2 border-foreground rounded-2xl overflow-hidden card-shadow">
+              <button
+                onClick={openNotifications}
+                className="relative flex h-9 w-9 items-center justify-center text-foreground active:bg-muted transition-colors"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-danger" />
+                )}
+              </button>
+              <div className="w-px h-5 bg-foreground/20" />
+              {isNigerian ? (
+                <Link to="/profile" className="flex h-9 w-9 items-center justify-center text-foreground active:bg-muted transition-colors">
+                  <User className="h-5 w-5" />
+                </Link>
+              ) : (
+                <Link to="/profile" className="flex h-9 w-9 items-center justify-center text-foreground active:bg-muted transition-colors">
+                  <User className="h-5 w-5" />
+                </Link>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Sticky mini average bar — appears when card scrolls out of view */}
+        <AnimatePresence>
+          {heroHasData && !avgCardVisible && (
+            <motion.button
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setShowResultsSheet(true)}
+              className="w-full mt-2 flex items-center justify-between rounded-xl bg-card border border-border px-4 py-2 active:scale-[0.98] transition-transform"
+            >
+              <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">{heroLabel}</span>
+              <div className="flex items-center gap-3">
+                <div className="w-24 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-secondary transition-all"
+                    style={{ width: `${Math.min(heroBarWidth, 100)}%` }}
+                  />
+                </div>
+                <span className="text-sm font-black text-foreground">
+                  {heroValue !== null ? heroValue.toFixed(isNigerian ? 2 : 1) : "—"}{isNigerian ? "" : "/20"}
+                </span>
+              </div>
+            </motion.button>
+          )}
+        </AnimatePresence>
+        </div>{/* /header-inner */}
+      </div>
+
+      <div className="content-col flex flex-col gap-4 pb-8 pt-[calc(7rem+env(safe-area-inset-top))]">
+
+        {/* ══════════ HERO CARD ══════════ */}
+        <HeroCard
+          cardRef={avgCardRef}
+          value={heroValue}
+          max={heroMax}
+          target={heroTarget}
+          label={heroLabel}
+          suffix={heroSuffix}
+          barWidth={heroBarWidth}
+          decimals={isNigerian ? 2 : 1}
+          degreeClass={isNigerian ? nigerianClass : undefined}
+          coverageLabel={appState ? (() => {
+            const subjects = appState.subjects ?? [];
+            if (isNigerian) {
+              const total = subjects.length;
+              if (total === 0) return undefined;
+              const filled = subjects.filter(s =>
+                (s.customAssessments ?? []).some(a => a.value !== null)
+              ).length;
+              const pct = Math.round((filled / total) * 100);
+              return t("coverageCourses").replace("{pct}", String(pct)).replace("{filled}", String(filled)).replace("{total}", String(total));
+            }
+            const total = subjects.length * 3;
+            const filled = subjects.reduce((acc, s) =>
+              acc + (s.marks.interro !== null ? 1 : 0) + (s.marks.dev !== null ? 1 : 0) + (s.marks.compo !== null ? 1 : 0), 0);
+            if (total === 0) return undefined;
+            const pct = Math.round((filled / total) * 100);
+            return t("coverageScores").replace("{pct}", String(pct)).replace("{filled}", String(filled)).replace("{total}", String(total));
+          })() : undefined}
+          hideBar={false}
+          onClick={() => setShowResultsSheet(true)}
+        />
+
+        {/* ══════════ TARGET PROGRESS & GOAL PREDICTOR CARD ══════════ */}
+        {appState && (
+          <TargetProgressCard
+            subjects={appState.subjects ?? []}
+            targetMin={appState.targetMin ?? appState.targetAverage ?? 10}
+            gradingSystem={gradingSystem}
+            weightedSplit={weightedSplit}
+          />
+        )}
+
+        {/* ══════════ MY GRADES CARD ══════════ */}
+        <motion.button
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          onClick={() => navigate("/simulator")}
+          className="w-full flex items-center gap-4 rounded-2xl bg-card border-2 border-foreground p-4 card-shadow active:scale-[0.97] transition-transform text-left"
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary border-2 border-foreground shrink-0">
+            <BarChart3 className="h-6 w-6 text-foreground" />
+          </div>
+          <div>
+            <p className="text-base font-black text-foreground leading-tight">{t("myGrades")}</p>
+            <p className="text-[12px] font-semibold text-muted-foreground mt-0.5 leading-tight">{t("simulateTrackGrades")}</p>
+          </div>
+        </motion.button>
+
+        {/* Performance Alerts — APC/French only */}
+        {!isNigerian && alerts.length > 0 && (
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="rounded-2xl bg-danger/15 p-4 border-2 border-danger/30"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-4 w-4 text-danger" />
+              <span className="text-sm font-black text-danger">{t("performanceAlert")}</span>
+            </div>
+            {alerts.map((a) => (
+              <p key={a.subject.id} className="text-xs font-bold text-danger/80 flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3 flex-shrink-0" /> {a.subject.name} ({t("coeff")} {a.subject.coefficient}): {a.avg.toFixed(1)}/20 — {t("belowThreshold")}
+              </p>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Onboarding checklist — Nigerian */}
+        {isNigerian && appState && (
+          <div className="tour-checklist">
+          <OnboardingChecklist
+            steps={[
+              {
+                key: "target",
+                label: "Set target GPA",
+                description: "Set the GPA you're aiming for",
+                done: !!(appState?.targetMin && appState.targetMin > 0 && appState.targetMin <= 5) || appState?.hasEverSetTarget === true,
+                href: "/profile",
+              },
+              {
+                key: "subjects",
+                label: "Add your courses",
+                description: "Add the courses you're taking this semester",
+                done: (appState?.subjects?.length ?? 0) > 0 || appState?.hasEverAddedSubjects === true,
+                href: "/profile",
+              },
+              {
+                key: "mark",
+                label: "Log your first score",
+                description: "Enter a CA or exam score to see your GPA",
+                done: (appState?.subjects ?? []).some(s => s.customAssessments?.some(a => a.value !== null)),
+                onClick: openMarkSheet,
+              },
+            ]}
+          />
+          </div>
+        )}
+
+        {/* Onboarding checklist — APC/French */}
+        {!isNigerian && appState && (
+          <div className="tour-checklist">
+          <OnboardingChecklist
+            steps={[
+              {
+                key: "target",
+                label: t("checklistSetTarget"),
+                description: t("checklistSetTargetDesc"),
+                done: !!(appState?.targetMin && appState.targetMin > 0) || appState?.hasEverSetTarget === true,
+                href: "/profile",
+              },
+              {
+                key: "subjects",
+                label: t("checklistAddSubjects"),
+                description: t("checklistAddSubjectsDesc"),
+                done: (appState?.subjects?.length ?? 0) > 0 || appState?.hasEverAddedSubjects === true,
+                href: "/simulator",
+              },
+              {
+                key: "mark",
+                label: t("checklistLogMark"),
+                description: t("checklistLogMarkDesc"),
+                done: filledMarks > 0 || appState?.hasEverLoggedMark === true,
+                onClick: openMarkSheet,
+              },
+              {
+                key: "simulator",
+                label: t("checklistSimulator"),
+                description: t("checklistSimulatorDesc"),
+                done: !!(appState?.savedStrategy && appState.savedStrategy.marks.length > 0) || !!(appState as any)?.strategyDeleted,
+                href: "/simulator",
+              },
+              {
+                key: "library",
+                label: t("checklistLibrary"),
+                description: t("checklistLibraryDesc"),
+                done: downloadedCount > 0 || appState?.hasEverDownloadedPaper === true,
+                href: "/library",
+              },
+            ]}
+          />
+          </div>
+        )}
+
+
+        {/* Saved Strategy — APC/French only */}
+        {!isNigerian && appState && savedStrategy && savedStrategy.marks.length > 0 && (
+          <motion.div
+            initial={{ y: 15, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="rounded-2xl bg-card border-2 border-secondary/40 overflow-hidden relative"
+          >
+            {/* Accent stripe */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary via-secondary/60 to-transparent" />
+
+            {/* Collapsible header */}
+            <button
+              onClick={() => setStrategyOpen(v => !v)}
+              className="w-full flex items-center justify-between px-4 pt-4 pb-3 active:bg-muted/30 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary/15">
+                  <Target className="h-4 w-4 text-secondary" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-black text-foreground text-sm">{t("myStrategy")}</h3>
+                  <p className="text-[10px] font-bold text-muted-foreground">
+                    {t("projectedAverage")}: {savedStrategy.simulatedAverage.toFixed(1)}/20
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Link
+                  to="/simulator"
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center justify-center rounded-lg bg-secondary/15 h-7 w-7 active:scale-95 transition-transform"
+                >
+                  <Pencil className="h-3.5 w-3.5 text-secondary" />
+                </Link>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowDeleteStrategyConfirm(true); }}
+                  className="flex items-center justify-center rounded-lg bg-muted h-7 w-7 text-[10px] font-black text-muted-foreground active:scale-95 transition-transform"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+                <motion.div animate={{ rotate: strategyOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </motion.div>
+              </div>
+            </button>
+
+            <AnimatePresence initial={false}>
+              {strategyOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex flex-col gap-1.5 px-4 pb-4 border-t border-secondary/20 pt-3">
+                    {/* Group marks by subject */}
+                    {Array.from(new Map(savedStrategy.marks.map(sm => [sm.subjectId, sm.subjectName])))
+                      .sort(([, a], [, b]) => (a as string).localeCompare(b as string))
+                      .map(([subjectId, subjectName]) => {
+                      const subMarks = savedStrategy.marks.filter(sm => sm.subjectId === subjectId);
+                      const sub = appState!.subjects.find(s => s.id === subjectId);
+                      const anyFulfilled = subMarks.some(sm => sub?.marks[sm.markType] !== null);
+                      return (
+                        <div
+                          key={subjectId}
+                          className={`flex items-center justify-between rounded-lg px-3 py-2 ${anyFulfilled ? "bg-secondary/10" : "bg-muted/50"}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="h-3.5 w-3.5 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
+                            <span className="text-xs font-bold text-foreground">{subjectName}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            {subMarks.map(sm => {
+                              const actual = sub?.marks[sm.markType] ?? null;
+                              const pillStyle = actual === null
+                                ? "bg-muted text-foreground/60"
+                                : actual >= sm.targetValue
+                                  ? "bg-success/20 text-success"
+                                  : "bg-danger/20 text-danger";
+                              return (
+                                <span key={sm.markType} className={`text-[10px] font-black px-1.5 py-0.5 rounded ${pillStyle}`}>
+                                  {sm.targetValue.toFixed(1)}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+
+        {/* Courses — Nigerian, collapsible */}
+        {/* Courses — Nigerian, collapsible, shows all subjects */}
+        {isNigerian && (() => {
+          // Integrated mode only
+          const allSubjects = [...(appState?.subjects ?? [])]
+            .sort((a, b) => a.name.localeCompare(b.name));
+          if (allSubjects.length === 0) return null;
+          return (
+            <div className="rounded-2xl bg-card border-2 border-border overflow-hidden">
+              <button onClick={() => setCoursesOpen(v => !v)} className="w-full flex items-center justify-between px-4 py-3 active:bg-muted/40 transition-colors">
+                <h3 className="font-black text-foreground text-sm">{t("coursesLabel")}</h3>
+                <motion.div animate={{ rotate: coursesOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </motion.div>
+              </button>
+              <AnimatePresence initial={false}>
+                {coursesOpen && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                    <div className="border-t border-border px-4 pb-3 pt-2 flex flex-col gap-1">
+                      {/* Column headers */}
+                      <div className="flex items-center px-3 py-1 mb-1">
+                        <span className="flex-1 text-[9px] font-black text-muted-foreground uppercase tracking-widest">{t("coursesLabel")}</span>
+                        <span className="w-8 text-center text-[9px] font-black text-muted-foreground uppercase">{t("cuLabel")}</span>
+                        <span className="w-14 text-center text-[9px] font-black text-muted-foreground uppercase">{t("scoreLabel")}</span>
+                        <span className="w-10 text-center text-[9px] font-black text-muted-foreground uppercase">{t("gradeLabel")}</span>
+                      </div>
+                      {allSubjects.map((sub) => {
+                        const score = computeIntegratedSubjectScore(sub);
+                        const { letter } = score !== null ? scoreToGrade(Math.round(score)) : { letter: null };
+                        const cu = sub.creditUnits ?? sub.coefficient;
+                        return (
+                          <div key={sub.id} className="flex items-center rounded-xl bg-muted/50 px-3 py-2">
+                            <span className="flex-1 text-sm font-bold text-foreground truncate">{sub.name}</span>
+                            <span className="w-8 text-center text-xs font-bold text-muted-foreground">{cu}</span>
+                            <span className="w-14 text-center text-sm font-black text-foreground">
+                              {score !== null ? score.toFixed(1) : "—"}
+                            </span>
+                            <span className={`w-10 text-center text-sm font-black ${letter === "A" ? "text-success" : letter === "B" ? "text-primary" : letter === "C" ? "text-warning" : letter ? "text-danger" : "text-muted-foreground/40"}`}>
+                              {letter ?? "—"}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })()}
+
+        {/* Subjects at a glance + Class ranking — APC/French */}
+        {!isNigerian && appState && (
+          <div className="tour-subjects-carousel overflow-x-auto -mx-4 px-4 pb-2 hide-scrollbar">
+            <div className="flex gap-3 items-start" style={{ width: "max-content" }}>
+              <SubjectsGlanceCard subjects={appState!.subjects} title={t("subjectsGlance")} />
+              <div className="carousel-card flex-shrink-0">
+                <FrenchClassView subjects={appState!.subjects} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Recent Activity — both systems */}
+        {appState && recentHistory.length > 0 && (
+          <motion.div
+            initial={{ y: 15, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.35 }}
+            className="tour-recent-activity rounded-2xl bg-card border-2 border-border p-4"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-black text-foreground text-sm">{t("recentActivity")}</h3>
+              {history.length > 5 && (
+                <button onClick={() => setShowHistoryModal(true)} className="text-[10px] font-black text-primary active:scale-95 transition-transform">
+                  {t("seeAll")} {history.length}
+                </button>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              {recentHistory.map((entry) => (
+                <div key={entry.id} className="flex items-center gap-3 rounded-xl bg-muted/50 px-3 py-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+                    <PenLine className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-foreground truncate">
+                      {entry.subjectName}{!isNigerian ? ` · ${markTypeLabels[entry.markType] ?? entry.markType}` : ""}
+                    </p>
+                    <p className="text-[10px] font-semibold text-muted-foreground">
+                      {new Date(entry.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                    </p>
+                  </div>
+                  <span className="text-sm font-black text-foreground">{entry.value.toFixed(1)}{isNigerian ? "/100" : "/20"}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Downloaded Papers — APC/French only (library feature) */}
+        {!isNigerian && downloadedCount > 0 && (
+          <motion.div initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}>
+            <Link to="/my-downloads" className="flex items-center justify-between rounded-2xl bg-card border-2 border-border p-4 active:scale-[0.98] transition-transform">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 dark:bg-green-900/30">
+                  <FileDown className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-foreground">{downloadedCount} {t("downloadedPapers")}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground">{t("viewAll")}</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          </motion.div>
+        )}
+
+        {/* Ideas & Feedback — both systems */}
+        {appState && (
+          <motion.div initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }}>
+            <Link
+              to="/feedback-board"
+              onClick={() => {
+                localStorage.setItem("gostudy_feedback_seen", new Date().toISOString());
+                setHasNewFeedback(false);
+              }}
+              className="tour-feedback flex items-center gap-3 rounded-2xl bg-card border-2 border-border p-4 active:scale-[0.98] transition-transform"
+            >
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/20 border border-secondary/30 shrink-0">
+                <Lightbulb className="h-5 w-5 text-secondary" />
+                {hasNewFeedback && (
+                  <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-danger border-2 border-background" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-black text-foreground">{language === "fr" ? "Idées & Avis" : "Ideas & Feedback"}</p>
+                <p className="text-[10px] font-bold text-muted-foreground">{t("tourFeedbackHint")}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            </Link>
+          </motion.div>
+        )}
+      </div>
+
+      <TaskBar
+        action={appState ? (
+          <div className="relative">
+            {/* Strategizer — APC/French only */}
+            {!isNigerian && (
+              <div className="absolute bottom-full mb-3 left-0">
+                <button
+                  onClick={() => {
+                    const bounds = getAbsoluteBounds(appState.subjects);
+                    const targetAvg = appState.targetMin ?? appState.targetAverage;
+                    if (bounds && bounds.max < targetAvg) {
+                      setTargetAdjustData({ currentTarget: targetAvg, maxPossible: bounds.max });
+                      setShowTargetAdjustDialog(true);
+                    } else {
+                      navigate("/simulator");
+                    }
+                  }}
+                  title={t("whatIfSimulator")}
+                  className="tour-strategizer h-12 w-12 rounded-full bg-card border-2 border-foreground card-shadow flex items-center justify-center active:scale-95 transition-transform"
+                >
+                  <TrendingUp className="h-6 w-6 text-foreground" />
+                </button>
+              </div>
+            )}
+            {isNigerian ? (
+              <button
+                onClick={openMarkSheet}
+                className="tour-add-mark flex items-center gap-2 rounded-full bg-secondary border-2 border-foreground px-5 h-12 font-black text-foreground card-shadow active:scale-95 transition-transform"
+              >
+                <Plus className="h-5 w-5" />
+                Log Score
+              </button>
+            ) : (
+              <button
+                onClick={openMarkSheet}
+                className="tour-add-mark h-12 w-12 rounded-full bg-secondary border-2 border-foreground card-shadow flex items-center justify-center active:scale-95 transition-transform"
+              >
+                <Plus className="h-6 w-6 text-foreground" />
+              </button>
+            )}
+          </div>
+        ) : undefined}
+      />
+
+      {/* Mark entry bottom sheet */}
+      <AnimatePresence>
+        {showMarkSheet && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMarkSheet(false)}
+              className="fixed inset-0 z-50 bg-black/40"
+            />
+            {/* Sheet */}
+            <motion.div
+              initial={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              animate={isTablet ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="sheet z-50 p-6 pb-10"
+            >
+              {/* Handle */}
+              <div className="w-10 h-1 rounded-full bg-foreground/20 mx-auto mb-5" />
+
+              {markStep === "subject" ? (
+                <>
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-xl font-black">{isNigerian ? "Which course?" : t("whichSubject")}</h2>
+                    <button onClick={() => setShowMarkSheet(false)}>
+                      <X className="h-5 w-5 text-muted-foreground" />
+                    </button>
+                  </div>
+                  <div className="flex flex-col gap-2 max-h-72 overflow-y-auto">
+                    {[...(appState?.subjects ?? [])].sort((a, b) => a.name.localeCompare(b.name)).map((sub) => {
+                      const markKeys = ["interro", "dev", "compo"] as const;
+                      // Nigerian: show credit units and computed weighted score
+                      const nigerianScore = isNigerian ? computeIntegratedSubjectScore(sub) : null;
+                      const { letter } = (isNigerian && nigerianScore !== null) ? scoreToGrade(Math.round(nigerianScore)) : { letter: null };
+                      const hasAssessments = isNigerian && sub.customAssessments && sub.customAssessments.some(a => a.value !== null);
+                      return (
+                        <button
+                          key={sub.id}
+                          onClick={() => handleSelectSubject(sub)}
+                          className="flex items-center justify-between rounded-2xl bg-card border-2 border-foreground px-4 py-3 active:scale-[0.98] transition-transform card-shadow"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-black text-foreground truncate min-w-0">{sub.name}</span>
+                            <span className="text-xs font-bold text-muted-foreground shrink-0">{sub.creditUnits ?? sub.coefficient} CU</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {isNigerian ? (
+                              <>
+                                {hasAssessments && nigerianScore !== null && (
+                                  <span className="text-xs font-black text-primary">{nigerianScore.toFixed(1)} · {letter}</span>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex gap-1">
+                                  {markKeys.map(k => {
+                                    const filled = sub.marks[k] !== null && sub.marks[k] !== undefined;
+                                    return (
+                                      <div
+                                        key={k}
+                                        className={`h-2 w-2 rounded-full border-2 border-foreground transition-all ${filled ? "bg-foreground" : "bg-transparent"}`}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                                <span className="text-xs font-bold text-muted-foreground">{t("coeff")} {sub.coefficient}</span>
+                              </>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {!isNigerian && (
+                  <div className="flex items-center gap-3 mb-5">
+                    <button onClick={() => setMarkStep("subject")} className="text-muted-foreground">
+                      <ArrowLeft className="h-5 w-5" />
+                    </button>
+                    <h2 className="text-xl font-black flex-1">{selectedSubject?.name}</h2>
+                    <button onClick={() => setShowMarkSheet(false)} className="text-muted-foreground">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  )}
+
+                  {isNigerian ? (
+                    /* ── Nigerian score entry: NigerianAssessmentSheet ── */
+                    <NigerianAssessmentSheet
+                      subject={selectedSubject!}
+                      onSave={(updated) => {
+                        if (!appState) return;
+                        const newState = {
+                          ...appState,
+                          subjects: appState.subjects.map(s => s.id === updated.id ? updated : s),
+                        };
+                        saveState(newState);
+                        setAppState(newState);
+                        setShowMarkSheet(false);
+                      }}
+                      onBack={() => setMarkStep("subject")}
+                      onClose={() => setShowMarkSheet(false)}
+                    />
+                  ) : (
+                    /* ── APC/French: interro / dev / compo type selector ── */
+                    <>
+                      {/* Live subject average preview */}
+                      {(() => {
+                        const previewVal = markValue !== "" && !isNaN(parseFloat(markValue))
+                          ? Math.min(20, Math.max(0, parseFloat(markValue)))
+                          : null;
+                        const previewMarks = {
+                          ...selectedSubject?.marks,
+                          [markType]: previewVal ?? selectedSubject?.marks[markType],
+                        } as { interro: number | null; dev: number | null; compo: number | null };
+                        const avg = calcSubjectAverage(previewMarks, selectedSubject?.markStatuses);
+                        if (avg === null) return null;
+                        return (
+                          <div className="rounded-2xl bg-primary/10 border-2 border-primary/30 px-4 py-3 mb-5">
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t("currentAverageLabel")}</p>
+                            <p className="text-2xl font-black text-foreground">{fmtAvg(avg, getRounding())}<span className="text-sm text-muted-foreground">/20</span></p>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Mark type selector — locked when there's an unsaved value */}
+                      <div className="grid grid-cols-3 gap-2 mb-5">
+                        {(["interro", "dev", "compo"] as const).map((type) => {
+                          const existingVal = selectedSubject?.marks[type];
+                          const isFilled = existingVal !== null && existingVal !== undefined;
+                          const isSelected = markType === type;
+                          // Lock other tabs when current input has an unsaved value
+                          const hasUnsavedValue = markValue !== "" && !isNaN(parseFloat(markValue));
+                          const isLocked = !isSelected && hasUnsavedValue;
+                          return (
+                            <button
+                              key={type}
+                              onClick={() => {
+                                if (isLocked) return;
+                                setMarkType(type);
+                                if (isFilled) setMarkValue(String(existingVal));
+                                else setMarkValue("");
+                              }}
+                              disabled={isLocked}
+                              className={`py-3 px-2 rounded-2xl border-2 text-sm font-black transition-all flex flex-col items-center gap-0.5 ${
+                                isSelected
+                                  ? "bg-secondary border-foreground card-shadow"
+                                  : isLocked
+                                  ? "bg-muted border-border text-muted-foreground/40 cursor-not-allowed"
+                                  : isFilled
+                                  ? "bg-primary/10 border-primary/30 text-primary"
+                                  : "bg-card border-foreground/30 text-muted-foreground"
+                              }`}
+                            >
+                              <span>{type === "interro" ? "Interro" : type === "dev" ? "Devoir" : "Compo"}</span>
+                              {isFilled && !isLocked && (
+                                <span className={`text-[10px] font-black ${isSelected ? "text-foreground/70" : "text-primary/70"}`}>
+                                  {Number(existingVal).toFixed(1)}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Score input */}
+                      <div className="relative mb-2">
+                        <input
+                          type="number"
+                          min={0}
+                          max={20}
+                          step={0.25}
+                          placeholder="Score (0–20)"
+                          value={markValue}
+                          onChange={(e) => setMarkValue(e.target.value)}
+                          className="w-full rounded-2xl border-2 border-foreground bg-card px-4 py-4 text-2xl font-black text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-secondary"
+                          autoFocus
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg font-black text-muted-foreground">/20</span>
+                      </div>
+                      <p className="text-[11px] font-semibold text-muted-foreground mb-5 px-1">
+                        {t("leaveBlankHint")}
+                      </p>
+
+                      <button
+                        onClick={handleSaveMark}
+                        disabled={!markValue || parseFloat(markValue) < 0 || parseFloat(markValue) > 20}
+                        className="w-full rounded-2xl bg-secondary border-2 border-foreground py-4 font-black text-foreground flex items-center justify-center gap-2 card-shadow active:translate-y-0.5 active:shadow-none transition-all disabled:opacity-40 disabled:pointer-events-none"
+                      >
+                        <Check className="h-5 w-5" />
+                        {t("saveMark")}
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <ProductTour />
+
+      {isNigerian && (
+        <ScreenIntro
+          screenKey="home_nigerian"
+          title={t("homeIntroTitle")}
+          description={t("homeIntroDesc")}
+          mascotPose="pointing"
+        />
+      )}
+
+      {/* ── Delete strategy confirm dialog ── */}
+      <AnimatePresence>
+        {showDeleteStrategyConfirm && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[80] bg-black/50"
+              onClick={() => setShowDeleteStrategyConfirm(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              className="fixed inset-x-6 z-[81] top-1/2 -translate-y-1/2 max-w-sm mx-auto bg-card border-2 border-foreground rounded-2xl p-5 card-shadow"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-danger/10 shrink-0">
+                  <Trash2 className="h-5 w-5 text-danger" />
+                </div>
+                <div>
+                  <h3 className="font-black text-foreground text-sm">{t("deleteStrategyTitle")}</h3>
+                  <p className="text-xs font-semibold text-muted-foreground mt-0.5">{t("deleteStrategyDesc")}</p>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setShowDeleteStrategyConfirm(false)}
+                  className="flex-1 rounded-xl bg-muted border-2 border-foreground/20 py-2.5 text-sm font-black text-foreground active:scale-95 transition-transform"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => { handleClearStrategy(); setShowDeleteStrategyConfirm(false); }}
+                  className="flex-1 rounded-xl bg-danger border-2 border-foreground py-2.5 text-sm font-black text-danger-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+
+
+      {/* Premium intro → plan select → payment */}
+      <>
+        <PremiumIntroSheet
+            open={showPremiumIntro && !activeNudge}
+            onClose={() => setShowPremiumIntro(false)}
+            onRedeemSuccess={() => setShowPremiumIntro(false)}
+          />
+          <PremiumIntroSheet
+            open={!!activeNudge}
+            subjectName={undefined}
+            nudgeSubtext={activeNudge ? nudgeSubtext(activeNudge, language as "en" | "fr") : undefined}
+            onClose={() => setActiveNudge(null)}
+            onRedeemSuccess={() => setActiveNudge(null)}
+          />
+        </>
+      {/* Target Adjustment Dialog */}
+      {targetAdjustData && (
+        <TargetAdjustmentDialog
+          open={showTargetAdjustDialog}
+          currentTarget={targetAdjustData.currentTarget}
+          maxPossible={targetAdjustData.maxPossible}
+          onClose={() => {
+            setShowTargetAdjustDialog(false);
+            setTargetAdjustData(null);
+          }}
+          onUpdateAndContinue={(newTarget) => {
+            // Update the target in state
+            if (appState) {
+              const updated = { ...appState, targetAverage: newTarget, targetMin: newTarget };
+              saveState(updated);
+              setAppState(updated);
+            }
+            setShowTargetAdjustDialog(false);
+            setTargetAdjustData(null);
+            // Navigate to simulator
+            navigate("/simulator");
+          }}
+        />
+      )}
+
+      {/* Results bottom sheet */}
+      <AnimatePresence>
+        {showResultsSheet && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowResultsSheet(false)}
+              className="fixed inset-0 z-50 bg-black/50"
+            />
+            <motion.div
+              initial={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              animate={isTablet ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="sheet z-50"
+              id="results-sheet"
+            >
+              {/* Drag handle */}
+              <div
+                className="flex justify-center pt-3 pb-2 touch-none cursor-grab active:cursor-grabbing"
+                onTouchStart={(e) => {
+                  const sheet = document.getElementById("results-sheet") as HTMLElement;
+                  if (!sheet) return;
+                  const startY = e.touches[0].clientY;
+                  let currentY = 0;
+                  const onMove = (ev: TouchEvent) => {
+                    currentY = Math.max(0, ev.touches[0].clientY - startY);
+                    sheet.style.transform = `translateY(${currentY}px)`;
+                    sheet.style.transition = "none";
+                  };
+                  const onEnd = () => {
+                    sheet.style.transition = "";
+                    if (currentY > window.innerHeight * 0.25) setShowResultsSheet(false);
+                    else sheet.style.transform = "";
+                    document.removeEventListener("touchmove", onMove);
+                    document.removeEventListener("touchend", onEnd);
+                  };
+                  document.addEventListener("touchmove", onMove, { passive: true });
+                  document.addEventListener("touchend", onEnd);
+                }}
+              >
+                <div className="w-10 h-1.5 rounded-full bg-foreground/30" />
+              </div>
+
+              <div className="flex-1 overflow-y-auto min-h-0">
+                {isNigerian ? (
+                  /* ── Nigerian: now uses shared ResultsScreen ── */
+                  appState && (
+                    <ResultsScreen
+                      subjects={appState.subjects}
+                      targetAverage={(() => {
+                        const raw = appState.targetMin ?? appState.targetAverage ?? 3.0;
+                        // If target looks like it was set for APC (>5), normalize to Nigerian scale
+                        return raw > 5 ? 3.0 : raw;
+                      })()}
+                      onBack={() => setShowResultsSheet(false)}
+                      onEditMarks={() => { setShowResultsSheet(false); setShowMarkSheet(true); }}
+                      isNigerian
+                    />
+                  )
+                ) : (
+                  /* ── APC/French results view ── */
+                  appState && (
+                    <ResultsScreen
+                      subjects={appState.subjects}
+                      targetAverage={appState.targetMin ?? appState.targetAverage}
+                      onBack={() => setShowResultsSheet(false)}
+                      onEditMarks={() => { setShowResultsSheet(false); openEditMarksSheet(); }}
+                    />
+                  )
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      {/* Edit Marks bottom sheet */}
+      <AnimatePresence>
+        {showEditMarksSheet && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowEditMarksSheet(false)}
+              className="fixed inset-0 z-50 bg-black/50"
+            />
+            <motion.div
+              initial={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              animate={isTablet ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="sheet z-50"
+            >
+              {/* Handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1.5 rounded-full bg-foreground/30" />
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-3 border-b border-border">
+                <button onClick={() => setShowEditMarksSheet(false)}>
+                  <X className="h-5 w-5 text-muted-foreground" />
+                </button>
+                <h2 className="text-lg font-black text-foreground">{t("editMarks")}</h2>
+                <button
+                  onClick={handleSaveEditMarks}
+                  className="rounded-xl bg-secondary border-2 border-foreground px-4 py-1.5 text-sm font-black text-foreground card-shadow active:translate-y-0.5 active:shadow-none transition-all"
+                >
+                  Done
+                </button>
+              </div>
+
+              {/* Subject list */}
+              <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4 min-h-0">
+                {appState?.subjects.map((sub) => {
+                  const vals = editMarksState[sub.id] ?? { interro: "", dev: "", compo: "" };
+                  const rows: { key: "interro" | "dev" | "compo"; label: string }[] = [
+                    { key: "interro", label: t("interro") },
+                    { key: "dev", label: t("devoir") },
+                    { key: "compo", label: t("composition") },
+                  ];
+                  return (
+                    <div key={sub.id} className="rounded-2xl bg-card border-2 border-foreground card-shadow p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-black text-foreground">{sub.name}</span>
+                        {/* Coefficient stepper */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-muted-foreground">{t("coeff")}</span>
+                          <button
+                            onClick={() => setEditMarksState(prev => ({
+                              ...prev,
+                              [sub.id]: { ...prev[sub.id], coefficient: String(Math.max(1, parseInt(prev[sub.id]?.coefficient || "1") - 1)) }
+                            }))}
+                            className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95"
+                          >−</button>
+                          <span className="w-5 text-center text-sm font-black text-foreground">
+                            {editMarksState[sub.id]?.coefficient ?? sub.coefficient}
+                          </span>
+                          <button
+                            onClick={() => setEditMarksState(prev => ({
+                              ...prev,
+                              [sub.id]: { ...prev[sub.id], coefficient: String(parseInt(prev[sub.id]?.coefficient || "1") + 1) }
+                            }))}
+                            className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-sm font-bold text-foreground active:scale-95"
+                          >+</button>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {rows.map(({ key, label }) => (
+                          <div key={key} className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-bold text-muted-foreground w-16">{label}</span>
+                            <span className="text-sm font-bold text-foreground/40 flex-1 text-right pr-2">
+                              {vals[key] === "" ? "—" : `${vals[key]}/20`}
+                            </span>
+                            <input
+                              type="number"
+                              min={0}
+                              max={20}
+                              step={0.25}
+                              placeholder="—"
+                              value={vals[key]}
+                              onChange={(e) =>
+                                setEditMarksState((prev) => ({
+                                  ...prev,
+                                  [sub.id]: { ...prev[sub.id], [key]: e.target.value },
+                                }))
+                              }
+                              className="w-20 rounded-xl border-2 border-foreground bg-background px-3 py-2 text-sm font-black text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-secondary text-center"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      {/* Notifications bottom sheet */}
+      <AnimatePresence>
+        {showNotifications && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowNotifications(false)}
+              className="fixed inset-0 z-50 bg-black/50"
+            />
+            <motion.div
+              initial={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              animate={isTablet ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="sheet z-50"
+            >
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1.5 rounded-full bg-foreground/30" />
+              </div>
+              <div className="flex items-center justify-between px-6 py-3 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-black text-foreground">{t("notifications")}</h2>
+                  {unreadCount > 0 && (
+                    <span className="text-xs font-black bg-danger text-white px-2 py-0.5 rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  {appNotifications.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setAppNotifications([]);
+                        if (user?.id) {
+                          // Clear from database
+                          const notifIds = appNotifications.map(n => n.id);
+                          markAllNotificationsRead(user.id, notifIds);
+                        } else {
+                          // Clear from localStorage
+                          localStorage.removeItem('gostudy_notif_reads');
+                        }
+                        toast.success('Notifications cleared');
+                      }}
+                      className="text-xs font-black text-muted-foreground hover:text-foreground active:scale-95 transition-all"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllRead}
+                      className="text-xs font-black text-primary active:scale-95 transition-transform"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                  <button onClick={() => setShowNotifications(false)}>
+                    <X className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="overflow-y-auto max-h-[60vh]">
+                {notifLoading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : appNotifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center px-8 py-16 gap-4">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-muted border-2 border-border">
+                      <Bell className="h-9 w-9 text-muted-foreground/50" />
+                    </div>
+                    <div className="text-center">
+                      <p className="font-black text-foreground text-base">{t("allQuiet")}</p>
+                      <p className="text-sm font-semibold text-muted-foreground mt-1 leading-relaxed">
+                        {t("notificationsDesc")}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {appNotifications.map(notif => (
+                      <div key={notif.id} className="relative">
+                        <button
+                          onClick={() => handleNotificationPress(notif)}
+                          onTouchStart={() => handleNotificationLongPressStart(notif.id)}
+                          onTouchEnd={handleNotificationLongPressEnd}
+                          onMouseDown={() => handleNotificationLongPressStart(notif.id)}
+                          onMouseUp={handleNotificationLongPressEnd}
+                          onMouseLeave={handleNotificationLongPressEnd}
+                          className={`w-full flex items-start gap-4 px-5 py-4 text-left transition-colors active:bg-muted/40 ${
+                            notif.is_read ? 'opacity-60' : ''
+                          } ${longPressNotifId === notif.id ? 'bg-danger/10' : ''}`}
+                        >
+                          <span className="text-2xl shrink-0 mt-0.5">{notif.icon ?? '📢'}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className={`text-sm leading-snug ${notif.is_read ? 'font-semibold text-muted-foreground' : 'font-black text-foreground'}`}>
+                                {notif.title}
+                              </p>
+                              {!notif.is_read && (
+                                <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-xs font-semibold text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">
+                              {notif.body}
+                            </p>
+                            {notif.image_url && (
+                              <img 
+                                src={notif.image_url} 
+                                alt="" 
+                                className="mt-2 rounded-lg w-full max-w-sm h-24 object-cover border border-border"
+                              />
+                            )}
+                            <p className="text-[10px] font-bold text-muted-foreground/50 mt-1">
+                              {new Date(notif.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
+                        </button>
+                        
+                        {/* Delete confirmation overlay */}
+                        <AnimatePresence>
+                          {longPressNotifId === notif.id && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute inset-0 bg-danger/90 flex items-center justify-center gap-3 px-4"
+                            >
+                              <button
+                                onClick={() => handleDeleteNotification(notif.id)}
+                                className="flex-1 py-2 bg-white text-danger font-black rounded-lg text-sm active:scale-95 transition-transform"
+                              >
+                                Delete
+                              </button>
+                              <button
+                                onClick={() => setLongPressNotifId(null)}
+                                className="flex-1 py-2 bg-white/20 text-white font-black rounded-lg text-sm active:scale-95 transition-transform"
+                              >
+                                Cancel
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Notification Detail Modal */}
+      <AnimatePresence>
+        {selectedNotification && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedNotification(null)}
+              className="fixed inset-0 z-50 bg-black/50"
+            />
+            <motion.div
+              initial={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              animate={isTablet ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 } : { y: 0 }}
+              exit={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="sheet z-50"
+            >
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1.5 rounded-full bg-foreground/30" />
+              </div>
+              
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-3 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{selectedNotification.icon ?? '📢'}</span>
+                  <div>
+                    <h2 className="text-lg font-black text-foreground">{selectedNotification.title}</h2>
+                    <p className="text-xs font-semibold text-muted-foreground">
+                      {new Date(selectedNotification.created_at).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedNotification(null)}>
+                  <X className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="overflow-y-auto max-h-[70vh] p-6 space-y-4">
+                {/* Message */}
+                <div>
+                  <p className="text-sm font-semibold text-foreground leading-relaxed whitespace-pre-wrap">
+                    {selectedNotification.body}
+                  </p>
+                </div>
+
+                {/* Image */}
+                {selectedNotification.image_url && (
+                  <div className="rounded-xl overflow-hidden border border-border">
+                    <img 
+                      src={selectedNotification.image_url} 
+                      alt="" 
+                      className="w-full h-auto object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Action Button */}
+                {selectedNotification.action_url && (
+                  <button
+                    onClick={() => {
+                      setSelectedNotification(null);
+                      setTimeout(() => navigate(selectedNotification.action_url!), 150);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-primary text-primary-foreground rounded-xl font-black text-sm active:scale-95 transition-transform"
+                  >
+                    <span>{t("openNotification")}</span>
+                    <ArrowUpRight className="h-4 w-4" />
+                  </button>
+                )}
+
+                {/* Delete Button */}
+                <button
+                  onClick={() => {
+                    handleDeleteNotification(selectedNotification.id);
+                    setSelectedNotification(null);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-danger/10 text-danger border border-danger/30 rounded-xl font-black text-sm active:scale-95 transition-transform"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>{t("deleteNotification")}</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* History modal */}
+      <AnimatePresence>
+        {showHistoryModal && (() => {
+          const subjectOptions = Array.from(new Set([...history].map(e => e.subjectName))).sort();
+          const filtered = [...history].reverse().filter(e => {
+            const matchSubject = historyFilterSubject === "all" || e.subjectName === historyFilterSubject;
+            const matchType = historyFilterType === "all" || e.markType === historyFilterType;
+            return matchSubject && matchType;
+          });
+          return (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setShowHistoryModal(false)}
+                className="fixed inset-0 z-50 bg-black/50"
+              />
+              <motion.div
+                initial={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+                animate={isTablet ? { x: "-50%", y: "-50%", scale: 1, opacity: 1 } : { y: 0 }}
+                exit={isTablet ? { x: "-50%", y: "-50%", scale: 0.94, opacity: 0 } : { y: "100%" }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="sheet z-50 flex flex-col"
+                style={{ maxHeight: "85vh" }}
+              >
+                {/* Handle */}
+                <div className="flex justify-center pt-3 pb-1 shrink-0">
+                  <div className="w-10 h-1.5 rounded-full bg-foreground/30" />
+                </div>
+
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-3 border-b border-border shrink-0">
+                  <div>
+                    <h2 className="text-lg font-black text-foreground">{t("recentActivity")}</h2>
+                    <p className="text-xs font-semibold text-muted-foreground">{filtered.length} {filtered.length === 1 ? t("entryCountSingular") : t("entryCountPlural")}</p>
+                  </div>
+                  <button onClick={() => setShowHistoryModal(false)}>
+                    <X className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                </div>
+
+                {/* Filters */}
+                <div className="px-4 py-3 flex flex-col gap-2 border-b border-border shrink-0">
+                  <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+                    {["all", ...subjectOptions].map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => setHistoryFilterSubject(opt)}
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black transition-all border-2 ${
+                          historyFilterSubject === opt
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-muted text-muted-foreground border-transparent"
+                        }`}
+                      >
+                        {opt === "all" ? "All subjects" : opt}
+                      </button>
+                    ))}
+                  </div>
+                  {!isNigerian && (
+                    <div className="flex gap-2">
+                      {[
+                        { key: "all", label: "All types" },
+                        { key: "interro", label: t("interro") },
+                        { key: "dev", label: t("devoir") },
+                        { key: "compo", label: t("composition") },
+                      ].map(opt => (
+                        <button
+                          key={opt.key}
+                          onClick={() => setHistoryFilterType(opt.key)}
+                          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black transition-all border-2 ${
+                            historyFilterType === opt.key
+                              ? "bg-secondary text-secondary-foreground border-secondary"
+                              : "bg-muted text-muted-foreground border-transparent"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* List */}
+                <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2">
+                  {filtered.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 gap-2">
+                      <p className="text-2xl">📭</p>
+                      <p className="text-sm font-black text-foreground">{t("noEntriesFound")}</p>
+                      <p className="text-xs font-semibold text-muted-foreground">{t("tryChangingFilters")}</p>
+                    </div>
+                  ) : (
+                    filtered.map((entry) => (
+                      <div key={entry.id} className="flex items-center gap-3 rounded-xl bg-muted/50 px-3 py-2.5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                          <PenLine className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-foreground truncate">
+                            {entry.subjectName}{!isNigerian ? ` · ${markTypeLabels[entry.markType] ?? entry.markType}` : ""}
+                          </p>
+                          <p className="text-[10px] font-semibold text-muted-foreground">
+                            {new Date(entry.date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                          </p>
+                        </div>
+                        <span className="text-sm font-black text-foreground shrink-0">
+                          {entry.value.toFixed(1)}{isNigerian ? "/100" : "/20"}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            </>
+          );
+        })()}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default Home;
+

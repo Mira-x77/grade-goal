@@ -1,0 +1,20 @@
+flowchart TB
+  subgraph clients [Clients]
+    App[Go Study! App\nWeb + Android]
+    Admin[Exam Library Admin\nWeb]
+  end
+
+  subgraph supabase [Supabase]
+    Auth[Auth]
+    DB[(PostgreSQL)]
+    Storage[File Storage]
+  end
+
+  App --> Auth
+  App --> DB
+  App --> Storage
+  Admin --> Auth
+  Admin --> DB
+  Admin --> Storage
+
+  App -.->|optional| APK[APK Update Server / Storage]

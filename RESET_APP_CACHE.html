@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reset ScoreTarget App Cache</title>
+    <style>
+        body {
+            font-family: system-ui;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1d2e;
+            color: white;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .danger { background: #ff4444; color: white; }
+        .success { background: #44ff44; color: black; }
+        .info { background: #4444ff; color: white; }
+        pre {
+            background: #0a0c14;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #2a2d3e;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Reset ScoreTarget App Cache</h1>
+    
+    <h2>Problem</h2>
+    <p>Your app shows only 8 papers because 55 papers are marked as "downloaded" in the cache and being hidden.</p>
+    
+    <h2>Solution</h2>
+    <p>Clear all cached data to reset the app to a fresh state.</p>
+    
+    <h3>Step 1: Clear All Caches</h3>
+    <button class="danger" onclick="clearAllCaches()">🗑️ CLEAR ALL CACHES</button>
+    
+    <h3>Step 2: Reload App</h3>
+    <button class="success" onclick="reloadApp()">🔄 RELOAD APP</button>
+    
+    <h3>Step 3: Check Status</h3>
+    <button class="info" onclick="checkStatus()">📊 CHECK STATUS</button>
+    
+    <div id="result" class="result" style="display:none"></div>
+    
+    <h2>What Gets Cleared</h2>
+    <ul>
+        <li>✅ Downloaded papers list (frees up all 55 "downloaded" papers)</li>
+        <li>✅ Saved filter state (Class Level, Subject, Year filters)</li>
+        <li>✅ Cached paper data</li>
+        <li>✅ IndexedDB database</li>
+        <li>✅ All localStorage for this app</li>
+    </ul>
+    
+    <h2>Manual Steps (if buttons don't work)</h2>
+    <pre>// Open browser console (F12) and run:
+
+// 1. Clear localStorage
+localStorage.clear();
+
+// 2. Clear IndexedDB
+indexedDB.deleteDatabase('exam-library-cache');
+
+// 3. Clear service worker cache
+caches.keys().then(keys => {
+    keys.forEach(key => caches.delete(key));
+});
+
+// 4. Reload
+location.reload();</pre>
+
+    <script>
+        function showResult(message, isError = false) {
+            const result = document.getElementById('result');
+            result.style.display = 'block';
+            result.style.background = isError ? '#ff4444' : '#44ff44';
+            result.style.color = isError ? 'white' : 'black';
+            result.innerHTML = message;
+        }
+
+        async function clearAllCaches() {
+            try {
+                console.log('🗑️ Clearing all caches...');
+                
+                // 1. Clear localStorage
+                localStorage.clear();
+                console.log('✅ localStorage cleared');
+                
+                // 2. Delete IndexedDB
+                const dbDeleted = indexedDB.deleteDatabase('exam-library-cache');
+                dbDeleted.onsuccess = () => console.log('✅ IndexedDB deleted');
+                dbDeleted.onerror = () => console.log('⚠️ IndexedDB delete failed');
+                
+                // 3. Clear all cache storage
+                const cacheKeys = await caches.keys();
+                await Promise.all(cacheKeys.map(key => caches.delete(key)));
+                console.log('✅ Cache storage cleared');
+                
+                // 4. Clear session storage
+                sessionStorage.clear();
+                console.log('✅ sessionStorage cleared');
+                
+                showResult(`
+                    <h3>✅ ALL CACHES CLEARED!</h3>
+                    <p>Cleared:</p>
+                    <ul>
+                        <li>localStorage ✓</li>
+                        <li>IndexedDB (exam-library-cache) ✓</li>
+                        <li>Cache Storage (${cacheKeys.length} caches) ✓</li>
+                        <li>sessionStorage ✓</li>
+                    </ul>
+                    <p><strong>Now click "RELOAD APP" button</strong></p>
+                `);
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, true);
+                console.error('Error clearing caches:', error);
+            }
+        }
+
+        function reloadApp() {
+            console.log('🔄 Reloading app...');
+            window.location.href = '/';
+        }
+
+        async function checkStatus() {
+            try {
+                // Check localStorage
+                const localStorageItems = Object.keys(localStorage);
+                
+                // Check IndexedDB
+                const dbs = await indexedDB.databases();
+                
+                // Check cache storage
+                const cacheKeys = await caches.keys();
+                
+                showResult(`
+                    <h3>📊 CURRENT STATUS</h3>
+                    <p><strong>localStorage items:</strong> ${localStorageItems.length}</p>
+                    <p><strong>IndexedDB databases:</strong> ${dbs.length}</p>
+                    <p><strong>Cache storages:</strong> ${cacheKeys.length}</p>
+                    <hr>
+                    <p><strong>localStorage keys:</strong></p>
+                    <pre>${localStorageItems.map(k => `- ${k}: ${localStorage.getItem(k)?.substring(0, 50)}...`).join('\n')}</pre>
+                    <p><strong>IndexedDB:</strong></p>
+                    <pre>${dbs.map(db => `- ${db.name} (v${db.version})`).join('\n') || 'None'}</pre>
+                    <p><strong>Caches:</strong></p>
+                    <pre>${cacheKeys.join('\n') || 'None'}</pre>
+                `);
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, true);
+            }
+        }
+        
+        // Auto-check status on load
+        window.addEventListener('load', checkStatus);
+    </script>
+</body>
+</html>

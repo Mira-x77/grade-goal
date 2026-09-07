@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Grade Goal App</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            margin: 0 0 20px 0;
+            font-size: 32px;
+        }
+        p {
+            margin: 0 0 30px 0;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .danger {
+            background: #ef4444;
+            color: white;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+        .info-box {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Reset Grade Goal App</h1>
+        <p>This will clear all local data and reset the app to first-time user state.</p>
+        
+        <div class="info-box">
+            <strong>What will be cleared:</strong><br>
+            ✓ All onboarding data<br>
+            ✓ Subjects and grades<br>
+            ✓ User preferences<br>
+            ✓ Session data<br>
+        </div>
+
+        <button onclick="checkData()">📊 Check Current Data</button>
+        <button class="danger" onclick="resetApp()">🗑️ Reset & Clear All</button>
+        <button class="success" onclick="openApp()">🚀 Open App</button>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        function showStatus(message, isSuccess = true) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.display = 'block';
+            status.style.background = isSuccess 
+                ? 'rgba(16, 185, 129, 0.3)' 
+                : 'rgba(239, 68, 68, 0.3)';
+        }
+
+        function checkData() {
+            const keys = Object.keys(localStorage);
+            const data = {};
+            keys.forEach(key => {
+                try {
+                    const value = localStorage.getItem(key);
+                    if (value && value.length > 100) {
+                        data[key] = value.substring(0, 100) + '...';
+                    } else {
+                        data[key] = value;
+                    }
+                } catch (e) {
+                    data[key] = 'Error reading';
+                }
+            });
+
+            if (keys.length === 0) {
+                showStatus('✅ No data found - App is in clean state!', true);
+            } else {
+                showStatus(`📦 Found ${keys.length} items:\n${keys.join(', ')}`, false);
+            }
+
+            console.log('Current localStorage:', data);
+        }
+
+        function resetApp() {
+            if (!confirm('Are you sure? This will delete all app data!')) {
+                return;
+            }
+
+            try {
+                // Clear localStorage
+                localStorage.clear();
+                
+                // Clear sessionStorage
+                sessionStorage.clear();
+                
+                // Clear any IndexedDB (if used)
+                if (window.indexedDB) {
+                    indexedDB.databases().then(databases => {
+                        databases.forEach(db => {
+                            if (db.name && db.name.includes('grade')) {
+                                indexedDB.deleteDatabase(db.name);
+                            }
+                        });
+                    }).catch(() => {});
+                }
+
+                showStatus('✅ All data cleared! App reset to first-time state.', true);
+                
+                setTimeout(() => {
+                    showStatus('✅ Ready to test! Click "Open App" to start fresh.', true);
+                }, 1000);
+
+            } catch (error) {
+                showStatus('❌ Error: ' + error.message, false);
+            }
+        }
+
+        function openApp() {
+            // Check if dev server is running on default port
+            const devUrl = 'http://127.0.0.1:5174';
+            
+            showStatus('🚀 Opening app...', true);
+            
+            setTimeout(() => {
+                window.open(devUrl, '_blank');
+            }, 500);
+        }
+
+        // Show initial status
+        window.onload = () => {
+            checkData();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "GoStudy — How My App Works",
+  "steps": [
+    {
+      "file": "src/App.tsx",
+      "line": 89,
+      "title": "🚪 First Launch Logic",
+      "description": "This function (LandingRoute) decides what users see when they open the app:\n\n- Brand new user (no data) → goes to onboarding wizard\n- Returning user (has data) → goes straight to Home\n\nThis is why the welcome/setup page only shows once."
+    },
+    {
+      "file": "src/App.tsx",
+      "line": 1,
+      "title": "🗺️ START HERE — The App Map",
+      "description": "This is App.tsx — the brain of the whole app. Every screen (page) is registered here as a Route. If you want to know what screens exist and what URL they live at, this is the file to check.\n\nThink of it like a table of contents for all your pages."
+    },
+    {
+      "file": "src/pages/WelcomePage.tsx",
+      "line": 1,
+      "title": "👋 Welcome Page",
+      "description": "The first screen new users see. Has two options:\n- 'Continue as Guest' → uses app without account, saves data locally only\n- 'Sign In' → opens Google/Apple login\n\nGuest mode sets a flag called 'guest_mode' in localStorage."
+    },
+    {
+      "file": "src/pages/Index.tsx",
+      "line": 1,
+      "title": "🎓 Onboarding Wizard (5 steps)",
+      "description": "This is the setup wizard new users go through:\n1. Enter your name\n2. Choose grading system (APC/Cameroonian, French, or Nigerian University)\n3. Pick your class level\n4. Set your target grade\n5. Choose your subjects\n\nWhen finished, it saves everything to localStorage and sends you to Home."
+    },
+    {
+      "file": "src/pages/Home.tsx",
+      "line": 1,
+      "title": "🏠 Home Screen — The Main Dashboard",
+      "description": "This is the most important page in the app. It shows:\n- Your current average vs your target\n- Each subject with its grade and status (on track / at risk)\n- Your daily streak counter\n- Notification bell\n- Quick buttons to add new marks\n\nThis file is very long because it does a lot. Don't be intimidated — each section is clearly separated."
+    },
+    {
+      "file": "src/lib/exam-logic.ts",
+      "line": 1,
+      "title": "🧮 The Grade Calculator",
+      "description": "This is the math engine. Every grade calculation in the app runs through here:\n- Subject average calculation\n- Overall yearly average\n- 'What do I need to score next?' calculations\n- Best/worst possible final grade\n\nIf grades are showing wrong, this is where to look."
+    },
+    {
+      "file": "src/lib/storage.ts",
+      "line": 1,
+      "title": "💾 Where All Data Lives",
+      "description": "This file controls saving and loading ALL user data.\n\n- loadState() → reads your subjects, grades, settings from localStorage\n- saveState() → writes it back and queues a cloud sync\n\nKey: all data is stored under the key 'scoretarget_state' in localStorage. This is your app's database on the device."
+    },
+    {
+      "file": "src/contexts/AuthContext.tsx",
+      "line": 1,
+      "title": "🔐 Login & Sync System",
+      "description": "Manages whether the user is logged in. Key behaviors:\n- Checks for existing session on startup (times out after 600ms so app never hangs)\n- On login: pulls cloud data down (or uploads local data up)\n- On logout: wipes local data to protect privacy\n- Syncs data to cloud every 30 seconds in the background\n\nProvides 'user' and 'session' to the whole app."
+    },
+    {
+      "file": "src/contexts/AppConfigContext.tsx",
+      "line": 1,
+      "title": "💎 Premium / Paywall System",
+      "description": "Controls who can access premium features. Key functions:\n- requirePremium(action) → runs the action if premium, shows paywall if not\n- openPremiumGate() → directly shows the 'enter your code' popup\n- openDownloadLimitGate() → shows 'you hit 5/month limit' popup\n\nUse the usePremium() hook in any page to check if user is premium."
+    },
+    {
+      "file": "src/config/app-features.ts",
+      "line": 1,
+      "title": "⚙️ Feature Toggles (Master Control)",
+      "description": "This is the control panel for the whole app.\n\nKey settings:\n- PREMIUM_ENABLED: false → production mode, quota system active\n- FREE_DOWNLOAD_LIMIT: 5 → free users get 5 downloads/month\n- DEBUG_MODE: false → set to true for extra console logs\n\n⚠️ WARNING: Setting PREMIUM_ENABLED: true gives everyone free premium. Only do this for testing!"
+    },
+    {
+      "file": "src/services/downloadService.ts",
+      "line": 1,
+      "title": "📥 Download System",
+      "description": "Handles everything about saving PDFs to the device:\n- Downloads papers and books\n- Tracks download progress\n- Checks your monthly quota (5 free/month)\n- Verifies file integrity after download\n- Lets you delete and share files\n\nThis is the most complex service in the app."
+    },
+    {
+      "file": "src/services/subscriptionService.ts",
+      "line": 1,
+      "title": "🎟️ Subscription Codes (Not a Payment System!)",
+      "description": "GoStudy uses CODE-based premium — users buy or receive a code and enter it in the app. There's no credit card processing.\n\nThis service:\n- Validates codes against the Supabase database\n- Stores subscription status locally\n- Tracks expiry dates\n- Knows which subjects are unlocked for subject packs"
+    },
+    {
+      "file": "src/lib/i18n.ts",
+      "line": 1,
+      "title": "🌍 All App Text (English + French)",
+      "description": "Every single text string shown in the app lives here as a key-value pair.\n\nFormat:\n  en: { key: 'English text' }\n  fr: { key: 'French text' }\n\nIf you need to change any label, button, or message in the app — this is the file. Use Ctrl+F to find the text you want to change."
+    },
+    {
+      "file": "src/pages/Simulator.tsx",
+      "line": 1,
+      "title": "🎯 What-If Simulator",
+      "description": "The grade simulator page. Shows sliders for each mark type across all subjects. As you drag, it recalculates your projected final average in real time.\n\n'What would my average be if I scored 80 on the next test?' — this answers that.\n\nSaving a strategy is premium-only."
+    },
+    {
+      "file": "src/pages/LibraryDirect.tsx",
+      "line": 1,
+      "title": "📚 Past Papers Library",
+      "description": "The exam papers library. Fetches papers from Supabase (the cloud database). Users can:\n- Filter by subject, year, class level\n- Download PDFs (up to 5/month free)\n- View papers in-app\n\nWhen a user hits 5 downloads, the quota gate popup appears automatically."
+    },
+    {
+      "file": "src/pages/MyDownloads.tsx",
+      "line": 1,
+      "title": "📂 My Downloads",
+      "description": "Shows all PDFs saved on this device. Users can:\n- Open, share, or delete individual files\n- See file sizes and download dates\n- View their quota usage (e.g. '3 of 5 used this month')\n\nAlso shows 'cloud-only' downloads — files marked as downloaded in the cloud but not present on this specific device."
+    },
+    {
+      "file": "src/pages/Profile.tsx",
+      "line": 1,
+      "title": "👤 Profile & Academic Data",
+      "description": "Where users manage their academic setup:\n- Edit name, class, and target grade\n- Add/remove subjects (free users limited to 5)\n- View grade history by semester\n- For Nigerian university students: add semesters, view GPA and CGPA\n- Archive old semesters to start fresh"
+    },
+    {
+      "file": "src/contexts/ThemeContext.tsx",
+      "line": 1,
+      "title": "🎨 Themes & Accent Colors",
+      "description": "Controls the visual look of the app:\n- Themes: light, dark, midnight, ink, system\n- Accent colors: Amber, Blue, Teal, Magenta, Cyan, Purple\n\nApplies these as CSS variables to the HTML root so every component automatically picks up the right colors. Accent color syncs to cloud so it follows users between devices."
+    },
+    {
+      "file": "src/services/hybridSyncService.ts",
+      "line": 1,
+      "title": "☁️ Cloud Sync Logic",
+      "description": "The smart sync layer that decides what happens when local data and cloud data might conflict:\n\n- Cloud has onboarding data? → Pull it down (cloud wins)\n- Local has onboarding data (guest mode)? → Push it up\n- New user, no data anywhere? → Wait for onboarding\n\nThis is what makes the app work seamlessly whether you sign in before or after using it as a guest."
+    },
+    {
+      "file": "src/pages/Debug.tsx",
+      "line": 1,
+      "title": "🐛 Debug Page (Dev Only)",
+      "description": "Visit /debug in the app to see:\n- Your current auth session\n- Raw localStorage data\n- App state dump\n\nUseful when something is broken and you need to see exactly what data the app has. Not visible to regular users."
+    }
+  ]
+}

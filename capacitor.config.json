@@ -1,0 +1,8 @@
+{
+  "appId": "com.gostudy.student",
+  "appName": "GoStudy!",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

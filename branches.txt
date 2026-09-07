@@ -1,0 +1,3 @@
+﻿2026-04-07 00:00:04 +0000 | VAEG | chore: bulk commit local changes
+2026-04-03 20:21:15 +0000 | ui-experiment | UI Refinements, Score Strategizer & Product Tour
+2026-03-21 13:34:19 +0000 | main | feat: enhanced PDF viewer, real download progress, 6mo price update to 3000 FCFA

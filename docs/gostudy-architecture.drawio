@@ -1,0 +1,210 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- TITLE -->
+    <mxCell id="title" value="GoStudy — App Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="527" y="20" width="600" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════ USER ENTRY FLOW ═══════════════════ -->
+    <mxCell id="g1" value="USER ENTRY" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="60" y="80" width="120" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="splash" value="🌟 Splash Screen" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="110" width="160" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="welcome" value="👋 Welcome Page&#xa;(WelcomePage.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="220" width="160" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="auth" value="🔐 Auth Page&#xa;Google / Apple Login&#xa;(AuthPage.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="340" width="160" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="onboarding" value="🎓 Onboarding Wizard&#xa;5-step setup&#xa;(Index.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="340" width="160" height="60" as="geometry" />
+    </mxCell>
+
+    <!-- arrows entry -->
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="splash" target="welcome" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="e2" value="New user" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="welcome" target="auth" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="e3" value="Guest mode" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="welcome" target="onboarding" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="e4" value="After login" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="auth" target="onboarding" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+    <!-- ═══════════════════ MAIN APP ═══════════════════ -->
+    <mxCell id="g2" value="MAIN APP (after onboarding)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="500" y="80" width="280" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="home" value="🏠 HOME&#xa;Dashboard, grades,&#xa;streak, alerts&#xa;(Home.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="520" y="110" width="180" height="80" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e5" value="Completes setup" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="onboarding" target="home" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="e6" value="Returning user" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="splash" target="home" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+    <!-- ═══════════════════ PAGES FROM HOME ═══════════════════ -->
+    <mxCell id="g3" value="PAGES (accessible from bottom nav or menu)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="500" y="230" width="400" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="simulator" value="🎯 Simulator&#xa;What-if grade calc&#xa;(Simulator.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="360" y="260" width="150" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="library" value="📚 Library&#xa;Past Papers + Books&#xa;(LibraryDirect.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="540" y="260" width="150" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="profile" value="👤 Profile&#xa;Subjects, grades, GPA&#xa;(Profile.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="260" width="150" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="downloads" value="📂 My Downloads&#xa;Saved PDFs&#xa;(MyDownloads.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="900" y="260" width="150" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="settings" value="⚙️ Settings&#xa;Theme, language&#xa;(Settings.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1080" y="260" width="150" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="courses" value="🎓 Courses&#xa;Browse learning content&#xa;(Courses.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1080" y="340" width="150" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="examprep" value="📝 Exam Prep 💎&#xa;Premium only&#xa;(ExamPrep.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="900" y="340" width="150" height="60" as="geometry" />
+    </mxCell>
+
+    <!-- arrows from home to pages -->
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="home" target="simulator" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="home" target="library" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="home" target="profile" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="home" target="downloads" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="home" target="settings" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="home" target="courses" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="home" target="examprep" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+    <!-- paper/book detail -->
+    <mxCell id="paperdetail" value="📄 Paper Detail&#xa;(PaperDetail.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="360" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="bookdetail" value="📖 Book Detail&#xa;(BookDetail.tsx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="640" y="360" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="library" target="paperdetail" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="library" target="bookdetail" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+    <!-- ═══════════════════ CONTEXTS (State Layer) ═══════════════════ -->
+    <mxCell id="g4" value="CONTEXTS — Global State (wraps entire app)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="60" y="460" width="400" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="ctx_auth" value="🔐 AuthContext&#xa;user, session, loading, syncing&#xa;→ AuthContext.tsx" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="490" width="190" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="ctx_premium" value="💎 AppConfigContext&#xa;premiumEnabled, requirePremium()&#xa;openPremiumGate()&#xa;→ AppConfigContext.tsx" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="490" width="200" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="ctx_theme" value="🎨 ThemeContext&#xa;theme, accentColor&#xa;→ ThemeContext.tsx" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="510" y="490" width="180" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="ctx_lang" value="🌍 LanguageContext&#xa;language, t() translate fn&#xa;→ LanguageContext.tsx" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="490" width="190" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════ SERVICES ═══════════════════ -->
+    <mxCell id="g5" value="SERVICES — Business Logic" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="60" y="590" width="300" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="svc_download" value="📥 downloadService&#xa;Save PDFs to device&#xa;Enforce quota" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="620" width="160" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="svc_sub" value="🎟️ subscriptionService&#xa;Validate premium codes&#xa;Track expiry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="250" y="620" width="160" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="svc_sync" value="☁️ hybridSyncService&#xa;Local vs cloud data&#xa;Conflict resolution" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="440" y="620" width="160" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="svc_exam" value="🔍 examService&#xa;Fetch papers from cloud&#xa;Cache locally" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="630" y="620" width="160" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="svc_analytics" value="📊 analyticsService&#xa;Track sessions, pages&#xa;Button clicks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="820" y="620" width="160" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="svc_notif" value="🔔 notificationService&#xa;Admin announcements&#xa;Read/unread tracking" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1010" y="620" width="160" height="60" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════ DATA LAYER ═══════════════════ -->
+    <mxCell id="g6" value="DATA LAYER" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="60" y="720" width="200" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="local" value="📱 localStorage&#xa;'scoretarget_state'&#xa;All grades, subjects, settings&#xa;storage.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="750" width="190" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="supabase" value="☁️ Supabase (Cloud DB)&#xa;user_profile, app_state&#xa;papers, books, courses&#xa;subscriptions, analytics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="750" width="220" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="device" value="📂 Device Storage&#xa;Downloaded PDFs&#xa;(Capacitor Filesystem)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="560" y="750" width="190" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════ GRADING SYSTEMS ═══════════════════ -->
+    <mxCell id="g7" value="GRADING SYSTEMS (exam-logic.ts routes to the right one)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="800" y="720" width="500" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gs_apc" value="🇨🇲 APC / Cameroonian&#xa;grading-apc.ts&#xa;Interro / Devoir / Compo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="800" y="750" width="170" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gs_fr" value="🇫🇷 French System&#xa;grading-french.ts&#xa;/20 scale" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="990" y="750" width="160" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="gs_ng" value="🇳🇬 Nigerian University&#xa;grading-nigerian.ts&#xa;GPA / CGPA / Degree class" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1170" y="750" width="190" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- ═══════════════════ CONFIG ═══════════════════ -->
+    <mxCell id="g8" value="CONFIG &amp; FEATURE FLAGS" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="800" y="460" width="300" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="cfg_feat" value="⚙️ app-features.ts&#xa;Master feature toggles&#xa;PREMIUM_ENABLED&#xa;FREE_DOWNLOAD_LIMIT: 5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="800" y="490" width="180" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="cfg_prem" value="💎 premium.ts&#xa;PREMIUM_DEV_BYPASS&#xa;false = production&#xa;true = free access (dev only!)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1010" y="490" width="200" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- LEGEND -->
+    <mxCell id="legend" value="LEGEND" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#333;" vertex="1" parent="1">
+      <mxGeometry x="1280" y="490" width="80" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="l1" value="Entry / Navigation" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1"><mxGeometry x="1280" y="515" width="150" height="25" as="geometry" /></mxCell>
+    <mxCell id="l2" value="Main Pages" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1"><mxGeometry x="1280" y="545" width="150" height="25" as="geometry" /></mxCell>
+    <mxCell id="l3" value="💎 Premium Gated" style="rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1"><mxGeometry x="1280" y="575" width="150" height="25" as="geometry" /></mxCell>
+    <mxCell id="l4" value="Services" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1"><mxGeometry x="1280" y="605" width="150" height="25" as="geometry" /></mxCell>
+    <mxCell id="l5" value="Data Storage" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1"><mxGeometry x="1280" y="635" width="150" height="25" as="geometry" /></mxCell>
+
+  </root>
+</mxGraphModel>

@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Exam papers collection - read for all, write for admin only
+    match /examPapers/{paperId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Analytics collection - read/write for admin only
+    match /analytics/{document} {
+      allow read, write: if request.auth != null && request.auth.token.admin == true;
+    }
+  }
+}
