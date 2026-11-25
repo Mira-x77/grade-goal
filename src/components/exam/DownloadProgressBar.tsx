@@ -1,7 +1,7 @@
 import { DownloadProgress } from "@/types/exam-library";
 import { X, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DownloadProgressBarProps {
   progress: DownloadProgress;
@@ -9,6 +9,7 @@ interface DownloadProgressBarProps {
 }
 
 export function DownloadProgressBar({ progress, onCancel }: DownloadProgressBarProps) {
+  const { t } = useLanguage();
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}

@@ -1,0 +1,48 @@
+===== 1 =====
+🚀
+COVER ARTWORK PLACEHOLDER
+Futuristic Tech & Creative Collage
+Suggested Image: High-energy artwork showing a laptop with VS Code & AI prompt window, Scratch Dino & Shark sprites,
+CapCut timeline edit UI, and a friendly mini robot rover.
+#0
+Compétences
+Guide simple des cerveaux de robots ﴾micro:bit/Arduino﴿,
+capteurs et moteurs.
+
+===== 2 =====
+Bienvenue dans le monde du créateur
+Ce guide a été écrit pour t'apprendre de vrais outils créatifs, concrets ! Tu ne trouveras pas de formules maths
+effrayantes ni de jargon académique. Tu vas apprendre à créer des jeux, monter des vidéos comme un pro, coder avec l'IA,
+et comprendre comment fonctionnent les robots simples.
+Ch 2 : Sites statiques vs sites fonctionnels / dynamiques
+Ch 10 : Jeu 2 — Chasse au chat / poursuite du rat
+Ch 12‐14 : Dino Chrome Runner & finitions de jeu
+Ch 15 : Bases CapCut & aperçu de l'espace de travail
+Ch 25 : Projets robotique fun pour commencer
+
+===== 3 =====
+🖥️
+PAGE 3 IMAGE PLACEHOLDER
+Frontend vs Backend Comparison Visual
+Suggested Image: Illustration showing a browser web page interface on top (Frontend) linked down to a server database icon
+below (Backend).
+Coder, c'est donner des instructions étape par étape à un ordinateur, dans un langage qu'il comprend. Les langages
+servent à des métiers différents !
+Tout ce qui est visible à l'écran : boutons, couleurs, texte,
+animations et mises en page responsive.
+JavaScript : le muscle ﴾clics, popups et
+animations﴿.
+Python : langage backend & IA, simple et populaire.
+Node.js / SQL : trafic serveur et enregistrements
+utilisateurs.
+API : ponts entre les demandes frontend et les données
+backend.
+ DÉFINITION • IDE : un IDE ﴾environnement de développement﴿ est simplement l'éditeur où on écrit et lance le code !
+Exemples : VS Code ou Cursor.
+
+===== 20 =====
+CONTINUE DE CRÉER & DE CONSTRUIRE !
+Tu as maintenant les bases pour coder avec l'IA, créer des jeux dans Scratch, monter des vidéos dans CapCut, et
+explorer la robotique.
+Liens logiciels conseillés
+  Éditeur Scratch : scratch.mit.edu ou turbo warp.

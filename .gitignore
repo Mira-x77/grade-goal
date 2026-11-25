@@ -37,6 +37,19 @@ android/app/src/main/assets/public/
 .env
 .env.*
 !.env.example
+!.env.desktop
+
+# Desktop build (Electron): generated catalogue + installers
+electron/catalog/
+releases/desktop/
+
+# EduSocial bulk PDF downloads (large binaries)
+downloads/edusocial-books/
+
+# Storage audit dumps (may list all object paths)
+scripts/output/
+scripts/r2/output/
+scripts/r2/.env
 
 # Editor directories and files
 .vscode/*
@@ -48,3 +61,6 @@ android/app/src/main/assets/public/
 *.njsproj
 *.sln
 *.sw?
+scripts/epreuves/.env
+scripts/epreuves/output/
+

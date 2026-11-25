@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Go Study flyer — portrait</title>
+<link rel="stylesheet" href="flyer.css" />
+<style>
+  .canvas { width: 1080px; height: 1350px; padding: 40px 48px; }
+  .band { position: absolute; z-index: 0; left: 0; right: 0; top: 0; height: 468px; background: var(--yellow); }
+  .band::after { content: ""; position: absolute; left: 0; right: 0; bottom: -26px; height: 26px; background: var(--yellow); border-bottom: 5px solid var(--ink); }
+
+  .logo { position: absolute; z-index: 20; left: 28px; top: 6px; width: 196px; }
+  .top-chip { position: absolute; z-index: 21; right: 46px; top: 58px; font-size: 16px; letter-spacing: .17em; }
+
+  .headline { position: absolute; z-index: 15; left: 50px; top: 198px; width: 900px; font-size: 88px; line-height: .92; }
+  .headline .marker::before { background: #fff; }
+
+  .sub { position: absolute; z-index: 15; left: 52px; top: 500px; width: 520px; font-size: 25px; font-weight: 700; line-height: 1.34; }
+
+  .phone-p { position: absolute; z-index: 8; right: 60px; top: 566px; width: 378px; height: 783px; transform: rotate(4.4deg); }
+
+  .benefits { position: absolute; z-index: 22; left: 48px; top: 664px; width: 536px; display: flex; flex-direction: column; gap: 22px; }
+  .benefit { background: #fff; border: 4px solid var(--ink); border-radius: 22px; padding: 18px 20px; box-shadow: 7px 7px 0 var(--ink); display: flex; gap: 15px; align-items: flex-start; }
+  .benefit .n { flex: none; width: 42px; height: 42px; border-radius: 12px; background: var(--yellow); border: 3px solid var(--ink); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 19px; }
+  .benefit h3 { font-size: 22px; font-weight: 900; letter-spacing: -.02em; line-height: 1.05; }
+  .benefit p { margin-top: 3px; font-size: 15px; font-weight: 700; line-height: 1.25; opacity: .62; }
+
+  .mascot-p { position: absolute; z-index: 26; left: 38px; top: 1018px; width: 270px; transform: rotate(-6deg); }
+
+  .target-chip {
+    position: absolute; z-index: 30; left: 560px; top: 552px; transform: rotate(-4deg);
+    background: var(--ink); color: #fff; border-radius: 999px; padding: 12px 22px;
+    font-size: 17px; font-weight: 900; letter-spacing: .06em; box-shadow: 6px 6px 0 rgba(23,22,20,.25);
+  }
+  .target-chip b { color: var(--yellow); }
+
+  .cta-bar {
+    position: absolute; z-index: 40; left: 46px; right: 46px; bottom: 34px;
+    background: var(--ink); border-radius: 26px; padding: 18px 24px; color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .bottom-cover { position: absolute; z-index: 35; left: 0; right: 0; bottom: 0; height: 40px; background: var(--paper); }
+  .cta-bar .go { background: var(--yellow); color: var(--ink); border-radius: 999px; padding: 12px 24px; font-size: 21px; font-weight: 900; }
+  .cta-bar .url { font-size: 23px; }
+  .cta-bar small { font-size: 12px; font-weight: 900; letter-spacing: .14em; opacity: .55; }
+
+  .foot { position: absolute; left: 48px; right: 48px; bottom: 6px; z-index: 40; display: flex; justify-content: space-between; font-size: 11px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; opacity: .45; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="band"></div>
+  <div class="dots soft"></div>
+  <img class="logo" src="/presentations/assets/icon_clean.png" alt="Go Study" />
+  <div class="chip top-chip">THE STUDY STRATEGIZER</div>
+
+  <h1 class="headline display">
+    Plan the marks<br />
+    that <span class="marker">move</span> your<br />
+    average.
+  </h1>
+
+  <p class="sub">
+    Slide any future mark and watch your average update — then save the plan that gets you to your target.
+  </p>
+
+  <div class="phone phone-p">
+    <img src="shots/simulator.png" alt="Go Study Study Strategizer screen" />
+  </div>
+
+  <div class="benefits">
+    <div class="benefit">
+      <div class="n">01</div>
+      <div>
+        <h3>Impact-ranked</h3>
+        <p>See which subject and mark moves your average the most.</p>
+      </div>
+    </div>
+    <div class="benefit">
+      <div class="n">02</div>
+      <div>
+        <h3>Target mode</h3>
+        <p>Set 16/20 — or 18/20 — and test every route to get there.</p>
+      </div>
+    </div>
+    <div class="benefit">
+      <div class="n">03</div>
+      <div>
+        <h3>Save your strategy</h3>
+        <p>Keep the plan and check it off as exam week gets closer.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mascot mascot-p"><img src="/presentations/assets/think.png" alt="" /></div>
+
+  <div class="target-chip">TARGET <b>16–20</b> / 20</div>
+
+  <div class="bottom-cover"></div>
+  <div class="cta-bar">
+    <div class="go">Start free →</div>
+    <div class="url">goostudy.vercel.app</div>
+    <small>ANDROID &amp; WEB</small>
+  </div>
+</div>
+</body>
+</html>

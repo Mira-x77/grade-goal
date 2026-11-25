@@ -1,92 +1,37 @@
-# 🚀 Quick Start - Get Your App on iPhone
+# Quick start — GoStudy on iPhone
 
-## ✅ What's Done
+The iOS project is generated and versioned (`com.gostudy.student`, 1.3.3 / 15).
+Nothing about it needs a Mac on your side: a macOS GitHub runner compiles it.
 
-Your **grade-goal app** (ScoreTarget) is now iOS-ready!
-- ✅ Capacitor installed
-- ✅ iOS project created
-- ✅ Web app built and synced
-- ✅ 12 Capacitor plugins configured
+## 3 steps
 
----
-
-## 🎯 Fastest Way to Get on iPhone (No Mac!)
-
-### Option 1: Cloud Build with Codemagic (Recommended)
-
-**⏱️ Time: 30 minutes**
-
-1. Go to https://codemagic.io
-2. Sign up (free)
-3. Connect your GitHub repo
-4. Configure iOS build
-5. Download .ipa file
-6. Install via AltStore (https://altstore.io)
-
-### Option 2: Use a Mac (If Available)
-
-**⏱️ Time: 2-3 hours (first time)**
-
-```bash
-# On Mac:
-cd /path/to/grade-goal
-npm install --legacy-peer-deps
+```powershell
+# 1. refresh the iOS project from the current web build (run on Windows)
 npm run ios:sync
-npm run ios:open
-# Click Play in Xcode
+
+# 2. push so the workflow can build it
+git add -A
+git commit -m "iOS project sync"
+git push
 ```
 
----
+3. GitHub → **Actions** → **iOS build (unsigned IPA)** → **Run workflow** →
+   download `gostudy-ios-unsigned-ipa` → install with **Sideloadly** or
+   **AltStore** from Windows.
 
-## 📱 New Commands Available
+Before the first run, add the `VITE_SUPABASE_*` secrets (Settings → Secrets and
+variables → Actions). `.env` is gitignored, so CI rebuilds it from them.
 
-```bash
-# Sync and open iOS (on Mac)
-npm run ios:sync    # Build web + sync to iOS
-npm run ios:open    # Open Xcode
+## Files that matter
 
-# Sync and open Android
-npm run android:sync
-npm run android:open
-```
+| Path | Purpose |
+|---|---|
+| `ios/App/App.xcodeproj` | Xcode project (shared scheme `App`) |
+| `ios/App/App/Info.plist` | bundle settings, display name `GoStudy!` |
+| `ios/App/CapApp-SPM/Package.swift` | generated plugin list, normalised by `npm run ios:prepare` |
+| `scripts/ios/prepare-ios.mjs` | fixes Windows SPM paths + iOS 15 deployment target |
+| `.github/workflows/ios.yml` | unsigned IPA build |
+| `.github/workflows/ios-release.yml` | signed IPA / TestFlight build |
 
----
-
-## 🎁 What You Get
-
-Your iPhone app will have:
-- ✅ All features from web version
-- ✅ Offline storage
-- ✅ Cloud sync with Supabase
-- ✅ Native iOS look and feel
-- ✅ File downloads
-- ✅ Share functionality
-- ✅ Haptic feedback
-- ✅ Local notifications
-- ✅ Status bar styling
-
----
-
-## 📖 Full Instructions
-
-See **IOS_BUILD_GUIDE.md** for complete details.
-
----
-
-## ❓ Quick FAQ
-
-**Q: Can I build iOS on Windows?**
-A: Not directly, but cloud services (Codemagic, EAS) can do it for you.
-
-**Q: Do I need to pay Apple?**
-A: $99/year for App Store or TestFlight. Free for testing on your own device.
-
-**Q: How long to publish?**
-A: 1-3 days for Apple review after submission.
-
-**Q: Can I test without Mac?**
-A: Yes! Use cloud build + AltStore/Sideloadly to install on iPhone.
-
----
-
-Ready to go! 🚀
+Full details, signing and App Store checklist:
+[`docs/ios/BUILD_IOS_FROM_WINDOWS.md`](docs/ios/BUILD_IOS_FROM_WINDOWS.md).

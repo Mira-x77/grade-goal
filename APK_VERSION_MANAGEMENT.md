@@ -2,10 +2,14 @@
 
 ## 🔢 Current Version Configuration
 
-**Version Code:** 4  
-**Version Name:** 1.1.0  
-**App ID:** `com.scoretarget.app`  
-**Date:** September 2, 2026
+**Version Code:** 15  
+**Version Name:** 1.3.3  
+**App ID:** `com.gostudy.student`  
+**Date:** November 15, 2026
+
+Artifacts: `releases/GoStudy-1.3.3-v15/` (APK + AAB), signed with the same
+release key as v14 (`scoretarget-release-key.jks`), so it installs as an update.
+The web download at `/GoStudy.apk` is refreshed from the same build.
 
 ---
 

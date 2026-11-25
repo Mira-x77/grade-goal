@@ -1,29 +1,47 @@
 import { useEffect, useState } from 'react';
-import { FileText, Download, HardDrive, TrendingUp, Upload, BarChart3, AlertTriangle, Ticket, Sparkles } from 'lucide-react';
+import { FileText, Download, HardDrive, BookOpen, Upload, BarChart3, AlertTriangle, Ticket, Sparkles } from 'lucide-react';
 import { ExamPaper } from '../types';
-import { adminService } from '../services/adminService';
+import { adminService, type ContentSource } from '../services/adminService';
+import { fetchCatalogueSummary } from '../lib/r2-catalog';
+import SupabaseNotice from '../components/SupabaseNotice';
+import { useSupabaseStatus } from '../lib/supabase-status';
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({ totalPapers: 0, totalDownloads: 0, storageUsed: 0, todayDownloads: 0 });
+  const [stats, setStats] = useState({
+    totalPapers: 0,
+    totalBooks: 0,
+    totalFiles: 0,
+    totalDownloads: 0,
+    storageUsed: 0,
+  });
   const [recentUploads, setRecentUploads] = useState<ExamPaper[]>([]);
+  const [source, setSource] = useState<ContentSource>('none');
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const supabaseStatus = useSupabaseStatus();
 
   useEffect(() => { loadStats(); }, []);
 
   const loadStats = async () => {
     try {
-      const papers = await adminService.getAllPapers();
-      const downloadData = await adminService.getDownloadAnalytics();
-      const storageData = await adminService.getStorageAnalytics();
-      const today = new Date().toISOString().split('T')[0];
-      const bandwidthData = await adminService.getBandwidthUsage(today);
+      const [papers, books, downloadData, storageData, summary] = await Promise.all([
+        adminService.getAllPapers(),
+        adminService.getAllBooks(),
+        adminService.getDownloadAnalytics(),
+        adminService.getStorageAnalytics(),
+        fetchCatalogueSummary(),
+      ]);
+
       setStats({
         totalPapers: papers.length,
+        totalBooks: books.length,
+        totalFiles: storageData.totalFiles || summary.files,
         totalDownloads: downloadData.totalDownloads,
         storageUsed: storageData.totalSizeBytes,
-        todayDownloads: bandwidthData.downloadCount,
       });
       setRecentUploads(papers.slice(0, 5));
+      setSource(adminService.getPaperSource());
+      setGeneratedAt(summary.generatedAt);
     } catch (error) {
       console.error('Failed to load stats:', error);
     } finally {
@@ -42,6 +60,7 @@ export default function Dashboard() {
   const formatTimeAgo = (timestamp: any) => {
     if (!timestamp) return 'Unknown';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return 'Unknown';
     const diffMins = Math.floor((Date.now() - date.getTime()) / 60000);
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
@@ -49,13 +68,14 @@ export default function Dashboard() {
     return `${Math.floor(diffMins / 1440)}d ago`;
   };
 
-  const storagePercentage = (stats.storageUsed / (1024 * 1024 * 1024)) * 100;
+  // R2 free tier: 10 GB-month of storage.
+  const storagePercentage = (stats.storageUsed / (10 * 1024 * 1024 * 1024)) * 100;
 
   const statCards = [
-    { title: 'Total Papers', value: stats.totalPapers, icon: FileText, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { title: 'Total Downloads', value: stats.totalDownloads, icon: Download, color: 'text-green-400', bg: 'bg-green-500/10' },
-    { title: 'Storage Used', value: formatBytes(stats.storageUsed), subtitle: '/ 1 GB', icon: HardDrive, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    { title: "Today's Downloads", value: stats.todayDownloads, icon: TrendingUp, color: 'text-orange-400', bg: 'bg-orange-500/10' },
+    { title: 'Total Papers', value: stats.totalPapers, subtitle: 'PDFs', icon: FileText, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { title: 'Total Books', value: stats.totalBooks, subtitle: 'PDFs', icon: BookOpen, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { title: 'Library Size', value: formatBytes(stats.storageUsed), subtitle: `/ 10 GB R2`, icon: HardDrive, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { title: 'Total Downloads', value: stats.totalDownloads, icon: Download, color: 'text-orange-400', bg: 'bg-orange-500/10' },
   ];
 
   if (loading) {
@@ -70,8 +90,15 @@ export default function Dashboard() {
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-        <p className="text-gray-400 mt-1">Overview of your exam library</p>
+        <p className="text-gray-400 mt-1">
+          {stats.totalFiles} documents · {formatBytes(stats.storageUsed)} on Cloudflare R2
+        </p>
       </div>
+
+      <SupabaseNotice status={supabaseStatus} className="mb-6">
+        Counts and previews below come from the <strong>R2 catalogue</strong>
+        {generatedAt ? ` (generated ${new Date(generatedAt).toLocaleString()})` : ''}.
+      </SupabaseNotice>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -83,7 +110,7 @@ export default function Dashboard() {
             <h3 className="text-gray-400 text-sm font-semibold mb-1">{card.title}</h3>
             <p className="text-3xl font-bold text-white">
               {card.value}
-              {'subtitle' in card && card.subtitle && (
+              {card.subtitle && (
                 <span className="text-lg text-gray-500 ml-1">{card.subtitle}</span>
               )}
             </p>
@@ -117,7 +144,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             { href: '/upload', icon: Upload, title: 'Upload Paper', desc: 'Add new exam paper' },
-            { href: '/papers', icon: FileText, title: 'Manage Papers', desc: 'View and edit papers' },
+            { href: '/papers', icon: FileText, title: 'Manage Library', desc: `${stats.totalPapers} papers · ${stats.totalBooks} books` },
             { href: '/analytics', icon: BarChart3, title: 'View Analytics', desc: 'Check statistics' },
           ].map(({ href, icon: Icon, title, desc }) => (
             <a key={href} href={href} className="flex items-center gap-3 p-4 border border-gray-700 rounded-lg hover:border-indigo-500 hover:bg-indigo-500/5 transition-colors">
@@ -133,28 +160,40 @@ export default function Dashboard() {
 
       {/* Recent Uploads */}
       <div className="bg-[#1a1d2e] border border-gray-800 rounded-xl p-6 mb-8">
-        <h2 className="text-xl font-bold text-white mb-4">Recent Uploads</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-white">Recent Papers</h2>
+          {source === 'r2-catalogue' && (
+            <span className="text-xs font-semibold uppercase tracking-wide text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-md px-2 py-1">
+              R2 catalogue
+            </span>
+          )}
+        </div>
         {recentUploads.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No recent uploads</p>
+          <p className="text-gray-500 text-center py-4">No papers found</p>
         ) : (
           <div className="space-y-3">
             {recentUploads.map((paper) => (
               <div key={paper.id} className="flex items-center justify-between p-3 border border-gray-800 rounded-lg hover:bg-gray-800/50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-gray-500" />
-                  <div>
-                    <h3 className="font-medium text-white">{paper.title}</h3>
-                    <p className="text-sm text-gray-500">{paper.subject} • {paper.classLevel}</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <FileText className="h-5 w-5 text-gray-500 shrink-0" />
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-white truncate">{paper.title}</h3>
+                    <p className="text-sm text-gray-500">{paper.subject} • {paper.classLevel} • {paper.year}</p>
                   </div>
                 </div>
-                <span className="text-sm text-gray-500">{formatTimeAgo(paper.uploadDate)}</span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-sm text-gray-500">{formatTimeAgo(paper.uploadDate)}</span>
+                  <a href={paper.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-indigo-400 hover:underline">
+                    View
+                  </a>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Storage Warning */}
+      {/* Storage Warning (R2 free tier is 10 GB) */}
       {storagePercentage >= 80 && (
         <div className="bg-orange-500/10 border border-orange-500/30 p-4 rounded-lg">
           <div className="flex items-start gap-3">
@@ -162,7 +201,7 @@ export default function Dashboard() {
             <div>
               <h3 className="font-semibold text-orange-300">Storage Warning</h3>
               <p className="text-sm text-orange-400/80 mt-1">
-                You are at {storagePercentage.toFixed(1)}% of the 1GB storage limit.
+                You are at {storagePercentage.toFixed(1)}% of the 10 GB R2 free-tier storage.
               </p>
             </div>
           </div>

@@ -70,6 +70,8 @@ export function useDownloadQuota() {
     checkCanDownload,
     getQuotaMessage,
     canDownload: appPremium || (quota?.canDownload ?? false),
+    /** Same as canDownload — freemium cannot view or download after monthly limit */
+    canView: appPremium || (quota?.canDownload ?? false),
     hasPremium: appPremium || (quota?.hasPremium ?? false),
     downloadsRemaining: quota?.downloadsRemaining ?? 0,
     downloadsUsed: quota?.downloadsUsed ?? 0,

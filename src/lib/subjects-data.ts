@@ -377,3 +377,30 @@ export function getDefaultSubjectsForLevel(classLevel: string, serie?: string) {
 export function translateSubject(name: string, _language: string): string {
   return name;
 }
+
+/** Combine profile class + série into DB class_level (e.g. 1ère + G → 1ère G). */
+export function buildFullClassLevel(classLevel: string, serie?: string | null): string {
+  const base = classLevel.trim();
+  const s = serie?.trim();
+  if (!s) return base;
+  if (base.toLowerCase().includes(s.toLowerCase())) return base;
+  return `${base} ${s}`;
+}
+
+/** Whether an exam paper row matches the user's class (+ optional série). */
+export function paperMatchesUserClass(
+  paperClassLevel: string | null | undefined,
+  userClass: string | null | undefined,
+  userSerie?: string | null,
+): boolean {
+  if (!userClass) return true;
+  const paper = (paperClassLevel ?? "").trim().toLowerCase();
+  if (!paper) return false;
+  const full = buildFullClassLevel(userClass, userSerie).toLowerCase();
+  const base = userClass.trim().toLowerCase();
+  if (paper === full || paper === base) return true;
+  if (paper.startsWith(`${full} `)) return true;
+  // Shared papers tagged with base level only (no série)
+  if (!userSerie && paper === base) return true;
+  return false;
+}

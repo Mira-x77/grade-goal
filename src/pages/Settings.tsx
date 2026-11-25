@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, Mail, LogOut, Pencil, Check, Sun, Moon, Monitor, Zap, ChevronDown, AlertTriangle, Lightbulb, ArrowLeft } from "lucide-react";
+import { Trash2, Mail, LogOut, Pencil, Check, Sun, Moon, Monitor, Zap, ChevronDown, AlertTriangle, Lightbulb, ArrowLeft, Key, Crown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppTheme, AccentColor } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -12,7 +12,29 @@ import { supabase } from "@/integrations/supabase/client";
 import TaskBar from "@/components/TaskBar";
 import { cacheService } from "@/services/cacheService";
 import { downloadService } from "@/services/downloadService";
+import { clearLocalSubscription } from "@/services/subscriptionService";
 import { useIsTablet } from "@/hooks/useIsTablet";
+import { usePremium } from "@/contexts/AppConfigContext";
+import { RedeemCodeSheet } from "@/components/subscription/RedeemCodeSheet";
+
+const ACCENT_LABEL_KEYS: Record<AccentColor, "accentAmber" | "accentBlue" | "accentTeal" | "accentMagenta" | "accentCyan" | "accentPurple"> = {
+  yellow: "accentAmber",
+  blue: "accentBlue",
+  green: "accentTeal",
+  pink: "accentMagenta",
+  orange: "accentCyan",
+  purple: "accentPurple",
+};
+
+function normalizeSettings(settings: AppSettings): AppSettings {
+  return {
+    ...DEFAULT_SETTINGS,
+    ...settings,
+    weights: { ...DEFAULT_SETTINGS.weights, ...settings.weights },
+    notifications: { ...DEFAULT_SETTINGS.notifications, ...settings.notifications },
+    colorThresholds: { ...DEFAULT_SETTINGS.colorThresholds, ...settings.colorThresholds },
+  };
+}
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -39,6 +61,8 @@ const Settings = () => {
   const [state, setState] = useState<AppState | null>(null);
   const [editingWeights, setEditingWeights] = useState(false);
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
+  const [showRedeem, setShowRedeem] = useState(false);
+  const { refresh: refreshPremium, isPremium, daysRemaining } = usePremium();
 
   const headerRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(80);
@@ -56,13 +80,8 @@ const Settings = () => {
     if (loaded) {
       if (!loaded.settings) {
         loaded.settings = DEFAULT_SETTINGS;
-      }
-      // Migrate old settings missing new fields
-      if (loaded.settings.gradingSystem === undefined) {
-        loaded.settings.gradingSystem = "apc";
-      }
-      if (loaded.settings.apcWeightedSplit === undefined) {
-        loaded.settings.apcWeightedSplit = false;
+      } else {
+        loaded.settings = normalizeSettings(loaded.settings);
       }
       setState(loaded);
     } else {
@@ -138,7 +157,14 @@ const Settings = () => {
     });
 
     localStorage.removeItem("gostudy_accent");
+    localStorage.removeItem("gostudy_theme");
+    localStorage.removeItem("scoretarget_schedule");
+    localStorage.removeItem("guest_mode");
+    localStorage.removeItem("scoretarget_has_account");
+    localStorage.removeItem("scoretarget_last_user_id");
+    clearLocalSubscription();
     setAccent("orange");
+    setTheme("system");
 
     setState({
       step: "onboarding",
@@ -157,18 +183,20 @@ const Settings = () => {
       {/* Header */}
       <div ref={headerRef} className="fixed top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top py-3">
         <div className="header-inner flex items-center gap-3">
-          {settings.gradingSystem === "nigerian_university" && (
-            <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-card border-2 border-foreground card-shadow active:scale-95 transition-transform shrink-0">
-              <ArrowLeft className="h-5 w-5 text-foreground" />
-            </button>
-          )}
+          <button
+            onClick={() => navigate(-1)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-card border-2 border-foreground active:scale-95 transition-transform shrink-0"
+            aria-label={t("goBack")}
+          >
+            <ArrowLeft className="h-5 w-5 text-foreground" />
+          </button>
           <h1 className="text-lg font-black text-primary">{t("settings")}</h1>
         </div>
       </div>
 
       <div className="content-col flex flex-col gap-5 py-6" style={{ paddingTop: headerHeight + 24 }}>
         {/* Appearance */}
-        <Section title={t("appearance")}>
+        <Section title={t("appearance")} defaultOpen>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {([
               { value: "light",    labelKey: "themeLight",    icon: Sun },
@@ -206,7 +234,7 @@ const Settings = () => {
               <span className="h-4 w-4 rounded-full border-2 border-foreground/20 shrink-0" style={{ backgroundColor: accentMap[accent].hex }} />
               <div className="text-left">
                 <p className="font-black text-foreground text-sm">{t("accentColor")}</p>
-                <p className="text-xs text-muted-foreground font-semibold">{accentMap[accent].label}</p>
+                <p className="text-xs text-muted-foreground font-semibold">{t(ACCENT_LABEL_KEYS[accent])}</p>
               </div>
             </div>
             <motion.div animate={{ rotate: accentOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -224,18 +252,18 @@ const Settings = () => {
                 className="overflow-hidden"
               >
                 <div className="flex flex-col gap-1 px-4 pb-4">
-                  {(Object.entries(accentMap) as [AccentColor, { hsl: string; label: string; hex: string }][]).map(([key, { label, hex }]) => (
+                  {(Object.entries(accentMap) as [AccentColor, { hsl: string; label: string; hex: string }][]).map(([key, { hex }]) => (
                     <button
                       key={key}
                       onClick={() => { setAccent(key); setAccentOpen(false); }}
                       className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all active:scale-[0.98] border-2 ${
                         accent === key
-                          ? "border-foreground card-shadow bg-muted"
+                          ? "border-foreground bg-muted"
                           : "border-transparent bg-muted/50"
                       }`}
                     >
                       <span className="h-5 w-5 rounded-full border-2 border-foreground/20 shrink-0" style={{ backgroundColor: hex }} />
-                      <span className="font-bold text-sm text-foreground">{label}</span>
+                      <span className="font-bold text-sm text-foreground">{t(ACCENT_LABEL_KEYS[key])}</span>
                       {key === "orange" && <span className="text-[10px] font-black text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md ml-1">{t("defaultLabel")}</span>}
                       {accent === key && <Check className="h-4 w-4 text-foreground ml-auto" />}
                     </button>
@@ -247,7 +275,7 @@ const Settings = () => {
         </motion.div>
 
         {/* Language */}
-        <Section title={t("language")}>
+        <Section title={t("language")} defaultOpen>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {([
               { value: "en" as const, label: "English", flag: "🇬🇧" },
@@ -443,11 +471,58 @@ const Settings = () => {
           </div>
         </Section>
 
-        <Section title={t("accountTitle")}>
+        <Section title={t("unlockPremium")} defaultOpen>
+          <div className="flex flex-col gap-2">
+            {isPremium && daysRemaining != null && daysRemaining > 0 && (
+              <div className="rounded-xl bg-premium/10 border border-premium/30 px-4 py-3 flex items-center gap-3">
+                <Crown className="h-5 w-5 text-premium shrink-0" />
+                <div>
+                  <p className="text-sm font-black text-foreground">{t("premiumActive")}</p>
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    {t("premiumDaysRemaining").replace("{n}", String(daysRemaining))}
+                  </p>
+                </div>
+              </div>
+            )}
+            <Link
+              to="/premium/how-to-get-code"
+              className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3 font-bold text-foreground active:scale-[0.98] transition-transform text-sm"
+            >
+              <span className="flex items-center gap-3">
+                <Key className="h-4 w-4 text-premium shrink-0" />
+                {t("howToGetCode")}
+              </span>
+              <span className="text-muted-foreground">›</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setShowRedeem(true)}
+              className="flex items-center justify-between rounded-xl bg-secondary/10 border border-secondary/30 px-4 py-3 font-bold text-foreground active:scale-[0.98] transition-transform text-sm w-full text-left"
+            >
+              <span className="flex items-center gap-3">
+                <Crown className="h-4 w-4 text-premium shrink-0" />
+                {t("iHaveACode")}
+              </span>
+              <span className="text-muted-foreground">›</span>
+            </button>
+          </div>
+        </Section>
+
+        <Section title={t("accountTitle")} defaultOpen>
           <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-3 rounded-xl bg-muted/50 px-4 py-3">
-              <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-              <p className="text-sm font-bold text-foreground truncate">{user?.email}</p>
+            <div className="flex items-start gap-3 rounded-xl bg-muted/50 px-4 py-3">
+              <Mail className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+              {user?.email && !user.is_anonymous ? (
+                <p className="text-sm font-bold text-foreground truncate">{user.email}</p>
+              ) : (
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-foreground">{t("guestAccountLabel")}</p>
+                  <p className="text-xs font-semibold text-muted-foreground mt-1 leading-relaxed">{t("guestAccountHint")}</p>
+                  <Link to="/auth" className="inline-block mt-2 text-xs font-black text-primary active:opacity-70">
+                    {t("signIn")} →
+                  </Link>
+                </div>
+              )}
             </div>
             <Link
               to="/feedback-board"
@@ -484,6 +559,12 @@ const Settings = () => {
       </div>
 
       <TaskBar showBack />
+
+      <RedeemCodeSheet
+        open={showRedeem}
+        onClose={() => setShowRedeem(false)}
+        onSuccess={() => void refreshPremium()}
+      />
 
       {/* Wipe confirmation bottom sheet */}
       <AnimatePresence>
@@ -541,8 +622,8 @@ const Settings = () => {
   );
 };
 
-const Section = ({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const Section = ({ title, subtitle, children, defaultOpen = false }: { title: string; subtitle?: string; children: React.ReactNode; defaultOpen?: boolean }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   return (
     <motion.div
       initial={{ y: 10, opacity: 0 }}

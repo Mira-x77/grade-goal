@@ -1,21 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ChevronLeft, ChevronRight, ExternalLink, GraduationCap, Clock, Award, Users, Eye, Sparkles } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight, Clock, Users, Eye, Sparkles } from "lucide-react";
+import { coverImage, isNewsPost, type FeedPost } from "@/lib/feed-posts";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-export interface CourseItem {
-  id: string;
-  title: string;
-  description: string;
-  instructor: string | null;
-  price: string | null;
-  duration: string | null;
-  level: string;
-  category: string;
-  image_url: string | null;
-  link_url: string | null;
-  is_featured: boolean;
-  created_at: string;
-}
+export type CourseItem = FeedPost;
 
 interface CourseHeroCarouselProps {
   courses: CourseItem[];
@@ -23,6 +12,7 @@ interface CourseHeroCarouselProps {
 }
 
 export default function CourseHeroCarousel({ courses, onSelectCourse }: CourseHeroCarouselProps) {
+  const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -44,6 +34,8 @@ export default function CourseHeroCarousel({ courses, onSelectCourse }: CourseHe
   if (slides.length === 0) return null;
 
   const currentCourse = slides[currentIndex] || slides[0];
+  const heroImage = coverImage(currentCourse);
+  const news = isNewsPost(currentCourse);
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % slides.length);
@@ -71,15 +63,17 @@ export default function CourseHeroCarousel({ courses, onSelectCourse }: CourseHe
           className="relative min-h-[220px] sm:min-h-[260px] flex flex-col justify-between p-5 sm:p-6"
         >
           {/* Background Poster Image Overlay */}
-          {currentCourse.image_url ? (
+          {heroImage ? (
             <div className="absolute inset-0 z-0 overflow-hidden">
               <img
-                src={currentCourse.image_url}
+                src={heroImage}
                 alt={currentCourse.title}
-                loading="lazy"
+                loading="eager"
                 decoding="async"
+                fetchPriority="high"
+                width={800}
+                height={420}
                 className="w-full h-full object-cover filter brightness-[0.35] dark:brightness-[0.25] scale-105"
-                style={{ contentVisibility: 'auto' }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
             </div>
@@ -94,12 +88,12 @@ export default function CourseHeroCarousel({ courses, onSelectCourse }: CourseHe
                 {currentCourse.is_featured ? (
                   <>
                     <Star className="h-3.5 w-3.5 fill-current" />
-                    <span>FEATURED COURSE</span>
+                    <span>{t("featured").toUpperCase()}</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="h-3.5 w-3.5" />
-                    <span>TRENDING</span>
+                    <span>{t("trending").toUpperCase()}</span>
                   </>
                 )}
               </span>
@@ -109,7 +103,7 @@ export default function CourseHeroCarousel({ courses, onSelectCourse }: CourseHe
               </span>
             </div>
 
-            {currentCourse.price && (
+            {!news && currentCourse.price && (
               <span className="text-sm font-black bg-primary text-primary-foreground px-3 py-1 rounded-full border border-foreground/20">
                 {currentCourse.price}
               </span>
@@ -147,7 +141,7 @@ export default function CourseHeroCarousel({ courses, onSelectCourse }: CourseHe
               onClick={() => onSelectCourse(currentCourse)}
               className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl font-black text-xs sm:text-sm active:scale-95 transition-transform border-2 border-foreground shadow-md"
             >
-              <span>Explore Course</span>
+              <span>{news ? t("feedsReadMore") : t("feedsJoinCourse")}</span>
               <Eye className="h-4 w-4" />
             </button>
 

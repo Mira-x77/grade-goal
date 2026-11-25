@@ -2,6 +2,7 @@ import { useState, FormEvent, ChangeEvent } from 'react';
 import { Edit, AlertCircle, Loader2, FileText } from 'lucide-react';
 import { adminService } from '../services/adminService';
 import { ClassLevel, ExamType, Session, ExamPaper, AcademicSystem } from '../types';
+import { ADMIN_CLASS_LEVELS, ADMIN_EXAM_TYPES, ADMIN_SESSIONS } from '../lib/class-catalog';
 import { toast } from 'sonner';
 
 interface EditFormProps {
@@ -26,14 +27,9 @@ interface FormErrors {
   [key: string]: string;
 }
 
-const CLASS_LEVELS: ClassLevel[] = [
-  "6ème", "5ème", "4ème", "3ème",
-  "2nde", "1ère D", "1ère C", "Tle D", "Tle C"
-];
-
-const EXAM_TYPES: ExamType[] = ["Baccalauréat", "Composition", "Devoir", "Interro"];
-
-const SESSIONS: Session[] = ["1st Semester", "2nd Semester", "Annual"];
+const CLASS_LEVELS = ADMIN_CLASS_LEVELS;
+const EXAM_TYPES = ADMIN_EXAM_TYPES;
+const SESSIONS = [...ADMIN_SESSIONS] as Session[];
 
 const SUBJECTS = [
   "Mathématiques",

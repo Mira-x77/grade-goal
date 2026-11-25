@@ -14,6 +14,8 @@ export interface UnlockedSubject {
 
 export interface LocalSubscription {
   deviceId: string;
+  /** Supabase user id that owns this premium (prevents cross-account bleed on shared phones) */
+  ownerUserId?: string;
   tier: SubscriptionTier;
   status: SubscriptionStatus;
   subscriptionCode?: string;
@@ -49,14 +51,55 @@ export interface SubscriptionAnalytics {
   last_updated: string;
 }
 
-// Helper to check if subscription is active
-export function isSubscriptionActive(subscription: LocalSubscription): boolean {
-  if (subscription.status !== 'active') return false;
-  
-  if (subscription.tier === 'premium' && subscription.expiresAt) {
-    return new Date(subscription.expiresAt) > new Date();
+export function isExpiryInFuture(expiresAt?: string, now: Date = new Date()): boolean {
+  if (!expiresAt) return false;
+  const expires = new Date(expiresAt);
+  return !Number.isNaN(expires.getTime()) && expires > now;
+}
+
+/** Paid premium is defined by a future expiry — not by a stale `status` flag. */
+export function hasPaidPremiumAccess(subscription: LocalSubscription, now: Date = new Date()): boolean {
+  if (subscription.tier !== 'premium') return false;
+  return isExpiryInFuture(subscription.expiresAt, now);
+}
+
+export function applyPremiumGrant(
+  subscription: LocalSubscription,
+  grant: {
+    expiresAt: string;
+    userId?: string | null;
+    deviceId?: string | null;
+    code?: string;
+    now?: Date;
   }
-  
+): LocalSubscription {
+  const now = grant.now ?? new Date();
+  const previous = subscription.expiresAt ? new Date(subscription.expiresAt) : null;
+  const incoming = new Date(grant.expiresAt);
+  const keepPrevious =
+    previous && !Number.isNaN(previous.getTime()) && previous > incoming;
+
+  return {
+    ...subscription,
+    ownerUserId: grant.userId ?? subscription.ownerUserId,
+    deviceId: grant.deviceId ?? subscription.deviceId,
+    tier: 'premium',
+    status: 'active',
+    expiresAt: keepPrevious ? subscription.expiresAt : grant.expiresAt,
+    activatedAt: subscription.activatedAt ?? now.toISOString(),
+    subscriptionCode: grant.code ?? subscription.subscriptionCode,
+    accessType: subscription.accessType ?? 'all_subjects',
+    updatedAt: now.toISOString(),
+  };
+}
+
+// Helper to check if subscription is active
+export function isSubscriptionActive(subscription: LocalSubscription, now: Date = new Date()): boolean {
+  if (hasPaidPremiumAccess(subscription, now)) return true;
+  if (subscription.status !== 'active') return false;
+  if (subscription.tier === 'premium') {
+    return isExpiryInFuture(subscription.expiresAt, now);
+  }
   return true;
 }
 

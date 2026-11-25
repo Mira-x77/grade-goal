@@ -4,8 +4,12 @@ import { toast } from 'sonner';
 import { autoCategorizeFile, AutoCategoryResult } from '../lib/auto-categorize';
 import { adminService } from '../services/adminService';
 import { ClassLevel, ExamType, Session, AcademicSystem } from '../types';
+import { ADMIN_CLASS_LEVELS, ADMIN_EXAM_TYPES, ADMIN_SESSIONS } from '../lib/class-catalog';
 import { calculateFileHash } from '../lib/integrity';
 import { generatePDFPreview } from '../lib/pdf-preview-generator';
+import { storageAdapter } from '../lib/storage-adapter';
+import { useStorageTarget } from '../lib/storage-target';
+import StorageTargetSelect from './StorageTargetSelect';
 // import { supabase } from '../lib/supabaseClient';
 
 interface ProcessedFile extends AutoCategoryResult {
@@ -21,16 +25,9 @@ interface MassUploadProps {
   systemLabel: string;
 }
 
-const CLASS_LEVELS = [
-  "6ème", "5ème", "4ème", "3ème",
-  "2nde", "2nde A4", "2nde CD", "2nde E", "2nde F", "2nde G",
-  "1ère", "1ère A4", "1ère C", "1ère D", "1ère E", "1ère F", "1ère G",
-  "Tle",  "Tle A4",  "Tle C",  "Tle D",  "Tle E",  "Tle F",  "Tle G",
-];
-
-const EXAM_TYPES = ["Baccalauréat", "Probatoire", "BEPC", "Composition", "Devoir", "Interro", "Practice", "Revision"];
-
-const SESSIONS = ["1er Trimestre", "2ème Trimestre", "3ème Trimestre", "Annuel", "1st Semester", "2nd Semester", "Annual", "Regular"];
+const CLASS_LEVELS = ADMIN_CLASS_LEVELS;
+const EXAM_TYPES = ADMIN_EXAM_TYPES;
+const SESSIONS = [...ADMIN_SESSIONS];
 
 const SUBJECTS = [
   "Mathématiques", "Physique", "Chimie", "SVT", "PCT",
@@ -38,17 +35,12 @@ const SUBJECTS = [
   "Philosophie", "Informatique"
 ];
 
-const SYSTEMS: {value: AcademicSystem, label: string}[] = [
-  { value: "apc", label: "APC (Togo)" },
-  { value: "french", label: "French" },
-  { value: "english", label: "English / Nigerian" }
-];
-
 export default function MassUpload({ systemFilter, systemLabel }: MassUploadProps) {
   const [files, setFiles] = useState<ProcessedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [target] = useStorageTarget();
 
   const processFiles = async (newFiles: File[]) => {
     setIsProcessing(true);
@@ -150,35 +142,40 @@ export default function MassUpload({ systemFilter, systemLabel }: MassUploadProp
         try {
           const previewBlob = await generatePDFPreview(fileData.file);
           const previewFileName = `preview_${Date.now()}_${fileData.file.name.replace(/\s+/g, '-')}.png`;
-          const { supabase } = await import('../lib/supabaseClient');
-          const { error: previewError } = await supabase.storage
-            .from('exam-papers')
-            .upload(previewFileName, previewBlob);
-          
-          if (!previewError) {
-            const { data } = supabase.storage.from('exam-papers').getPublicUrl(previewFileName);
-            previewUrl = data.publicUrl;
-          }
+          previewUrl = await storageAdapter.uploadFile(previewFileName, previewBlob, {
+            contentType: 'image/png',
+          });
         } catch (err) {
           console.warn('Failed to generate preview for', fileData.file.name, err);
         }
 
         // 4. Create DB Record
-        await adminService.createPaper({
-          title: fileData.title,
-          subject: fileData.subject,
-          classLevel: fileData.classLevel as ClassLevel,
-          year: fileData.year,
-          examType: fileData.examType as ExamType,
-          session: fileData.session as Session,
-          system: fileData.system as AcademicSystem,
-          fileUrl: fileUrl,
-          fileName: fileData.file.name,
-          fileSize: fileData.file.size,
-          contentHash: contentHash,
-          tags: [],
-          previewUrl: previewUrl
-        });
+        try {
+          await adminService.createPaper({
+            title: fileData.title,
+            subject: fileData.subject,
+            classLevel: fileData.classLevel as ClassLevel,
+            year: fileData.year,
+            examType: fileData.examType as ExamType,
+            session: fileData.session as Session,
+            system: fileData.system as AcademicSystem,
+            fileUrl: fileUrl,
+            fileName: fileData.file.name,
+            fileSize: fileData.file.size,
+            contentHash: contentHash,
+            tags: [],
+            previewUrl: previewUrl
+          });
+        } catch (dbError) {
+          // No row -> roll back the files we just stored.
+          for (const url of [previewUrl, fileUrl]) {
+            if (!url) continue;
+            await storageAdapter.deleteFile(url).catch((cleanupError) => {
+              console.warn('⚠️ Could not roll back stored file:', url, cleanupError);
+            });
+          }
+          throw dbError;
+        }
 
         setFiles(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'success' } : f));
       } catch (error: any) {
@@ -237,6 +234,9 @@ export default function MassUpload({ systemFilter, systemLabel }: MassUploadProp
         </div>
       </div>
 
+      {/* Destination */}
+      <StorageTargetSelect disabled={isUploading || isProcessing} />
+
       {/* Stats & Action */}
       {files.length > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between bg-[#1a1d2e] p-4 rounded-xl border border-gray-800 gap-4">
@@ -263,7 +263,7 @@ export default function MassUpload({ systemFilter, systemLabel }: MassUploadProp
             {isUploading ? (
               <><Loader2 className="h-5 w-5 animate-spin" /> Uploading...</>
             ) : (
-              <><Play className="h-5 w-5 fill-current" /> Confirm & Upload {pendingCount} Files</>
+              <><Play className="h-5 w-5 fill-current" /> Confirm &amp; Upload {pendingCount} Files{target === 'r2' ? ' to R2' : ' to Supabase'}</>
             )}
           </button>
         </div>

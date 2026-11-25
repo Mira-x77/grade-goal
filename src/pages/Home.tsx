@@ -37,6 +37,9 @@ import { useAppConfig } from "@/contexts/AppConfigContext";
 import { usePremium } from "@/hooks/usePremium";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TodayScheduleCard } from "@/components/TodayScheduleCard";
+import { ScheduleSetupCard } from "@/components/ScheduleSetupCard";
+import { loadScheduleState } from "@/lib/schedule-storage";
 import {
   scoreToGrade,
   validateScore,
@@ -126,6 +129,10 @@ const Home = () => {
 
   const [downloadedCount, setDownloadedCount] = useState(0);
   const [appState, setAppState] = useState(() => loadState());
+  const [schedulePrompt, setSchedulePrompt] = useState(() => {
+    const s = loadScheduleState();
+    return !s.setupCompleted && !s.setupSkipped;
+  });
 
   // Check and set quick setup completion flags
   useEffect(() => {
@@ -721,6 +728,19 @@ const Home = () => {
           </div>
         </motion.button>
 
+        {/* ══════════ SCHOOL SCHEDULE ══════════ */}
+        {schedulePrompt && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}>
+            <ScheduleSetupCard
+              onSetupNow={() => navigate("/schedule")}
+              onDismiss={() => setSchedulePrompt(false)}
+            />
+          </motion.div>
+        )}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}>
+          <TodayScheduleCard />
+        </motion.div>
+
         {/* Performance Alerts — APC/French only */}
         {!isNigerian && alerts.length > 0 && (
           <motion.div
@@ -970,9 +990,9 @@ const Home = () => {
         {!isNigerian && appState && (
           <div className="tour-subjects-carousel overflow-x-auto -mx-4 px-4 pb-2 hide-scrollbar">
             <div className="flex gap-3 items-start" style={{ width: "max-content" }}>
-              <SubjectsGlanceCard subjects={appState!.subjects} title={t("subjectsGlance")} />
+              <SubjectsGlanceCard subjects={appState.subjects ?? []} title={t("subjectsGlance")} />
               <div className="carousel-card flex-shrink-0">
-                <FrenchClassView subjects={appState!.subjects} />
+                <FrenchClassView subjects={appState.subjects ?? []} />
               </div>
             </div>
           </div>
@@ -1051,7 +1071,7 @@ const Home = () => {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-black text-foreground">{language === "fr" ? "Idées & Avis" : "Ideas & Feedback"}</p>
+                <p className="text-sm font-black text-foreground">{t("ideasFeedback")}</p>
                 <p className="text-[10px] font-bold text-muted-foreground">{t("tourFeedbackHint")}</p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -1897,14 +1917,14 @@ const Home = () => {
                             : "bg-muted text-muted-foreground border-transparent"
                         }`}
                       >
-                        {opt === "all" ? "All subjects" : opt}
+                        {opt === "all" ? t("allSubjects") : opt}
                       </button>
                     ))}
                   </div>
                   {!isNigerian && (
                     <div className="flex gap-2">
                       {[
-                        { key: "all", label: "All types" },
+                        { key: "all", label: t("allTypes") },
                         { key: "interro", label: t("interro") },
                         { key: "dev", label: t("devoir") },
                         { key: "compo", label: t("composition") },

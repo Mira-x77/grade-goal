@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Go Study flyer — A4</title>
+<link rel="stylesheet" href="flyer.css" />
+<style>
+  .canvas { width: 1240px; height: 1754px; padding: 58px 62px 54px; }
+  .topbar { position: relative; z-index: 10; display: flex; align-items: flex-start; justify-content: space-between; }
+  .logo { width: 262px; margin: -26px 0 0 -22px; }
+  .topbar .chip { margin-top: 18px; font-size: 19px; letter-spacing: .12em; }
+
+  .headline { position: relative; z-index: 10; margin-top: 6px; font-size: 97px; }
+  .headline .l2 { display: block; }
+  .sub { position: relative; z-index: 10; margin-top: 26px; width: 760px; font-size: 27px; line-height: 1.36; font-weight: 700; opacity: .82; }
+
+  .hero { position: absolute; inset: 0; z-index: 5; }
+  .phone-a { position: absolute; left: 424px; top: 600px; width: 352px; height: 727px; transform: rotate(-2.2deg); z-index: 8; }
+  .phone-b { position: absolute; left: 800px; top: 636px; width: 306px; height: 627px; transform: rotate(5.5deg); z-index: 7; }
+
+  .stat {
+    position: absolute; left: 62px; top: 610px; width: 322px; z-index: 20;
+    background: #fff; border: 5px solid var(--ink); border-radius: 30px;
+    box-shadow: 11px 11px 0 var(--ink); padding: 26px 26px 22px; transform: rotate(-2.5deg);
+  }
+  .stat .cap { font-size: 15px; font-weight: 900; letter-spacing: .18em; opacity: .55; }
+  .stat .big { font-size: 76px; font-weight: 900; letter-spacing: -.05em; line-height: 1; margin-top: 6px; }
+  .stat .big small { font-size: 34px; opacity: .5; letter-spacing: -.02em; }
+  .stat .bar { margin-top: 16px; height: 16px; border: 3px solid var(--ink); border-radius: 99px; background: #eee; overflow: hidden; }
+  .stat .bar i { display: block; width: 78%; height: 100%; background: var(--yellow); border-right: 3px solid var(--ink); }
+  .stat .note { margin-top: 12px; font-size: 17px; font-weight: 800; opacity: .62; }
+
+  .streak {
+    position: absolute; left: 72px; top: 872px; z-index: 22; transform: rotate(3deg);
+    background: var(--ink); color: #fff; border-radius: 24px; padding: 14px 22px 16px;
+    display: flex; align-items: center; gap: 12px; box-shadow: 8px 8px 0 rgba(23,22,20,.25);
+  }
+  .streak .flame { font-size: 40px; line-height: 1; }
+  .streak b { font-size: 34px; font-weight: 900; line-height: .9; display: block; }
+  .streak span { font-size: 13px; font-weight: 900; letter-spacing: .18em; opacity: .7; }
+
+  .minilist { position: absolute; left: 62px; top: 1002px; z-index: 20; display: flex; flex-direction: column; gap: 14px; }
+  .minilist .row {
+    display: flex; align-items: center; gap: 12px; background: #fff; border: 4px solid var(--ink);
+    border-radius: 16px; padding: 11px 16px; font-size: 17px; font-weight: 900; width: 300px;
+    box-shadow: 5px 5px 0 rgba(23,22,20,.85);
+  }
+  .minilist .row em { font-style: normal; font-size: 19px; }
+
+  .mascot-a { position: absolute; left: 62px; top: 1140px; width: 232px; z-index: 21; transform: rotate(-4deg); }
+
+  .bubble {
+    position: absolute; z-index: 24; left: 796px; top: 508px;
+    background: var(--yellow); border: 5px solid var(--ink); border-radius: 999px;
+    padding: 12px 24px; font-weight: 900; font-size: 22px; transform: rotate(-3deg);
+    box-shadow: 7px 7px 0 var(--ink);
+  }
+  .badge-a { right: 20px; top: 912px; transform: rotate(6deg); font-size: 20px; width: 122px; height: 122px; }
+  .badge-a b { font-size: 46px; display: block; letter-spacing: -.03em; }
+  .badge-a span { font-size: 12px; letter-spacing: .18em; opacity: .65; display: block; margin-top: 8px; }
+
+  .features { position: absolute; left: 62px; right: 62px; top: 1338px; z-index: 12; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .feature { background: #fff; border: 4px solid var(--ink); border-radius: 24px; padding: 20px 20px 18px; box-shadow: 7px 7px 0 var(--ink); }
+  .feature .ico { width: 46px; height: 46px; border-radius: 14px; background: var(--yellow); border: 3px solid var(--ink); display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 10px; }
+  .feature h3 { font-size: 21px; font-weight: 900; letter-spacing: -.02em; }
+  .feature p { margin-top: 4px; font-size: 15px; font-weight: 700; line-height: 1.25; opacity: .66; }
+
+  .cta-bar {
+    position: absolute; left: 62px; right: 62px; top: 1552px; z-index: 12;
+    background: var(--ink); border-radius: 30px; padding: 24px 30px; color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .cta-bar .left { display: flex; align-items: center; gap: 18px; }
+  .cta-bar .go { background: var(--yellow); color: var(--ink); border-radius: 999px; padding: 14px 26px; font-size: 22px; font-weight: 900; white-space: nowrap; }
+  .cta-bar .url { font-size: 27px; }
+  .cta-bar .right { text-align: right; }
+  .cta-bar .right small { display: block; font-size: 14px; font-weight: 900; letter-spacing: .14em; opacity: .55; margin-top: 6px; }
+
+  .foot { position: absolute; left: 62px; right: 62px; bottom: 30px; z-index: 12; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; opacity: .5; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="dots"></div>
+  <div class="blob" style="width:540px;height:540px;right:-190px;top:-210px;opacity:.55"></div>
+  <div class="blob" style="width:300px;height:300px;left:-140px;bottom:280px;background:var(--yellow-soft)"></div>
+
+  <div class="topbar">
+    <img class="logo" src="/presentations/assets/icon_clean.png" alt="Go Study" />
+    <div class="chip yellow">BAC · BEPC · PROBATOIRE</div>
+  </div>
+
+  <h1 class="headline display">
+    Know your average.<br />
+    <span class="l2">Own your <span class="marker">results.</span></span>
+  </h1>
+  <p class="sub">
+    Go Study! turns every mark into a clear average, a real target and a plan for the next exam
+    — whatever grading system your school uses.
+  </p>
+
+  <div class="hero">
+    <div class="phone phone-b">
+      <img src="shots/simulator.png" alt="Study Strategizer screen" />
+    </div>
+    <div class="phone phone-a">
+      <img src="shots/home.png" alt="Go Study home dashboard" />
+    </div>
+
+    <div class="stat">
+      <div class="cap">YOUR AVERAGE</div>
+      <div class="big">15.7<small> /20</small></div>
+      <div class="bar"><i></i></div>
+      <div class="note">33/39 marks · TRÈS BIEN</div>
+    </div>
+
+    <div class="streak">
+      <div class="flame">🔥</div>
+      <div><b>7</b><span>DAY STREAK</span></div>
+    </div>
+
+    <div class="minilist">
+      <div class="row"><em>🎓</em> APC · Français · GPA</div>
+      <div class="row"><em>📚</em> 60+ past papers</div>
+    </div>
+
+    <div class="mascot mascot-a"><img src="/presentations/assets/triumph.png" alt="" /></div>
+
+    <div class="bubble">16.0/20 target</div>
+    <div class="badge-round badge-a"><span>ON TRACK</span><b>+0.4</b><span>POINTS</span></div>
+  </div>
+
+  <div class="features">
+    <div class="feature">
+      <div class="ico">🧮</div>
+      <h3>Grade calculator</h3>
+      <p>Average, rank and target in seconds — no spreadsheets.</p>
+    </div>
+    <div class="feature">
+      <div class="ico">🎯</div>
+      <h3>Study Strategizer</h3>
+      <p>See which mark moves your average the most.</p>
+    </div>
+    <div class="feature">
+      <div class="ico">📄</div>
+      <h3>Paper library</h3>
+      <p>60+ past papers, 2015–2024, nine subjects.</p>
+    </div>
+  </div>
+
+  <div class="cta-bar">
+    <div class="left">
+      <div class="go">Start free →</div>
+      <div class="url">goostudy.vercel.app</div>
+    </div>
+    <div class="right">
+      ANDROID &amp; WEB
+      <small>FREE UP TO 3 SUBJECTS</small>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>APC · French · Nigerian GPA</span>
+    <span>Built for African classrooms</span>
+  </div>
+</div>
+</body>
+</html>

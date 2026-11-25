@@ -1,77 +1,30 @@
-# 📱 Build iOS App on Mac
+# Build the iOS app
 
-## ⚠️ Important
-iOS apps **cannot** be built on Windows. You need a Mac to build the iOS app.
+iOS binaries can only be compiled by Xcode, which runs on macOS. You do **not**
+need a Mac: this project builds on a macOS GitHub Actions runner and you install
+the result from Windows.
 
-## 🚀 Quick Steps on Mac
+- Full instructions: [`docs/ios/BUILD_IOS_FROM_WINDOWS.md`](docs/ios/BUILD_IOS_FROM_WINDOWS.md)
+- Short reference: [`IOS_BUILD_GUIDE.md`](IOS_BUILD_GUIDE.md)
 
-### 1. Transfer Project Files
-Copy the entire `grade-goal` folder to your Mac
+## Fast path
 
-### 2. Open Terminal and Navigate
-```bash
-cd /path/to/grade-goal
+```powershell
+npm ci --legacy-peer-deps
+npm run ios:sync          # build web assets, sync Capacitor, fix SPM paths / iOS 15
+git push                  # so GitHub Actions can see the changes
 ```
 
-### 3. Install Dependencies (if needed)
-```bash
-npm install --legacy-peer-deps
-```
+Then:
 
-### 4. Open iOS Project in Xcode
-```bash
-npx cap open ios
-```
+1. Add `VITE_SUPABASE_PROJECT_ID`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+   under **Settings → Secrets and variables → Actions**.
+2. **Actions → iOS build (unsigned IPA) → Run workflow.**
+3. Download the `gostudy-ios-unsigned-ipa` artifact.
+4. Install it from Windows with **Sideloadly** or **AltStore** (free Apple ID,
+   re-sign every 7 days).
 
-### 5. Build and Run
-In Xcode:
-- Select a **simulator** (e.g., iPhone 15 Pro) or your connected iPhone
-- Click the ▶️ **Play** button
-- App will launch!
+For TestFlight/App Store, use the `iOS release (signed IPA)` workflow with a paid
+Apple Developer account.
 
-## 📲 To Install on Your iPhone
-
-### Option A: Direct Install (Easy)
-1. Connect iPhone to Mac with USB cable
-2. Trust Mac on iPhone when prompted
-3. In Xcode, select your iPhone from device dropdown
-4. Click Play button ▶️
-5. If "untrusted developer" error: iPhone Settings → General → VPN & Device Management → Trust Developer
-
-### Option B: Create .ipa File for Distribution
-1. In Xcode: Product → Archive
-2. Wait for build to complete
-3. Click "Distribute App"
-4. Choose "Ad Hoc" or "Development"
-5. Follow wizard to export .ipa file
-6. Use Apple Configurator or AltStore to install on iPhone
-
-## 🌐 Alternative: Use Cloud Build (No Mac!)
-
-### Using Codemagic (Recommended)
-1. Go to https://codemagic.io
-2. Sign up (free tier available)
-3. Connect your GitHub repo
-4. Configure iOS build
-5. Download .ipa file
-6. Install via AltStore or TestFlight
-
-### Using Ionic Appflow
-1. Sign up at https://ionic.io/appflow
-2. Link your project
-3. Build iOS in cloud
-4. Download .ipa
-
-## ✅ Project is Ready
-- Web assets already synced to iOS
-- All plugins configured
-- Just needs Xcode to build!
-
-## 📁 Files Location
-- iOS project: `grade-goal/ios/`
-- Built web app: `grade-goal/dist/`
-- Config: `grade-goal/capacitor.config.json`
-
----
-
-**Your Android APK is already on Desktop: `ScoreTarget-GoStudy.apk`** ✅
+Do not use Gradle for iOS — Gradle only builds the Android APK/AAB.

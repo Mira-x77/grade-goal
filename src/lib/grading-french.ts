@@ -8,7 +8,7 @@ export function calcFrenchSubjectAverage(
   marks: Subject["marks"],
   markStatuses?: Subject["markStatuses"]
 ): number | null {
-  const { interro, dev, compo } = marks;
+  const { interro, dev, compo } = marks ?? { interro: null, dev: null, compo: null };
 
   const isExcluded = (type: "interro" | "dev" | "compo") =>
     markStatuses?.[type] === "not_done";
@@ -30,7 +30,7 @@ export function calcFrenchYearlyAverage(subjects: Subject[]): number | null {
   let totalPoints = 0;
   let totalCoeff = 0;
 
-  for (const sub of subjects) {
+  for (const sub of subjects ?? []) {
     const avg = calcFrenchSubjectAverage(sub.marks, sub.markStatuses);
     if (avg !== null) {
       totalPoints += avg * sub.coefficient;
@@ -100,7 +100,7 @@ export function calcFrenchSummary(subjects: Subject[]): {
   let totalClassCoeff = 0;
   let hasClassData = false;
 
-  const subjectDetails = subjects.map((sub) => {
+  const subjectDetails = (subjects ?? []).map((sub) => {
     const studentAvg = calcFrenchSubjectAverage(sub.marks, sub.markStatuses);
     const classAvg = sub.french?.classAverage ?? null;
     const delta = calcDelta(studentAvg, classAvg);
@@ -147,7 +147,7 @@ export function getAppreciationTrend(subjects: Subject[]): {
   improving: boolean;
   count: number;
 } {
-  const scores = subjects
+  const scores = (subjects ?? [])
     .map((s) => s.french?.appreciation)
     .filter((a) => a !== null && a !== undefined) as number[];
 

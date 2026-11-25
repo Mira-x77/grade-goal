@@ -41,11 +41,20 @@ export function OpenLocalPdfButton({
     }
   };
 
-  const handleClick = () => {
+  const handleClick = async () => {
+    try {
+      const added = await externalPdfService.browsePhoneFolders();
+      if (added >= 0) return;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "";
+      if (message !== "USE_FILE_INPUT") {
+        console.warn("Native folder picker failed, using file input:", err);
+      }
+    }
     fileInputRef.current?.click();
   };
 
-  const buttonText = label || t("openPdfFile") || "Open PDF File";
+  const buttonText = label || t("openPdfFile") || "Browse phone folders";
 
   return (
     <>
@@ -68,7 +77,7 @@ export function OpenLocalPdfButton({
           <div className="flex-1 min-w-0">
             <p className="text-sm font-black text-foreground truncate">{buttonText}</p>
             <p className="text-xs text-muted-foreground font-medium truncate">
-              {t("readAnyPdfDevice") || "Open and read any PDF from phone storage"}
+              {t("readAnyPdfDevice") || "Browse folders and add PDFs from this phone"}
             </p>
           </div>
           <FolderOpen className="h-4 w-4 text-muted-foreground shrink-0" />

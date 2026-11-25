@@ -1,0 +1,457 @@
+
+########## PAGE 1 ##########
+[0] size=64.22 font=InkFree flags=0 Tech skills
+[1] size=60.49 font=InkFree flags=0 for | Beginners
+[2] size=9.92 font=SegoeUI-Semibold flags=16 2026 Edition • Easy, Beginner-Friendly Guide | Page 1 of 20
+[3] size=18.0 font=Type3 (39 0 R) flags=0 🚀
+[4] size=7.5 font=SegoeUIBlack flags=0 COVER ARTWORK PLACEHOLDER
+[5] size=9.38 font=SegoeUI-Bold flags=16 Futuristic Tech & Creative Collage
+[6] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: High-energy artwork showing a laptop with VS Code & AI prompt window, Scratch Dino & Shark sprites,
+[7] size=7.88 font=SegoeUI-Italic flags=2 CapCut timeline edit UI, and a friendly mini robot rover.
+[8] size=10.5 font=Type3 (231 0 R) flags=0 💻 Vibe Coding & Languages
+[9] size=8.62 font=SegoeUI flags=0 Frontend vs Backend, IDEs, safe AI prompting formula & | security rules.
+[10] size=10.5 font=Type3 (233 0 R) flags=0 🎮 Scratch Game Projects
+[11] size=8.62 font=SegoeUI flags=0 Build 4 full games: Apple Catch, Cat Hunt, Hungry Shark & | Chrome Dino.
+[12] size=10.5 font=Type3 (233 0 R) flags=0 🎬 CapCut Video Editing
+[13] size=8.62 font=SegoeUI flags=0 Cuts, joins, scene transitions, green screen memes & auto- | captions.
+[14] size=10.5 font=Type3 (236 0 R) flags=0 🤖 Casual Robotics
+[15] size=8.62 font=SegoeUI flags=0 Surface-level guide to robot brains (micro:bit/Arduino), | sensors & motors.
+[16] size=107.75 font=ArialBlack flags=0 #0
+
+########## PAGE 2 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 WELCOME & OVERVIEW | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Welcome to the Creator's World
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Simple, practical tech skills without any complicated academic jargon
+[3] size=9.75 font=SegoeUI flags=0 This guidebook was written specifically to teach you real, practical creative tools! You won't find scary math formulas | or confusing academic speak here. Instead, you'll learn how to build games, edit videos like a pro, code with AI, and | understand how simple robots work.
+[4] size=9.0 font=Type3 (54 0 R) flags=0 💡 The Creator Promise: Every topic in this guidebook is explained in plain English with visual cheat sheets and step-by- | step guides along the way!
+[5] size=10.87 font=Type3 (55 0 R) flags=0 📖 Complete 20-Page Guidebook Map
+[6] size=8.62 font=SegoeUIBlack flags=0 MODULE 1: CODING BASICS & VIBE CODING | PAGES 3–6
+[7] size=8.25 font=SegoeUI-Semibold flags=16 Ch 1: Coding Languages 101 (Frontend vs Backend) | Page 3
+[8] size=8.25 font=SegoeUI-Semibold flags=16 Ch 2: Static Sites vs. Functional / Dynamic Sites | Page 4
+[9] size=8.25 font=SegoeUI-Semibold flags=16 Ch 3 & 4: Intro to Vibe Coding & Master AI Prompting | Page 5
+[10] size=8.25 font=SegoeUI-Semibold flags=16 Ch 5 & 6-7: hardware/software                                      | Page 6
+[11] size=8.62 font=SegoeUIBlack flags=0 MODULE 2: SCRATCH GAME PROJECTS | PAGES 7–11
+[12] size=8.25 font=SegoeUI-Semibold flags=16 Ch 8: Scratch Controls & Block Basics                                                                                                                                                    Page 7
+[13] size=8.25 font=SegoeUI-Semibold flags=16 Ch 9:  input and output devices                                                                                                                                                            Page 8
+[14] size=8.25 font=SegoeUI-Semibold flags=16 Ch 10: Game 2 - Cat Hunt Rat Chase Game | Page 9
+[15] size=8.25 font=SegoeUI-Semibold flags=16 Ch 11: Scratch test                                                     | Page 10
+[16] size=8.25 font=SegoeUI-Semibold flags=16 Ch 12-14: Chrome Dino Runner & Game Polish | Page 11
+[17] size=8.62 font=SegoeUIBlack flags=0 MODULE 3: CAPCUT VIDEO EDITING | PAGES 12–15
+[18] size=8.25 font=SegoeUI-Semibold flags=16 Ch 15: CapCut Basics & Workspace Overview | Page 12
+[19] size=8.25 font=SegoeUI-Semibold flags=16 Ch 16 & 17: Cutting Clips & Smooth Transitions | Page 13
+[20] size=8.25 font=SegoeUI-Semibold flags=16 Ch 18: Memes, Overlays & Green Screen Popups | Page 14
+[21] size=8.25 font=SegoeUI-Semibold flags=16 Ch 19-21: Auto-Captions, Music Sync & Exporting | Page 15
+[22] size=8.62 font=SegoeUIBlack flags=0 MODULE 4: CASUAL SURFACE ROBOTICS | PAGES 16–18
+[23] size=8.25 font=SegoeUI-Semibold flags=16 Ch 22: What is a Robot? (Casual Surface View) | Page 16
+[24] size=8.25 font=SegoeUI-Semibold flags=16 Ch 23 & 24: Robot Brains, Sensors & Motors | Page 17
+[25] size=8.25 font=SegoeUI-Semibold flags=16 Ch 25: Fun Surface Robotics Starter Projects | Page 18
+[26] size=8.62 font=SegoeUIBlack flags=0 MASTER REFERENCE & BACK COVER | PAGES 19–20
+[27] size=8.25 font=SegoeUI-Semibold flags=16 Ch 26: Master Cheat Sheet Across All 4 Topics | Page 19
+[28] size=8.25 font=SegoeUI-Semibold flags=16 Resources, Software Links & Back Cover | Page 20
+[29] size=7.88 font=SegoeUI-Semibold flags=16 Welcome & Overview | Page 2 of 20
+
+########## PAGE 3 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 1 • CODING BASICS | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 1: Coding Languages 101
+[2] size=9.75 font=SegoeUI-Semibold flags=16 What main programming languages are for and what they do
+[3] size=9.75 font=SegoeUI flags=0 Coding is simply giving step-by-step instructions to a computer in a language it understands. Different coding | languages are designed for different specialized jobs!
+[4] size=10.88 font=SegoeUI-Bold flags=16 Frontend vs. Backend Made Simple
+[5] size=9.75 font=SegoeUI-Bold flags=16 FRONTEND (What You See)
+[6] size=8.62 font=SegoeUI flags=0 Everything visible on your screen: buttons, colors, text, | animations, and responsive layouts.
+[7] size=8.62 font=SegoeUI-Bold flags=16 HTML: The skeleton (text, headings, & layout structure).
+[8] size=8.62 font=SegoeUI-Bold flags=16 CSS: The clothes & paint (colors, fonts, & flex | alignment).
+[9] size=8.62 font=SegoeUI-Bold flags=16 JavaScript: The muscle (button clicks, popups, & | animations).
+[10] size=9.75 font=SegoeUI-Bold flags=16 BACKEND (Behind the Scenes)
+[11] size=8.62 font=SegoeUI flags=0 The hidden brain operating on remote servers to manage | accounts, passwords, and databases.
+[12] size=8.62 font=SegoeUI-Bold flags=16 Python: Easy, popular backend & AI language.
+[13] size=8.62 font=SegoeUI-Bold flags=16 Node.js / SQL: Handles server traffic & database user | records.
+[14] size=8.62 font=SegoeUI-Bold flags=16 APIs: Bridges connecting Frontend requests to Backend | data.
+[15] size=9.0 font=Type3 (54 0 R) flags=0 💡 BASIC DEFINITION • IDE: An IDE (Integrated Development Environment) is simply the code editor program where | programmers write and run code files! Examples: VS Code or Cursor.
+[16] size=7.88 font=SegoeUI-Semibold flags=16 Module 1 • Coding Basics | Page 3 of 20
+[17] size=18.0 font=Type3 (61 0 R) flags=0 🖥️
+[18] size=7.5 font=SegoeUIBlack flags=0 PAGE 3 IMAGE PLACEHOLDER
+[19] size=9.38 font=SegoeUI-Bold flags=16 Frontend vs Backend Comparison Visual
+[20] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Illustration showing a browser web page interface on top (Frontend) linked down to a server database icon
+[21] size=7.88 font=SegoeUI-Italic flags=2 below (Backend).
+
+########## PAGE 4 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 1 • CODING BASICS | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 2: Static vs. Functional Sites
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Understanding the two main types of websites
+[3] size=9.75 font=SegoeUI flags=0 Before building a web project or prompting AI, you need to know which type of website you are creating!
+[4] size=9.75 font=SegoeUI-Bold flags=16 1. Static Websites (Digital Posters)
+[5] size=8.62 font=SegoeUI flags=0 Show the exact same content to every visitor. They do not | save user logins or process custom live data.
+[6] size=8.62 font=SegoeUI-Bold flags=16 Examples: Portfolios, restaurant menus, school blogs.
+[7] size=8.62 font=SegoeUI-Bold flags=16 Built With: Simple HTML & CSS.
+[8] size=8.62 font=SegoeUI-Bold flags=16 Benefit: Super fast & easy to build!
+[9] size=9.75 font=SegoeUI-Bold flags=16 2. Functional / Dynamic Sites
+[10] size=8.62 font=SegoeUI flags=0 Interactive web applications that change based on user | actions, save progress, or handle user accounts.
+[11] size=8.62 font=SegoeUI-Bold flags=16 Examples: Scratch, YouTube, games, online stores.
+[12] size=8.62 font=SegoeUI-Bold flags=16 Built With: JavaScript + Backend Database.
+[13] size=8.62 font=SegoeUI-Bold flags=16 Benefit: Interactive & personalized!
+[14] size=10.88 font=SegoeUI-Bold flags=16 Static vs Dynamic Feature Comparison
+[15] size=8.62 font=SegoeUI-Bold flags=16 Feature | Static Websites | Dynamic / Functional Apps
+[16] size=8.62 font=SegoeUI-Bold flags=16 User Logins | No user accounts | Full accounts & passwords
+[17] size=8.62 font=SegoeUI-Bold flags=16 Data Storage | Fixed text in files | Saves to server database
+[18] size=8.62 font=SegoeUI-Bold flags=16 Build Time | Minutes to hours | Days to weeks
+[19] size=9.0 font=Type3 (54 0 R) flags=0 💡 BASIC DEFINITION • HTML: HTML (HyperText Markup Language) is the standard code structure used to place | headers, text, images, and buttons on web pages.
+[20] size=7.88 font=SegoeUI-Semibold flags=16 Module 1 • Coding Basics | Page 4 of 20
+[21] size=18.0 font=Type3 (68 0 R) flags=0 🌐
+[22] size=7.5 font=SegoeUIBlack flags=0 PAGE 4 IMAGE PLACEHOLDER
+[23] size=9.38 font=SegoeUI-Bold flags=16 Static Menu Page vs Interactive App Mockup
+[24] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Side-by-side mockup comparing a simple static restaurant menu web page vs an interactive web game app
+[25] size=7.88 font=SegoeUI-Italic flags=2 UI.
+
+########## PAGE 5 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 1 • VIBE CODING | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 3 & 4: Intro to Vibe Coding & AI Prompting
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Creating software by talking to AI in plain English
+[3] size=9.75 font=SegoeUI-Bold flags=16 Vibe Coding means using modern AI tools (like ChatGPT, Claude, or Cursor) to write code for you while you guide | the project using plain English prompts!
+[4] size=10.88 font=SegoeUI-Bold flags=16 What AI Needs from You (The 3 Key Requirements)
+[5] size=9.75 font=SegoeUI-Bold flags=16 1. Clear Goal
+[6] size=8.62 font=SegoeUI flags=0 Tell AI exactly what app to make (e.g., | "Make a simple score counter web | page").
+[7] size=9.75 font=SegoeUI-Bold flags=16 2. Target Tech
+[8] size=8.62 font=SegoeUI flags=0 Specify the language (e.g., "Use | single-file HTML and Vanilla CSS").
+[9] size=9.75 font=SegoeUI-Bold flags=16 3. Style & Features
+[10] size=8.62 font=SegoeUI flags=0 Describe colors, layout, and button | behavior preferences.
+[11] size=10.88 font=SegoeUI-Bold flags=16 The Simple 3-Step Prompt Formula
+[12] size=7.5 font=Consolas-Bold flags=24 3-STEP PROMPT FORMULA | BEGINNER FRIENDLY
+[13] size=8.25 font=Consolas flags=8 1. WHO AI IS: "You are an expert front-end web developer..." | 2. WHAT TO BUILD: "Build a clean single-file HTML page for my game..." | 3. SPECIAL RULES: "Use a dark blue background, big green action buttons, and keep the code simple."
+[14] size=9.0 font=Type3 (76 0 R) flags=0 ⚡ The Vibe Coding Secret: You don't need to memorize coding syntax anymore—just learn how to describe what you | want clearly!
+[15] size=7.88 font=SegoeUI-Semibold flags=16 Module 1 • Vibe Coding | Page 5 of 20
+[16] size=18.0 font=Type3 (77 0 R) flags=0 🤖
+[17] size=7.5 font=SegoeUIBlack flags=0 PAGE 5 IMAGE PLACEHOLDER
+[18] size=9.38 font=SegoeUI-Bold flags=16 Vibe Coding Workspace & Chat Flow
+[19] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Diagram showing user typing a prompt in an AI chat window and receiving instant HTML/CSS code blocks.
+
+########## PAGE 6 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 1 • Hardware/software            | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 5 & 6-7: Hardware /software
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Essential safety rules and pre-flight checklist
+[3] size=9.0 font=Type3 (84 0 R) flags=0 🚨 STRICT SECURITY RULES! What NEVER to share with AI: | • Passwords & PINs: Never paste real user passwords or logins. | • Private API Keys & Tokens: Secret keys to online services. | • Personal Data: Phone numbers, home addresses, or credit cards. | • Database Credentials: Secret database login credentials.
+[4] size=7.5 font=Consolas-Bold flags=24 SAFE CODE EXAMPLE • ALWAYS SANITIZE
+[5] size=8.25 font=Consolas flags=8 // WRONG (UNSAFE): const myApiKey = "sk_live_998877665544332211"; | // CORRECT (SAFE): const myApiKey = "YOUR_API_KEY_HERE";
+[6] size=10.88 font=SegoeUI-Bold flags=16 The Vibe Coding Pre-Flight Checklist
+[7] size=8.62 font=Type3 (85 0 R) flags=0 ✅ Know whether you need a Static site or a Functional site.
+[8] size=8.62 font=Type3 (85 0 R) flags=0 ✅ Decide your target tech stack (HTML, CSS, JS, Python).
+[9] size=8.62 font=Type3 (85 0 R) flags=0 ✅ Open your IDE editor (VS Code or Cursor).
+[10] size=8.62 font=Type3 (85 0 R) flags=0 ✅ Write clear prompts specifying goals and layout preferences.
+[11] size=8.62 font=Type3 (85 0 R) flags=0 ✅ NEVER share passwords or private API keys with AI!
+[12] size=8.62 font=Type3 (85 0 R) flags=0 ✅ Test generated code in your web browser step-by-step.
+[13] size=7.88 font=SegoeUI-Semibold flags=16 Module 1 • Security & Summary | Page 6 of 20
+[14] size=18.0 font=Type3 (77 0 R) flags=0 🛡️
+[15] size=7.5 font=SegoeUIBlack flags=0 PAGE 6 IMAGE PLACEHOLDER
+[16] size=9.38 font=SegoeUI-Bold flags=16 Security Shield & Module 1 Completion Badge
+[17] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Security graphic showing a padlock over private credentials alongside a colorful "Module 1 Complete" badge
+[18] size=7.88 font=SegoeUI-Italic flags=2 artwork.
+
+########## PAGE 7 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 2 • SCRATCH GAMES | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 8: Scratch Controls & Block Basics
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Understanding sprites, stage coordinates, and visual code blocks
+[3] size=9.75 font=SegoeUI-Bold flags=16 Scratch is MIT's visual block programming platform. Instead of typing complex syntax, you snap color-coded blocks | together like LEGO bricks!
+[4] size=10.88 font=SegoeUI-Bold flags=16 Key Scratch Concepts
+[5] size=9.75 font=SegoeUI-Bold flags=16 1. Sprite
+[6] size=8.62 font=SegoeUI flags=0 Characters or objects on stage (Cat, | Dino, Shark, Basket).
+[7] size=9.75 font=SegoeUI-Bold flags=16 2. Stage
+[8] size=8.62 font=SegoeUI flags=0 The game screen background grid | (480 wide x 360 high).
+[9] size=9.75 font=SegoeUI-Bold flags=16 3. Script
+[10] size=8.62 font=SegoeUI flags=0 Connected stack of blocks telling a | sprite what to do!
+[11] size=10.88 font=SegoeUI-Bold flags=16 Essential Scratch Block Types
+[12] size=8.25 font=SegoeUI-Bold flags=16 when green flag clicked | go to x: (0) y: (0) | change x by (10) | change y by (10) | forever
+[13] size=8.25 font=SegoeUI-Bold flags=16 touching [mouse-pointer v]? | change [Score v] by (1)
+[14] size=9.0 font=Type3 (54 0 R) flags=0 💡 Stage Coordinates: The center of the Scratch stage is (X: 0, Y: 0). X goes from -240 (Left) to +240 (Right). Y goes | from -180 (Bottom) to +180 (Top).
+[15] size=7.88 font=SegoeUI-Semibold flags=16 Module 2 • Scratch Controls | Page 7 of 20
+[16] size=18.0 font=Type3 (92 0 R) flags=0 🧩
+[17] size=7.5 font=SegoeUIBlack flags=0 PAGE 7 IMAGE PLACEHOLDER
+[18] size=9.38 font=SegoeUI-Bold flags=16 Scratch 3.0 Editor Interface Overview
+[19] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Screenshot of Scratch editor highlighting Block Palette, Script Workspace, and Stage Canvas.
+
+########## PAGE 8 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 2 • Input and output devices | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 9: Input and output devices
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Falling objects, random positions, and catching mechanisms
+[3] size=9.75 font=SegoeUI flags=0 In our first game, delicious Apples fall randomly from the sky! The player moves a Basket left and right to catch them | and score points.
+[4] size=10.87 font=SegoeUI-Bold flags=16 Apple Spawning & Catching Script
+[5] size=8.25 font=SegoeUI-Bold flags=16 when green flag clicked
+[6] size=8.25 font=SegoeUI-Bold flags=16 set [Score v] to (0)
+[7] size=8.25 font=SegoeUI-Bold flags=16 forever
+[8] size=8.25 font=SegoeUI-Bold flags=16 go to x: (pick random (-200) to (200)) y: (180)
+[9] size=8.25 font=SegoeUI-Bold flags=16 repeat until <touching [Basket v]? or (y position < -160)>
+[10] size=8.25 font=SegoeUI-Bold flags=16 change y by (-5)
+[11] size=8.25 font=SegoeUI-Bold flags=16 if <touching [Basket v]?> then
+[12] size=8.25 font=SegoeUI-Bold flags=16 change [Score v] by (1)
+[13] size=8.25 font=SegoeUI-Bold flags=16 play sound [Chomp v]
+[14] size=7.88 font=SegoeUI-Semibold flags=16 Module 2 • Apple Catch Game | Page 8 of 20
+[15] size=18.0 font=Type3 (100 0 R) flags=0 🍎
+[16] size=7.5 font=SegoeUIBlack flags=0 PAGE 8 IMAGE PLACEHOLDER
+[17] size=9.38 font=SegoeUI-Bold flags=16 Apple Catching Game Gameplay Screenshot
+[18] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Screenshot showing Basket sprite at bottom catching red falling Apple sprite with Score counter displaying
+[19] size=7.88 font=SegoeUI-Italic flags=2 "Score: 5".
+
+########## PAGE 9 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 2 • SCRATCH GAMES | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 10: Game 1 - Cat Hunt Rat Chase
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Player Arrow controls, enemy AI movement, and collision scoring
+[3] size=9.75 font=SegoeUI flags=0 In this chase game, the player controls the Cat sprite using keyboard arrow keys to hunt down a sneaky Rat sprite | that glides around the stage!
+[4] size=9.75 font=SegoeUI-Bold flags=16 1. Cat Arrow Movement Script
+[5] size=8.25 font=SegoeUI-Bold flags=16 when [right arrow v] key pressed
+[6] size=8.25 font=SegoeUI-Bold flags=16 point in direction (90)
+[7] size=8.25 font=SegoeUI-Bold flags=16 move (15) steps
+[8] size=9.75 font=SegoeUI-Bold flags=16 2. Rat Glide & Catch Scoring
+[9] size=8.25 font=SegoeUI-Bold flags=16 when green flag clicked
+[10] size=8.25 font=SegoeUI-Bold flags=16 forever
+[11] size=7.5 font=SegoeUI-Bold flags=16 glide (1) secs to x: (random) y: (random)
+[12] size=8.25 font=SegoeUI-Bold flags=16 if <touching [Cat v]?> then
+[13] size=8.25 font=SegoeUI-Bold flags=16 change [Score v] by (1)
+[14] size=8.25 font=SegoeUI-Bold flags=16 start sound [Meow v]
+[15] size=7.88 font=SegoeUI-Semibold flags=16 Module 2 • Cat Hunt Rat Game | Page 9 of 20
+[16] size=18.0 font=Type3 (108 0 R) flags=0 🐱
+[17] size=7.5 font=SegoeUIBlack flags=0 PAGE 9 IMAGE PLACEHOLDER
+[18] size=9.38 font=SegoeUI-Bold flags=16 Cat Hunting Rat Game Stage Screenshot
+[19] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Screenshot showing Cat sprite chasing Rat sprite across kitchen backdrop.
+
+########## PAGE 10 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 2 • SCRATCH test | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 11: Exercise
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Underwater mouse controls, target touching, and mouth costume animation
+[3] size=9.75 font=SegoeUI flags=0 In Hungry Shark, the player guides a giant Shark underwater using mouse pointer movement to catch Diver sprites!
+[4] size=9.75 font=SegoeUI-Bold flags=16 Shark Movement & Mouth Animation Logic
+[5] size=8.25 font=SegoeUI-Bold flags=16 when green flag clicked
+[6] size=8.25 font=SegoeUI-Bold flags=16 forever
+[7] size=8.25 font=SegoeUI-Bold flags=16 point towards [mouse-pointer v]
+[8] size=8.25 font=SegoeUI-Bold flags=16 move (5) steps
+[9] size=8.25 font=SegoeUI-Bold flags=16 if <touching [Diver v]?> then
+[10] size=8.25 font=SegoeUI-Bold flags=16 switch costume to [Shark-B-OpenMouth v]
+[11] size=8.25 font=SegoeUI-Bold flags=16 change [Score v] by (1)
+[12] size=8.25 font=SegoeUI-Bold flags=16 play sound [Bite v] until done
+[13] size=8.25 font=SegoeUI-Bold flags=16 switch costume to [Shark-A v]
+[14] size=9.0 font=Type3 (54 0 R) flags=0 💡 Costume Animation Tip: Switching costumes briefly to an "open mouth" sprite creates a super cool visual eating | effect!
+[15] size=7.88 font=SegoeUI-Semibold flags=16 Module 2 • Hungry Shark Game | Page 10 of 20
+[16] size=18.0 font=Type3 (121 0 R) flags=0 🦈
+[17] size=7.5 font=SegoeUIBlack flags=0 PAGE 10 IMAGE PLACEHOLDER
+[18] size=9.38 font=SegoeUI-Bold flags=16 Hungry Shark Underwater Stage Screenshot
+[19] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Screenshot showing Shark sprite opening mouth to eat Diver sprite underwater with score panel.
+
+########## PAGE 11 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 2 • SCRATCH GAMES & POLISH | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 12-14: Chrome Dino & Game Polish
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Jumping gravity physics, scrolling obstacles, and game menus
+[3] size=9.75 font=SegoeUI-Bold flags=16 1. Dino Jump & Gravity Script
+[4] size=8.25 font=SegoeUI-Bold flags=16 when [space v] key pressed
+[5] size=8.25 font=SegoeUI-Bold flags=16 if <y position = -100> then
+[6] size=8.25 font=SegoeUI-Bold flags=16 set [velocityY v] to (14)
+[7] size=8.25 font=SegoeUI-Bold flags=16 repeat until <y position < -100>
+[8] size=8.25 font=SegoeUI-Bold flags=16 change y by (velocityY)
+[9] size=8.25 font=SegoeUI-Bold flags=16 change [velocityY v] by (-1)
+[10] size=9.75 font=SegoeUI-Bold flags=16 2. Cactus Movement Script
+[11] size=8.25 font=SegoeUI-Bold flags=16 when green flag clicked
+[12] size=8.25 font=SegoeUI-Bold flags=16 forever
+[13] size=8.25 font=SegoeUI-Bold flags=16 go to x: (240) y: (-100)
+[14] size=8.25 font=SegoeUI-Bold flags=16 repeat until <x position < -240>
+[15] size=8.25 font=SegoeUI-Bold flags=16 change x by (-8)
+[16] size=10.88 font=SegoeUI-Bold flags=16 3 Ways to Make Your Games Feel Pro
+[17] size=8.62 font=SegoeUI flags=0 1. Add Sound Effects: Play chomp, meow, pop, or jump sounds during collisions!
+[18] size=8.62 font=SegoeUI flags=0 2. Create a Start Menu Screen: Use a broadcast message start game when player clicks "PLAY"!
+[19] size=8.62 font=SegoeUI flags=0 3. Game Over Banner: Display a custom red "GAME OVER" sprite when player runs out of lives!
+[20] size=7.88 font=SegoeUI-Semibold flags=16 Module 2 • Dino Runner & Polish | Page 11 of 20
+[21] size=18.0 font=Type3 (121 0 R) flags=0 🦖
+[22] size=7.5 font=SegoeUIBlack flags=0 PAGE 11 IMAGE PLACEHOLDER
+[23] size=9.38 font=SegoeUI-Bold flags=16 Chrome Dino Runner & Finished Project Gallery
+[24] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: 4-quadrant picture showing previews of Apple Catch, Cat Hunt, Hungry Shark, and Chrome Dino games.
+
+########## PAGE 12 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 3 • CAPCUT EDITING | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 15: Intro to CapCut Video Editing
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Getting started with CapCut on desktop and mobile
+[3] size=9.75 font=SegoeUI-Bold flags=16 CapCut is one of the most popular, beginner-friendly video editing apps for desktop and phones. It makes editing | video clips, adding text, and applying effects super fast!
+[4] size=10.88 font=SegoeUI-Bold flags=16 The CapCut Workspace Areas
+[5] size=9.75 font=SegoeUI-Bold flags=16 1. Media Library
+[6] size=8.62 font=SegoeUI flags=0 Where you import raw video clips, | audio tracks, and images.
+[7] size=9.75 font=SegoeUI-Bold flags=16 2. Preview Window
+[8] size=8.62 font=SegoeUI flags=0 The screen where you watch your | video play back live while editing.
+[9] size=9.75 font=SegoeUI-Bold flags=16 3. The Timeline
+[10] size=8.62 font=SegoeUI flags=0 The bottom track layout where you | cut, trim, arrange, and layer clips!
+[11] size=10.88 font=SegoeUI-Bold flags=16 Video Format Comparison
+[12] size=8.62 font=SegoeUI-Bold flags=16 Format | Aspect Ratio | Best For Platform
+[13] size=8.62 font=SegoeUI-Bold flags=16 Landscape (16:9) | 1920 x 1080 | YouTube Longform, TV, PC screens
+[14] size=8.62 font=SegoeUI-Bold flags=16 Vertical (9:16) | 1080 x 1920 | TikTok, YouTube Shorts, Instagram Reels
+[15] size=7.88 font=SegoeUI-Semibold flags=16 Module 3 • CapCut Editing | Page 12 of 20
+[16] size=18.0 font=Type3 (100 0 R) flags=0 🎬
+[17] size=7.5 font=SegoeUIBlack flags=0 PAGE 12 IMAGE PLACEHOLDER
+[18] size=9.38 font=SegoeUI-Bold flags=16 CapCut Desktop Interface Screenshot
+[19] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Labeled screenshot of CapCut Desktop editor showing Media Panel, Player Screen, and Timeline tracks.
+
+########## PAGE 13 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 3 • CAPCUT EDITING | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 16 & 17: Cutting Clips & Transitions
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Trimming boring parts, splitting scenes, and adding smooth transitions
+[3] size=10.88 font=SegoeUI-Bold flags=16 Step-by-Step Cutting Protocol in CapCut
+[4] size=8.62 font=SegoeUI flags=0 1. Import Footage: Drag your recorded video clips into CapCut's media panel.
+[5] size=8.62 font=SegoeUI flags=0 2. Drag to Timeline: Place your videos onto Main Video Track 1.
+[6] size=8.62 font=SegoeUI flags=0 3. Split / Cut: Move playhead line to cut spot, and click Split (Razor) tool (or press Ctrl + B).
+[7] size=8.62 font=SegoeUI flags=0 4. Delete Bad Parts: Select unwanted middle clip segment and press Delete!
+[8] size=8.62 font=SegoeUI flags=0 5. Automatic Join: CapCut automatically snaps remaining clips together seamlessly!
+[9] size=10.88 font=SegoeUI-Bold flags=16 Popular CapCut Transitions
+[10] size=9.75 font=SegoeUI-Bold flags=16 Dissolve / Fade
+[11] size=8.62 font=SegoeUI flags=0 Smoothly blends Clip A into Clip B for | time passes or calm cuts.
+[12] size=9.75 font=SegoeUI-Bold flags=16 Camera Push / Zoom
+[13] size=8.62 font=SegoeUI flags=0 Energetic zoom in/out effect great | for tech reveals or action moments!
+[14] size=9.75 font=SegoeUI-Bold flags=16 Blur Wipe
+[15] size=8.62 font=SegoeUI flags=0 Wipes left or right with a quick | motion blur effect.
+[16] size=7.88 font=SegoeUI-Semibold flags=16 Module 3 • Cutting & Transitions | Page 13 of 20
+[17] size=18.0 font=Type3 (145 0 R) flags=0 ✂️
+[18] size=7.5 font=SegoeUIBlack flags=0 PAGE 13 IMAGE PLACEHOLDER
+[19] size=9.38 font=SegoeUI-Bold flags=16 CapCut Split & Trim Timeline Graphic
+[20] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Diagram showing Razor Split tool slicing a video clip in CapCut timeline and joining adjacent segments.
+
+########## PAGE 14 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 3 • CAPCUT EDITING | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 18: Adding Memes & Overlays
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Using Green Screen memes, funny reactions, and picture-in-picture
+[3] size=9.75 font=SegoeUI flags=0 Adding funny Meme Clips (laughing reactions, vine booms, green screen popups) makes tech and gaming videos | super entertaining!
+[4] size=10.88 font=SegoeUI-Bold flags=16 Using Green Screen Cutout in CapCut
+[5] size=8.62 font=SegoeUI flags=0 1. Drag your Green Screen Meme Clip onto Video Track 2 (above your main video).
+[6] size=8.62 font=SegoeUI flags=0 2. Select the meme clip on timeline -> Go to Cutout Tab in right inspector panel.
+[7] size=8.62 font=SegoeUI flags=0 3. Check Chroma Key -> Use Color Picker dropper to pick green background color.
+[8] size=8.62 font=SegoeUI flags=0 4. Increase Strength slider until green background disappears completely!
+[9] size=9.0 font=Type3 (54 0 R) flags=0 💡 Pro Meme Tip: Pair funny meme visual popups with matching sound effects (e.g. pop sound or funny laugh) for | maximum humor!
+[10] size=7.88 font=SegoeUI-Semibold flags=16 Module 3 • Memes & Overlays | Page 14 of 20
+[11] size=18.0 font=Helvetica flags=0 
+[12] size=7.5 font=SegoeUIBlack flags=0 PAGE 14 IMAGE PLACEHOLDER
+[13] size=9.38 font=SegoeUI-Bold flags=16 Green Screen Meme Chroma Key Preview
+[14] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Screenshot showing green screen meme overlay on timeline with Chroma Key green background removed.
+
+########## PAGE 15 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 3 • CAPCUT EDITING | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 19-21: Captions, Audio & Export
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Auto-subtitles, background music balance, and export settings
+[3] size=9.75 font=SegoeUI-Bold flags=16 1-Click Auto-Captions
+[4] size=8.62 font=SegoeUI flags=0 Go to Text Tab -> Auto Captions -> Create. CapCut's AI | instantly transcribes your voice track into synced subtitles!
+[5] size=9.75 font=SegoeUI-Bold flags=16 Styling Viral Captions
+[6] size=8.62 font=SegoeUI flags=0 Use bold modern fonts (Montserrat/Impact), add yellow | highlight text color, and subtle black text outline shadow.
+[7] size=10.88 font=SegoeUI-Bold flags=16 Proper Audio Volume Balance
+[8] size=9.75 font=SegoeUI-Bold flags=16 Voiceover / Speech Track
+[9] size=8.62 font=SegoeUI flags=0 Keep loud & clear (Volume set around 0 dB to +2 dB).
+[10] size=9.75 font=SegoeUI-Bold flags=16 Background Music Track
+[11] size=8.62 font=SegoeUI flags=0 Lower volume significantly (set around -15 dB to -20 dB) | so voice stays easy to hear.
+[12] size=10.88 font=SegoeUI-Bold flags=16 Best CapCut Export Settings
+[13] size=8.62 font=SegoeUI-Bold flags=16 Setting | Recommended Value | Why
+[14] size=8.62 font=SegoeUI-Bold flags=16 Resolution | 1080p (Full HD) | Sharp clear video quality
+[15] size=8.62 font=SegoeUI-Bold flags=16 Frame Rate | 30 FPS or 60 FPS | Smooth gameplay playback
+[16] size=8.62 font=SegoeUI-Bold flags=16 Format | MP4 (H.264) | Compatible with all platforms
+[17] size=7.88 font=SegoeUI-Semibold flags=16 Module 3 • Captions & Export | Page 15 of 20
+[18] size=18.0 font=Type3 (100 0 R) flags=0 🎵
+[19] size=7.5 font=SegoeUIBlack flags=0 PAGE 15 IMAGE PLACEHOLDER
+[20] size=9.38 font=SegoeUI-Bold flags=16 CapCut Auto-Captions & Export Panel
+[21] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Screenshot showing CapCut Auto Captions text generator panel and 1080p MP4 Export window.
+
+########## PAGE 16 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 4 • CASUAL ROBOTICS | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 22: What is a Robot? (Casual View)
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Surface-level knowledge about smart machines without scary math
+[3] size=9.75 font=SegoeUI flags=0 A Robot is simply a machine that can automatically sense its environment, think using code, and perform a physical | action!
+[4] size=10.88 font=SegoeUI-Bold flags=16 The 3 Parts Every Robot Has
+[5] size=9.75 font=SegoeUI-Bold flags=16 1. SENSORS (Eyes & Ears)
+[6] size=8.62 font=SegoeUI flags=0 Detect things like distance, light, | touch, or sound around the robot.
+[7] size=9.75 font=SegoeUI-Bold flags=16 2. THE BRAIN (Microcontroller)
+[8] size=8.62 font=SegoeUI flags=0 Small chip running code that decides | what action to take.
+[9] size=9.75 font=SegoeUI-Bold flags=16 3. MOTORS & LIGHTS (Hands | & Legs)
+[10] size=8.62 font=SegoeUI flags=0 Spin wheels, move arm joints, blink | LEDs, or play sounds.
+[11] size=9.0 font=Type3 (54 0 R) flags=0 💡 Casual Robotics Tip: Robotics is just hardware + code working together!
+[12] size=7.88 font=SegoeUI-Semibold flags=16 Module 4 • Casual Robotics | Page 16 of 20
+[13] size=18.0 font=Type3 (77 0 R) flags=0 🤖
+[14] size=7.5 font=SegoeUIBlack flags=0 PAGE 16 IMAGE PLACEHOLDER
+[15] size=9.38 font=SegoeUI-Bold flags=16 Simple 3-Part Robot Anatomy Diagram
+[16] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Casual illustration showing Sensor (Eyes) -> Microcontroller Board (Brain) -> Wheels/Motor (Legs).
+
+########## PAGE 17 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 4 • CASUAL ROBOTICS | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 23 & 24: Robot Brains, Sensors & Motors
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Arduino, Raspberry Pi, micro:bit, and hardware parts made simple
+[3] size=10.88 font=SegoeUI-Bold flags=16 Popular Beginner Robot Boards
+[4] size=9.75 font=SegoeUI-Bold flags=16 micro:bit
+[5] size=8.62 font=SegoeUI flags=0 Super easy board with built-in LED | screen and buttons. Connects directly | to Scratch!
+[6] size=9.75 font=SegoeUI-Bold flags=16 Arduino
+[7] size=8.62 font=SegoeUI flags=0 Classic sturdy board for controlling | motors, lights, and simple sensors.
+[8] size=9.75 font=SegoeUI-Bold flags=16 Raspberry Pi Pico
+[9] size=8.62 font=SegoeUI flags=0 Tiny $4 mini-computer board | programmed in easy MicroPython | code!
+[10] size=10.88 font=SegoeUI-Bold flags=16 Everyday Robot Hardware Parts
+[11] size=9.75 font=SegoeUI-Bold flags=16 Ultrasonic Distance Sensor
+[12] size=8.62 font=SegoeUI flags=0 Looks like two tiny eyes! Emits sound pulses to measure | how far away walls or obstacles are.
+[13] size=9.75 font=SegoeUI-Bold flags=16 Servo Motor
+[14] size=8.62 font=SegoeUI flags=0 A tiny motor that rotates precisely to specific angles (0 to | 180 degrees) for robot arm waving.
+[15] size=9.75 font=SegoeUI-Bold flags=16 DC Wheel Motor
+[16] size=8.62 font=SegoeUI flags=0 Spins wheels forward or backward continuously so a rover | can drive!
+[17] size=9.75 font=SegoeUI-Bold flags=16 LED Lights & Buzzers
+[18] size=8.62 font=SegoeUI flags=0 Simple lights for robot eyes and buzzers for funny beep | sounds.
+[19] size=7.88 font=SegoeUI-Semibold flags=16 Module 4 • Brains & Sensors | Page 17 of 20
+[20] size=18.0 font=Type3 (61 0 R) flags=0 🔌
+[21] size=7.5 font=SegoeUIBlack flags=0 PAGE 17 IMAGE PLACEHOLDER
+[22] size=9.38 font=SegoeUI-Bold flags=16 Microcontroller Boards & Hardware Guide
+[23] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Friendly photo displaying micro:bit, Arduino, Distance Sensor, and Servo Motor side-by-side.
+
+########## PAGE 18 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MODULE 4 • CASUAL ROBOTICS | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 25: Fun Surface Robotics Ideas
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Cool starter projects you can build or dream up
+[3] size=9.75 font=SegoeUI-Bold flags=16 1. Smart Trash Can
+[4] size=8.62 font=SegoeUI flags=0 Uses a distance sensor to detect your hand and | automatically opens the lid with a servo motor!
+[5] size=9.75 font=SegoeUI-Bold flags=16 2. Obstacle-Avoiding Rover
+[6] size=8.62 font=SegoeUI flags=0 A 2-wheeled car rover that drives around and turns away | whenever it gets close to a wall!
+[7] size=9.75 font=SegoeUI-Bold flags=16 3. Automatic Plant Waterer
+[8] size=8.62 font=SegoeUI flags=0 Detects dry soil moisture and pumps water to keep plants | healthy!
+[9] size=9.75 font=SegoeUI-Bold flags=16 4. Pet Companion Bot
+[10] size=8.62 font=SegoeUI flags=0 Blinks LED eyes and wiggles a feather arm whenever a pet | walks past!
+[11] size=9.0 font=Type3 (185 0 R) flags=0 🎉 Module 4 Complete! You now understand basic robotics concepts without any confusing math!
+[12] size=7.88 font=SegoeUI-Semibold flags=16 Module 4 • Starter Projects | Page 18 of 20
+[13] size=18.0 font=Helvetica flags=0 🏎️
+[14] size=7.5 font=SegoeUIBlack flags=0 PAGE 18 IMAGE PLACEHOLDER
+[15] size=9.38 font=SegoeUI-Bold flags=16 Mini Robot Rover & Smart Trash Can Prototype
+[16] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Cute photo of a 2-wheeled mini robot rover with eyes and battery pack.
+
+########## PAGE 19 ##########
+[0] size=8.25 font=SegoeUI-Bold flags=16 MASTER REFERENCE | THE CREATOR'S GUIDEBOOK
+[1] size=18.0 font=SegoeUIBlack flags=0 Ch 26: Master Cheat Sheet
+[2] size=9.75 font=SegoeUI-Semibold flags=16 Quick reference cards across all 4 guidebook topics
+[3] size=9.75 font=Type3 (192 0 R) flags=0 💻 Vibe Coding & Languages
+[4] size=8.62 font=SegoeUI-Bold flags=16 Frontend: HTML, CSS, JavaScript (Visuals).
+[5] size=8.62 font=SegoeUI-Bold flags=16 Backend: Python, Node.js, SQL (Servers).
+[6] size=8.62 font=SegoeUI-Bold flags=16 NEVER SHARE: Passwords, API Keys, Credentials.
+[7] size=9.75 font=Type3 (193 0 R) flags=0 🎮 Scratch Games Summary
+[8] size=8.62 font=SegoeUI-Bold flags=16 Apple Catch: Random X fall + Basket score.
+[9] size=8.62 font=SegoeUI-Bold flags=16 Cat Hunt: Arrow keys + touching Rat score.
+[10] size=8.62 font=SegoeUI-Bold flags=16 Hungry Shark: Mouse point + touching Diver.
+[11] size=8.62 font=SegoeUI-Bold flags=16 Chrome Dino: Space jump + Cactus avoid.
+[12] size=9.75 font=Type3 (193 0 R) flags=0 🎬 CapCut Video Shortcuts
+[13] size=8.62 font=SegoeUI-Bold flags=16 Split / Cut: Ctrl+B / Razor tool.
+[14] size=8.62 font=SegoeUI-Bold flags=16 Transitions: Drag onto clip seam.
+[15] size=8.62 font=SegoeUI-Bold flags=16 Green Screen Meme: Cutout -> Chroma Key.
+[16] size=8.62 font=SegoeUI-Bold flags=16 Captions: Text -> Auto Captions.
+[17] size=9.75 font=Type3 (194 0 R) flags=0 🤖 Casual Robotics
+[18] size=8.62 font=SegoeUI-Bold flags=16 Sensors: Eyes & ears (Distance/Light).
+[19] size=8.62 font=SegoeUI-Bold flags=16 Brains: Microcontrollers (micro:bit/Pico).
+[20] size=8.62 font=SegoeUI-Bold flags=16 Motors: Wheel & Servo movement.
+[21] size=7.88 font=SegoeUI-Semibold flags=16 Master Reference | Page 19 of 20
+[22] size=18.0 font=Type3 (195 0 R) flags=0 📋
+[23] size=7.5 font=SegoeUIBlack flags=0 PAGE 19 IMAGE PLACEHOLDER
+[24] size=9.38 font=SegoeUI-Bold flags=16 Master Summary Cards Visual
+[25] size=7.88 font=SegoeUI-Italic flags=2 Suggested Image: Clean visual summary graphic organizing icons for HTML, Scratch, CapCut, and Robotics.
+
+########## PAGE 20 ##########
+[0] size=16.12 font=SegoeUI-Bold flags=16 KEEP CREATING & BUILDING! | THE CREATOR'S GUIDEBOOK | Congratulations on completing The | Creator's Guidebook!
+[1] size=9.75 font=SegoeUI flags=0 You now have the fundamental knowledge to code with AI, build games in Scratch, edit videos in CapCut, and | explore robotics.
+[2] size=12.92 font=SegoeUI-Bold flags=16 Recommended Software Links |   Scratch Editor: scratch.mit.edu or turbo warp.
+[3] size=13.83 font=SegoeUI-Bold flags=16 CapCut Desktop: capcut.com (Free video editor for PC/Mac/Phone).
+[4] size=13.83 font=SegoeUI-Bold flags=16 IDE Code Editor: code.visualstudio.com or cursor.com or kiro or antigravity
+[5] size=15.28 font=ArialBlack flags=0 Download the Gostudy! app for more | opportunities like this at | goostudy.vercel.app
+[6] size=21.61 font=DubaiMedium flags=0 About the Author
+[7] size=17.68 font=DubaiMedium flags=0 SkyDrake (Chukwudumueme Miracle Chidera)
+[8] size=17.68 font=DubaiMedium flags=0 is an automotive engineering student, soft-
+[9] size=17.68 font=DubaiMedium flags=0 ware developer, and entrepreneur based in
+[10] size=17.68 font=DubaiMedium flags=0 Lomé, Togo. He runs Skydrake, a company
+[11] size=17.68 font=DubaiMedium flags=0 building apps and SaaS tools for the West
+[12] size=17.68 font=DubaiMedium flags=0 African market, and created this guidebook
+[13] size=17.68 font=DubaiMedium flags=0 to make coding, design, and robotics simple
+[14] size=17.68 font=DubaiMedium flags=0 and accessible for young creators.
+[15] size=22.0 font=Arial,Italic flags=2 Signature:

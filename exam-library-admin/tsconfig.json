@@ -17,7 +17,9 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/lib/subjects-data": ["../src/lib/subjects-data.ts"],
+      "@/*": ["./src/*"],
+      "@app/*": ["../src/*"]
     }
   },
   "include": ["src"],

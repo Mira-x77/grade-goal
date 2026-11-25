@@ -10,6 +10,7 @@ React + Vite + Capacitor exam library and grade-planning app.
 | **Supabase setup** | [docs/guides/START_HERE.md](docs/guides/START_HERE.md) |
 | **Testing** | [docs/guides/TESTING_GUIDE.md](docs/guides/TESTING_GUIDE.md) |
 | **APK build** | [docs/build/APK_BUILD_PROCESS.md](docs/build/APK_BUILD_PROCESS.md) |
+| **Windows desktop build** | [docs/build/DESKTOP_BUILD.md](docs/build/DESKTOP_BUILD.md) |
 | **App overview** | [docs/Grade-Goal-App-Overview.md](docs/Grade-Goal-App-Overview.md) |
 | **All docs** | [docs/README.md](docs/README.md) |
 
@@ -31,3 +32,4 @@ Admin panel: `exam-library-admin/` (separate Vite app).
 - `supabase/migrations/` — database migrations
 - `scripts/maintenance/` — one-off DB/quota scripts
 - `docs/` — guides, build notes, and archived session logs
+- `pending/` — **pending fixes and features** (start at `pending/README.md`)

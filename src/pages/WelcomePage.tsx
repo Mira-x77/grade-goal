@@ -3,10 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Globe } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import AuthSheet from "@/components/AuthSheet";
-import { Link } from "react-router-dom";
+import { ensureGuestSession } from "@/lib/guest-auth";
 
 function BenefitText({ language }: { language: string }) {
   const { t } = useLanguage();
@@ -18,12 +16,10 @@ function BenefitText({ language }: { language: string }) {
   ];
   const [idx, setIdx] = useState(0);
   const fr = language === "fr";
-
   useEffect(() => {
     const id = setInterval(() => setIdx(i => (i + 1) % BENEFITS_KEYS.length), 3200);
     return () => clearInterval(id);
   }, []);
-
   return (
     <AnimatePresence mode="wait">
       <motion.p
@@ -51,9 +47,7 @@ export default function WelcomePage() {
     try {
       localStorage.setItem("guest_mode", "true");
       navigate("/onboarding", { replace: true });
-      if (navigator.onLine) {
-        supabase.auth.signInAnonymously().catch(() => {});
-      }
+      void ensureGuestSession();
     } finally {
       setGuestLoading(false);
     }

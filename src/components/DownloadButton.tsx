@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useDownloadQuota } from '@/hooks/useDownloadQuota';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePremium } from '@/contexts/AppConfigContext';
+import { subscriptionService } from '@/services/subscriptionService';
 
 interface DownloadButtonProps {
   onDownload: () => Promise<void>;
@@ -32,7 +33,8 @@ export function DownloadButton({
   const handleClick = async () => {
     if (disabled || isDownloading || isDownloaded || isClicked) return;
 
-    if (!isPremium && !canDownload) {
+    const paidNow = isPremium || (await subscriptionService.getStatus()).hasPremiumAccess;
+    if (!paidNow && !canDownload) {
       openDownloadLimitGate();
       return;
     }

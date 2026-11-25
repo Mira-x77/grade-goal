@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { BarChart3, Users, Clock, Eye, Download, TrendingUp, Calendar } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { format, subDays } from 'date-fns';
+import SupabaseNotice from '../components/SupabaseNotice';
+import { useSupabaseStatus } from '../lib/supabase-status';
 
 interface DailyStats {
   date: string;
@@ -28,6 +30,7 @@ interface EventStats {
 export default function Analytics() {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState(7); // Last 7 days
+  const supabaseStatus = useSupabaseStatus();
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
   const [pageStats, setPageStats] = useState<PageStats[]>([]);
   const [eventStats, setEventStats] = useState<EventStats[]>([]);
@@ -168,6 +171,14 @@ export default function Analytics() {
         <div className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
         </div>
+      ) : supabaseStatus === 'restricted' ? (
+        <>
+          <SupabaseNotice status={supabaseStatus}>
+            App-usage tracking lives in the Supabase tables <code className="rounded bg-black/30 px-1">page_views</code>{' '}
+            and <code className="rounded bg-black/30 px-1">event_tracking</code>, so these charts stay
+            empty until the project is upgraded. Storage and download figures are on the Dashboard.
+          </SupabaseNotice>
+        </>
       ) : (
         <>
           {/* Summary Cards */}

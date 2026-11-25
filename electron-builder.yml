@@ -1,0 +1,54 @@
+# electron-builder configuration for the GoStudy Windows desktop build.
+# Produced by `npm run desktop:package`.
+appId: app.gostudy.desktop
+productName: GoStudy
+copyright: GoStudy
+
+directories:
+  output: releases/desktop
+  buildResources: electron/assets
+
+asar: true
+npmRebuild: false
+
+# The repository keeps version 0.0.0 for the shared web/android/ios build; the
+# desktop artifact carries the product version instead.
+extraMetadata:
+  version: 1.3.4
+  main: electron/main.cjs
+
+files:
+  - dist/**/*
+  - electron/main.cjs
+  - package.json
+  - "!**/*.map"
+  # Landing-page downloads are not used by the desktop renderer.
+  - "!dist/GoStudy.apk"
+  - "!dist/mascot-collage.png"
+  - "!dist/flyer.pdf"
+
+# The bundle catalogue lives outside the asar so the shell can read it with a
+# plain path (process.resourcesPath/catalog) and swap it for a refreshed copy.
+extraResources:
+  - from: electron/catalog
+    to: catalog
+
+win:
+  icon: electron/assets/icon.png
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: GoStudy
+  artifactName: GoStudy-${version}-setup.${ext}
+
+portable:
+  artifactName: GoStudy-${version}-portable.${ext}

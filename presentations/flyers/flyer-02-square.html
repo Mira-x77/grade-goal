@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Go Study flyer — square</title>
+<link rel="stylesheet" href="flyer.css" />
+<style>
+  .canvas { width: 1080px; height: 1080px; background: var(--yellow); padding: 40px 48px; }
+  .canvas .dots { background-image: radial-gradient(rgba(23,22,20,.20) 1.8px, transparent 1.9px); background-size: 30px 30px; }
+  .logo { position: absolute; z-index: 20; left: 34px; top: 8px; width: 194px; }
+  .top-chip { position: absolute; z-index: 21; right: 46px; top: 54px; font-size: 17px; letter-spacing: .16em; }
+
+  .headline { position: absolute; z-index: 15; left: 46px; top: 214px; font-size: 88px; line-height: .92; }
+  .headline .l2 { display: block; }
+  .headline .marker::before { background: #fff; }
+
+  .sub { position: absolute; z-index: 15; left: 50px; top: 494px; width: 500px; font-size: 25px; font-weight: 700; line-height: 1.32; }
+
+  .phone-sq { position: absolute; z-index: 8; right: 78px; top: 430px; width: 450px; height: 939px; transform: rotate(4.6deg); }
+
+  .stat {
+    position: absolute; z-index: 25; left: 46px; top: 616px; width: 300px;
+    background: #fff; border: 5px solid var(--ink); border-radius: 30px; padding: 22px 24px 20px;
+    box-shadow: 10px 10px 0 var(--ink); transform: rotate(-3deg);
+  }
+  .stat .cap { font-size: 14px; font-weight: 900; letter-spacing: .18em; opacity: .55; }
+  .stat .big { font-size: 72px; font-weight: 900; letter-spacing: -.05em; line-height: 1; margin-top: 4px; }
+  .stat .big small { font-size: 30px; opacity: .45; }
+  .stat .bar { margin-top: 14px; height: 15px; border: 3px solid var(--ink); border-radius: 999px; background: #eee; overflow: hidden; }
+  .stat .bar i { display: block; width: 78%; height: 100%; background: var(--yellow); border-right: 3px solid var(--ink); }
+  .stat .note { margin-top: 10px; font-size: 15px; font-weight: 900; opacity: .6; }
+
+  .sticker-streak {
+    position: absolute; z-index: 26; right: 40px; top: 330px; transform: rotate(-4deg);
+    background: var(--ink); color: #fff; border-radius: 22px; padding: 12px 18px;
+    display: flex; align-items: center; gap: 10px; box-shadow: 6px 6px 0 rgba(23,22,20,.28);
+  }
+  .sticker-streak .flame { font-size: 34px; }
+  .sticker-streak b { display: block; font-size: 28px; font-weight: 900; line-height: .9; }
+  .sticker-streak span { font-size: 11px; letter-spacing: .16em; font-weight: 900; opacity: .65; }
+
+  .mascot-sq { position: absolute; z-index: 24; left: 24px; top: 800px; width: 296px; transform: rotate(-5deg); }
+
+  .cta-bar {
+    position: absolute; z-index: 40; left: 46px; right: 46px; bottom: 34px;
+    background: var(--ink); border-radius: 26px; padding: 18px 24px; color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .cta-bar .go { background: var(--yellow); color: var(--ink); border-radius: 999px; padding: 12px 24px; font-size: 21px; font-weight: 900; }
+  .cta-bar .url { font-size: 23px; }
+  .cta-bar small { font-size: 12px; font-weight: 900; letter-spacing: .14em; opacity: .55; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="dots"></div>
+  <div class="blob" style="width:420px;height:420px;left:-160px;bottom:-170px;background:#fff;opacity:.4"></div>
+
+  <img class="logo" src="/presentations/assets/icon_clean.png" alt="Go Study" />
+  <div class="chip top-chip">FREE TO START</div>
+
+  <h1 class="headline display">
+    School is hard.<br />
+    <span class="l2">Your average</span>
+    <span class="l2"><span class="marker">shouldn't be.</span></span>
+  </h1>
+
+  <p class="sub">
+    Track every mark, see your real average and know exactly what to study next.
+  </p>
+
+  <div class="phone phone-sq">
+    <img src="shots/home.png" alt="Go Study home dashboard" />
+  </div>
+
+  <div class="stat">
+    <div class="cap">YOUR AVERAGE</div>
+    <div class="big">15.7<small> /20</small></div>
+    <div class="bar"><i></i></div>
+    <div class="note">33/39 marks · TRÈS BIEN</div>
+  </div>
+
+  <div class="sticker-streak">
+    <div class="flame">🔥</div>
+    <div><b>7</b><span>DAY STREAK</span></div>
+  </div>
+
+  <div class="mascot mascot-sq"><img src="/presentations/assets/triumph.png" alt="" /></div>
+
+  <div class="cta-bar">
+    <div class="go">Start free →</div>
+    <div class="url">goostudy.vercel.app</div>
+    <small>ANDROID &amp; WEB</small>
+  </div>
+</div>
+</body>
+</html>

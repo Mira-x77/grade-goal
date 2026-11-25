@@ -1,4 +1,4 @@
-import { ArrowLeft, Home, BookOpen, GraduationCap } from "lucide-react";
+import { ArrowLeft, Home, BookOpen, Rss } from "lucide-react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ReactNode, useState } from "react";
@@ -65,7 +65,7 @@ const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
     const tabs = [
       { path: "/",        icon: Home,          label: t("home") },
       { path: "/library", icon: BookOpen,      label: t("library") },
-      { path: "/courses", icon: GraduationCap, label: "Cours" },
+      { path: "/courses", icon: Rss, label: t("feedsNav") },
     ] as const;
 
     return (
@@ -120,8 +120,8 @@ const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 />
               )}
-              <GraduationCap className={`h-5 w-5 relative z-10 transition-all ${activeTab === "/courses" ? "text-foreground fill-foreground stroke-[1.5]" : "text-muted-foreground fill-none stroke-2"}`} />
-              <span className={`text-[10px] font-black relative z-10 ${activeTab === "/courses" ? "text-foreground" : "text-muted-foreground"}`}>Cours</span>
+              <Rss className={`h-5 w-5 relative z-10 transition-all ${activeTab === "/courses" ? "text-foreground fill-foreground stroke-[1.5]" : "text-muted-foreground fill-none stroke-2"}`} />
+              <span className={`text-[10px] font-black relative z-10 ${activeTab === "/courses" ? "text-foreground" : "text-muted-foreground"}`}>{t("feedsNav")}</span>
             </Link>
           </div>
 
@@ -141,7 +141,7 @@ const TaskBar = ({ action, backAction, showBack }: TaskBarProps) => {
   const tabs = [
     { path: "/",        icon: Home,          label: t("home") },
     { path: "/library", icon: BookOpen,      label: t("library") },
-    { path: "/courses", icon: GraduationCap, label: "Cours" },
+    { path: "/courses", icon: Rss, label: t("feedsNav") },
   ] as const;
 
   return (

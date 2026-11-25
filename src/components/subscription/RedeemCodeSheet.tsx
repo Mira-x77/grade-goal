@@ -6,7 +6,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getGradingSystemFromState, getSchoolFromProfile, type CodeSource } from '@/lib/subscription-profile';
+import { isGuestUser } from '@/lib/guest-auth';
+import AuthSheet from '@/components/AuthSheet';
 import { RedeemCodeSuccess } from './RedeemCodeSuccess';
+import { HowToGetCodeLink } from './HowToGetCodeLink';
 
 interface RedeemCodeSheetProps {
   open: boolean;
@@ -24,7 +27,7 @@ const SOURCE_OPTIONS: { value: CodeSource; labelKey: 'codeSourceSchool' | 'codeS
 
 export function RedeemCodeSheet({ open, onClose, onSuccess, subjectName }: RedeemCodeSheetProps) {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [code, setCode] = useState('');
   const [codeSource, setCodeSource] = useState<CodeSource | ''>('');
   const [loading, setLoading] = useState(false);
@@ -49,6 +52,10 @@ export function RedeemCodeSheet({ open, onClose, onSuccess, subjectName }: Redee
   };
 
   const handleActivate = async () => {
+    if (isGuestUser(user)) {
+      setError(t('premiumSignInRequired'));
+      return;
+    }
     if (code.replace(/-/g, '').length !== 12) {
       setError(t('enterValidCode'));
       return;
@@ -58,19 +65,25 @@ export function RedeemCodeSheet({ open, onClose, onSuccess, subjectName }: Redee
     setError(null);
 
     try {
+      const activeUserId = user?.id ?? null;
+      if (!activeUserId) {
+        setError(t('premiumSignInRequired'));
+        return;
+      }
+
       let profileMeta: Record<string, unknown> | null = null;
-      if (user?.id) {
+      if (activeUserId) {
         const { data } = await supabase
           .from('user_profile')
           .select('metadata')
-          .eq('user_id', user.id)
+          .eq('user_id', activeUserId)
           .maybeSingle();
         profileMeta = (data?.metadata as Record<string, unknown>) ?? null;
       }
 
       const result = await subscriptionService.activatePremiumCode(code, {
         subjectName,
-        userId: user?.id ?? null,
+        userId: activeUserId,
         gradingSystem: getGradingSystemFromState(),
         school: getSchoolFromProfile(profileMeta),
         codeSource: codeSource || null,
@@ -93,6 +106,22 @@ export function RedeemCodeSheet({ open, onClose, onSuccess, subjectName }: Redee
     onSuccess();
     onClose();
   };
+
+  if (open && authLoading) {
+    return null;
+  }
+
+  if (open && isGuestUser(user)) {
+    return (
+      <AuthSheet
+        open={open}
+        onClose={(signedIn) => {
+          if (!signedIn) onClose();
+        }}
+        message={t('premiumSignInRequired')}
+      />
+    );
+  }
 
   return (
     <>
@@ -162,6 +191,8 @@ export function RedeemCodeSheet({ open, onClose, onSuccess, subjectName }: Redee
           </div>
 
           {error && <p className="text-sm font-bold text-destructive text-center">{error}</p>}
+
+          <HowToGetCodeLink onNavigate={handleClose} />
 
           <button
             type="button"

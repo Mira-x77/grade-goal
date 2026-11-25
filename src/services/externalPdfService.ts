@@ -4,8 +4,18 @@
  */
 
 import { App } from "@capacitor/app";
-import { Capacitor } from "@capacitor/core";
-import { Filesystem } from "@capacitor/filesystem";
+import { Capacitor, registerPlugin } from "@capacitor/core";
+import { Directory, Filesystem } from "@capacitor/filesystem";
+import { toast } from "sonner";
+import { cacheService } from "@/services/cacheService";
+import { EXAM_PAPERS_DIR } from "@/lib/filesystem";
+import type { CachedPaper } from "@/types/exam-library";
+
+const IncomingPdf = registerPlugin<{
+  consumeLaunchPdf(): Promise<{ found: boolean; path?: string; fileName?: string; size?: number }>;
+  readUri(options: { uri: string }): Promise<{ path: string; fileName: string; size?: number }>;
+  pickPdf(): Promise<{ cancelled?: boolean; files?: { path: string; fileName: string; size?: number }[] }>;
+}>("IncomingPdf");
 
 export interface ExternalPdfPayload {
   pdfUrl?: string;
@@ -19,15 +29,23 @@ class ExternalPdfService {
   private activePayload: ExternalPdfPayload | null = null;
   private listeners: Set<ExternalPdfListener> = new Set();
   private initialized = false;
+  private launchConsumed = false;
 
   public init() {
     if (this.initialized) return;
     this.initialized = true;
 
+    this.consumeNativeLaunchPdf();
+
+    window.addEventListener("gostudy-incoming-pdf", () => {
+      void this.consumeNativeLaunchPdf();
+    });
+
     // 1. Check if launched with intent URL on fresh startup
     App.getLaunchUrl().then((launchUrl) => {
+      if (this.launchConsumed) return;
       if (launchUrl?.url) {
-        this.handleIncomingUrl(launchUrl.url);
+        void this.handleIncomingUrl(launchUrl.url);
       }
     }).catch((err) => {
       console.warn("[ExternalPdfService] Error getting launch URL:", err);
@@ -36,9 +54,44 @@ class ExternalPdfService {
     // 2. Listen for app opened from background via file intent / deep link
     App.addListener("appUrlOpen", (data) => {
       if (data?.url) {
-        this.handleIncomingUrl(data.url);
+        void this.handleIncomingUrl(data.url);
       }
     });
+  }
+
+  /** Alias for browsePhoneFolders for compatibility */
+  public pickMultiplePdfs = () => this.browsePhoneFolders();
+
+  /** Opens the Android folder browser and adds the chosen PDFs to My Downloads. */
+  public async browsePhoneFolders(): Promise<number> {
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "android") {
+      throw new Error("USE_FILE_INPUT");
+    }
+    const result = await IncomingPdf.pickPdf();
+    if (!result || result.cancelled || !result.files?.length) return 0;
+
+    let opened = false;
+    let added = 0;
+    for (const file of result.files) {
+      if (!file?.path) continue;
+      try {
+        await this.importPhonePdf(file.path, file.fileName || "Document.pdf", file.size ?? 0);
+        added += 1;
+        if (!opened) {
+          opened = true;
+          await this.openCopiedFile(file.path, file.fileName || "Document.pdf");
+        }
+      } catch (err) {
+        console.warn("[ExternalPdfService] import failed:", err);
+      }
+    }
+    if (added > 0) {
+      window.dispatchEvent(new CustomEvent("gostudy-downloads-updated"));
+      toast.success(added === 1 ? "PDF added to My Downloads" : `${added} PDFs added to My Downloads`);
+    } else {
+      toast.error("Could not add that PDF from your phone.");
+    }
+    return added;
   }
 
   public subscribe(listener: ExternalPdfListener): () => void {
@@ -59,6 +112,65 @@ class ExternalPdfService {
 
   public close() {
     this.setPayload(null);
+  }
+
+  private async consumeNativeLaunchPdf() {
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "android") return;
+    try {
+      const result = await IncomingPdf.consumeLaunchPdf();
+      if (result?.found && result.path) {
+        this.launchConsumed = true;
+        await this.openCopiedFile(result.path, result.fileName || "Document.pdf");
+      }
+    } catch (err) {
+      console.warn("[ExternalPdfService] Native launch PDF:", err);
+    }
+  }
+
+  private async importPhonePdf(path: string, fileName: string, size: number) {
+    const res = await Filesystem.readFile({ path });
+    if (typeof res.data !== "string" || res.data.length === 0) {
+      throw new Error("Empty PDF");
+    }
+    const safeName = fileName.replace(/[^\w.\- ()]/g, "_");
+    const storedName = `${Date.now()}-${safeName.toLowerCase().endsWith(".pdf") ? safeName : `${safeName}.pdf`}`;
+    await Filesystem.mkdir({ path: EXAM_PAPERS_DIR, directory: Directory.Data, recursive: true }).catch(() => {});
+    await Filesystem.writeFile({
+      path: `${EXAM_PAPERS_DIR}/${storedName}`,
+      data: res.data,
+      directory: Directory.Data,
+    });
+    const now = new Date().toISOString();
+    const bytes = size > 0 ? size : Math.floor((res.data.length * 3) / 4);
+    const paper: CachedPaper = {
+      id: `phone-${storedName}`,
+      title: fileName.replace(/\.pdf$/i, ""),
+      subject: "Phone",
+      classLevel: "Autre",
+      year: new Date().getFullYear(),
+      examType: "Devoir",
+      session: "Regular",
+      fileSize: bytes,
+      fileSizeFormatted: bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`,
+      uploadDate: now,
+      downloads: 0,
+      tags: ["phone"],
+      isDownloaded: true,
+      localPath: `${EXAM_PAPERS_DIR}/${storedName}`,
+      downloadedAt: now,
+      lastFetched: now,
+    };
+    await cacheService.saveImportedPaper(paper);
+  }
+
+  private async openCopiedFile(path: string, fileName: string) {
+    const res = await Filesystem.readFile({ path });
+    if (typeof res.data === "string" && res.data.length > 0) {
+      this.setPayload({ pdfData: res.data, fileName });
+      return;
+    }
+    const fileUri = path.startsWith("file://") ? path : `file://${path}`;
+    this.setPayload({ pdfUrl: Capacitor.convertFileSrc(fileUri), fileName });
   }
 
   public async handleIncomingUrl(urlStr: string) {
@@ -84,6 +196,7 @@ class ExternalPdfService {
       }
     } catch (err) {
       console.error("❌ [ExternalPdfService] Failed to resolve PDF from URI:", err);
+      toast.error("Could not open this PDF from your phone.");
     }
   }
 
@@ -138,18 +251,30 @@ class ExternalPdfService {
       return { pdfUrl: converted, fileName };
     }
 
-    // 3. Android Content URIs (content://...)
+    // 3. Android Content URIs — copy into app cache, then serve via convertFileSrc.
     if (uri.startsWith("content://")) {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const copied = await IncomingPdf.readUri({ uri });
+          if (copied?.path) {
+            const res = await Filesystem.readFile({ path: copied.path });
+            if (typeof res.data === "string" && res.data.length > 0) {
+              return { pdfData: res.data, fileName: copied.fileName || fileName };
+            }
+          }
+        } catch (err) {
+          console.warn("[ExternalPdfService] IncomingPdf.readUri failed:", err);
+        }
+      }
       try {
         const res = await Filesystem.readFile({ path: uri });
-        if (typeof res.data === "string") {
+        if (typeof res.data === "string" && res.data.length > 0) {
           return { pdfData: res.data, fileName };
         }
       } catch (err) {
-        console.warn("⚠️ [ExternalPdfService] Content URI readFile warning, trying convertFileSrc:", err);
-        const converted = Capacitor.convertFileSrc(uri);
-        return { pdfUrl: converted, fileName };
+        console.warn("[ExternalPdfService] content:// readFile failed:", err);
       }
+      throw new Error("Could not read this PDF from phone storage.");
     }
 
     // Fallback convert

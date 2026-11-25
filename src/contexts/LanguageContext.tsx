@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 import { Language, getLanguage, setLanguage, translations } from "@/lib/i18n";
 
 type TFunction = (key: keyof typeof translations.en) => string;
@@ -30,11 +30,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     [language]
   );
 
-  // key={language} forces full remount of the app tree on language change
-  // so all components using the static t() from i18n also get fresh values
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+
+  // key={language} forces full remount on language change so static t() imports refresh too
   return (
     <LanguageContext.Provider value={{ language, setLang, t }}>
-      {children}
+      <div key={language} className="contents">
+        {children}
+      </div>
     </LanguageContext.Provider>
   );
 }

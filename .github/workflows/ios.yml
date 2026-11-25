@@ -1,0 +1,147 @@
+name: iOS build (unsigned IPA)
+
+# Builds GoStudy for iPhone on a macOS runner, with no Mac involved locally.
+#
+# Output: an UNSIGNED .ipa. iOS only installs signed binaries, so this artifact
+# must be re-signed on install:
+#
+#   Sideloadly (Windows/macOS) + free Apple ID -> works, expires every 7 days
+#   AltStore   (Windows/macOS) + free Apple ID -> same limit
+#   Paid Apple Developer account + Xcode/TestFlight -> see ios-release.yml
+#
+# Trigger: Actions tab (Run workflow) or a tag such as `ios-v1.3.3`.
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'ios-*'
+
+concurrency:
+  group: ios-unsigned-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # The lockfile was resolved with legacy peer resolution (the Vite 8 /
+      # lovable-tagger peer range conflicts), so plain `npm ci` fails here.
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      # The web bundle is built from .env, which is gitignored. Supabase values
+      # come from repository secrets; the R2 catalogue URL is public.
+      - name: Write .env for the web build
+        env:
+          SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          CATALOG_URL: ${{ secrets.VITE_CATALOG_URL }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -n "$SUPABASE_PROJECT_ID" ] || missing="$missing VITE_SUPABASE_PROJECT_ID"
+          [ -n "$SUPABASE_URL" ] || missing="$missing VITE_SUPABASE_URL"
+          [ -n "$SUPABASE_ANON_KEY" ] || missing="$missing VITE_SUPABASE_ANON_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing"
+            echo "Add them under Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+          {
+            printf 'VITE_SUPABASE_PROJECT_ID=%s\n' "$SUPABASE_PROJECT_ID"
+            printf 'VITE_SUPABASE_URL=%s\n' "$SUPABASE_URL"
+            printf 'VITE_SUPABASE_ANON_KEY=%s\n' "$SUPABASE_ANON_KEY"
+            printf 'VITE_APP_URL=%s\n' "https://gostudy.app"
+            printf 'VITE_CATALOG_URL=%s\n' "${CATALOG_URL:-https://pub-91f336347bd944c48d724d28d0d3b647.r2.dev/catalog}"
+          } > .env
+          sed -E 's/=.*/=<set>/' .env
+
+      - name: Build web assets
+        run: npm run build
+
+      - name: Sync Capacitor iOS project
+        run: npx cap sync ios
+
+      # Normalises the plugin paths written by the Windows CLI and pins the
+      # iOS 15 deployment target Capacitor 8 requires.
+      - name: Prepare iOS project
+        run: npm run ios:prepare
+
+      - name: Toolchain versions
+        run: |
+          xcodebuild -version
+          xcode-select -p
+          node --version
+          npx cap --version
+
+      - name: Resolve Swift packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData"
+
+      - name: Build (unsigned)
+        run: |
+          set -euo pipefail
+          xcodebuild build \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_ENTITLEMENTS="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            ONLY_ACTIVE_ARCH=NO \
+            | tee "$RUNNER_TEMP/xcodebuild.log" | tail -n 40
+
+      - name: Package .ipa
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos/App.app"
+          test -d "$APP" || { echo "::error::App.app was not produced"; exit 1; }
+
+          BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")"
+          SHORT_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist")"
+          BUILD_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist")"
+          echo "Bundle: $BUNDLE_ID  version $SHORT_VERSION ($BUILD_VERSION)"
+
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          IPA="GoStudy-${SHORT_VERSION}-${BUILD_VERSION}-unsigned.ipa"
+          zip -qry "$IPA" Payload
+          ls -lh "$IPA"
+
+      - name: Upload .ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: gostudy-ios-unsigned-ipa
+          path: '*.ipa'
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: ${{ runner.temp }}/xcodebuild.log
+          retention-days: 7
+          if-no-files-found: ignore

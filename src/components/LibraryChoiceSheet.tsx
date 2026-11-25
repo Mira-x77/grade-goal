@@ -8,6 +8,7 @@ import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { BookOpen, FileText, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LibraryChoiceSheetProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface LibraryChoiceSheetProps {
 
 export default function LibraryChoiceSheet({ open, onClose }: LibraryChoiceSheetProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const sheetRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
 
@@ -73,7 +75,7 @@ export default function LibraryChoiceSheet({ open, onClose }: LibraryChoiceSheet
     <div
       aria-modal="true"
       role="dialog"
-      aria-label="Library options"
+      aria-label={t("library")}
       style={{
         position: 'fixed',
         inset: 0,
@@ -117,9 +119,9 @@ export default function LibraryChoiceSheet({ open, onClose }: LibraryChoiceSheet
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-2 pb-4">
           <div>
-            <h2 className="text-lg font-black text-foreground">Library</h2>
+            <h2 className="text-lg font-black text-foreground">{t("library")}</h2>
             <p className="text-xs font-semibold text-muted-foreground mt-0.5">
-              What are you looking for?
+              {t("libraryLookingFor")}
             </p>
           </div>
           <button
@@ -140,9 +142,9 @@ export default function LibraryChoiceSheet({ open, onClose }: LibraryChoiceSheet
               <FileText className="h-6 w-6 text-primary" />
             </div>
             <div className="text-center">
-              <p className="font-black text-foreground text-sm">Past Papers</p>
+              <p className="font-black text-foreground text-sm">{t("pastPapers")}</p>
               <p className="text-[10px] font-semibold text-muted-foreground mt-0.5 leading-tight">
-                Exam papers & tests
+                {t("examPapersTests")}
               </p>
             </div>
           </button>
@@ -155,9 +157,9 @@ export default function LibraryChoiceSheet({ open, onClose }: LibraryChoiceSheet
               <BookOpen className="h-6 w-6 text-secondary-foreground" />
             </div>
             <div className="text-center">
-              <p className="font-black text-foreground text-sm">Books</p>
+              <p className="font-black text-foreground text-sm">{t("booksTitle")}</p>
               <p className="text-[10px] font-semibold text-muted-foreground mt-0.5 leading-tight">
-                Textbooks & guides
+                {t("booksSubtitle")}
               </p>
             </div>
           </button>

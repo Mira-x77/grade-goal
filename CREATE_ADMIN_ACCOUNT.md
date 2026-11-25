@@ -1,66 +1,43 @@
-# Create Admin Account for Login
+# Admin Panel Access
 
-## Quick Steps:
+The admin panel **no longer has a sign-in page** — opening
+`http://localhost:3001` (or `http://127.0.0.1:3001`) goes straight to the
+Dashboard. There is nothing to create or remember.
 
-### 1. Go to Supabase Dashboard
-🔗 https://supabase.com/dashboard/project/aaayzhvqgqptgqaxxbdh/auth/users
+The panel runs under a fixed local identity (`admin@gostudy.app`, used only for
+attribution when generating subscription codes) and talks to Supabase with the
+service-role key from `exam-library-admin/.env`, so make sure that key is set:
 
-### 2. Create Admin User
-1. Click **"Add user"** button (top right)
-2. Select **"Create new user"**
-3. Fill in:
-   - **Email**: `techmira77@gmail.com` (or your email)
-   - **Password**: Choose a strong password (remember it!)
-   - **Auto Confirm User**: ✅ Check this box (important!)
-4. Click **"Create user"**
+```env
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+VITE_SUPABASE_SERVICE_ROLE_KEY=...   # required for admin reads/writes
+```
 
-### 3. Login to Admin Panel
-1. Go to: `http://localhost:3001`
-2. You'll see the login page
-3. Enter:
-   - Email: `techmira77@gmail.com` (or the email you used)
-   - Password: (the password you set)
-4. Click **"Sign In"**
+Old `/login` links (bookmarks, previous logout button) redirect to `/`.
 
-### 4. You're In!
-After login, you'll see the admin panel with:
-- Dashboard
-- Upload
-- Papers
-- Analytics
-- **Subscriptions** (bright yellow-orange button) ← Your subscription codes page!
+> The panel is intended as a local/operator tool. Before hosting it publicly,
+> move the service-role key and the R2 upload signing behind a server-side
+> endpoint (Cloudflare Worker), since both are embedded in the browser bundle.
 
----
-
-## Alternative: Use Any Email
-
-You can use ANY email address you want:
-1. Create user in Supabase with your preferred email
-2. Login with that email and password
-3. The admin panel doesn't restrict by email - any authenticated user can access it
-
----
-
-## Troubleshooting:
-
-**"Invalid login credentials"**
-- Make sure you checked "Auto Confirm User" when creating the account
-- Try resetting the password in Supabase dashboard
-
-**Can't access Supabase dashboard**
-- Make sure you're logged into Supabase
-- Use the direct link above (includes your project ID)
-
-**Still stuck?**
-- You can create the user via SQL in Supabase SQL Editor:
-  ```sql
-  -- This creates a user directly (advanced)
-  -- Go to: https://supabase.com/dashboard/project/aaayzhvqgqptgqaxxbdh/sql
-  ```
-
----
-
-## Your Supabase Project:
+## Your Supabase Project
 - **Project ID**: aaayzhvqgqptgqaxxbdh
 - **URL**: https://aaayzhvqgqptgqaxxbdh.supabase.co
 - **Dashboard**: https://supabase.com/dashboard/project/aaayzhvqgqptgqaxxbdh
+- **Storage bucket**: `exam-papers` (R2 mirrors the same layout)
+
+## Troubleshooting
+
+**Dashboard shows 0 papers / empty lists**
+- The admin reads the R2 catalogue when Supabase is restricted, so it should show
+  319 papers / 355 books. If it shows zeros, check that
+  `VITE_R2_PUBLIC_URL` (or `VITE_CATALOG_URL`) is set and that
+  `<public base>/catalog/papers.json` returns 200.
+- Storage/PostgREST still return `402 exceed_storage_size_quota` until the
+  project is upgraded; the amber banner in the panel explains which features that
+  affects.
+- Check that `VITE_SUPABASE_SERVICE_ROLE_KEY` is present and the dev server was
+  restarted after editing `.env`.
+
+**Can't access Supabase dashboard**
+- Make sure you're logged into Supabase, then use the direct link above.

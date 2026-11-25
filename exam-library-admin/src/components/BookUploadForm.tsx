@@ -1,14 +1,12 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 import { Upload, BookOpen, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '../lib/supabaseClient';
+import { storageAdapter } from '../lib/storage-adapter';
+import StorageTargetSelect from './StorageTargetSelect';
+import { useStorageTarget } from '../lib/storage-target';
 import { calculateFileHash } from '../lib/integrity';
 import { generatePDFPreview } from '../lib/pdf-preview-generator';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL || 'https://aaayzhvqgqptgqaxxbdh.supabase.co',
-  import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhYXl6aHZxZ3FwdGdxYXh4YmRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NzAwNDksImV4cCI6MjA4ODA0NjA0OX0.NNKOn17jGZHEbBKBnX3oxVhSYJhKm28QSOkK76I0bgo'
-);
 
 const CATEGORIES = ['Textbook', 'Study Guide', 'Reference', 'Practice Book', 'Novel', 'Other'];
 const SYSTEMS = [
@@ -56,6 +54,7 @@ export default function BookUploadForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [target] = useStorageTarget();
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -104,6 +103,11 @@ export default function BookUploadForm() {
     setUploading(true);
     setProgress(0);
 
+    // Roll back stored files when the database row never lands.
+    let uploadedFileUrl: string | null = null;
+    let uploadedCoverUrl: string | null = null;
+    let rowCreated = false;
+
     try {
       // 1. Hash
       const contentHash = await calculateFileHash(file);
@@ -111,9 +115,10 @@ export default function BookUploadForm() {
 
       // 2. Upload PDF
       const fileName = `books/${Date.now()}_${file.name.replace(/\s+/g, '-')}`;
-      const { error: uploadError } = await supabase.storage.from('exam-papers').upload(fileName, file);
-      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
-      const { data: { publicUrl: fileUrl } } = supabase.storage.from('exam-papers').getPublicUrl(fileName);
+      const fileUrl = await storageAdapter.uploadFile(fileName, file, {
+        contentType: 'application/pdf',
+      });
+      uploadedFileUrl = fileUrl;
       setProgress(50);
 
       // 3. Upload cover image (optional)
@@ -121,54 +126,66 @@ export default function BookUploadForm() {
       if (coverFile) {
         try {
           const coverName = `book-covers/${Date.now()}_${coverFile.name.replace(/\s+/g, '-')}`;
-          const { error: coverError } = await supabase.storage.from('exam-papers').upload(coverName, coverFile);
-          if (!coverError) {
-            const { data: { publicUrl } } = supabase.storage.from('exam-papers').getPublicUrl(coverName);
-            coverUrl = publicUrl;
-          }
+          coverUrl = await storageAdapter.uploadFile(coverName, coverFile);
+          uploadedCoverUrl = coverUrl;
         } catch { /* non-fatal */ }
       } else {
         // Auto-generate cover from PDF first page
         try {
           const previewBlob = await generatePDFPreview(file);
           const previewName = `book-covers/auto_${Date.now()}.png`;
-          const { error: previewError } = await supabase.storage.from('exam-papers').upload(previewName, previewBlob);
-          if (!previewError) {
-            const { data: { publicUrl } } = supabase.storage.from('exam-papers').getPublicUrl(previewName);
-            coverUrl = publicUrl;
-          }
+          coverUrl = await storageAdapter.uploadFile(previewName, previewBlob, {
+            contentType: 'image/png',
+          });
+          uploadedCoverUrl = coverUrl;
         } catch { /* non-fatal */ }
       }
       setProgress(80);
 
       // 4. Insert DB record
       const tags = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
-      const { error: dbError } = await supabase.from('library_books').insert({
-        title: formData.title.trim(),
-        author: formData.author.trim() || null,
-        subject: formData.subject,
-        category: formData.category,
-        system: formData.system,
-        class_level: formData.classLevel.trim() || null,
-        description: formData.description.trim() || null,
-        cover_url: coverUrl,
-        file_url: fileUrl,
-        file_name: file.name,
-        file_size: file.size,
-        file_size_formatted: formatBytes(file.size),
-        content_hash: contentHash,
-        tags,
-        published_year: formData.publishedYear ? parseInt(formData.publishedYear) : null,
-        downloads: 0,
-      });
+      const { data: inserted, error: dbError } = await supabaseAdmin
+        .from('library_books')
+        .insert({
+          title: formData.title.trim(),
+          author: formData.author.trim() || null,
+          subject: formData.subject,
+          category: formData.category,
+          system: formData.system,
+          class_level: formData.classLevel.trim() || null,
+          description: formData.description.trim() || null,
+          cover_url: coverUrl,
+          file_url: fileUrl,
+          file_name: file.name,
+          file_size: file.size,
+          file_size_formatted: formatBytes(file.size),
+          content_hash: contentHash,
+          tags,
+          published_year: formData.publishedYear ? parseInt(formData.publishedYear) : null,
+          downloads: 0,
+        })
+        .select('id, title')
+        .single();
 
       if (dbError) throw new Error(`Database error: ${dbError.message}`);
+      if (!inserted?.id) throw new Error('Database error: book row was not created');
+      rowCreated = true;
 
       setProgress(100);
       toast.success('Book uploaded successfully!');
       setTimeout(() => { reset(); setUploading(false); }, 800);
     } catch (err) {
       console.error('Book upload error:', err);
+
+      if (!rowCreated) {
+        for (const url of [uploadedCoverUrl, uploadedFileUrl]) {
+          if (!url) continue;
+          await storageAdapter.deleteFile(url).catch((cleanupError) => {
+            console.warn('⚠️ Could not roll back stored file:', url, cleanupError);
+          });
+        }
+      }
+
       toast.error(err instanceof Error ? err.message : 'Upload failed');
       setUploading(false);
       setProgress(0);
@@ -305,6 +322,9 @@ export default function BookUploadForm() {
         </div>
       )}
 
+      {/* Destination */}
+      <StorageTargetSelect disabled={uploading} />
+
       {/* Actions */}
       <div className="flex items-center justify-end gap-3">
         <button type="button" onClick={reset} disabled={uploading}
@@ -313,7 +333,7 @@ export default function BookUploadForm() {
         </button>
         <button type="submit" disabled={uploading}
           className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2">
-          {uploading ? <><Loader2 className="h-5 w-5 animate-spin" />Uploading...</> : <><Upload className="h-5 w-5" />Upload Book</>}
+          {uploading ? <><Loader2 className="h-5 w-5 animate-spin" />Uploading...</> : <><Upload className="h-5 w-5" />Upload Book{target === 'r2' ? ' to R2' : ' to Supabase'}</>}
         </button>
       </div>
     </form>

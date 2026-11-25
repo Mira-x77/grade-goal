@@ -74,7 +74,7 @@ export async function autoCategorizeFile(file: File): Promise<AutoCategoryResult
       result.examType = 'Composition';
       points += 1;
     } else {
-      result.examType = 'Practice'; // Default
+      result.examType = 'Exercices';
     }
   }
 
@@ -107,13 +107,15 @@ export async function autoCategorizeFile(file: File): Promise<AutoCategoryResult
   if (result.classLevel === '1ère' || result.classLevel === 'Tle') {
     const seriesMatch = filename.match(/\b(A4|CD|[CDEFG])\b/) || text.match(/SERIE\s*(A4|CD|[CDEFG])|SÉRIE\s*(A4|CD|[CDEFG])/);
     if (seriesMatch) {
-      const series = seriesMatch[1] || seriesMatch[2];
+      const seriesRaw = seriesMatch[1] || seriesMatch[2];
+      const series = seriesRaw === 'A' ? 'A4' : seriesRaw;
       result.classLevel = `${result.classLevel} ${series}` as ClassLevel;
     }
   } else if (result.classLevel === '2nde') {
     const seriesMatch = filename.match(/\b(A4|CD|[EFG])\b/) || text.match(/SERIE\s*(A4|CD|[EFG])|SÉRIE\s*(A4|CD|[EFG])/);
     if (seriesMatch) {
-      const series = seriesMatch[1] || seriesMatch[2];
+      const seriesRaw = seriesMatch[1] || seriesMatch[2];
+      const series = seriesRaw === 'A' ? 'A4' : seriesRaw;
       result.classLevel = `${result.classLevel} ${series}` as ClassLevel;
     }
   }

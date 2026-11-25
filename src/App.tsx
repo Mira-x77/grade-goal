@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
+﻿import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -41,11 +41,24 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import Debug from "./pages/Debug";
 import FixState from "./pages/FixState";
 import Courses from "./pages/Courses";
+import HowToGetCode from "./pages/HowToGetCode";
+import ScheduleManager from "./pages/ScheduleManager";
 
 const queryClient = new QueryClient();
 
 /** HashRouter is required on Capacitor Android — BrowserRouter breaks with https://localhost */
 const AppRouter = Capacitor.isNativePlatform() ? HashRouter : BrowserRouter;
+
+/** Refresh book-packing reminders on native app open (rolling 4-week window). */
+function ReminderRefreshInitializer() {
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    import("@/lib/notification-scheduler")
+      .then(({ refreshRemindersIfNeeded }) => refreshRemindersIfNeeded())
+      .catch(() => {});
+  }, []);
+  return null;
+}
 
 /** Analytics Initializer - Lazy load to not block app startup */
 function AnalyticsInitializer() {
@@ -131,6 +144,7 @@ function AppInner() {
     <>
       <AuthProvider>
         <AnalyticsInitializer />
+        <ReminderRefreshInitializer />
         <AppConfigProvider>
         <ErrorBoundary>
           <Routes>
@@ -161,6 +175,7 @@ function AppInner() {
             <Route path="/courses" element={<ProtectedRoute requireOnboarding><Courses /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute requireOnboarding><Settings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute requireOnboarding><Profile /></ProtectedRoute>} />
+            <Route path="/schedule" element={<ProtectedRoute requireOnboarding><ScheduleManager /></ProtectedRoute>} />
             <Route path="/feedback" element={<ProtectedRoute requireOnboarding><FeedbackBoard /></ProtectedRoute>} />
             <Route path="/feedback-board" element={<ProtectedRoute requireOnboarding><FeedbackBoard /></ProtectedRoute>} />
 
@@ -168,16 +183,16 @@ function AppInner() {
             {/* Public legal pages */}
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsAndConditions />} />
+            <Route path="/premium/how-to-get-code" element={<HowToGetCode />} />
             {/* Debug page */}
             <Route path="/debug" element={<Debug />} />
             <Route path="/fix" element={<FixState />} />
           </Routes>
         </ErrorBoundary>
+        {/* Must live inside Auth + AppConfig: phone PDFs are not library quota. */}
+        <ExternalPdfViewerHost />
         </AppConfigProvider>
       </AuthProvider>
-
-      {/* External PDF Reader Host (System Intent & Local PDF Reader) */}
-      <ExternalPdfViewerHost />
 
       {/* Update Dialog */}
       <UpdateDialog

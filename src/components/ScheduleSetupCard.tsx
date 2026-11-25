@@ -1,8 +1,6 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
 import { markSetupSkipped } from "@/lib/schedule-storage";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ScheduleSetupCardProps {
   onSetupNow: () => void;
@@ -10,6 +8,8 @@ interface ScheduleSetupCardProps {
 }
 
 export function ScheduleSetupCard({ onSetupNow, onDismiss }: ScheduleSetupCardProps) {
+  const { t } = useLanguage();
+
   const handleRemindLater = () => {
     markSetupSkipped();
     onDismiss();

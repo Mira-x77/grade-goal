@@ -117,8 +117,13 @@ class CacheService {
         tags: paper.tags,
         description: paper.description,
         preview_url: paper.preview_url,
+        fileUrl: paper.fileUrl,
+        fileName: paper.fileName,
+        contentHash: paper.contentHash,
         isDownloaded: false,
-        lastFetched: now
+        lastFetched: now,
+        classLevels: paper.classLevels,
+        subjects: paper.subjects,
       };
 
       // Check if paper is already downloaded
@@ -174,6 +179,33 @@ class CacheService {
         console.error('❌ getCachedPapers error:', request.error);
         reject(request.error);
       };
+    });
+  }
+
+  /** Save a PDF the student picked from phone storage into My Downloads. */
+  async saveImportedPaper(paper: CachedPaper): Promise<void> {
+    if (!this.db) await this.init();
+    if (!paper.localPath) throw new Error("Imported PDF is missing a local path");
+
+    const transaction = this.db!.transaction([STORES.PAPERS, STORES.DOWNLOADS], "readwrite");
+    transaction.objectStore(STORES.PAPERS).put({
+      ...paper,
+      isDownloaded: true,
+      downloadedAt: paper.downloadedAt ?? new Date().toISOString(),
+      lastFetched: new Date().toISOString(),
+    });
+    const downloaded: DownloadedPaper = {
+      id: paper.id,
+      paperId: paper.id,
+      localPath: paper.localPath,
+      downloadedAt: paper.downloadedAt ?? new Date().toISOString(),
+      fileSize: paper.fileSize,
+    };
+    transaction.objectStore(STORES.DOWNLOADS).put(downloaded);
+
+    await new Promise<void>((resolve, reject) => {
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
     });
   }
 
@@ -405,12 +437,20 @@ class CacheService {
         title: book.title,
         author: book.author,
         subject: book.subject,
+        subjects: book.subjects,
         category: book.category,
         fileSize: book.file_size,
         fileSizeFormatted: book.file_size_formatted,
         tags: book.tags,
         downloads: book.downloads,
         publishedYear: book.published_year,
+        fileUrl: book.file_url,
+        fileName: book.file_name,
+        coverUrl: book.cover_url,
+        description: book.description,
+        classLevel: book.class_level,
+        classLevels: book.class_levels,
+        system: book.system,
         isDownloaded: false,
         lastFetched: now
       };

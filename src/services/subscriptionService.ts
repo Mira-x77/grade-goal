@@ -2,30 +2,52 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   LocalSubscription,
   isSubscriptionActive,
+  hasPaidPremiumAccess,
+  applyPremiumGrant,
   hasSubjectAccess,
   getUnlockedSubjects,
-  UnlockedSubject,
   PremiumAccessType
 } from '@/types/subscription';
 import { getDeviceId } from '@/lib/device-id';
 import { PREMIUM_DEV_BYPASS } from '@/config/premium';
 import type { CodeSource } from '@/lib/subscription-profile';
+import { quotaEvents } from '@/lib/quotaEvents';
 
 const SUBSCRIPTION_KEY = 'scoretarget_subscription';
+
+export function clearLocalSubscription(): void {
+  try {
+    localStorage.removeItem(SUBSCRIPTION_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 class SubscriptionService {
   private subscription: LocalSubscription | null = null;
   private deviceId: string | null = null;
+  private lastInitializedUserId: string | null = null;
 
   /**
-   * Initialize subscription on app launch (local + optional cloud merge)
+   * Initialize subscription on app launch (server sync per account + optional cloud merge)
    */
   async initialize(userId?: string | null): Promise<void> {
     try {
       this.deviceId = await getDeviceId();
+
+      // Only reset local premium when switching between two real accounts.
+      // Missing userId (offline / session not restored) must not wipe the device.
+      if (userId && this.lastInitializedUserId && userId !== this.lastInitializedUserId) {
+        await this.saveSubscription(this.createFreeSubscription());
+      }
+      if (userId) {
+        this.lastInitializedUserId = userId;
+      }
+
       this.subscription = await this.loadSubscription();
 
       if (userId) {
+        await this.syncPremiumFromServer(userId);
         await this.syncFromCloud(userId);
       }
 
@@ -38,6 +60,57 @@ class SubscriptionService {
     } catch (error) {
       console.error('Failed to initialize subscription:', error);
       throw error;
+    }
+  }
+
+  /** Server authority: account premium + max 2 devices, preserves expiry */
+  private async syncPremiumFromServer(userId: string): Promise<void> {
+    try {
+      const deviceId = await getDeviceId();
+      const { data, error } = await supabase.rpc('sync_premium_device', {
+        p_device_id: deviceId,
+      });
+
+      if (error) {
+        console.warn('sync_premium_device failed:', error.message);
+        return;
+      }
+
+      const row = Array.isArray(data) ? data[0] : data;
+      const sub = this.subscription ?? this.createFreeSubscription();
+      sub.ownerUserId = userId;
+      sub.deviceId = deviceId;
+
+      if (row?.has_premium && row.expires_at) {
+        const granted = applyPremiumGrant(sub, {
+          expiresAt: row.expires_at,
+          userId,
+          deviceId,
+        });
+        // Sold codes are full premium. Do not keep a one-subject pack
+        // that an older screen wrote when the popup passed a subject name.
+        granted.accessType = 'all_subjects';
+        await this.saveSubscription(granted);
+        return;
+      }
+
+      // Never wipe a paid grant that is still in date. Sync can lag or report
+      // "2 devices" right after a successful redeem on this phone.
+      if (hasPaidPremiumAccess(sub)) {
+        await this.saveSubscription(sub);
+        return;
+      }
+
+      sub.tier = 'free';
+      sub.status = 'active';
+      sub.expiresAt = undefined;
+      sub.subscriptionCode = undefined;
+      sub.accessType = undefined;
+      sub.unlockedSubjects = [];
+
+      await this.saveSubscription(sub);
+    } catch (err) {
+      console.warn('Premium server sync failed:', err);
     }
   }
 
@@ -60,6 +133,7 @@ class SubscriptionService {
       const localActive = local.tier === 'premium' && isSubscriptionActive(local);
 
       if (!localActive || !localExpires || localExpires < new Date(expiresAt)) {
+        local.ownerUserId = userId;
         local.tier = 'premium';
         local.status = 'active';
         local.expiresAt = expiresAt;
@@ -77,7 +151,7 @@ class SubscriptionService {
   private async syncToCloud(userId: string): Promise<void> {
     try {
       const sub = this.subscription ?? await this.loadSubscription();
-      const active = sub.tier === 'premium' && isSubscriptionActive(sub);
+      const active = hasPaidPremiumAccess(sub);
 
       const { data: existing } = await supabase
         .from('user_profile')
@@ -103,18 +177,14 @@ class SubscriptionService {
     }
   }
 
-  /**
-   * Load subscription from localStorage or create new
-   */
   private async loadSubscription(): Promise<LocalSubscription> {
     try {
       const stored = localStorage.getItem(SUBSCRIPTION_KEY);
-      
+
       if (stored) {
         return JSON.parse(stored);
       }
-      
-      // Create new free subscription
+
       return this.createFreeSubscription();
     } catch (error) {
       console.error('Failed to load subscription:', error);
@@ -122,14 +192,11 @@ class SubscriptionService {
     }
   }
 
-  /**
-   * Create a new free subscription
-   */
   private createFreeSubscription(): LocalSubscription {
     const now = new Date().toISOString();
-    
+
     return {
-      deviceId: this.deviceId!,
+      deviceId: this.deviceId ?? '',
       tier: 'free',
       status: 'active',
       unlockedSubjects: [],
@@ -138,9 +205,6 @@ class SubscriptionService {
     };
   }
 
-  /**
-   * Save subscription to localStorage
-   */
   private async saveSubscription(subscription: LocalSubscription): Promise<void> {
     try {
       subscription.updatedAt = new Date().toISOString();
@@ -152,9 +216,6 @@ class SubscriptionService {
     }
   }
 
-  /**
-   * Get current subscription
-   */
   async getSubscription(): Promise<LocalSubscription> {
     if (!this.subscription) {
       await this.initialize();
@@ -162,31 +223,20 @@ class SubscriptionService {
     return this.subscription!;
   }
 
-  /**
-   * Check if user has access to a specific subject's premium features
-   */
   async hasSubjectAccess(subjectName: string): Promise<boolean> {
-    // Check if premium is globally enabled (bypass all checks)
     if (PREMIUM_DEV_BYPASS) {
       return true;
     }
-    
+
     const subscription = await this.getSubscription();
     return hasSubjectAccess(subscription, subjectName);
   }
 
-  /**
-   * Get list of unlocked subjects
-   */
   async getUnlockedSubjects(): Promise<string[]> {
     const subscription = await this.getSubscription();
     return getUnlockedSubjects(subscription);
   }
 
-
-  /**
-   * Activate premium with code
-   */
   async activatePremiumCode(
     code: string,
     options?: {
@@ -198,16 +248,25 @@ class SubscriptionService {
     }
   ): Promise<{ durationMonths: number; expiresAt: string }> {
     try {
+      if (!options?.userId) {
+        throw new Error('Please sign in to activate premium on your account');
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id || session.user.is_anonymous) {
+        throw new Error('Please sign in to activate premium on your account');
+      }
+
       const deviceId = await getDeviceId();
       const normalizedCode = code.toUpperCase().trim();
 
       const { data, error } = await supabase.rpc('use_subscription_code', {
         p_code: normalizedCode,
         p_device_id: deviceId,
-        p_user_id: options?.userId ?? null,
-        p_grading_system: options?.gradingSystem ?? null,
-        p_school: options?.school ?? null,
-        p_code_source: options?.codeSource ?? null,
+        p_user_id: options.userId,
+        p_grading_system: options.gradingSystem ?? null,
+        p_school: options.school ?? null,
+        p_code_source: options.codeSource ?? null,
       });
 
       if (error) {
@@ -221,35 +280,52 @@ class SubscriptionService {
 
       const row = Array.isArray(data) ? data[0] : data;
       if (!row?.success) {
-        throw new Error(row?.message || 'Invalid code');
-      }
-
-      const subscription = await this.getSubscription();
-      const now = new Date().toISOString();
-
-      subscription.status = 'active';
-      subscription.tier = 'premium';
-      subscription.subscriptionCode = normalizedCode;
-      subscription.activatedAt = now;
-      subscription.expiresAt = row.expires_at;
-      subscription.accessType = 'all_subjects';
-      subscription.unlockedSubjects = [];
-
-      if (options?.subjectName) {
-        subscription.accessType = 'subject_pack';
-        if (!subscription.unlockedSubjects.some((s) => s.subjectName === options.subjectName)) {
-          subscription.unlockedSubjects.push({
-            subjectName: options.subjectName,
-            unlockedAt: now,
-            accessType: 'subject_pack',
-          });
+        const msg = row?.message || 'Invalid code';
+        if (/already used/i.test(msg)) {
+          await this.syncPremiumFromServer(options.userId);
+          const restored = this.subscription ?? await this.loadSubscription();
+          if (hasPaidPremiumAccess(restored) && restored.expiresAt) {
+            quotaEvents.emit();
+            await this.syncToCloud(options.userId);
+            const remainingMs = new Date(restored.expiresAt).getTime() - Date.now();
+            return {
+              durationMonths: Math.max(1, Math.ceil(remainingMs / (1000 * 60 * 60 * 24 * 30))),
+              expiresAt: restored.expiresAt,
+            };
+          }
         }
+        throw new Error(msg);
       }
+
+      if (!row.expires_at) {
+        throw new Error('Premium activated but expiry is missing. Please reopen the app.');
+      }
+
+      // Apply the paid grant immediately. Do not wait on a second RPC that can
+      // still report "free" and would otherwise ask for another code.
+      let subscription = this.subscription ?? await this.loadSubscription();
+      subscription = applyPremiumGrant(subscription, {
+        expiresAt: row.expires_at,
+        userId: options.userId,
+        deviceId,
+        code: normalizedCode,
+      });
+      subscription.activatedAt = new Date().toISOString();
+      subscription.accessType = 'all_subjects';
 
       await this.saveSubscription(subscription);
+      await this.syncPremiumFromServer(options.userId);
+      await this.syncToCloud(options.userId);
+      quotaEvents.emit();
 
-      if (options?.userId) {
-        await this.syncToCloud(options.userId);
+      const confirmed = await this.getSubscription();
+      if (!hasPaidPremiumAccess(confirmed)) {
+        await this.saveSubscription(applyPremiumGrant(confirmed, {
+          expiresAt: row.expires_at,
+          userId: options.userId,
+          deviceId,
+          code: normalizedCode,
+        }));
       }
 
       return {
@@ -262,45 +338,35 @@ class SubscriptionService {
     }
   }
 
-  /**
-   * Check monthly reset (no-op for feature-gating model, kept for compatibility)
-   */
   async checkMonthlyReset(): Promise<void> {
-    // No monthly reset needed for feature-gating model
-    // Downloads are always free, premium gates study tools
     return;
   }
 
-  /**
-   * Check and handle expiration
-   */
   async checkExpiration(): Promise<boolean> {
     const subscription = await this.getSubscription();
 
-    if (subscription.tier !== 'premium' || !subscription.expiresAt) {
+    if (hasPaidPremiumAccess(subscription)) {
+      if (subscription.status !== 'active') {
+        subscription.status = 'active';
+        subscription.tier = 'premium';
+        await this.saveSubscription(subscription);
+      }
       return false;
     }
 
-    const now = new Date();
-    const expires = new Date(subscription.expiresAt);
-
-    if (expires <= now) {
-      // Downgrade to free - lose access to premium study tools
-      subscription.tier = 'free';
-      subscription.status = 'expired';
-      subscription.unlockedSubjects = [];
-      subscription.accessType = undefined;
-      
-      await this.saveSubscription(subscription);
-      return true;
+    if (subscription.tier !== 'premium') {
+      return false;
     }
 
-    return false;
+    subscription.tier = 'free';
+    subscription.status = 'expired';
+    subscription.unlockedSubjects = [];
+    subscription.accessType = undefined;
+
+    await this.saveSubscription(subscription);
+    return true;
   }
 
-  /**
-   * Get subscription status for display
-   */
   async getStatus(): Promise<{
     tier: string;
     accessType?: PremiumAccessType;
@@ -311,7 +377,6 @@ class SubscriptionService {
   }> {
     const subscription = await this.getSubscription();
 
-    // Check if premium is globally enabled (bypass all checks)
     if (PREMIUM_DEV_BYPASS) {
       return {
         tier: 'premium',
@@ -321,8 +386,7 @@ class SubscriptionService {
       };
     }
 
-    // Active code redemption always grants access
-    if (subscription.tier === 'premium' && isSubscriptionActive(subscription)) {
+    if (hasPaidPremiumAccess(subscription)) {
       let daysRemaining: number | undefined;
       if (subscription.expiresAt) {
         const now = new Date();
@@ -352,7 +416,7 @@ class SubscriptionService {
       unlockedSubjects: getUnlockedSubjects(subscription),
       expires: subscription.expiresAt,
       daysRemaining,
-      hasPremiumAccess: subscription.tier === 'premium' && isSubscriptionActive(subscription)
+      hasPremiumAccess: hasPaidPremiumAccess(subscription)
     };
   }
 }

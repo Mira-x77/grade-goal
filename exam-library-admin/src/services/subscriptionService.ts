@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { isCodePremiumActive, userProfileService } from './userProfileService';
 
 export interface SubscriptionCode {
   id: string;
@@ -28,7 +29,24 @@ export interface CodeStats {
   total: number;
   unused: number;
   used: number;
+  activePremium: number;
   byDuration: Record<string, { total: number; used: number; unused: number }>;
+}
+
+export interface EnrichedSubscriptionCode extends SubscriptionCode {
+  studentName?: string;
+  authMethod?: string;
+  isGuest?: boolean;
+  deviceCount?: number;
+  expiresAt?: string;
+  isActivePremium?: boolean;
+}
+
+export interface UserPremiumStatus {
+  isActive: boolean;
+  expiresAt?: string;
+  code?: string;
+  deviceCount?: number;
 }
 
 class SubscriptionService {
@@ -106,13 +124,95 @@ class SubscriptionService {
   /**
    * Get code statistics
    */
+  /** Active premium per account (same logic as student app / migration 019) */
+  async getActivePremiumByUserIds(userIds: string[]): Promise<Map<string, UserPremiumStatus>> {
+    const map = new Map<string, UserPremiumStatus>();
+    if (userIds.length === 0) return map;
+
+    const { data, error } = await supabase
+      .from('subscription_codes')
+      .select('id, code, redeemed_by, used_at, duration_months, is_used')
+      .in('redeemed_by', userIds)
+      .eq('is_used', true)
+      .order('used_at', { ascending: false });
+
+    if (error) throw error;
+
+    const activeCodeIds: string[] = [];
+    for (const row of data ?? []) {
+      if (!row.redeemed_by || map.has(row.redeemed_by)) continue;
+      const active = isCodePremiumActive(row.used_at, row.duration_months);
+      const expiresAt =
+        row.used_at && row.duration_months
+          ? new Date(new Date(row.used_at).setMonth(new Date(row.used_at).getMonth() + row.duration_months)).toISOString()
+          : undefined;
+      map.set(row.redeemed_by, {
+        isActive: active,
+        expiresAt,
+        code: row.code,
+      });
+      if (active) activeCodeIds.push(row.id);
+    }
+
+    if (activeCodeIds.length > 0) {
+      const devicesByCode = await userProfileService.getDeviceRegistrationsByCodeIds(activeCodeIds);
+      for (const [, status] of map) {
+        if (!status.isActive || !status.code) continue;
+        const codeRow = (data ?? []).find((r) => r.code === status.code);
+        if (!codeRow) continue;
+        const devices = (devicesByCode.get(codeRow.id) ?? []).filter((d) => new Date(d.expires_at) > new Date());
+        status.deviceCount = devices.length;
+      }
+    }
+
+    return map;
+  }
+
+  /** Codes enriched with student profile + device slot info (synced with student app) */
+  async getEnrichedCodes(filter?: 'all' | 'unused' | 'used'): Promise<EnrichedSubscriptionCode[]> {
+    let codes: SubscriptionCode[];
+    if (filter === 'unused') codes = await this.getCodesByStatus(false);
+    else if (filter === 'used') codes = await this.getCodesByStatus(true);
+    else codes = await this.getAllCodes();
+
+    const userIds = [...new Set(codes.map((c) => c.redeemed_by).filter(Boolean))] as string[];
+    const codeIds = codes.map((c) => c.id);
+
+    const [profiles, devicesByCode] = await Promise.all([
+      userProfileService.getProfilesByUserIds(userIds),
+      userProfileService.getDeviceRegistrationsByCodeIds(codeIds),
+    ]);
+
+    return codes.map((code) => {
+      const profile = code.redeemed_by ? profiles.get(code.redeemed_by) : undefined;
+      const devices = devicesByCode.get(code.id) ?? [];
+      const activeDevices = devices.filter((d) => new Date(d.expires_at) > new Date());
+      const isActive = isCodePremiumActive(code.used_at, code.duration_months);
+      const expiresAt =
+        code.used_at && code.duration_months
+          ? new Date(new Date(code.used_at).setMonth(new Date(code.used_at).getMonth() + code.duration_months)).toISOString()
+          : undefined;
+
+      return {
+        ...code,
+        studentName: profile?.student_name ?? undefined,
+        authMethod: typeof profile?.metadata?.auth_method === 'string' ? profile.metadata.auth_method : undefined,
+        isGuest: profile?.metadata?.is_guest === true,
+        deviceCount: activeDevices.length,
+        expiresAt,
+        isActivePremium: isActive,
+      };
+    });
+  }
+
   async getCodeStats(): Promise<CodeStats> {
     const codes = await this.getAllCodes();
-    
+
     const stats: CodeStats = {
       total: codes.length,
       unused: codes.filter(c => !c.is_used).length,
       used: codes.filter(c => c.is_used).length,
+      activePremium: codes.filter(c => isCodePremiumActive(c.used_at, c.duration_months)).length,
       byDuration: {}
     };
 

@@ -1,5 +1,7 @@
 import { DayOfWeek, WeeklySchedule, ReminderSettings } from "@/types/schedule";
 import { LocalNotifications } from "@capacitor/local-notifications";
+import { t } from "@/lib/i18n";
+import { loadScheduleState } from "@/lib/schedule-storage";
 
 const DAY_MAP: Record<number, DayOfWeek> = {
   1: "monday",
@@ -9,13 +11,24 @@ const DAY_MAP: Record<number, DayOfWeek> = {
   5: "friday",
 };
 
-const DAY_NAMES: Record<DayOfWeek, string> = {
-  monday: "Monday",
-  tuesday: "Tuesday",
-  wednesday: "Wednesday",
-  thursday: "Thursday",
-  friday: "Friday",
+const DAY_LABEL_KEYS: Record<DayOfWeek, keyof typeof import("@/lib/i18n").translations.en> = {
+  monday: "monday",
+  tuesday: "tuesday",
+  wednesday: "wednesday",
+  thursday: "thursday",
+  friday: "friday",
 };
+
+function dayLabel(day: DayOfWeek): string {
+  return t(DAY_LABEL_KEYS[day]);
+}
+
+function fillTemplate(template: string, vars: Record<string, string>): string {
+  return Object.entries(vars).reduce(
+    (text, [key, value]) => text.replace(new RegExp(`\\{${key}\\}`, "g"), value),
+    template
+  );
+}
 
 export async function requestNotificationPermission(): Promise<boolean> {
   try {
@@ -32,30 +45,27 @@ export async function scheduleAllReminders(
   settings: ReminderSettings
 ) {
   try {
-    console.log("Starting scheduleAllReminders");
-    console.log("Settings:", settings);
-    console.log("Schedule:", schedule);
-
     // Cancel all existing notifications first
     try {
       const pending = await LocalNotifications.getPending();
-      console.log("Existing pending notifications:", pending.notifications.length);
       if (pending.notifications.length > 0) {
-        await LocalNotifications.cancel({ 
-          notifications: pending.notifications.map(n => ({ id: n.id }))
+        await LocalNotifications.cancel({
+          notifications: pending.notifications.map((n) => ({ id: n.id })),
         });
-        console.log("Cancelled existing notifications");
       }
     } catch (cancelError) {
       console.error("Error cancelling notifications:", cancelError);
     }
 
-    const notifications: any[] = [];
-    let notificationId = 1000; // Start with a higher ID to avoid conflicts
+    const notifications: Array<{
+      id: number;
+      title: string;
+      body: string;
+      schedule: { at: Date };
+    }> = [];
+    let notificationId = 1000;
 
-    // Schedule for the next 4 weeks
     for (let weekOffset = 0; weekOffset < 4; weekOffset++) {
-      // Schedule for each weekday
       for (let dayNum = 1; dayNum <= 5; dayNum++) {
         const day = DAY_MAP[dayNum];
         const subjects = schedule[day];
@@ -63,20 +73,18 @@ export async function scheduleAllReminders(
         if (!subjects || subjects.length === 0) continue;
 
         const subjectList = subjects.join(", ");
+        const dayName = dayLabel(day);
 
-        // Evening reminder (day before)
         if (settings.eveningEnabled) {
           try {
-            const eveningDayNum = dayNum === 1 ? 0 : dayNum - 1; // 0 = Sunday for Monday
+            const eveningDayNum = dayNum === 1 ? 0 : dayNum - 1;
             const eveningDate = getNextOccurrence(eveningDayNum, settings.eveningTime);
-            eveningDate.setDate(eveningDate.getDate() + (weekOffset * 7));
-            
-            console.log(`Evening reminder for ${day}: ${eveningDate.toISOString()}`);
-            
+            eveningDate.setDate(eveningDate.getDate() + weekOffset * 7);
+
             notifications.push({
               id: notificationId++,
-              title: "📚 Pack Your Books",
-              body: `Tomorrow is ${DAY_NAMES[day]}. Pack your books for: ${subjectList}`,
+              title: t("notifEveningTitle"),
+              body: fillTemplate(t("notifEveningBody"), { day: dayName, subjects: subjectList }),
               schedule: { at: eveningDate },
             });
           } catch (err) {
@@ -84,18 +92,15 @@ export async function scheduleAllReminders(
           }
         }
 
-        // Morning reminder (same day)
         if (settings.morningEnabled) {
           try {
             const morningDate = getNextOccurrence(dayNum, settings.morningTime);
-            morningDate.setDate(morningDate.getDate() + (weekOffset * 7));
-            
-            console.log(`Morning reminder for ${day}: ${morningDate.toISOString()}`);
-            
+            morningDate.setDate(morningDate.getDate() + weekOffset * 7);
+
             notifications.push({
               id: notificationId++,
-              title: "📖 Today's Books",
-              body: `Today is ${DAY_NAMES[day]}. You need: ${subjectList}`,
+              title: t("notifMorningTitle"),
+              body: fillTemplate(t("notifMorningBody"), { day: dayName, subjects: subjectList }),
               schedule: { at: morningDate },
             });
           } catch (err) {
@@ -105,73 +110,56 @@ export async function scheduleAllReminders(
       }
     }
 
-    console.log(`Total notifications to schedule: ${notifications.length}`);
+    if (notifications.length === 0) return true;
 
-    if (notifications.length === 0) {
-      console.log("No notifications to schedule");
-      return true;
-    }
-
-    // Log first few notifications for debugging
-    console.log("Sample notifications:", notifications.slice(0, 3));
-
-    // Schedule all notifications
     await LocalNotifications.schedule({ notifications });
-    console.log("Successfully scheduled all notifications");
-
-    // Verify they were scheduled
-    const pending = await LocalNotifications.getPending();
-    console.log(`Verified: ${pending.notifications.length} notifications are now pending`);
-
     return true;
   } catch (error) {
     console.error("FATAL ERROR in scheduleAllReminders:", error);
-    if (error instanceof Error) {
-      console.error("Error name:", error.name);
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
-    }
     return false;
   }
 }
 
+/** Re-schedule reminders on app open so the rolling 4-week window stays fresh. */
+export async function refreshRemindersIfNeeded(): Promise<void> {
+  const state = loadScheduleState();
+  if (!state.setupCompleted) return;
+
+  const hasSubjects = Object.values(state.schedule).some((s) => s.length > 0);
+  if (!hasSubjects) return;
+  if (!state.reminderSettings.morningEnabled && !state.reminderSettings.eveningEnabled) return;
+
+  const granted = await requestNotificationPermission();
+  if (!granted) return;
+
+  await scheduleAllReminders(state.schedule, state.reminderSettings);
+}
+
 function getNextOccurrence(dayOfWeek: number, time: string): Date {
-  console.log(`getNextOccurrence called with dayOfWeek=${dayOfWeek}, time=${time}`);
-  
-  // Validate time format
   if (!time || !time.includes(":")) {
-    console.error("Invalid time format:", time);
     throw new Error(`Invalid time format: ${time}`);
   }
 
   const timeParts = time.split(":");
   const hours = parseInt(timeParts[0], 10);
   const minutes = parseInt(timeParts[1], 10);
-  
-  // Validate parsed values
+
   if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-    console.error("Invalid time values:", { hours, minutes, time });
     throw new Error(`Invalid time values: hours=${hours}, minutes=${minutes}`);
   }
 
   const now = new Date();
-  const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  
-  console.log(`Current day: ${currentDay}, Target day: ${dayOfWeek}`);
-  
-  // dayOfWeek: 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const currentDay = now.getDay();
+
   let daysUntil = dayOfWeek - currentDay;
-  
+
   if (daysUntil < 0) {
-    // Target day is in the past this week, schedule for next week
     daysUntil += 7;
   } else if (daysUntil === 0) {
-    // Target day is today, check if time has passed
     const targetTime = new Date(now);
     targetTime.setHours(hours, minutes, 0, 0);
-    
+
     if (targetTime <= now) {
-      // Time has passed today, schedule for next week
       daysUntil = 7;
     }
   }
@@ -180,25 +168,16 @@ function getNextOccurrence(dayOfWeek: number, time: string): Date {
   targetDate.setDate(now.getDate() + daysUntil);
   targetDate.setHours(hours, minutes, 0, 0);
 
-  console.log(`Calculated target date: ${targetDate.toISOString()}`);
-  
   return targetDate;
-}
-
-async function getAllScheduledIds() {
-  try {
-    const pending = await LocalNotifications.getPending();
-    return pending.notifications.map(n => ({ id: n.id }));
-  } catch {
-    return [];
-  }
 }
 
 export async function cancelAllReminders() {
   try {
-    const ids = await getAllScheduledIds();
-    if (ids.length > 0) {
-      await LocalNotifications.cancel({ notifications: ids });
+    const pending = await LocalNotifications.getPending();
+    if (pending.notifications.length > 0) {
+      await LocalNotifications.cancel({
+        notifications: pending.notifications.map((n) => ({ id: n.id })),
+      });
     }
   } catch (error) {
     console.error("Failed to cancel notifications:", error);
@@ -208,10 +187,6 @@ export async function cancelAllReminders() {
 export async function getScheduledNotificationsCount(): Promise<number> {
   try {
     const pending = await LocalNotifications.getPending();
-    console.log("Pending notifications:", pending.notifications.length);
-    pending.notifications.forEach(n => {
-      console.log(`ID: ${n.id}, Title: ${n.title}, Schedule: ${JSON.stringify(n.schedule)}`);
-    });
     return pending.notifications.length;
   } catch (error) {
     console.error("Failed to get pending notifications:", error);

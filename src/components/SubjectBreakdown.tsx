@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import { BookOpen, CheckCircle2 } from "lucide-react";
 import { Subject, FeedbackStatus } from "@/types/exam";
 import { calcSubjectAverage, calcAllRequiredMarks, calcSubjectBounds, getMarkLabel } from "@/lib/exam-logic";

@@ -296,6 +296,11 @@
   user-select: none;
 }
 
+.pdf-viewer-root .pdf-touch-surface {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
 @media print {
   .pdf-viewer-root {
     display: none !important;

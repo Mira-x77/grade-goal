@@ -1,0 +1,6357 @@
+[
+  {
+    "page": 1,
+    "blocks": [
+      {
+        "bbox": [
+          32.79,
+          23.73,
+          295.08,
+          117.4
+        ],
+        "text": "Tech skills",
+        "size": 64.22,
+        "max_size": 64.22,
+        "font": "InkFree",
+        "color": 0,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          89.21,
+          80.58,
+          309.27,
+          192.66
+        ],
+        "text": "for\nBeginners",
+        "size": 60.49,
+        "max_size": 64.22,
+        "font": "InkFree",
+        "color": 0,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          181.85,
+          789.5,
+          405.85,
+          816.39
+        ],
+        "text": "2026 Edition • Easy, Beginner-Friendly Guide\nPage 1 of 20",
+        "size": 9.92,
+        "max_size": 11.97,
+        "font": "SegoeUI-Semibold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          390.25,
+          309.98,
+          408.27
+        ],
+        "text": "🚀",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (39 0 R)",
+        "color": 16777215,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          228.73,
+          417.16,
+          365.94,
+          427.13
+        ],
+        "text": "COVER ARTWORK PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 16777215,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          223.49,
+          433.13,
+          371.76,
+          445.6
+        ],
+        "text": "Futuristic Tech & Creative Collage",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          90.13,
+          447.5,
+          505.11,
+          457.98
+        ],
+        "text": "Suggested Image: High-energy artwork showing a laptop with VS Code & AI prompt window, Scratch Dino & Shark sprites,",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 9684477,
+        "flags": 2,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          203.23,
+          458.75,
+          392.03,
+          469.23
+        ],
+        "text": "CapCut timeline edit UI, and a friendly mini robot rover.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 9684477,
+        "flags": 2,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          56.6,
+          652.42,
+          201.68,
+          666.39
+        ],
+        "text": "💻 Vibe Coding & Languages",
+        "size": 10.5,
+        "max_size": 10.5,
+        "font": "Type3 (231 0 R)",
+        "color": 3718648,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          56.6,
+          670.94,
+          270.17,
+          694.41
+        ],
+        "text": "Frontend vs Backend, IDEs, safe AI prompting formula &\nsecurity rules.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 9741240,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          313.38,
+          652.42,
+          440.46,
+          666.39
+        ],
+        "text": "🎮 Scratch Game Projects",
+        "size": 10.5,
+        "max_size": 10.5,
+        "font": "Type3 (233 0 R)",
+        "color": 3718648,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          313.38,
+          670.94,
+          534.65,
+          694.41
+        ],
+        "text": "Build 4 full games: Apple Catch, Cat Hunt, Hungry Shark &\nChrome Dino.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 9741240,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          56.6,
+          723.67,
+          178.98,
+          737.64
+        ],
+        "text": "🎬 CapCut Video Editing",
+        "size": 10.5,
+        "max_size": 10.5,
+        "font": "Type3 (233 0 R)",
+        "color": 3718648,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          56.6,
+          741.44,
+          278.45,
+          764.91
+        ],
+        "text": "Cuts, joins, scene transitions, green screen memes & auto-\ncaptions.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 9741240,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          313.38,
+          723.67,
+          408.06,
+          737.64
+        ],
+        "text": "🤖 Casual Robotics",
+        "size": 10.5,
+        "max_size": 10.5,
+        "font": "Type3 (236 0 R)",
+        "color": 3718648,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          313.38,
+          741.44,
+          522.34,
+          764.91
+        ],
+        "text": "Surface-level guide to robot brains (micro:bit/Arduino),\nsensors & motors.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 9741240,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          437.01,
+          -0.0,
+          595.75,
+          136.84
+        ],
+        "text": "#0",
+        "size": 107.75,
+        "max_size": 107.75,
+        "font": "ArialBlack",
+        "color": 0,
+        "flags": 0,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 2,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "WELCOME & OVERVIEW\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          324.87,
+          92.27
+        ],
+        "text": "Welcome to the Creator's World",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          350.98,
+          109.7
+        ],
+        "text": "Simple, practical tech skills without any complicated academic jargon",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          120.73,
+          544.09,
+          162.2
+        ],
+        "text": "This guidebook was written specifically to teach you real, practical creative tools! You won't find scary math formulas\nor confusing academic speak here. Instead, you'll learn how to build games, edit videos like a pro, code with AI, and\nunderstand how simple robots work.",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          57.35,
+          180.79,
+          538.99,
+          205.51
+        ],
+        "text": "💡 The Creator Promise: Every topic in this guidebook is explained in plain English with visual cheat sheets and step-by-\nstep guides along the way!",
+        "size": 9.0,
+        "max_size": 9.0,
+        "font": "Type3 (54 0 R)",
+        "color": 1982639,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          223.76,
+          242.36,
+          238.23
+        ],
+        "text": "📖 Complete 20-Page Guidebook Map",
+        "size": 10.87,
+        "max_size": 10.87,
+        "font": "Type3 (55 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          51.35,
+          247.19,
+          543.91,
+          258.66
+        ],
+        "text": "MODULE 1: CODING BASICS & VIBE CODING\nPAGES 3–6",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          266.35,
+          543.9,
+          277.32
+        ],
+        "text": "Ch 1: Coding Languages 101 (Frontend vs Backend)\nPage 3",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          284.35,
+          543.9,
+          295.32
+        ],
+        "text": "Ch 2: Static Sites vs. Functional / Dynamic Sites\nPage 4",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          302.35,
+          543.9,
+          313.32
+        ],
+        "text": "Ch 3 & 4: Intro to Vibe Coding & Master AI Prompting\nPage 5",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.53,
+          320.35,
+          543.9,
+          331.32
+        ],
+        "text": "Ch 5 & 6-7: hardware/software                                     \nPage 6",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          341.69,
+          543.9,
+          353.16
+        ],
+        "text": "MODULE 2: SCRATCH GAME PROJECTS\nPAGES 7–11",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          47.49,
+          361.6,
+          543.91,
+          372.57
+        ],
+        "text": "Ch 8: Scratch Controls & Block Basics                                                                                                                                                    Page 7",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          50.02,
+          380.93,
+          543.91,
+          391.9
+        ],
+        "text": "Ch 9:  input and output devices                                                                                                                                                            Page 8",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          51.35,
+          398.93,
+          543.9,
+          409.9
+        ],
+        "text": "Ch 10: Game 2 - Cat Hunt Rat Chase Game\nPage 9",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          49.9,
+          416.93,
+          543.91,
+          427.9
+        ],
+        "text": "Ch 11: Scratch test                                                    \nPage 10",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          434.93,
+          543.91,
+          445.9
+        ],
+        "text": "Ch 12-14: Chrome Dino Runner & Game Polish\nPage 11",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          456.27,
+          543.91,
+          467.75
+        ],
+        "text": "MODULE 3: CAPCUT VIDEO EDITING\nPAGES 12–15",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          475.43,
+          543.91,
+          486.4
+        ],
+        "text": "Ch 15: CapCut Basics & Workspace Overview\nPage 12",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          493.43,
+          543.91,
+          504.4
+        ],
+        "text": "Ch 16 & 17: Cutting Clips & Smooth Transitions\nPage 13",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          511.43,
+          543.91,
+          522.4
+        ],
+        "text": "Ch 18: Memes, Overlays & Green Screen Popups\nPage 14",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          529.43,
+          543.91,
+          540.4
+        ],
+        "text": "Ch 19-21: Auto-Captions, Music Sync & Exporting\nPage 15",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          550.77,
+          543.91,
+          562.25
+        ],
+        "text": "MODULE 4: CASUAL SURFACE ROBOTICS\nPAGES 16–18",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          570.68,
+          543.91,
+          581.65
+        ],
+        "text": "Ch 22: What is a Robot? (Casual Surface View)\nPage 16",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          588.68,
+          543.91,
+          599.65
+        ],
+        "text": "Ch 23 & 24: Robot Brains, Sensors & Motors\nPage 17",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          606.68,
+          543.91,
+          617.65
+        ],
+        "text": "Ch 25: Fun Surface Robotics Starter Projects\nPage 18",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          628.02,
+          543.91,
+          639.5
+        ],
+        "text": "MASTER REFERENCE & BACK COVER\nPAGES 19–20",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          647.18,
+          543.91,
+          658.15
+        ],
+        "text": "Ch 26: Master Cheat Sheet Across All 4 Topics\nPage 19",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          51.35,
+          665.18,
+          543.91,
+          676.15
+        ],
+        "text": "Resources, Software Links & Back Cover\nPage 20",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Semibold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          818.0,
+          541.65,
+          828.48
+        ],
+        "text": "Welcome & Overview\nPage 2 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      }
+    ]
+  },
+  {
+    "page": 3,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MODULE 1 • CODING BASICS\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          281.85,
+          92.27
+        ],
+        "text": "Ch 1: Coding Languages 101",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          317.47,
+          109.7
+        ],
+        "text": "What main programming languages are for and what they do",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          120.73,
+          518.22,
+          147.95
+        ],
+        "text": "Coding is simply giving step-by-step instructions to a computer in a language it understands. Different coding\nlanguages are designed for different specialized jobs!",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          159.26,
+          224.44,
+          173.73
+        ],
+        "text": "Frontend vs. Backend Made Simple",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          190.48,
+          180.22,
+          203.45
+        ],
+        "text": "FRONTEND (What You See)",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          207.44,
+          260.95,
+          230.91
+        ],
+        "text": "Everything visible on your screen: buttons, colors, text,\nanimations, and responsive layouts.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          67.1,
+          234.44,
+          280.03,
+          245.91
+        ],
+        "text": "HTML: The skeleton (text, headings, & layout structure).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          67.1,
+          249.44,
+          239.22,
+          273.66
+        ],
+        "text": "CSS: The clothes & paint (colors, fonts, & flex\nalignment).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          67.1,
+          276.44,
+          253.14,
+          300.66
+        ],
+        "text": "JavaScript: The muscle (button clicks, popups, &\nanimations).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          311.88,
+          190.48,
+          450.52,
+          203.45
+        ],
+        "text": "BACKEND (Behind the Scenes)",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          311.88,
+          207.44,
+          530.15,
+          230.91
+        ],
+        "text": "The hidden brain operating on remote servers to manage\naccounts, passwords, and databases.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          323.88,
+          234.44,
+          501.55,
+          245.91
+        ],
+        "text": "Python: Easy, popular backend & AI language.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          323.88,
+          249.44,
+          528.14,
+          273.66
+        ],
+        "text": "Node.js / SQL: Handles server traffic & database user\nrecords.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          323.88,
+          276.44,
+          535.75,
+          300.66
+        ],
+        "text": "APIs: Bridges connecting Frontend requests to Backend\ndata.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          57.35,
+          329.29,
+          528.0,
+          354.01
+        ],
+        "text": "💡 BASIC DEFINITION • IDE: An IDE (Integrated Development Environment) is simply the code editor program where\nprogrammers write and run code files! Examples: VS Code or Cursor.",
+        "size": 9.0,
+        "max_size": 9.0,
+        "font": "Type3 (54 0 R)",
+        "color": 1982639,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.65,
+          805.23
+        ],
+        "text": "Module 1 • Coding Basics\nPage 3 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          538.01,
+          309.98,
+          556.02
+        ],
+        "text": "🖥️",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (61 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          235.27,
+          564.91,
+          359.4,
+          574.88
+        ],
+        "text": "PAGE 3 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          209.52,
+          580.88,
+          385.72,
+          593.35
+        ],
+        "text": "Frontend vs Backend Comparison Visual",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          86.99,
+          595.25,
+          508.26,
+          605.73
+        ],
+        "text": "Suggested Image: Illustration showing a browser web page interface on top (Frontend) linked down to a server database icon",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          269.11,
+          605.75,
+          326.13,
+          616.23
+        ],
+        "text": "below (Backend).",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 4,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MODULE 1 • CODING BASICS\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          311.71,
+          92.27
+        ],
+        "text": "Ch 2: Static vs. Functional Sites",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          250.95,
+          109.7
+        ],
+        "text": "Understanding the two main types of websites",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          120.73,
+          497.63,
+          133.7
+        ],
+        "text": "Before building a web project or prompting AI, you need to know which type of website you are creating!",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          152.98,
+          211.84,
+          165.95
+        ],
+        "text": "1. Static Websites (Digital Posters)",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          169.94,
+          274.92,
+          193.41
+        ],
+        "text": "Show the exact same content to every visitor. They do not\nsave user logins or process custom live data.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          67.1,
+          196.94,
+          270.75,
+          208.41
+        ],
+        "text": "Examples: Portfolios, restaurant menus, school blogs.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          67.1,
+          211.94,
+          191.43,
+          223.41
+        ],
+        "text": "Built With: Simple HTML & CSS.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          67.1,
+          226.94,
+          201.8,
+          238.41
+        ],
+        "text": "Benefit: Super fast & easy to build!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          311.88,
+          152.98,
+          444.72,
+          165.95
+        ],
+        "text": "2. Functional / Dynamic Sites",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          311.88,
+          169.94,
+          521.12,
+          193.41
+        ],
+        "text": "Interactive web applications that change based on user\nactions, save progress, or handle user accounts.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          323.88,
+          196.94,
+          515.72,
+          208.41
+        ],
+        "text": "Examples: Scratch, YouTube, games, online stores.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          323.88,
+          211.94,
+          489.6,
+          223.41
+        ],
+        "text": "Built With: JavaScript + Backend Database.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          323.88,
+          226.94,
+          459.73,
+          238.41
+        ],
+        "text": "Benefit: Interactive & personalized!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          259.01,
+          240.78,
+          273.48
+        ],
+        "text": "Static vs Dynamic Feature Comparison",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          53.6,
+          286.94,
+          437.8,
+          298.41
+        ],
+        "text": "Feature\nStatic Websites\nDynamic / Functional Apps",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 3359061,
+        "flags": 16,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          53.6,
+          309.44,
+          429.32,
+          320.91
+        ],
+        "text": "User Logins\nNo user accounts\nFull accounts & passwords",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          53.6,
+          331.94,
+          422.06,
+          343.41
+        ],
+        "text": "Data Storage\nFixed text in files\nSaves to server database",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          53.6,
+          353.69,
+          382.67,
+          365.16
+        ],
+        "text": "Build Time\nMinutes to hours\nDays to weeks",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          57.35,
+          387.04,
+          513.94,
+          411.76
+        ],
+        "text": "💡 BASIC DEFINITION • HTML: HTML (HyperText Markup Language) is the standard code structure used to place\nheaders, text, images, and buttons on web pages.",
+        "size": 9.0,
+        "max_size": 9.0,
+        "font": "Type3 (54 0 R)",
+        "color": 1982639,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.65,
+          805.23
+        ],
+        "text": "Module 1 • Coding Basics\nPage 4 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          567.25,
+          309.98,
+          585.27
+        ],
+        "text": "🌐",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (68 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          235.18,
+          593.41,
+          359.48,
+          603.38
+        ],
+        "text": "PAGE 4 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          199.02,
+          610.13,
+          396.22,
+          622.6
+        ],
+        "text": "Static Menu Page vs Interactive App Mockup",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          85.21,
+          624.5,
+          510.04,
+          634.98
+        ],
+        "text": "Suggested Image: Side-by-side mockup comparing a simple static restaurant menu web page vs an interactive web game app",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          293.0,
+          635.0,
+          302.24,
+          645.48
+        ],
+        "text": "UI.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 5,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MODULE 1 • VIBE CODING\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          443.31,
+          92.27
+        ],
+        "text": "Ch 3 & 4: Intro to Vibe Coding & AI Prompting",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          263.82,
+          109.7
+        ],
+        "text": "Creating software by talking to AI in plain English",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          120.73,
+          535.93,
+          147.95
+        ],
+        "text": "Vibe Coding means using modern AI tools (like ChatGPT, Claude, or Cursor) to write code for you while you guide\nthe project using plain English prompts!",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          159.26,
+          306.29,
+          173.73
+        ],
+        "text": "What AI Needs from You (The 3 Key Requirements)",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          188.98,
+          112.8,
+          201.95
+        ],
+        "text": "1. Clear Goal",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          205.94,
+          197.26,
+          241.41
+        ],
+        "text": "Tell AI exactly what app to make (e.g.,\n\"Make a simple score counter web\npage\").",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          225.79,
+          188.98,
+          289.15,
+          201.95
+        ],
+        "text": "2. Target Tech",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          225.79,
+          205.94,
+          355.02,
+          229.41
+        ],
+        "text": "Specify the language (e.g., \"Use\nsingle-file HTML and Vanilla CSS\").",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          396.47,
+          188.98,
+          482.07,
+          201.95
+        ],
+        "text": "3. Style & Features",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          396.47,
+          205.94,
+          528.97,
+          229.41
+        ],
+        "text": "Describe colors, layout, and button\nbehavior preferences.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          259.76,
+          225.01,
+          274.23
+        ],
+        "text": "The Simple 3-Step Prompt Formula",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          291.6,
+          539.79,
+          300.38
+        ],
+        "text": "3-STEP PROMPT FORMULA\nBEGINNER FRIENDLY",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "Consolas-Bold",
+        "color": 9741240,
+        "flags": 24,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          55.1,
+          311.16,
+          504.3,
+          344.82
+        ],
+        "text": "1. WHO AI IS: \"You are an expert front-end web developer...\"\n2. WHAT TO BUILD: \"Build a clean single-file HTML page for my game...\"\n3. SPECIAL RULES: \"Use a dark blue background, big green action buttons, and keep the code simple.\"",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "Consolas",
+        "color": 16317180,
+        "flags": 8,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          57.35,
+          369.79,
+          533.13,
+          394.51
+        ],
+        "text": "⚡ The Vibe Coding Secret: You don't need to memorize coding syntax anymore—just learn how to describe what you\nwant clearly!",
+        "size": 9.0,
+        "max_size": 9.0,
+        "font": "Type3 (76 0 R)",
+        "color": 1982639,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.65,
+          805.23
+        ],
+        "text": "Module 1 • Vibe Coding\nPage 5 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          563.5,
+          309.98,
+          581.52
+        ],
+        "text": "🤖",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (77 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          235.27,
+          590.41,
+          359.4,
+          600.38
+        ],
+        "text": "PAGE 5 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          216.88,
+          606.38,
+          378.37,
+          618.85
+        ],
+        "text": "Vibe Coding Workspace & Chat Flow",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          86.3,
+          620.75,
+          508.95,
+          631.23
+        ],
+        "text": "Suggested Image: Diagram showing user typing a prompt in an AI chat window and receiving instant HTML/CSS code blocks.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 6,
+    "blocks": [
+      {
+        "bbox": [
+          54.13,
+          40.6,
+          549.52,
+          51.57
+        ],
+        "text": "MODULE 1 • Hardware/software           \nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          323.21,
+          92.83
+        ],
+        "text": "Ch 5 & 6-7: Hardware /software",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          240.92,
+          109.7
+        ],
+        "text": "Essential safety rules and pre-flight checklist",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          57.35,
+          128.29,
+          321.44,
+          192.76
+        ],
+        "text": "🚨 STRICT SECURITY RULES! What NEVER to share with AI:\n• Passwords & PINs: Never paste real user passwords or logins.\n• Private API Keys & Tokens: Secret keys to online services.\n• Personal Data: Phone numbers, home addresses, or credit cards.\n• Database Credentials: Secret database login credentials.",
+        "size": 9.0,
+        "max_size": 9.0,
+        "font": "Type3 (84 0 R)",
+        "color": 10033947,
+        "flags": 0,
+        "nlines": 5
+      },
+      {
+        "bbox": [
+          55.1,
+          217.35,
+          212.18,
+          226.13
+        ],
+        "text": "SAFE CODE EXAMPLE • ALWAYS SANITIZE",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "Consolas-Bold",
+        "color": 16557477,
+        "flags": 24,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          236.91,
+          350.04,
+          258.57
+        ],
+        "text": "// WRONG (UNSAFE): const myApiKey = \"sk_live_998877665544332211\";\n// CORRECT (SAFE): const myApiKey = \"YOUR_API_KEY_HERE\";",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "Consolas",
+        "color": 16281969,
+        "flags": 8,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          277.76,
+          231.99,
+          292.23
+        ],
+        "text": "The Vibe Coding Pre-Flight Checklist",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          68.6,
+          307.19,
+          296.69,
+          318.66
+        ],
+        "text": "✅ Know whether you need a Static site or a Functional site.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "Type3 (85 0 R)",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          68.6,
+          322.19,
+          287.47,
+          333.66
+        ],
+        "text": "✅ Decide your target tech stack (HTML, CSS, JS, Python).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "Type3 (85 0 R)",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          68.6,
+          336.44,
+          242.78,
+          347.91
+        ],
+        "text": "✅ Open your IDE editor (VS Code or Cursor).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "Type3 (85 0 R)",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          68.6,
+          351.44,
+          312.69,
+          362.91
+        ],
+        "text": "✅ Write clear prompts specifying goals and layout preferences.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "Type3 (85 0 R)",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          68.6,
+          366.44,
+          291.63,
+          377.91
+        ],
+        "text": "✅ NEVER share passwords or private API keys with AI!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "Type3 (85 0 R)",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          68.6,
+          380.69,
+          292.41,
+          392.16
+        ],
+        "text": "✅ Test generated code in your web browser step-by-step.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "Type3 (85 0 R)",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.65,
+          805.23
+        ],
+        "text": "Module 1 • Security & Summary\nPage 6 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          555.25,
+          309.98,
+          573.27
+        ],
+        "text": "🛡️",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (77 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          235.27,
+          581.41,
+          359.4,
+          591.38
+        ],
+        "text": "PAGE 6 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          195.28,
+          598.13,
+          399.95,
+          610.6
+        ],
+        "text": "Security Shield & Module 1 Completion Badge",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          83.46,
+          612.5,
+          511.78,
+          622.98
+        ],
+        "text": "Suggested Image: Security graphic showing a padlock over private credentials alongside a colorful \"Module 1 Complete\" badge",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          283.59,
+          623.0,
+          311.64,
+          633.48
+        ],
+        "text": "artwork.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 7,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MODULE 2 • SCRATCH GAMES\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          362.59,
+          92.27
+        ],
+        "text": "Ch 8: Scratch Controls & Block Basics",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          330.6,
+          109.7
+        ],
+        "text": "Understanding sprites, stage coordinates, and visual code blocks",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          120.73,
+          542.86,
+          147.95
+        ],
+        "text": "Scratch is MIT's visual block programming platform. Instead of typing complex syntax, you snap color-coded blocks\ntogether like LEGO bricks!",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          159.26,
+          154.36,
+          173.73
+        ],
+        "text": "Key Scratch Concepts",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          188.98,
+          93.27,
+          201.95
+        ],
+        "text": "1. Sprite",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          205.94,
+          189.97,
+          229.41
+        ],
+        "text": "Characters or objects on stage (Cat,\nDino, Shark, Basket).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          225.79,
+          188.98,
+          262.3,
+          201.95
+        ],
+        "text": "2. Stage",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          225.79,
+          205.94,
+          356.07,
+          229.41
+        ],
+        "text": "The game screen background grid\n(480 wide x 360 high).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          396.47,
+          188.98,
+          434.08,
+          201.95
+        ],
+        "text": "3. Script",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          396.47,
+          205.94,
+          528.64,
+          229.41
+        ],
+        "text": "Connected stack of blocks telling a\nsprite what to do!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          247.76,
+          193.04,
+          262.23
+        ],
+        "text": "Essential Scratch Block Types",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          52.1,
+          273.85,
+          443.72,
+          284.82
+        ],
+        "text": "when green flag clicked\ngo to x: (0) y: (0)\nchange x by (10)\nchange y by (10)\nforever",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 5
+      },
+      {
+        "bbox": [
+          52.1,
+          300.85,
+          271.68,
+          311.82
+        ],
+        "text": "touching [mouse-pointer v]?\nchange [Score v] by (1)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          57.35,
+          332.29,
+          521.05,
+          357.76
+        ],
+        "text": "💡 Stage Coordinates: The center of the Scratch stage is (X: 0, Y: 0). X goes from -240 (Left) to +240 (Right). Y goes\nfrom -180 (Bottom) to +180 (Top).",
+        "size": 9.0,
+        "max_size": 9.0,
+        "font": "Type3 (54 0 R)",
+        "color": 1982639,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.65,
+          805.23
+        ],
+        "text": "Module 2 • Scratch Controls\nPage 7 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          544.75,
+          309.98,
+          563.13
+        ],
+        "text": "🧩",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (92 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          235.27,
+          571.66,
+          359.4,
+          581.63
+        ],
+        "text": "PAGE 7 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          215.85,
+          587.63,
+          379.4,
+          600.1
+        ],
+        "text": "Scratch 3.0 Editor Interface Overview",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          111.08,
+          602.75,
+          484.18,
+          613.23
+        ],
+        "text": "Suggested Image: Screenshot of Scratch editor highlighting Block Palette, Script Workspace, and Stage Canvas.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 8,
+    "blocks": [
+      {
+        "bbox": [
+          53.96,
+          40.6,
+          549.52,
+          51.57
+        ],
+        "text": "MODULE 2 • Input and output devices\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          314.52,
+          92.27
+        ],
+        "text": "Ch 9: Input and output devices",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          310.21,
+          109.7
+        ],
+        "text": "Falling objects, random positions, and catching mechanisms",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          120.73,
+          549.93,
+          147.95
+        ],
+        "text": "In our first game, delicious Apples fall randomly from the sky! The player moves a Basket left and right to catch them\nand score points.",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          159.26,
+          221.68,
+          173.73
+        ],
+        "text": "Apple Spawning & Catching Script",
+        "size": 10.87,
+        "max_size": 10.87,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          60.35,
+          193.6,
+          152.22,
+          204.57
+        ],
+        "text": "when green flag clicked",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          60.35,
+          214.6,
+          131.72,
+          225.57
+        ],
+        "text": "set [Score v] to (0)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          60.35,
+          235.6,
+          88.41,
+          246.57
+        ],
+        "text": "forever",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          72.35,
+          256.6,
+          249.74,
+          267.57
+        ],
+        "text": "go to x: (pick random (-200) to (200)) y: (180)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          72.35,
+          277.6,
+          295.58,
+          288.57
+        ],
+        "text": "repeat until <touching [Basket v]? or (y position < -160)>",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          84.35,
+          298.6,
+          147.27,
+          309.57
+        ],
+        "text": "change y by (-5)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          72.35,
+          319.6,
+          190.54,
+          330.57
+        ],
+        "text": "if <touching [Basket v]?> then",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          84.35,
+          340.6,
+          173.68,
+          351.57
+        ],
+        "text": "change [Score v] by (1)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          84.35,
+          361.6,
+          169.66,
+          372.57
+        ],
+        "text": "play sound [Chomp v]",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.65,
+          805.23
+        ],
+        "text": "Module 2 • Apple Catch Game\nPage 8 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          545.5,
+          309.98,
+          564.24
+        ],
+        "text": "🍎",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (100 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          235.27,
+          572.41,
+          359.4,
+          582.38
+        ],
+        "text": "PAGE 8 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          201.22,
+          589.13,
+          394.03,
+          601.6
+        ],
+        "text": "Apple Catching Game Gameplay Screenshot",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          87.4,
+          603.5,
+          507.86,
+          613.98
+        ],
+        "text": "Suggested Image: Screenshot showing Basket sprite at bottom catching red falling Apple sprite with Score counter displaying",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          280.69,
+          614.0,
+          314.55,
+          624.48
+        ],
+        "text": "\"Score: 5\".",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 9,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.52,
+          51.57
+        ],
+        "text": "MODULE 2 • SCRATCH GAMES\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          346.86,
+          92.27
+        ],
+        "text": "Ch 10: Game 1 - Cat Hunt Rat Chase",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          332.86,
+          109.7
+        ],
+        "text": "Player Arrow controls, enemy AI movement, and collision scoring",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          120.73,
+          533.97,
+          147.95
+        ],
+        "text": "In this chase game, the player controls the Cat sprite using keyboard arrow keys to hunt down a sneaky Rat sprite\nthat glides around the stage!",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          55.1,
+          167.23,
+          193.87,
+          180.2
+        ],
+        "text": "1. Cat Arrow Movement Script",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          61.85,
+          189.1,
+          189.39,
+          200.07
+        ],
+        "text": "when [right arrow v] key pressed",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          61.85,
+          210.1,
+          147.01,
+          221.07
+        ],
+        "text": "point in direction (90)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          61.85,
+          231.1,
+          123.46,
+          242.07
+        ],
+        "text": "move (15) steps",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          311.88,
+          167.23,
+          441.42,
+          180.2
+        ],
+        "text": "2. Rat Glide & Catch Scoring",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          318.63,
+          189.1,
+          410.51,
+          200.07
+        ],
+        "text": "when green flag clicked",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          318.63,
+          210.1,
+          346.69,
+          221.07
+        ],
+        "text": "forever",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          318.63,
+          231.16,
+          460.92,
+          241.13
+        ],
+        "text": "glide (1) secs to x: (random) y: (random)",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          318.63,
+          250.6,
+          424.09,
+          261.57
+        ],
+        "text": "if <touching [Cat v]?> then",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          318.63,
+          271.6,
+          407.96,
+          282.57
+        ],
+        "text": "change [Score v] by (1)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          318.63,
+          292.6,
+          401.77,
+          303.57
+        ],
+        "text": "start sound [Meow v]",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.65,
+          805.23
+        ],
+        "text": "Module 2 • Cat Hunt Rat Game\nPage 9 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          521.94,
+          309.98,
+          539.94
+        ],
+        "text": "🐱",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (108 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          235.27,
+          548.41,
+          359.4,
+          558.38
+        ],
+        "text": "PAGE 9 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          209.14,
+          564.38,
+          386.12,
+          576.85
+        ],
+        "text": "Cat Hunting Rat Game Stage Screenshot",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          142.39,
+          578.75,
+          452.86,
+          589.23
+        ],
+        "text": "Suggested Image: Screenshot showing Cat sprite chasing Rat sprite across kitchen backdrop.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 10,
+    "blocks": [
+      {
+        "bbox": [
+          71.42,
+          40.6,
+          549.52,
+          51.57
+        ],
+        "text": "MODULE 2 • SCRATCH test\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          171.61,
+          92.27
+        ],
+        "text": "Ch 11: Exercise",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          383.27,
+          109.7
+        ],
+        "text": "Underwater mouse controls, target touching, and mouth costume animation",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          120.73,
+          548.86,
+          133.7
+        ],
+        "text": "In Hungry Shark, the player guides a giant Shark underwater using mouse pointer movement to catch Diver sprites!",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          152.98,
+          255.8,
+          165.95
+        ],
+        "text": "Shark Movement & Mouth Animation Logic",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          61.85,
+          174.85,
+          153.72,
+          185.82
+        ],
+        "text": "when green flag clicked",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          61.85,
+          195.85,
+          89.91,
+          206.82
+        ],
+        "text": "forever",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          73.85,
+          216.85,
+          200.61,
+          227.82
+        ],
+        "text": "point towards [mouse-pointer v]",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          73.85,
+          237.85,
+          130.71,
+          248.82
+        ],
+        "text": "move (5) steps",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          73.85,
+          258.85,
+          187.08,
+          269.82
+        ],
+        "text": "if <touching [Diver v]?> then",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          85.85,
+          279.85,
+          251.6,
+          290.82
+        ],
+        "text": "switch costume to [Shark-B-OpenMouth v]",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          85.85,
+          300.85,
+          175.18,
+          311.82
+        ],
+        "text": "change [Score v] by (1)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          85.85,
+          321.85,
+          200.65,
+          332.82
+        ],
+        "text": "play sound [Bite v] until done",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          85.85,
+          342.85,
+          201.86,
+          353.82
+        ],
+        "text": "switch costume to [Shark-A v]",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          57.35,
+          382.54,
+          522.21,
+          407.26
+        ],
+        "text": "💡 Costume Animation Tip: Switching costumes briefly to an \"open mouth\" sprite creates a super cool visual eating\neffect!",
+        "size": 9.0,
+        "max_size": 9.0,
+        "font": "Type3 (54 0 R)",
+        "color": 1982639,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.66,
+          805.23
+        ],
+        "text": "Module 2 • Hungry Shark Game\nPage 10 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          569.5,
+          309.98,
+          587.88
+        ],
+        "text": "🦈",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (121 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          233.14,
+          596.41,
+          361.5,
+          606.38
+        ],
+        "text": "PAGE 10 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          200.6,
+          613.13,
+          394.66,
+          625.6
+        ],
+        "text": "Hungry Shark Underwater Stage Screenshot",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          103.89,
+          627.5,
+          491.37,
+          637.98
+        ],
+        "text": "Suggested Image: Screenshot showing Shark sprite opening mouth to eat Diver sprite underwater with score panel.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 11,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MODULE 2 • SCRATCH GAMES & POLISH\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          371.14,
+          92.27
+        ],
+        "text": "Ch 12-14: Chrome Dino & Game Polish",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          318.76,
+          109.7
+        ],
+        "text": "Jumping gravity physics, scrolling obstacles, and game menus",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          128.98,
+          191.94,
+          141.95
+        ],
+        "text": "1. Dino Jump & Gravity Script",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          61.85,
+          150.85,
+          167.1,
+          161.82
+        ],
+        "text": "when [space v] key pressed",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          61.85,
+          171.85,
+          167.58,
+          182.82
+        ],
+        "text": "if <y position = -100> then",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          61.85,
+          192.85,
+          151.82,
+          203.82
+        ],
+        "text": "set [velocityY v] to (14)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          61.85,
+          213.85,
+          187.27,
+          224.82
+        ],
+        "text": "repeat until <y position < -100>",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          61.85,
+          234.85,
+          151.89,
+          245.82
+        ],
+        "text": "change y by (velocityY)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          61.85,
+          255.85,
+          168.36,
+          266.82
+        ],
+        "text": "change [velocityY v] by (-1)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          311.88,
+          128.98,
+          434.52,
+          141.95
+        ],
+        "text": "2. Cactus Movement Script",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          318.63,
+          150.85,
+          410.51,
+          161.82
+        ],
+        "text": "when green flag clicked",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          318.63,
+          171.85,
+          346.69,
+          182.82
+        ],
+        "text": "forever",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          318.63,
+          192.85,
+          405.82,
+          203.82
+        ],
+        "text": "go to x: (240) y: (-100)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          318.63,
+          213.85,
+          444.17,
+          224.82
+        ],
+        "text": "repeat until <x position < -240>",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 0,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          318.63,
+          234.85,
+          381.66,
+          245.82
+        ],
+        "text": "change x by (-8)",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 16777215,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          289.76,
+          234.01,
+          304.23
+        ],
+        "text": "3 Ways to Make Your Games Feel Pro",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          59.72,
+          319.19,
+          369.53,
+          330.66
+        ],
+        "text": "1. Add Sound Effects: Play chomp, meow, pop, or jump sounds during collisions!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          59.72,
+          334.19,
+          431.0,
+          345.66
+        ],
+        "text": "2. Create a Start Menu Screen: Use a broadcast message start game when player clicks \"PLAY\"!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          59.72,
+          348.44,
+          422.95,
+          359.91
+        ],
+        "text": "3. Game Over Banner: Display a custom red \"GAME OVER\" sprite when player runs out of lives!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.66,
+          805.23
+        ],
+        "text": "Module 2 • Dino Runner & Polish\nPage 11 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          544.0,
+          309.98,
+          562.38
+        ],
+        "text": "🦖",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (121 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          233.58,
+          570.91,
+          361.07,
+          580.88
+        ],
+        "text": "PAGE 11 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          192.73,
+          586.88,
+          402.54,
+          599.35
+        ],
+        "text": "Chrome Dino Runner & Finished Project Gallery",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          89.87,
+          602.0,
+          505.38,
+          612.48
+        ],
+        "text": "Suggested Image: 4-quadrant picture showing previews of Apple Catch, Cat Hunt, Hungry Shark, and Chrome Dino games.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 12,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MODULE 3 • CAPCUT EDITING\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          355.64,
+          92.27
+        ],
+        "text": "Ch 15: Intro to CapCut Video Editing",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          274.13,
+          109.7
+        ],
+        "text": "Getting started with CapCut on desktop and mobile",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          120.73,
+          535.65,
+          147.95
+        ],
+        "text": "CapCut is one of the most popular, beginner-friendly video editing apps for desktop and phones. It makes editing\nvideo clips, adding text, and applying effects super fast!",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          159.26,
+          194.65,
+          173.73
+        ],
+        "text": "The CapCut Workspace Areas",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          188.98,
+          129.83,
+          201.95
+        ],
+        "text": "1. Media Library",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          205.94,
+          184.8,
+          229.41
+        ],
+        "text": "Where you import raw video clips,\naudio tracks, and images.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          225.79,
+          188.98,
+          313.85,
+          201.95
+        ],
+        "text": "2. Preview Window",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          225.79,
+          205.94,
+          353.06,
+          229.41
+        ],
+        "text": "The screen where you watch your\nvideo play back live while editing.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          396.47,
+          188.98,
+          466.36,
+          201.95
+        ],
+        "text": "3. The Timeline",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          396.47,
+          205.94,
+          530.0,
+          229.41
+        ],
+        "text": "The bottom track layout where you\ncut, trim, arrange, and layer clips!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          247.76,
+          179.02,
+          262.23
+        ],
+        "text": "Video Format Comparison",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          53.6,
+          275.69,
+          363.15,
+          287.16
+        ],
+        "text": "Format\nAspect Ratio\nBest For Platform",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 3359061,
+        "flags": 16,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          53.6,
+          298.19,
+          423.97,
+          309.66
+        ],
+        "text": "Landscape (16:9)\n1920 x 1080\nYouTube Longform, TV, PC screens",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          53.6,
+          320.69,
+          444.01,
+          332.16
+        ],
+        "text": "Vertical (9:16)\n1080 x 1920\nTikTok, YouTube Shorts, Instagram Reels",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.66,
+          805.23
+        ],
+        "text": "Module 3 • CapCut Editing\nPage 12 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          531.25,
+          309.98,
+          549.99
+        ],
+        "text": "🎬",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (100 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          233.14,
+          558.16,
+          361.5,
+          568.13
+        ],
+        "text": "PAGE 12 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          215.63,
+          574.13,
+          379.62,
+          586.6
+        ],
+        "text": "CapCut Desktop Interface Screenshot",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          93.05,
+          588.5,
+          502.2,
+          598.98
+        ],
+        "text": "Suggested Image: Labeled screenshot of CapCut Desktop editor showing Media Panel, Player Screen, and Timeline tracks.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 13,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MODULE 3 • CAPCUT EDITING\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          373.57,
+          92.27
+        ],
+        "text": "Ch 16 & 17: Cutting Clips & Transitions",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          358.55,
+          109.7
+        ],
+        "text": "Trimming boring parts, splitting scenes, and adding smooth transitions",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          121.01,
+          252.3,
+          135.48
+        ],
+        "text": "Step-by-Step Cutting Protocol in CapCut",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          59.72,
+          151.19,
+          358.36,
+          162.66
+        ],
+        "text": "1. Import Footage: Drag your recorded video clips into CapCut's media panel.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          59.72,
+          165.44,
+          304.32,
+          176.91
+        ],
+        "text": "2. Drag to Timeline: Place your videos onto Main Video Track 1.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          59.72,
+          180.44,
+          419.77,
+          191.91
+        ],
+        "text": "3. Split / Cut: Move playhead line to cut spot, and click Split (Razor) tool (or press Ctrl + B).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          59.72,
+          195.44,
+          354.83,
+          206.91
+        ],
+        "text": "4. Delete Bad Parts: Select unwanted middle clip segment and press Delete!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          59.72,
+          209.69,
+          380.14,
+          221.16
+        ],
+        "text": "5. Automatic Join: CapCut automatically snaps remaining clips together seamlessly!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          242.51,
+          183.44,
+          256.98
+        ],
+        "text": "Popular CapCut Transitions",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          272.23,
+          123.87,
+          285.2
+        ],
+        "text": "Dissolve / Fade",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          289.19,
+          198.49,
+          312.66
+        ],
+        "text": "Smoothly blends Clip A into Clip B for\ntime passes or calm cuts.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          225.79,
+          272.23,
+          321.65,
+          285.2
+        ],
+        "text": "Camera Push / Zoom",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          225.79,
+          289.19,
+          360.65,
+          312.66
+        ],
+        "text": "Energetic zoom in/out effect great\nfor tech reveals or action moments!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          396.47,
+          272.23,
+          441.85,
+          285.2
+        ],
+        "text": "Blur Wipe",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          396.47,
+          289.19,
+          513.12,
+          312.66
+        ],
+        "text": "Wipes left or right with a quick\nmotion blur effect.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.66,
+          805.23
+        ],
+        "text": "Module 3 • Cutting & Transitions\nPage 13 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          523.88,
+          309.98,
+          541.88
+        ],
+        "text": "✂️",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (145 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          233.14,
+          549.91,
+          361.5,
+          559.88
+        ],
+        "text": "PAGE 13 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          215.33,
+          566.63,
+          379.9,
+          579.1
+        ],
+        "text": "CapCut Split & Trim Timeline Graphic",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          91.09,
+          581.0,
+          504.16,
+          591.48
+        ],
+        "text": "Suggested Image: Diagram showing Razor Split tool slicing a video clip in CapCut timeline and joining adjacent segments.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 14,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MODULE 3 • CAPCUT EDITING\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          330.48,
+          92.27
+        ],
+        "text": "Ch 18: Adding Memes & Overlays",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          341.77,
+          109.7
+        ],
+        "text": "Using Green Screen memes, funny reactions, and picture-in-picture",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          120.73,
+          533.81,
+          147.95
+        ],
+        "text": "Adding funny Meme Clips (laughing reactions, vine booms, green screen popups) makes tech and gaming videos\nsuper entertaining!",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          159.26,
+          235.37,
+          173.73
+        ],
+        "text": "Using Green Screen Cutout in CapCut",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          59.72,
+          188.69,
+          378.2,
+          200.16
+        ],
+        "text": "1. Drag your Green Screen Meme Clip onto Video Track 2 (above your main video).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          59.72,
+          203.69,
+          367.49,
+          215.16
+        ],
+        "text": "2. Select the meme clip on timeline -> Go to Cutout Tab in right inspector panel.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          59.72,
+          218.69,
+          376.23,
+          230.16
+        ],
+        "text": "3. Check Chroma Key -> Use Color Picker dropper to pick green background color.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          59.72,
+          232.94,
+          341.72,
+          244.41
+        ],
+        "text": "4. Increase Strength slider until green background disappears completely!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          57.35,
+          271.54,
+          516.64,
+          296.26
+        ],
+        "text": "💡 Pro Meme Tip: Pair funny meme visual popups with matching sound effects (e.g. pop sound or funny laugh) for\nmaximum humor!",
+        "size": 9.0,
+        "max_size": 9.0,
+        "font": "Type3 (54 0 R)",
+        "color": 1982639,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.66,
+          805.23
+        ],
+        "text": "Module 3 • Memes & Overlays\nPage 14 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          510.9,
+          290.27,
+          535.63
+        ],
+        "text": "",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Helvetica",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          233.06,
+          540.91,
+          361.58,
+          550.88
+        ],
+        "text": "PAGE 14 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          206.85,
+          557.63,
+          388.4,
+          570.1
+        ],
+        "text": "Green Screen Meme Chroma Key Preview",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          87.07,
+          572.0,
+          508.19,
+          582.48
+        ],
+        "text": "Suggested Image: Screenshot showing green screen meme overlay on timeline with Chroma Key green background removed.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 15,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MODULE 3 • CAPCUT EDITING\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          346.62,
+          92.27
+        ],
+        "text": "Ch 19-21: Captions, Audio & Export",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          321.88,
+          109.7
+        ],
+        "text": "Auto-subtitles, background music balance, and export settings",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          128.98,
+          155.59,
+          141.95
+        ],
+        "text": "1-Click Auto-Captions",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          145.94,
+          275.77,
+          169.41
+        ],
+        "text": "Go to Text Tab -> Auto Captions -> Create. CapCut's AI\ninstantly transcribes your voice track into synced subtitles!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          311.88,
+          128.98,
+          410.25,
+          141.95
+        ],
+        "text": "Styling Viral Captions",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          311.88,
+          145.94,
+          529.37,
+          169.41
+        ],
+        "text": "Use bold modern fonts (Montserrat/Impact), add yellow\nhighlight text color, and subtle black text outline shadow.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          188.51,
+          197.77,
+          202.98
+        ],
+        "text": "Proper Audio Volume Balance",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          218.23,
+          169.2,
+          231.2
+        ],
+        "text": "Voiceover / Speech Track",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          234.44,
+          262.7,
+          245.91
+        ],
+        "text": "Keep loud & clear (Volume set around 0 dB to +2 dB).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          311.88,
+          218.23,
+          423.63,
+          231.2
+        ],
+        "text": "Background Music Track",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          311.88,
+          234.44,
+          529.94,
+          257.91
+        ],
+        "text": "Lower volume significantly (set around -15 dB to -20 dB)\nso voice stays easy to hear.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          277.01,
+          188.89,
+          291.48
+        ],
+        "text": "Best CapCut Export Settings",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          53.6,
+          304.94,
+          353.93,
+          316.41
+        ],
+        "text": "Setting\nRecommended Value\nWhy",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 3359061,
+        "flags": 16,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          53.6,
+          326.69,
+          428.9,
+          338.16
+        ],
+        "text": "Resolution\n1080p (Full HD)\nSharp clear video quality",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          53.6,
+          349.19,
+          440.66,
+          360.66
+        ],
+        "text": "Frame Rate\n30 FPS or 60 FPS\nSmooth gameplay playback",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          53.6,
+          371.69,
+          447.48,
+          383.16
+        ],
+        "text": "Format\nMP4 (H.264)\nCompatible with all platforms",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.66,
+          805.23
+        ],
+        "text": "Module 3 • Captions & Export\nPage 15 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          556.75,
+          309.98,
+          575.49
+        ],
+        "text": "🎵",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (100 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          233.14,
+          583.66,
+          361.5,
+          593.63
+        ],
+        "text": "PAGE 15 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          213.89,
+          599.63,
+          381.36,
+          612.1
+        ],
+        "text": "CapCut Auto-Captions & Export Panel",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          104.29,
+          614.0,
+          490.96,
+          624.48
+        ],
+        "text": "Suggested Image: Screenshot showing CapCut Auto Captions text generator panel and 1080p MP4 Export window.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 16,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MODULE 4 • CASUAL ROBOTICS\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          371.48,
+          92.27
+        ],
+        "text": "Ch 22: What is a Robot? (Casual View)",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          342.9,
+          109.7
+        ],
+        "text": "Surface-level knowledge about smart machines without scary math",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          120.73,
+          541.38,
+          147.95
+        ],
+        "text": "A Robot is simply a machine that can automatically sense its environment, think using code, and perform a physical\naction!",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          159.26,
+          189.46,
+          173.73
+        ],
+        "text": "The 3 Parts Every Robot Has",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          188.98,
+          171.21,
+          201.95
+        ],
+        "text": "1. SENSORS (Eyes & Ears)",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          205.94,
+          184.71,
+          229.41
+        ],
+        "text": "Detect things like distance, light,\ntouch, or sound around the robot.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          225.79,
+          188.98,
+          369.35,
+          201.95
+        ],
+        "text": "2. THE BRAIN (Microcontroller)",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          225.79,
+          205.94,
+          366.55,
+          229.41
+        ],
+        "text": "Small chip running code that decides\nwhat action to take.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          396.47,
+          188.98,
+          530.87,
+          216.2
+        ],
+        "text": "3. MOTORS & LIGHTS (Hands\n& Legs)",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          396.47,
+          220.19,
+          529.58,
+          243.66
+        ],
+        "text": "Spin wheels, move arm joints, blink\nLEDs, or play sounds.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          57.35,
+          269.29,
+          366.18,
+          281.26
+        ],
+        "text": "💡 Casual Robotics Tip: Robotics is just hardware + code working together!",
+        "size": 9.0,
+        "max_size": 9.0,
+        "font": "Type3 (54 0 R)",
+        "color": 1982639,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.66,
+          805.23
+        ],
+        "text": "Module 4 • Casual Robotics\nPage 16 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          506.5,
+          309.98,
+          524.52
+        ],
+        "text": "🤖",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (77 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          233.14,
+          533.41,
+          361.5,
+          543.38
+        ],
+        "text": "PAGE 16 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          211.29,
+          550.13,
+          383.97,
+          562.6
+        ],
+        "text": "Simple 3-Part Robot Anatomy Diagram",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          100.2,
+          564.5,
+          495.05,
+          574.98
+        ],
+        "text": "Suggested Image: Casual illustration showing Sensor (Eyes) -> Microcontroller Board (Brain) -> Wheels/Motor (Legs).",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 17,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MODULE 4 • CASUAL ROBOTICS\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          423.17,
+          92.27
+        ],
+        "text": "Ch 23 & 24: Robot Brains, Sensors & Motors",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          336.27,
+          109.7
+        ],
+        "text": "Arduino, Raspberry Pi, micro:bit, and hardware parts made simple",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          121.01,
+          206.27,
+          135.48
+        ],
+        "text": "Popular Beginner Robot Boards",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          151.48,
+          96.53,
+          164.45
+        ],
+        "text": "micro:bit",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          167.69,
+          197.8,
+          203.91
+        ],
+        "text": "Super easy board with built-in LED\nscreen and buttons. Connects directly\nto Scratch!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          225.79,
+          151.48,
+          263.04,
+          164.45
+        ],
+        "text": "Arduino",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          225.79,
+          167.69,
+          358.64,
+          191.16
+        ],
+        "text": "Classic sturdy board for controlling\nmotors, lights, and simple sensors.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          396.47,
+          151.48,
+          476.66,
+          164.45
+        ],
+        "text": "Raspberry Pi Pico",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          396.47,
+          167.69,
+          525.92,
+          203.91
+        ],
+        "text": "Tiny $4 mini-computer board\nprogrammed in easy MicroPython\ncode!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          45.35,
+          222.26,
+          207.67,
+          236.73
+        ],
+        "text": "Everyday Robot Hardware Parts",
+        "size": 10.88,
+        "max_size": 10.88,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          251.98,
+          176.72,
+          264.95
+        ],
+        "text": "Ultrasonic Distance Sensor",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          268.19,
+          267.28,
+          292.41
+        ],
+        "text": "Looks like two tiny eyes! Emits sound pulses to measure\nhow far away walls or obstacles are.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          311.88,
+          251.98,
+          369.62,
+          264.95
+        ],
+        "text": "Servo Motor",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          311.88,
+          268.19,
+          529.17,
+          292.41
+        ],
+        "text": "A tiny motor that rotates precisely to specific angles (0 to\n180 degrees) for robot arm waving.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          55.1,
+          318.73,
+          131.63,
+          331.7
+        ],
+        "text": "DC Wheel Motor",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          335.69,
+          275.48,
+          359.16
+        ],
+        "text": "Spins wheels forward or backward continuously so a rover\ncan drive!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          311.88,
+          318.73,
+          408.34,
+          331.7
+        ],
+        "text": "LED Lights & Buzzers",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          311.88,
+          335.69,
+          523.06,
+          359.16
+        ],
+        "text": "Simple lights for robot eyes and buzzers for funny beep\nsounds.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.66,
+          805.23
+        ],
+        "text": "Module 4 • Brains & Sensors\nPage 17 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          547.0,
+          309.98,
+          565.02
+        ],
+        "text": "🔌",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (61 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          233.14,
+          573.16,
+          361.5,
+          583.13
+        ],
+        "text": "PAGE 17 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          204.54,
+          589.88,
+          390.72,
+          602.35
+        ],
+        "text": "Microcontroller Boards & Hardware Guide",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          111.81,
+          604.25,
+          483.46,
+          614.73
+        ],
+        "text": "Suggested Image: Friendly photo displaying micro:bit, Arduino, Distance Sensor, and Servo Motor side-by-side.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 18,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MODULE 4 • CASUAL ROBOTICS\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          335.48,
+          92.27
+        ],
+        "text": "Ch 25: Fun Surface Robotics Ideas",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          254.85,
+          109.7
+        ],
+        "text": "Cool starter projects you can build or dream up",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          128.98,
+          140.51,
+          141.95
+        ],
+        "text": "1. Smart Trash Can",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          145.94,
+          235.04,
+          169.41
+        ],
+        "text": "Uses a distance sensor to detect your hand and\nautomatically opens the lid with a servo motor!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          311.88,
+          128.98,
+          436.68,
+          141.95
+        ],
+        "text": "2. Obstacle-Avoiding Rover",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          311.88,
+          145.94,
+          527.47,
+          169.41
+        ],
+        "text": "A 2-wheeled car rover that drives around and turns away\nwhenever it gets close to a wall!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          55.1,
+          196.48,
+          179.7,
+          209.45
+        ],
+        "text": "3. Automatic Plant Waterer",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          212.69,
+          274.5,
+          236.16
+        ],
+        "text": "Detects dry soil moisture and pumps water to keep plants\nhealthy!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          311.88,
+          196.48,
+          411.67,
+          209.45
+        ],
+        "text": "4. Pet Companion Bot",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          311.88,
+          212.69,
+          531.56,
+          236.16
+        ],
+        "text": "Blinks LED eyes and wiggles a feather arm whenever a pet\nwalks past!",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI",
+        "color": 4674921,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          57.35,
+          262.54,
+          453.68,
+          274.51
+        ],
+        "text": "🎉 Module 4 Complete! You now understand basic robotics concepts without any confusing math!",
+        "size": 9.0,
+        "max_size": 9.0,
+        "font": "Type3 (185 0 R)",
+        "color": 1467700,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.66,
+          805.23
+        ],
+        "text": "Module 4 • Starter Projects\nPage 18 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          499.65,
+          290.27,
+          524.38
+        ],
+        "text": "🏎️",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Helvetica",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          233.14,
+          529.66,
+          361.5,
+          539.63
+        ],
+        "text": "PAGE 18 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          193.23,
+          546.38,
+          402.03,
+          558.85
+        ],
+        "text": "Mini Robot Rover & Smart Trash Can Prototype",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          145.84,
+          560.75,
+          449.41,
+          571.23
+        ],
+        "text": "Suggested Image: Cute photo of a 2-wheeled mini robot rover with eyes and battery pack.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 19,
+    "blocks": [
+      {
+        "bbox": [
+          55.85,
+          40.6,
+          549.53,
+          51.57
+        ],
+        "text": "MASTER REFERENCE\nTHE CREATOR'S GUIDEBOOK",
+        "size": 8.25,
+        "max_size": 8.25,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          45.35,
+          68.33,
+          270.92,
+          92.27
+        ],
+        "text": "Ch 26: Master Cheat Sheet",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "SegoeUIBlack",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          96.73,
+          271.62,
+          109.7
+        ],
+        "text": "Quick reference cards across all 4 guidebook topics",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          57.35,
+          128.98,
+          192.07,
+          141.95
+        ],
+        "text": "💻 Vibe Coding & Languages",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "Type3 (192 0 R)",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          69.35,
+          145.94,
+          229.6,
+          157.42
+        ],
+        "text": "Frontend: HTML, CSS, JavaScript (Visuals).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          69.35,
+          160.94,
+          224.2,
+          172.42
+        ],
+        "text": "Backend: Python, Node.js, SQL (Servers).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          69.35,
+          175.94,
+          255.94,
+          187.42
+        ],
+        "text": "NEVER SHARE: Passwords, API Keys, Credentials.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          314.13,
+          128.98,
+          443.83,
+          141.95
+        ],
+        "text": "🎮 Scratch Games Summary",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "Type3 (193 0 R)",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          326.13,
+          145.94,
+          492.63,
+          157.42
+        ],
+        "text": "Apple Catch: Random X fall + Basket score.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          326.13,
+          160.94,
+          492.53,
+          172.42
+        ],
+        "text": "Cat Hunt: Arrow keys + touching Rat score.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          326.13,
+          175.94,
+          503.93,
+          187.42
+        ],
+        "text": "Hungry Shark: Mouse point + touching Diver.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          326.13,
+          190.19,
+          489.48,
+          201.67
+        ],
+        "text": "Chrome Dino: Space jump + Cactus avoid.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          57.35,
+          230.98,
+          182.38,
+          243.95
+        ],
+        "text": "🎬 CapCut Video Shortcuts",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "Type3 (193 0 R)",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          69.35,
+          247.94,
+          192.44,
+          259.42
+        ],
+        "text": "Split / Cut: Ctrl+B / Razor tool.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          69.35,
+          262.94,
+          196.71,
+          274.42
+        ],
+        "text": "Transitions: Drag onto clip seam.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          69.35,
+          277.19,
+          243.28,
+          288.67
+        ],
+        "text": "Green Screen Meme: Cutout -> Chroma Key.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          69.35,
+          292.19,
+          194.73,
+          303.67
+        ],
+        "text": "Captions: Text -> Auto Captions.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          314.13,
+          230.98,
+          402.05,
+          243.95
+        ],
+        "text": "🤖 Casual Robotics",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "Type3 (194 0 R)",
+        "color": 988970,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          326.13,
+          247.94,
+          470.12,
+          259.42
+        ],
+        "text": "Sensors: Eyes & ears (Distance/Light).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          326.13,
+          262.94,
+          480.3,
+          274.42
+        ],
+        "text": "Brains: Microcontrollers (micro:bit/Pico).",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          326.13,
+          277.19,
+          462.29,
+          288.67
+        ],
+        "text": "Motors: Wheel & Servo movement.",
+        "size": 8.62,
+        "max_size": 8.62,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          45.35,
+          794.75,
+          541.66,
+          805.23
+        ],
+        "text": "Master Reference\nPage 19 of 20",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Semibold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          285.27,
+          520.01,
+          309.98,
+          538.02
+        ],
+        "text": "📋",
+        "size": 18.0,
+        "max_size": 18.0,
+        "font": "Type3 (195 0 R)",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          233.14,
+          546.91,
+          361.5,
+          556.88
+        ],
+        "text": "PAGE 19 IMAGE PLACEHOLDER",
+        "size": 7.5,
+        "max_size": 7.5,
+        "font": "SegoeUIBlack",
+        "color": 3359061,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          231.86,
+          563.63,
+          363.4,
+          576.1
+        ],
+        "text": "Master Summary Cards Visual",
+        "size": 9.38,
+        "max_size": 9.38,
+        "font": "SegoeUI-Bold",
+        "color": 1976635,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          116.12,
+          578.0,
+          479.12,
+          588.48
+        ],
+        "text": "Suggested Image: Clean visual summary graphic organizing icons for HTML, Scratch, CapCut, and Robotics.",
+        "size": 7.88,
+        "max_size": 7.88,
+        "font": "SegoeUI-Italic",
+        "color": 6583435,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  },
+  {
+    "page": 20,
+    "blocks": [
+      {
+        "bbox": [
+          45.35,
+          40.6,
+          549.52,
+          121.81
+        ],
+        "text": "KEEP CREATING & BUILDING!\nTHE CREATOR'S GUIDEBOOK\nCongratulations on completing The\nCreator's Guidebook!",
+        "size": 16.12,
+        "max_size": 24.0,
+        "font": "SegoeUI-Bold",
+        "color": 6583435,
+        "flags": 16,
+        "nlines": 4
+      },
+      {
+        "bbox": [
+          45.35,
+          130.89,
+          516.01,
+          158.11
+        ],
+        "text": "You now have the fundamental knowledge to code with AI, build games in Scratch, edit videos in CapCut, and\nexplore robotics.",
+        "size": 9.75,
+        "max_size": 9.75,
+        "font": "SegoeUI",
+        "color": 1976635,
+        "flags": 0,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          55.1,
+          167.23,
+          362.45,
+          201.62
+        ],
+        "text": "Recommended Software Links\n  Scratch Editor: scratch.mit.edu or turbo warp.",
+        "size": 12.92,
+        "max_size": 13.83,
+        "font": "SegoeUI-Bold",
+        "color": 988970,
+        "flags": 16,
+        "nlines": 2
+      },
+      {
+        "bbox": [
+          55.1,
+          204.42,
+          480.77,
+          223.04
+        ],
+        "text": "CapCut Desktop: capcut.com (Free video editor for PC/Mac/Phone).",
+        "size": 13.83,
+        "max_size": 13.83,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          55.1,
+          225.84,
+          551.11,
+          244.46
+        ],
+        "text": "IDE Code Editor: code.visualstudio.com or cursor.com or kiro or antigravity",
+        "size": 13.83,
+        "max_size": 13.83,
+        "font": "SegoeUI-Bold",
+        "color": 4674921,
+        "flags": 16,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          245.38,
+          737.79,
+          538.38,
+          805.04
+        ],
+        "text": "Download the Gostudy! app for more\nopportunities like this at\ngoostudy.vercel.app",
+        "size": 15.28,
+        "max_size": 15.28,
+        "font": "ArialBlack",
+        "color": 0,
+        "flags": 0,
+        "nlines": 3
+      },
+      {
+        "bbox": [
+          248.61,
+          266.45,
+          417.79,
+          303.59
+        ],
+        "text": "About the Author",
+        "size": 21.61,
+        "max_size": 21.61,
+        "font": "DubaiMedium",
+        "color": 0,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          252.81,
+          303.59,
+          579.52,
+          333.97
+        ],
+        "text": "SkyDrake (Chukwudumueme Miracle Chidera)",
+        "size": 17.68,
+        "max_size": 17.68,
+        "font": "DubaiMedium",
+        "color": 0,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          252.81,
+          333.97,
+          563.39,
+          364.36
+        ],
+        "text": "is an automotive engineering student, soft-",
+        "size": 17.68,
+        "max_size": 17.68,
+        "font": "DubaiMedium",
+        "color": 0,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          252.81,
+          364.36,
+          559.34,
+          394.74
+        ],
+        "text": "ware developer, and entrepreneur based in",
+        "size": 17.68,
+        "max_size": 17.68,
+        "font": "DubaiMedium",
+        "color": 0,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          252.81,
+          394.74,
+          552.45,
+          425.12
+        ],
+        "text": "Lomé, Togo. He runs Skydrake, a company",
+        "size": 17.68,
+        "max_size": 17.68,
+        "font": "DubaiMedium",
+        "color": 0,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          252.81,
+          425.12,
+          550.53,
+          455.51
+        ],
+        "text": "building apps and SaaS tools for the West",
+        "size": 17.68,
+        "max_size": 17.68,
+        "font": "DubaiMedium",
+        "color": 0,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          252.81,
+          455.51,
+          563.37,
+          485.89
+        ],
+        "text": "African market, and created this guidebook",
+        "size": 17.68,
+        "max_size": 17.68,
+        "font": "DubaiMedium",
+        "color": 0,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          252.81,
+          485.89,
+          561.01,
+          516.28
+        ],
+        "text": "to make coding, design, and robotics simple",
+        "size": 17.68,
+        "max_size": 17.68,
+        "font": "DubaiMedium",
+        "color": 0,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          252.81,
+          516.28,
+          496.21,
+          546.66
+        ],
+        "text": "and accessible for young creators.",
+        "size": 17.68,
+        "max_size": 17.68,
+        "font": "DubaiMedium",
+        "color": 0,
+        "flags": 0,
+        "nlines": 1
+      },
+      {
+        "bbox": [
+          286.81,
+          571.12,
+          387.08,
+          595.69
+        ],
+        "text": "Signature:",
+        "size": 22.0,
+        "max_size": 22.0,
+        "font": "Arial,Italic",
+        "color": 0,
+        "flags": 2,
+        "nlines": 1
+      }
+    ]
+  }
+]

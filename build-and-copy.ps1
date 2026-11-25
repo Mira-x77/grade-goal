@@ -5,8 +5,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ProjectRoot = $PSScriptRoot
-$versionName = "1.2.0"
-$versionCode = 7
+$versionName = "1.2.1"
+$versionCode = 11
 $applicationId = "com.gostudy.student"
 $apkName = "GoStudy-${versionName}-v${versionCode}.apk"
 $releaseApk = Join-Path $ProjectRoot "android\app\build\outputs\apk\release\app-release.apk"

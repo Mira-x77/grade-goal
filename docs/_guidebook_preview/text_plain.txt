@@ -1,0 +1,621 @@
+===== PAGE 1 =====
+Tech skills
+for
+Beginners
+2026 Edition • Easy, Beginner-Friendly Guide
+Page 1 of 20
+🚀
+COVER ARTWORK PLACEHOLDER
+Futuristic Tech & Creative Collage
+Suggested Image: High-energy artwork showing a laptop with VS Code & AI prompt window, Scratch Dino & Shark sprites,
+CapCut timeline edit UI, and a friendly mini robot rover.
+💻 Vibe Coding & Languages
+Frontend vs Backend, IDEs, safe AI prompting formula &
+security rules.
+🎮 Scratch Game Projects
+Build 4 full games: Apple Catch, Cat Hunt, Hungry Shark &
+Chrome Dino.
+🎬 CapCut Video Editing
+Cuts, joins, scene transitions, green screen memes & auto-
+captions.
+🤖 Casual Robotics
+Surface-level guide to robot brains (micro:bit/Arduino),
+sensors & motors.
+#0
+
+===== PAGE 2 =====
+WELCOME & OVERVIEW
+THE CREATOR'S GUIDEBOOK
+Welcome to the Creator's World
+Simple, practical tech skills without any complicated academic jargon
+This guidebook was written specifically to teach you real, practical creative tools! You won't find scary math formulas
+or confusing academic speak here. Instead, you'll learn how to build games, edit videos like a pro, code with AI, and
+understand how simple robots work.
+💡The Creator Promise: Every topic in this guidebook is explained in plain English with visual cheat sheets and step-by-
+step guides along the way!
+📖 Complete 20-Page Guidebook Map
+MODULE 1: CODING BASICS & VIBE CODING
+PAGES 3–6
+Ch 1: Coding Languages 101 (Frontend vs Backend)
+Page 3
+Ch 2: Static Sites vs. Functional / Dynamic Sites
+Page 4
+Ch 3 & 4: Intro to Vibe Coding & Master AI Prompting
+Page 5
+Ch 5 & 6-7: hardware/software                                     
+Page 6
+MODULE 2: SCRATCH GAME PROJECTS
+PAGES 7–11
+Ch 8: Scratch Controls & Block Basics                                                                                                                                                    Page 7
+Ch 9:  input and output devices                                                                                                                                                            Page 8
+Ch 10: Game 2 - Cat Hunt Rat Chase Game
+Page 9
+Ch 11: Scratch test                                                    
+Page 10
+Ch 12-14: Chrome Dino Runner & Game Polish
+Page 11
+MODULE 3: CAPCUT VIDEO EDITING
+PAGES 12–15
+Ch 15: CapCut Basics & Workspace Overview
+Page 12
+Ch 16 & 17: Cutting Clips & Smooth Transitions
+Page 13
+Ch 18: Memes, Overlays & Green Screen Popups
+Page 14
+Ch 19-21: Auto-Captions, Music Sync & Exporting
+Page 15
+MODULE 4: CASUAL SURFACE ROBOTICS
+PAGES 16–18
+Ch 22: What is a Robot? (Casual Surface View)
+Page 16
+Ch 23 & 24: Robot Brains, Sensors & Motors
+Page 17
+Ch 25: Fun Surface Robotics Starter Projects
+Page 18
+MASTER REFERENCE & BACK COVER
+PAGES 19–20
+Ch 26: Master Cheat Sheet Across All 4 Topics
+Page 19
+Resources, Software Links & Back Cover
+Page 20
+Welcome & Overview
+Page 2 of 20
+
+===== PAGE 3 =====
+MODULE 1 • CODING BASICS
+THE CREATOR'S GUIDEBOOK
+Ch 1: Coding Languages 101
+What main programming languages are for and what they do
+Coding is simply giving step-by-step instructions to a computer in a language it understands. Different coding
+languages are designed for different specialized jobs!
+Frontend vs. Backend Made Simple
+FRONTEND (What You See)
+Everything visible on your screen: buttons, colors, text,
+animations, and responsive layouts.
+HTML: The skeleton (text, headings, & layout structure).
+CSS: The clothes & paint (colors, fonts, & flex
+alignment).
+JavaScript: The muscle (button clicks, popups, &
+animations).
+BACKEND (Behind the Scenes)
+The hidden brain operating on remote servers to manage
+accounts, passwords, and databases.
+Python: Easy, popular backend & AI language.
+Node.js / SQL: Handles server traffic & database user
+records.
+APIs: Bridges connecting Frontend requests to Backend
+data.
+💡BASIC DEFINITION • IDE: An IDE (Integrated Development Environment) is simply the code editor program where
+programmers write and run code files! Examples: VS Code or Cursor.
+Module 1 • Coding Basics
+Page 3 of 20
+🖥️
+PAGE 3 IMAGE PLACEHOLDER
+Frontend vs Backend Comparison Visual
+Suggested Image: Illustration showing a browser web page interface on top (Frontend) linked down to a server database icon
+below (Backend).
+
+===== PAGE 4 =====
+MODULE 1 • CODING BASICS
+THE CREATOR'S GUIDEBOOK
+Ch 2: Static vs. Functional Sites
+Understanding the two main types of websites
+Before building a web project or prompting AI, you need to know which type of website you are creating!
+1. Static Websites (Digital Posters)
+Show the exact same content to every visitor. They do not
+save user logins or process custom live data.
+Examples: Portfolios, restaurant menus, school blogs.
+Built With: Simple HTML & CSS.
+Benefit: Super fast & easy to build!
+2. Functional / Dynamic Sites
+Interactive web applications that change based on user
+actions, save progress, or handle user accounts.
+Examples: Scratch, YouTube, games, online stores.
+Built With: JavaScript + Backend Database.
+Benefit: Interactive & personalized!
+Static vs Dynamic Feature Comparison
+Feature
+Static Websites
+Dynamic / Functional Apps
+User Logins
+No user accounts
+Full accounts & passwords
+Data Storage
+Fixed text in files
+Saves to server database
+Build Time
+Minutes to hours
+Days to weeks
+💡BASIC DEFINITION • HTML:HTML (HyperText Markup Language) is the standard code structure used to place
+headers, text, images, and buttons on web pages.
+Module 1 • Coding Basics
+Page 4 of 20
+🌐
+PAGE 4 IMAGE PLACEHOLDER
+Static Menu Page vs Interactive App Mockup
+Suggested Image: Side-by-side mockup comparing a simple static restaurant menu web page vs an interactive web game app
+UI.
+
+===== PAGE 5 =====
+MODULE 1 • VIBE CODING
+THE CREATOR'S GUIDEBOOK
+Ch 3 & 4: Intro to Vibe Coding & AI Prompting
+Creating software by talking to AI in plain English
+Vibe Coding means using modern AI tools (like ChatGPT, Claude, or Cursor) to write code for you while you guide
+the project using plain English prompts!
+What AI Needs from You (The 3 Key Requirements)
+1. Clear Goal
+Tell AI exactly what app to make (e.g.,
+"Make a simple score counter web
+page").
+2. Target Tech
+Specify the language (e.g., "Use
+single-file HTML and Vanilla CSS").
+3. Style & Features
+Describe colors, layout, and button
+behavior preferences.
+The Simple 3-Step Prompt Formula
+3-STEP PROMPT FORMULA
+BEGINNER FRIENDLY
+1. WHO AI IS: "You are an expert front-end web developer..."
+2. WHAT TO BUILD: "Build a clean single-file HTML page for my game..."
+3. SPECIAL RULES: "Use a dark blue background, big green action buttons, and keep the code simple."
+⚡The Vibe Coding Secret: You don't need to memorize coding syntax anymore—just learn how to describe what you
+want clearly!
+Module 1 • Vibe Coding
+Page 5 of 20
+🤖
+PAGE 5 IMAGE PLACEHOLDER
+Vibe Coding Workspace & Chat Flow
+Suggested Image: Diagram showing user typing a prompt in an AI chat window and receiving instant HTML/CSS code blocks.
+
+===== PAGE 6 =====
+MODULE 1 • Hardware/software           
+THE CREATOR'S GUIDEBOOK
+Ch 5 & 6-7: Hardware /software
+Essential safety rules and pre-flight checklist
+🚨STRICT SECURITY RULES! What NEVER to share with AI:
+• Passwords & PINs: Never paste real user passwords or logins.
+• Private API Keys & Tokens: Secret keys to online services.
+• Personal Data: Phone numbers, home addresses, or credit cards.
+• Database Credentials: Secret database login credentials.
+SAFE CODE EXAMPLE • ALWAYS SANITIZE
+// WRONG (UNSAFE): const myApiKey = "sk_live_998877665544332211";
+// CORRECT (SAFE): const myApiKey = "YOUR_API_KEY_HERE";
+The Vibe Coding Pre-Flight Checklist
+✅ Know whether you need a Static site or a Functional site.
+✅ Decide your target tech stack (HTML, CSS, JS, Python).
+✅ Open your IDE editor (VS Code or Cursor).
+✅ Write clear prompts specifying goals and layout preferences.
+✅NEVER share passwords or private API keys with AI!
+✅ Test generated code in your web browser step-by-step.
+Module 1 • Security & Summary
+Page 6 of 20
+🛡️
+PAGE 6 IMAGE PLACEHOLDER
+Security Shield & Module 1 Completion Badge
+Suggested Image: Security graphic showing a padlock over private credentials alongside a colorful "Module 1 Complete" badge
+artwork.
+
+===== PAGE 7 =====
+MODULE 2 • SCRATCH GAMES
+THE CREATOR'S GUIDEBOOK
+Ch 8: Scratch Controls & Block Basics
+Understanding sprites, stage coordinates, and visual code blocks
+Scratch is MIT's visual block programming platform. Instead of typing complex syntax, you snap color-coded blocks
+together like LEGO bricks!
+Key Scratch Concepts
+1. Sprite
+Characters or objects on stage (Cat,
+Dino, Shark, Basket).
+2. Stage
+The game screen background grid
+(480 wide x 360 high).
+3. Script
+Connected stack of blocks telling a
+sprite what to do!
+Essential Scratch Block Types
+when green flag clicked
+go to x: (0) y: (0)
+change x by (10)
+change y by (10)
+forever
+touching [mouse-pointer v]?
+change [Score v] by (1)
+💡Stage Coordinates: The center of the Scratch stage is (X: 0, Y: 0). X goes from -240 (Left) to +240 (Right). Y goes
+from -180 (Bottom) to +180 (Top).
+Module 2 • Scratch Controls
+Page 7 of 20
+🧩
+PAGE 7 IMAGE PLACEHOLDER
+Scratch 3.0 Editor Interface Overview
+Suggested Image: Screenshot of Scratch editor highlighting Block Palette, Script Workspace, and Stage Canvas.
+
+===== PAGE 8 =====
+MODULE 2 • Input and output devices
+THE CREATOR'S GUIDEBOOK
+Ch 9: Input and output devices
+Falling objects, random positions, and catching mechanisms
+In our first game, delicious Apples fall randomly from the sky! The player moves a Basket left and right to catch them
+and score points.
+Apple Spawning & Catching Script
+when green flag clicked
+set [Score v] to (0)
+forever
+go to x: (pick random (-200) to (200)) y: (180)
+repeat until <touching [Basket v]? or (y position < -160)>
+change y by (-5)
+if <touching [Basket v]?> then
+change [Score v] by (1)
+play sound [Chomp v]
+Module 2 • Apple Catch Game
+Page 8 of 20
+🍎
+PAGE 8 IMAGE PLACEHOLDER
+Apple Catching Game Gameplay Screenshot
+Suggested Image: Screenshot showing Basket sprite at bottom catching red falling Apple sprite with Score counter displaying
+"Score: 5".
+
+===== PAGE 9 =====
+MODULE 2 • SCRATCH GAMES
+THE CREATOR'S GUIDEBOOK
+Ch 10: Game 1 - Cat Hunt Rat Chase
+Player Arrow controls, enemy AI movement, and collision scoring
+In this chase game, the player controls the Cat sprite using keyboard arrow keys to hunt down a sneaky Rat sprite
+that glides around the stage!
+1. Cat Arrow Movement Script
+when [right arrow v] key pressed
+point in direction (90)
+move (15) steps
+2. Rat Glide & Catch Scoring
+when green flag clicked
+forever
+glide (1) secs to x: (random) y: (random)
+if <touching [Cat v]?> then
+change [Score v] by (1)
+start sound [Meow v]
+Module 2 • Cat Hunt Rat Game
+Page 9 of 20
+🐱
+PAGE 9 IMAGE PLACEHOLDER
+Cat Hunting Rat Game Stage Screenshot
+Suggested Image: Screenshot showing Cat sprite chasing Rat sprite across kitchen backdrop.
+
+===== PAGE 10 =====
+MODULE 2 • SCRATCH test
+THE CREATOR'S GUIDEBOOK
+Ch 11: Exercise
+Underwater mouse controls, target touching, and mouth costume animation
+In Hungry Shark, the player guides a giant Shark underwater using mouse pointer movement to catch Diver sprites!
+Shark Movement & Mouth Animation Logic
+when green flag clicked
+forever
+point towards [mouse-pointer v]
+move (5) steps
+if <touching [Diver v]?> then
+switch costume to [Shark-B-OpenMouth v]
+change [Score v] by (1)
+play sound [Bite v] until done
+switch costume to [Shark-A v]
+💡Costume Animation Tip: Switching costumes briefly to an "open mouth" sprite creates a super cool visual eating
+effect!
+Module 2 • Hungry Shark Game
+Page 10 of 20
+🦈
+PAGE 10 IMAGE PLACEHOLDER
+Hungry Shark Underwater Stage Screenshot
+Suggested Image: Screenshot showing Shark sprite opening mouth to eat Diver sprite underwater with score panel.
+
+===== PAGE 11 =====
+MODULE 2 • SCRATCH GAMES & POLISH
+THE CREATOR'S GUIDEBOOK
+Ch 12-14: Chrome Dino & Game Polish
+Jumping gravity physics, scrolling obstacles, and game menus
+1. Dino Jump & Gravity Script
+when [space v] key pressed
+if <y position = -100> then
+set [velocityY v] to (14)
+repeat until <y position < -100>
+change y by (velocityY)
+change [velocityY v] by (-1)
+2. Cactus Movement Script
+when green flag clicked
+forever
+go to x: (240) y: (-100)
+repeat until <x position < -240>
+change x by (-8)
+3 Ways to Make Your Games Feel Pro
+1. Add Sound Effects: Play chomp, meow, pop, or jump sounds during collisions!
+2. Create a Start Menu Screen: Use a broadcast message start game when player clicks "PLAY"!
+3. Game Over Banner: Display a custom red "GAME OVER" sprite when player runs out of lives!
+Module 2 • Dino Runner & Polish
+Page 11 of 20
+🦖
+PAGE 11 IMAGE PLACEHOLDER
+Chrome Dino Runner & Finished Project Gallery
+Suggested Image: 4-quadrant picture showing previews of Apple Catch, Cat Hunt, Hungry Shark, and Chrome Dino games.
+
+===== PAGE 12 =====
+MODULE 3 • CAPCUT EDITING
+THE CREATOR'S GUIDEBOOK
+Ch 15: Intro to CapCut Video Editing
+Getting started with CapCut on desktop and mobile
+CapCut is one of the most popular, beginner-friendly video editing apps for desktop and phones. It makes editing
+video clips, adding text, and applying effects super fast!
+The CapCut Workspace Areas
+1. Media Library
+Where you import raw video clips,
+audio tracks, and images.
+2. Preview Window
+The screen where you watch your
+video play back live while editing.
+3. The Timeline
+The bottom track layout where you
+cut, trim, arrange, and layer clips!
+Video Format Comparison
+Format
+Aspect Ratio
+Best For Platform
+Landscape (16:9)
+1920 x 1080
+YouTube Longform, TV, PC screens
+Vertical (9:16)
+1080 x 1920
+TikTok, YouTube Shorts, Instagram Reels
+Module 3 • CapCut Editing
+Page 12 of 20
+🎬
+PAGE 12 IMAGE PLACEHOLDER
+CapCut Desktop Interface Screenshot
+Suggested Image: Labeled screenshot of CapCut Desktop editor showing Media Panel, Player Screen, and Timeline tracks.
+
+===== PAGE 13 =====
+MODULE 3 • CAPCUT EDITING
+THE CREATOR'S GUIDEBOOK
+Ch 16 & 17: Cutting Clips & Transitions
+Trimming boring parts, splitting scenes, and adding smooth transitions
+Step-by-Step Cutting Protocol in CapCut
+1. Import Footage: Drag your recorded video clips into CapCut's media panel.
+2. Drag to Timeline: Place your videos onto Main Video Track 1.
+3. Split / Cut: Move playhead line to cut spot, and click Split (Razor) tool (or press Ctrl + B).
+4. Delete Bad Parts: Select unwanted middle clip segment and press Delete!
+5. Automatic Join: CapCut automatically snaps remaining clips together seamlessly!
+Popular CapCut Transitions
+Dissolve / Fade
+Smoothly blends Clip A into Clip B for
+time passes or calm cuts.
+Camera Push / Zoom
+Energetic zoom in/out effect great
+for tech reveals or action moments!
+Blur Wipe
+Wipes left or right with a quick
+motion blur effect.
+Module 3 • Cutting & Transitions
+Page 13 of 20
+✂️
+PAGE 13 IMAGE PLACEHOLDER
+CapCut Split & Trim Timeline Graphic
+Suggested Image: Diagram showing Razor Split tool slicing a video clip in CapCut timeline and joining adjacent segments.
+
+===== PAGE 14 =====
+MODULE 3 • CAPCUT EDITING
+THE CREATOR'S GUIDEBOOK
+Ch 18: Adding Memes & Overlays
+Using Green Screen memes, funny reactions, and picture-in-picture
+Adding funny Meme Clips (laughing reactions, vine booms, green screen popups) makes tech and gaming videos
+super entertaining!
+Using Green Screen Cutout in CapCut
+1. Drag your Green Screen Meme Clip onto Video Track 2 (above your main video).
+2. Select the meme clip on timeline -> Go to Cutout Tab in right inspector panel.
+3. Check Chroma Key -> Use Color Picker dropper to pick green background color.
+4. Increase Strength slider until green background disappears completely!
+💡Pro Meme Tip: Pair funny meme visual popups with matching sound effects (e.g. pop sound or funny laugh) for
+maximum humor!
+Module 3 • Memes & Overlays
+Page 14 of 20
+�
+PAGE 14 IMAGE PLACEHOLDER
+Green Screen Meme Chroma Key Preview
+Suggested Image: Screenshot showing green screen meme overlay on timeline with Chroma Key green background removed.
+
+===== PAGE 15 =====
+MODULE 3 • CAPCUT EDITING
+THE CREATOR'S GUIDEBOOK
+Ch 19-21: Captions, Audio & Export
+Auto-subtitles, background music balance, and export settings
+1-Click Auto-Captions
+Go to Text Tab -> Auto Captions -> Create. CapCut's AI
+instantly transcribes your voice track into synced subtitles!
+Styling Viral Captions
+Use bold modern fonts (Montserrat/Impact), add yellow
+highlight text color, and subtle black text outline shadow.
+Proper Audio Volume Balance
+Voiceover / Speech Track
+Keep loud & clear (Volume set around 0 dB to +2 dB).
+Background Music Track
+Lower volume significantly (set around -15 dB to -20 dB)
+so voice stays easy to hear.
+Best CapCut Export Settings
+Setting
+Recommended Value
+Why
+Resolution
+1080p (Full HD)
+Sharp clear video quality
+Frame Rate
+30 FPS or 60 FPS
+Smooth gameplay playback
+Format
+MP4 (H.264)
+Compatible with all platforms
+Module 3 • Captions & Export
+Page 15 of 20
+🎵
+PAGE 15 IMAGE PLACEHOLDER
+CapCut Auto-Captions & Export Panel
+Suggested Image: Screenshot showing CapCut Auto Captions text generator panel and 1080p MP4 Export window.
+
+===== PAGE 16 =====
+MODULE 4 • CASUAL ROBOTICS
+THE CREATOR'S GUIDEBOOK
+Ch 22: What is a Robot? (Casual View)
+Surface-level knowledge about smart machines without scary math
+A Robot is simply a machine that can automatically sense its environment, think using code, and perform a physical
+action!
+The 3 Parts Every Robot Has
+1. SENSORS (Eyes & Ears)
+Detect things like distance, light,
+touch, or sound around the robot.
+2. THE BRAIN (Microcontroller)
+Small chip running code that decides
+what action to take.
+3. MOTORS & LIGHTS (Hands
+& Legs)
+Spin wheels, move arm joints, blink
+LEDs, or play sounds.
+💡Casual Robotics Tip: Robotics is just hardware + code working together!
+Module 4 • Casual Robotics
+Page 16 of 20
+🤖
+PAGE 16 IMAGE PLACEHOLDER
+Simple 3-Part Robot Anatomy Diagram
+Suggested Image: Casual illustration showing Sensor (Eyes) -> Microcontroller Board (Brain) -> Wheels/Motor (Legs).
+
+===== PAGE 17 =====
+MODULE 4 • CASUAL ROBOTICS
+THE CREATOR'S GUIDEBOOK
+Ch 23 & 24: Robot Brains, Sensors & Motors
+Arduino, Raspberry Pi, micro:bit, and hardware parts made simple
+Popular Beginner Robot Boards
+micro:bit
+Super easy board with built-in LED
+screen and buttons. Connects directly
+to Scratch!
+Arduino
+Classic sturdy board for controlling
+motors, lights, and simple sensors.
+Raspberry Pi Pico
+Tiny $4 mini-computer board
+programmed in easy MicroPython
+code!
+Everyday Robot Hardware Parts
+Ultrasonic Distance Sensor
+Looks like two tiny eyes! Emits sound pulses to measure
+how far away walls or obstacles are.
+Servo Motor
+A tiny motor that rotates precisely to specific angles (0 to
+180 degrees) for robot arm waving.
+DC Wheel Motor
+Spins wheels forward or backward continuously so a rover
+can drive!
+LED Lights & Buzzers
+Simple lights for robot eyes and buzzers for funny beep
+sounds.
+Module 4 • Brains & Sensors
+Page 17 of 20
+🔌
+PAGE 17 IMAGE PLACEHOLDER
+Microcontroller Boards & Hardware Guide
+Suggested Image: Friendly photo displaying micro:bit, Arduino, Distance Sensor, and Servo Motor side-by-side.
+
+===== PAGE 18 =====
+MODULE 4 • CASUAL ROBOTICS
+THE CREATOR'S GUIDEBOOK
+Ch 25: Fun Surface Robotics Ideas
+Cool starter projects you can build or dream up
+1. Smart Trash Can
+Uses a distance sensor to detect your hand and
+automatically opens the lid with a servo motor!
+2. Obstacle-Avoiding Rover
+A 2-wheeled car rover that drives around and turns away
+whenever it gets close to a wall!
+3. Automatic Plant Waterer
+Detects dry soil moisture and pumps water to keep plants
+healthy!
+4. Pet Companion Bot
+Blinks LED eyes and wiggles a feather arm whenever a pet
+walks past!
+🎉Module 4 Complete! You now understand basic robotics concepts without any confusing math!
+Module 4 • Starter Projects
+Page 18 of 20
+🏎️
+PAGE 18 IMAGE PLACEHOLDER
+Mini Robot Rover & Smart Trash Can Prototype
+Suggested Image: Cute photo of a 2-wheeled mini robot rover with eyes and battery pack.
+
+===== PAGE 19 =====
+MASTER REFERENCE
+THE CREATOR'S GUIDEBOOK
+Ch 26: Master Cheat Sheet
+Quick reference cards across all 4 guidebook topics
+💻 Vibe Coding & Languages
+Frontend: HTML, CSS, JavaScript (Visuals).
+Backend: Python, Node.js, SQL (Servers).
+NEVER SHARE: Passwords, API Keys, Credentials.
+🎮 Scratch Games Summary
+Apple Catch: Random X fall + Basket score.
+Cat Hunt: Arrow keys + touching Rat score.
+Hungry Shark: Mouse point + touching Diver.
+Chrome Dino: Space jump + Cactus avoid.
+🎬 CapCut Video Shortcuts
+Split / Cut:Ctrl+B / Razor tool.
+Transitions: Drag onto clip seam.
+Green Screen Meme: Cutout -> Chroma Key.
+Captions: Text -> Auto Captions.
+🤖 Casual Robotics
+Sensors: Eyes & ears (Distance/Light).
+Brains: Microcontrollers (micro:bit/Pico).
+Motors: Wheel & Servo movement.
+Master Reference
+Page 19 of 20
+📋
+PAGE 19 IMAGE PLACEHOLDER
+Master Summary Cards Visual
+Suggested Image: Clean visual summary graphic organizing icons for HTML, Scratch, CapCut, and Robotics.
+
+===== PAGE 20 =====
+KEEP CREATING & BUILDING!
+THE CREATOR'S GUIDEBOOK
+Congratulations on completing The
+Creator's Guidebook!
+You now have the fundamental knowledge to code with AI, build games in Scratch, edit videos in CapCut, and
+explore robotics.
+Recommended Software Links
+  Scratch Editor:scratch.mit.edu or turbo warp.
+CapCut Desktop:capcut.com (Free video editor for PC/Mac/Phone).
+  IDE Code Editor:code.visualstudio.com or cursor.com or kiro or antigravity
+Download the Gostudy! app for more
+opportunities like this at
+goostudy.vercel.app
+About the Author
+SkyDrake (Chukwudumueme Miracle Chidera)
+is an automotive engineering student, soft-
+ware developer, and entrepreneur based in
+Lomé, Togo. He runs Skydrake, a company
+building apps and SaaS tools for the West
+African market, and created this guidebook
+to make coding, design, and robotics simple
+and accessible for young creators.
+Signature:
+
+FONTS: Arial,Italic, ArialBlack, Consolas, Consolas-Bold, DubaiMedium, Helvetica, InkFree, SegoeUI, SegoeUI-Bold, SegoeUI-Italic, SegoeUI-Semibold, SegoeUIBlack, Type3 (100 0 R), Type3 (108 0 R), Type3 (121 0 R), Type3 (145 0 R), Type3 (185 0 R), Type3 (192 0 R), Type3 (193 0 R), Type3 (194 0 R), Type3 (195 0 R), Type3 (231 0 R), Type3 (233 0 R), Type3 (236 0 R), Type3 (39 0 R), Type3 (54 0 R), Type3 (55 0 R), Type3 (61 0 R), Type3 (68 0 R), Type3 (76 0 R), Type3 (77 0 R), Type3 (84 0 R), Type3 (85 0 R), Type3 (92 0 R)

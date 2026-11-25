@@ -21,7 +21,6 @@ import {
   Crown,
   Lock,
   Unlock,
-  Share2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
@@ -34,6 +33,10 @@ const MAX_SCALE = 5.0;
 const MAX_CANVAS_DIM = 4096;
 const DPR = Math.min(window.devicePixelRatio || 1, 3);
 const TOUR_KEY = "scoretarget_pdf_tour_seen";
+const TAP_MOVE_THRESHOLD = 12;
+const DOUBLE_TAP_MS = 280;
+const SWIPE_PAGE_THRESHOLD = 56;
+const DOUBLE_TAP_ZOOM = 2.0;
 
 type ReadingMode = "light" | "dark" | "sepia";
 const MODE_CFG: Record<
@@ -69,9 +72,6 @@ interface InAppPDFViewerProps {
   subjectName?: string;
   onClose: () => void;
   onPremiumNudge?: () => void;
-  /** Premium-only: share downloaded file */
-  showShare?: boolean;
-  onShare?: () => void;
 }
 
 export function InAppPDFViewer({
@@ -81,8 +81,6 @@ export function InAppPDFViewer({
   subjectName,
   onClose,
   onPremiumNudge,
-  showShare = false,
-  onShare,
 }: InAppPDFViewerProps) {
   const { t } = useLanguage();
   const isTablet = useIsTablet();
@@ -105,7 +103,6 @@ export function InAppPDFViewer({
   const [pageLoading, setPageLoading] = useState(false);
   const [error, setError] = useState("");
   const [showControls, setShowControls] = useState(true);
-  const [locked, setLocked] = useState(false);
   const [showPageInput, setShowPageInput] = useState(false);
   const [pageInputVal, setPageInputVal] = useState("");
   const [readingMode, setReadingMode] = useState<ReadingMode>("light");
@@ -137,6 +134,13 @@ export function InAppPDFViewer({
   const isPanningRef = useRef(false);
   const isPinchingRef = useRef(false);
   const lastTapRef = useRef(0);
+  const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const preZoomScaleRef = useRef(1.0);
+  const baseScaleRef = useRef(1.0);
+
+  useEffect(() => {
+    baseScaleRef.current = baseScale;
+  }, [baseScale]);
 
   // Show first-time tour
   useEffect(() => {
@@ -300,26 +304,53 @@ export function InAppPDFViewer({
   }, [pdfUrl, pdfData, retryCount]);
 
   useEffect(() => {
-    if (!pdfDocRef.current || loading) return;
-    renderPage(currentPage, baseScale, rotation);
-  }, [currentPage, baseScale, rotation, loading]);
-
-  const resetControlsTimer = useCallback(() => {
-    // Controls are always visible unless locked — nothing to do
-  }, []);
-
-  useEffect(() => {
-    resetControlsTimer();
     return () => {
       if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+      if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
     };
   }, []);
+
+  const getEffectiveScale = useCallback(() => {
+    return baseScaleRef.current * visualScaleRef.current;
+  }, []);
+
+  const contentOverflows = useCallback(() => {
+    if (!canvasRef.current || !containerRef.current) return false;
+    const scale = getEffectiveScale();
+    const cW = canvasRef.current.offsetWidth * scale;
+    const cH = canvasRef.current.offsetHeight * scale;
+    const { clientWidth, clientHeight } = containerRef.current;
+    return cW > clientWidth + 2 || cH > clientHeight + 2;
+  }, [getEffectiveScale]);
 
   const applyTransform = useCallback(() => {
     if (!wrapperRef.current) return;
     const { x, y } = panRef.current;
-    wrapperRef.current.style.transform = `translate(${x}px,${y}px) scale(${visualScaleRef.current})`;
+    wrapperRef.current.style.transform = `translate3d(${x}px,${y}px,0) scale(${visualScaleRef.current})`;
   }, []);
+
+  const constrainPan = useCallback(
+    (x: number, y: number) => {
+      if (!canvasRef.current || !containerRef.current) return { x: 0, y: 0 };
+
+      const scale = getEffectiveScale();
+      const cW = canvasRef.current.offsetWidth * scale;
+      const cH = canvasRef.current.offsetHeight * scale;
+      const { clientWidth, clientHeight } = containerRef.current;
+
+      if (cW <= clientWidth + 2 && cH <= clientHeight + 2) {
+        return { x: 0, y: 0 };
+      }
+
+      const maxX = Math.max(0, (cW - clientWidth) / 2);
+      const maxY = Math.max(0, (cH - clientHeight) / 2);
+      return {
+        x: Math.max(-maxX, Math.min(maxX, x)),
+        y: Math.max(-maxY, Math.min(maxY, y)),
+      };
+    },
+    [getEffectiveScale],
+  );
 
   const renderPage = useCallback(
     async (pageNum: number, sc: number, rot: number) => {
@@ -363,6 +394,7 @@ export function InAppPDFViewer({
         await task.promise;
         renderTaskRef.current = null;
         visualScaleRef.current = 1.0;
+        panRef.current = constrainPan(panRef.current.x, panRef.current.y);
         applyTransform();
       } catch (e: any) {
         if (e?.name !== "RenderingCancelledException")
@@ -371,34 +403,84 @@ export function InAppPDFViewer({
         setPageLoading(false);
       }
     },
-    [applyTransform],
+    [applyTransform, constrainPan],
   );
 
-  const constrainPan = useCallback(
-    (x: number, y: number, effectiveScale: number) => {
-      if (!canvasRef.current || !containerRef.current || effectiveScale <= 1.05)
-        return { x: 0, y: 0 };
-      const cW = canvasRef.current.offsetWidth * visualScaleRef.current;
-      const cH = canvasRef.current.offsetHeight * visualScaleRef.current;
-      const maxX = Math.max(0, (cW - containerRef.current.clientWidth) / 2);
-      const maxY = Math.max(0, (cH - containerRef.current.clientHeight) / 2);
-      return {
-        x: Math.max(-maxX, Math.min(maxX, x)),
-        y: Math.max(-maxY, Math.min(maxY, y)),
-      };
-    },
-    [],
-  );
+  useEffect(() => {
+    if (!pdfDocRef.current || loading) return;
+    renderPage(currentPage, baseScale, rotation);
+  }, [currentPage, baseScale, rotation, loading, renderPage]);
 
-  const getTouchDist = (e: React.TouchEvent) => {
-    const [a, b] = [e.touches[0], e.touches[1]];
+  // Re-fit page on rotation / resize
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || loading) return;
+    let raf = 0;
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        if (pdfDocRef.current && !loading) {
+          renderPage(currentPage, baseScaleRef.current, rotation);
+        }
+      });
+    });
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [currentPage, rotation, loading, renderPage]);
+
+  const toggleControls = useCallback(() => {
+    setShowControls((visible) => !visible);
+  }, []);
+
+  const hideControls = useCallback(() => {
+    setShowControls(false);
+  }, []);
+
+  const getTouchDist = (touches: TouchList) => {
+    const [a, b] = [touches[0], touches[1]];
     return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleDoubleTapZoom = useCallback(() => {
+    if (singleTapTimerRef.current) {
+      clearTimeout(singleTapTimerRef.current);
+      singleTapTimerRef.current = null;
+    }
+    lastTapRef.current = 0;
+
+    setBaseScale((current) => {
+      if (current > 1.05) {
+        panRef.current = { x: 0, y: 0 };
+        preZoomScaleRef.current = current;
+        return 1.0;
+      }
+      preZoomScaleRef.current = current;
+      return DOUBLE_TAP_ZOOM;
+    });
+    visualScaleRef.current = 1.0;
+    requestAnimationFrame(applyTransform);
+  }, [applyTransform]);
+
+  const scheduleControlsToggle = useCallback(() => {
+    if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
+    singleTapTimerRef.current = setTimeout(() => {
+      singleTapTimerRef.current = null;
+      toggleControls();
+      lastTapRef.current = 0;
+    }, DOUBLE_TAP_MS);
+  }, [toggleControls]);
+
+  const handleTouchStart = useCallback((e: TouchEvent) => {
     if (e.touches.length === 2) {
-      pinchStartDistRef.current = getTouchDist(e);
-      pinchBaseScaleRef.current = baseScale * visualScaleRef.current;
+      if (singleTapTimerRef.current) {
+        clearTimeout(singleTapTimerRef.current);
+        singleTapTimerRef.current = null;
+      }
+      pinchStartDistRef.current = getTouchDist(e.touches);
+      pinchBaseScaleRef.current = baseScaleRef.current * visualScaleRef.current;
       isPinchingRef.current = true;
       isPanningRef.current = false;
     } else if (e.touches.length === 1) {
@@ -412,108 +494,149 @@ export function InAppPDFViewer({
       };
       isPanningRef.current = false;
     }
-  };
+  }, []);
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (
-      e.touches.length === 2 &&
-      isPinchingRef.current &&
-      pinchStartDistRef.current != null
-    ) {
-      e.preventDefault();
-      const clamped = Math.max(
-        MIN_SCALE,
-        Math.min(
-          MAX_SCALE,
-          (pinchBaseScaleRef.current * getTouchDist(e)) /
-            pinchStartDistRef.current,
-        ),
-      );
-      visualScaleRef.current = clamped / baseScale;
-      applyTransform();
-      return;
-    }
-    // Pan only when not locked
-    if (
-      !locked &&
-      e.touches.length === 1 &&
-      panStartRef.current &&
-      !isPinchingRef.current
-    ) {
-      const effectiveScale = baseScale * visualScaleRef.current;
-      if (effectiveScale <= 1.05) return;
-      const t = e.touches[0];
-      const dx = t.clientX - panStartRef.current.x;
-      const dy = t.clientY - panStartRef.current.y;
-      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) isPanningRef.current = true;
-      if (isPanningRef.current) {
-        panRef.current = constrainPan(
-          panStartRef.current.px + dx,
-          panStartRef.current.py + dy,
-          effectiveScale,
-        );
-        applyTransform();
-      }
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (isPinchingRef.current && e.touches.length < 2) {
-      isPinchingRef.current = false;
-      const finalScale = Math.max(
-        MIN_SCALE,
-        Math.min(
-          MAX_SCALE,
-          parseFloat((baseScale * visualScaleRef.current).toFixed(2)),
-        ),
-      );
-      if (finalScale <= 1.05) panRef.current = { x: 0, y: 0 };
-      pinchStartDistRef.current = null;
-      visualScaleRef.current = 1.0;
-      setBaseScale(finalScale);
-      return;
-    }
-    if (locked) {
-      touchStartRef.current = null;
-      panStartRef.current = null;
-      return;
-    }
-    if (e.touches.length > 0 || !touchStartRef.current) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - touchStartRef.current.x;
-    const dy = t.clientY - touchStartRef.current.y;
-    if (!isPanningRef.current) {
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
       if (
-        Math.abs(dx) > 50 &&
-        Math.abs(dx) > Math.abs(dy) &&
-        baseScale <= 1.05
+        e.touches.length === 2 &&
+        isPinchingRef.current &&
+        pinchStartDistRef.current != null
       ) {
-        dx > 0 ? goTo(currentPage - 1) : goTo(currentPage + 1);
-      } else if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
-        // Double-tap to zoom only — no single-tap toggle
-        const now = Date.now();
-        if (now - lastTapRef.current < 300) {
-          panRef.current = { x: 0, y: 0 };
-          setBaseScale(baseScale > 1.05 ? 1.0 : 2.0);
-        }
-        lastTapRef.current = now;
+        e.preventDefault();
+        const clamped = Math.max(
+          MIN_SCALE,
+          Math.min(
+            MAX_SCALE,
+            (pinchBaseScaleRef.current * getTouchDist(e.touches)) /
+              pinchStartDistRef.current,
+          ),
+        );
+        visualScaleRef.current = clamped / baseScaleRef.current;
+        panRef.current = constrainPan(panRef.current.x, panRef.current.y);
+        applyTransform();
+        return;
       }
-    }
-    touchStartRef.current = null;
-    panStartRef.current = null;
-  };
+
+      if (
+        e.touches.length === 1 &&
+        panStartRef.current &&
+        !isPinchingRef.current
+      ) {
+        const t = e.touches[0];
+        const dx = t.clientX - panStartRef.current.x;
+        const dy = t.clientY - panStartRef.current.y;
+
+        if (Math.abs(dx) > TAP_MOVE_THRESHOLD || Math.abs(dy) > TAP_MOVE_THRESHOLD) {
+          if (singleTapTimerRef.current) {
+            clearTimeout(singleTapTimerRef.current);
+            singleTapTimerRef.current = null;
+          }
+          isPanningRef.current = true;
+        }
+
+        if (isPanningRef.current && contentOverflows()) {
+          e.preventDefault();
+          panRef.current = constrainPan(
+            panStartRef.current.px + dx,
+            panStartRef.current.py + dy,
+          );
+          applyTransform();
+        }
+      }
+    },
+    [applyTransform, constrainPan, contentOverflows],
+  );
 
   const goTo = useCallback(
     (n: number) => {
       const p = Math.max(1, Math.min(numPages, n));
+      if (p === currentPage) return;
       setCurrentPage(p);
-      panRef.current = { x: 0, y: 0 };
-      visualScaleRef.current = 1.0;
-      applyTransform();
-      resetControlsTimer();
+      // Preserve zoom level; re-constrain pan after the new page renders
     },
-    [numPages, resetControlsTimer, applyTransform],
+    [numPages, currentPage],
   );
+
+  const handleTouchEnd = useCallback(
+    (e: TouchEvent) => {
+      if (isPinchingRef.current && e.touches.length < 2) {
+        isPinchingRef.current = false;
+        const finalScale = Math.max(
+          MIN_SCALE,
+          Math.min(
+            MAX_SCALE,
+            parseFloat(
+              (baseScaleRef.current * visualScaleRef.current).toFixed(2),
+            ),
+          ),
+        );
+        pinchStartDistRef.current = null;
+        visualScaleRef.current = 1.0;
+        setBaseScale(finalScale);
+        panRef.current = constrainPan(panRef.current.x, panRef.current.y);
+        applyTransform();
+        touchStartRef.current = null;
+        panStartRef.current = null;
+        return;
+      }
+
+      if (e.touches.length > 0 || !touchStartRef.current) return;
+
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStartRef.current.x;
+      const dy = t.clientY - touchStartRef.current.y;
+
+      if (!isPanningRef.current && !isPinchingRef.current) {
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        if (
+          absDx > SWIPE_PAGE_THRESHOLD &&
+          absDx > absDy * 1.4 &&
+          !contentOverflows()
+        ) {
+          goTo(dx > 0 ? currentPage - 1 : currentPage + 1);
+        } else if (absDx < TAP_MOVE_THRESHOLD && absDy < TAP_MOVE_THRESHOLD) {
+          const now = Date.now();
+          if (now - lastTapRef.current < DOUBLE_TAP_MS) {
+            handleDoubleTapZoom();
+          } else {
+            lastTapRef.current = now;
+            scheduleControlsToggle();
+          }
+        }
+      }
+
+      isPanningRef.current = false;
+      touchStartRef.current = null;
+      panStartRef.current = null;
+    },
+    [
+      applyTransform,
+      constrainPan,
+      contentOverflows,
+      currentPage,
+      goTo,
+      handleDoubleTapZoom,
+      scheduleControlsToggle,
+    ],
+  );
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || loading || error) return;
+
+    el.addEventListener("touchstart", handleTouchStart, { passive: true });
+    el.addEventListener("touchmove", handleTouchMove, { passive: false });
+    el.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchmove", handleTouchMove);
+      el.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [loading, error, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   const zoom = (delta: number) => {
     setBaseScale((s) => {
@@ -522,9 +645,9 @@ export function InAppPDFViewer({
         Math.min(MAX_SCALE, parseFloat((s + delta).toFixed(2))),
       );
       if (next <= 1.05) panRef.current = { x: 0, y: 0 };
+      else panRef.current = constrainPan(panRef.current.x, panRef.current.y);
       return next;
     });
-    resetControlsTimer();
   };
 
   const submitPageInput = () => {
@@ -537,7 +660,6 @@ export function InAppPDFViewer({
   const cycleReadingMode = () => {
     const modes: ReadingMode[] = ["light", "dark", "sepia"];
     setReadingMode(modes[(modes.indexOf(readingMode) + 1) % modes.length]);
-    resetControlsTimer();
   };
 
   const mode = MODE_CFG[readingMode];
@@ -552,104 +674,38 @@ export function InAppPDFViewer({
         userSelect: "none",
       }}
     >
-      {/* ── Top Bar ── */}
+      {/* ── Top Bar (flex — does not overlap canvas) ── */}
       <div
         className={
-          "absolute top-0 left-0 right-0 z-20 transition-transform duration-300 safe-area-top " +
-          (!locked ? "translate-y-0" : "-translate-y-full")
+          "shrink-0 z-20 transition-all duration-300 overflow-hidden safe-area-top " +
+          (showControls ? "max-h-24 opacity-100" : "max-h-0 opacity-0 pointer-events-none")
         }
       >
-        <div className="bg-background/90 backdrop-blur-md border-b border-border/60 flex items-center gap-2 px-4 pt-3 pb-3">
-          {/* Close */}
+        <div className="bg-background/90 backdrop-blur-md border-b border-border/60 flex items-center gap-2 px-3 py-2 min-h-[3rem]">
           <button
             onClick={onClose}
             className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground active:scale-95 transition-transform shrink-0"
+            aria-label={t("close")}
           >
             <X className="h-5 w-5" />
           </button>
 
-          {/* Title */}
-          <div className="flex-1 min-w-0 px-1">
-            <p className="text-foreground text-xs font-black truncate leading-tight">
-              {fileName}
-            </p>
-            {numPages > 0 && (
-              <p className="text-muted-foreground text-[10px] font-semibold mt-0.5">
-                {currentPage} of {numPages} pages
-                {pdfUrl && !pdfData ? ` · ${t("streamViewHint")}` : ""}
-              </p>
-            )}
-          </div>
-
-          {/* Page jump */}
-          {numPages > 0 &&
-            (showPageInput ? (
-              <div className="flex items-center gap-1">
-                <input
-                  autoFocus
-                  type="number"
-                  value={pageInputVal}
-                  onChange={(e) => setPageInputVal(e.target.value)}
-                  onBlur={submitPageInput}
-                  onKeyDown={(e) => e.key === "Enter" && submitPageInput()}
-                  className="w-12 text-center text-foreground bg-muted rounded-lg px-1 py-1.5 text-sm outline-none border-2 border-primary font-bold"
-                  min={1}
-                  max={numPages}
-                />
-                <span className="text-muted-foreground text-xs font-bold">
-                  /{numPages}
-                </span>
-              </div>
-            ) : (
-              <button
-                onClick={() => {
-                  setShowPageInput(true);
-                  setPageInputVal(String(currentPage));
-                }}
-                className="px-2.5 py-1.5 rounded-xl bg-muted text-foreground text-xs font-black active:scale-95 transition-transform"
-              >
-                p.{currentPage}
-              </button>
-            ))}
-
-          {/* Rotate */}
-          <button
-            onClick={() => setRotation((r) => (r + 90) % 360)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground active:scale-95 transition-transform"
+          <p
+            className="flex-1 min-w-0 text-foreground text-xs font-black truncate leading-tight"
+            title={fileName}
           >
-            <RotateCw className="h-4 w-4" />
-          </button>
+            {fileName}
+          </p>
 
-          {/* Reading mode */}
           <button
-            onClick={cycleReadingMode}
-            className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-muted text-foreground active:scale-95 transition-transform"
-          >
-            {mode.icon}
-            <span className="text-[10px] font-black">{mode.label}</span>
-          </button>
-
-          {/* Share — premium only */}
-          {showShare && onShare && (
-            <button
-              onClick={onShare}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground active:scale-95 transition-transform"
-              title={t("share")}
-            >
-              <Share2 className="h-4 w-4" />
-            </button>
-          )}
-
-          {/* Lock button */}
-          <button
-            onClick={() => setLocked(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground active:scale-95 transition-transform"
+            onClick={hideControls}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground active:scale-95 transition-transform shrink-0"
+            aria-label="Hide controls"
           >
             <Unlock className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Progress bar */}
         {numPages > 1 && (
           <div className="h-0.5 bg-border/40">
             <div
@@ -663,11 +719,8 @@ export function InAppPDFViewer({
       {/* ── Canvas Container ── */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-hidden flex items-center justify-center"
+        className="flex-1 min-h-0 overflow-hidden flex items-center justify-center pdf-touch-surface"
         style={{ backgroundColor: mode.bg, touchAction: "none" }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       >
         {loading && (
           <div className="flex items-center justify-center h-full w-full">
@@ -714,90 +767,130 @@ export function InAppPDFViewer({
         )}
       </div>
 
-      {/* ── Bottom Controls — floating pill ── */}
+      {/* ── Bottom Controls (flex — does not overlap canvas) ── */}
       {!loading && !error && (
         <div
           className={
-            "absolute bottom-0 left-0 right-0 z-20 transition-transform duration-300 " +
-            (!locked ? "translate-y-0" : "translate-y-full")
+            "shrink-0 z-20 transition-all duration-300 overflow-hidden safe-area-bottom " +
+            (showControls ? "max-h-28 opacity-100" : "max-h-0 opacity-0 pointer-events-none")
           }
         >
-          <div className="flex items-center justify-center gap-3 px-4 pb-10 pt-3 bg-background/90 backdrop-blur-md border-t border-border/60">
-            {/* Nav group */}
-            <div className="flex items-center bg-muted rounded-2xl overflow-hidden border border-border/40">
+          <div className="flex items-center justify-between gap-2 px-3 py-2 bg-background/90 backdrop-blur-md border-t border-border/60">
+            <div className="flex items-center bg-muted rounded-xl overflow-hidden border border-border/40 shrink-0">
               <button
                 onClick={() => goTo(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="flex h-11 w-11 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors"
+                className="flex h-10 w-10 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <div className="w-px h-5 bg-border/60" />
+              {showPageInput ? (
+                <input
+                  autoFocus
+                  type="number"
+                  value={pageInputVal}
+                  onChange={(e) => setPageInputVal(e.target.value)}
+                  onBlur={submitPageInput}
+                  onKeyDown={(e) => e.key === "Enter" && submitPageInput()}
+                  className="w-10 text-center text-foreground bg-transparent px-1 py-1.5 text-xs outline-none font-bold"
+                  min={1}
+                  max={numPages}
+                />
+              ) : (
+                <button
+                  onClick={() => {
+                    setShowPageInput(true);
+                    setPageInputVal(String(currentPage));
+                  }}
+                  className="flex h-10 min-w-[3rem] px-2 items-center justify-center text-foreground text-[11px] font-black active:bg-muted-foreground/20 transition-colors"
+                >
+                  {currentPage}/{numPages || "?"}
+                </button>
+              )}
+              <div className="w-px h-5 bg-border/60" />
               <button
                 onClick={() => goTo(currentPage + 1)}
                 disabled={currentPage === numPages}
-                className="flex h-11 w-11 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors"
+                className="flex h-10 w-10 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Zoom group */}
-            <div className="flex items-center bg-muted rounded-2xl overflow-hidden border border-border/40">
+            <div className="flex items-center bg-muted rounded-xl overflow-hidden border border-border/40 shrink-0">
               <button
                 onClick={() => zoom(-0.25)}
                 disabled={baseScale <= MIN_SCALE}
-                className="flex h-11 w-11 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors"
+                className="flex h-10 w-10 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors"
               >
-                <ZoomOut className="h-5 w-5" />
+                <ZoomOut className="h-4 w-4" />
               </button>
               <button
                 onClick={() => {
                   panRef.current = { x: 0, y: 0 };
                   setBaseScale(1.0);
                 }}
-                className="flex h-11 px-3 items-center justify-center text-foreground active:bg-muted-foreground/20 transition-colors"
+                className="flex h-10 min-w-[2.75rem] px-2 items-center justify-center text-foreground active:bg-muted-foreground/20 transition-colors"
               >
-                <span className="text-xs font-black min-w-[36px] text-center">
+                <span className="text-[11px] font-black text-center">
                   {Math.round(baseScale * 100)}%
                 </span>
               </button>
               <button
                 onClick={() => zoom(0.25)}
                 disabled={baseScale >= MAX_SCALE}
-                className="flex h-11 w-11 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors"
+                className="flex h-10 w-10 items-center justify-center text-foreground active:bg-muted-foreground/20 disabled:opacity-30 transition-colors"
               >
-                <ZoomIn className="h-5 w-5" />
+                <ZoomIn className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Fit button */}
-            <button
-              onClick={() => {
-                panRef.current = { x: 0, y: 0 };
-                setBaseScale(1.0);
-              }}
-              className="flex h-11 w-11 items-center justify-center bg-muted rounded-2xl border border-border/40 text-foreground active:scale-95 transition-transform"
-            >
-              <Maximize2 className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => setRotation((r) => (r + 90) % 360)}
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted border border-border/40 text-foreground active:scale-95 transition-transform"
+                aria-label="Rotate"
+              >
+                <RotateCw className="h-4 w-4" />
+              </button>
+              <button
+                onClick={cycleReadingMode}
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted border border-border/40 text-foreground active:scale-95 transition-transform"
+                aria-label={mode.label}
+              >
+                {mode.icon}
+              </button>
+              <button
+                onClick={() => {
+                  panRef.current = { x: 0, y: 0 };
+                  setBaseScale(1.0);
+                }}
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted border border-border/40 text-foreground active:scale-95 transition-transform"
+                aria-label="Fit page"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── Lock indicator — tap to unlock ── */}
+      {/* ── Controls hidden hint — tap page or this pill to restore ── */}
       <AnimatePresence>
-        {locked && !loading && !error && (
+        {!showControls && !loading && !error && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
-            onClick={() => setLocked(false)}
-            className="absolute bottom-10 right-4 z-30 flex items-center gap-2 bg-background/90 backdrop-blur-md border-2 border-foreground rounded-2xl px-3 py-2.5 card-shadow active:scale-95 transition-transform"
+            onClick={toggleControls}
+            className="absolute bottom-6 right-4 z-30 flex items-center gap-2 bg-background/85 backdrop-blur-md border border-border/60 rounded-2xl px-3 py-2 safe-area-bottom active:scale-95 transition-transform"
           >
-            <Lock className="h-4 w-4 text-foreground" />
-            <span className="text-xs font-black text-foreground">Locked</span>
+            <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[10px] font-black text-muted-foreground">
+              Tap page to show controls
+            </span>
           </motion.button>
         )}
       </AnimatePresence>
@@ -980,9 +1073,14 @@ export function InAppPDFViewer({
                     desc: "Pan around when zoomed in",
                   },
                   {
+                    icon: "👆",
+                    label: "Tap page",
+                    desc: "Hide or show the toolbars",
+                  },
+                  {
                     icon: "🔒",
-                    label: "Lock",
-                    desc: "Hide controls — pinch-zoom only",
+                    label: "Hide button",
+                    desc: "Distraction-free reading mode",
                   },
                 ].map(({ icon, label, desc }) => (
                   <div key={label} className="flex items-center gap-3">

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Go Study flyer set — contact sheet</title>
+<link rel="stylesheet" href="flyer.css" />
+<style>
+  .canvas { width: 2700px; height: 820px; padding: 0 60px; }
+  .head { position: absolute; left: 60px; right: 60px; top: 48px; display: flex; align-items: flex-end; justify-content: space-between; z-index: 10; }
+  .head h1 { font-size: 48px; font-weight: 900; letter-spacing: -.03em; }
+  .head h1 span { color: transparent; -webkit-text-stroke: 2px var(--ink); }
+  .head p { font-size: 17px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; opacity: .55; }
+  .rule { position: absolute; left: 60px; right: 60px; top: 128px; height: 5px; background: var(--ink); z-index: 10; }
+
+  .row { position: absolute; left: 60px; top: 178px; display: flex; align-items: flex-start; gap: 24px; z-index: 5; }
+  .item { flex: none; }
+  .frame { background: #fff; border: 4px solid var(--ink); border-radius: 20px; padding: 10px; box-shadow: 7px 7px 0 var(--ink); }
+  .frame img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+  .cap { margin-top: 14px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .cap b { font-size: 19px; font-weight: 900; letter-spacing: -.01em; }
+  .cap span { font-size: 13px; font-weight: 900; letter-spacing: .1em; opacity: .5; white-space: nowrap; }
+
+  .foot { position: absolute; left: 60px; right: 60px; bottom: 34px; display: flex; justify-content: space-between; font-size: 13px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; opacity: .45; z-index: 10; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="dots soft"></div>
+  <div class="blob" style="width:420px;height:420px;right:-140px;top:-190px;opacity:.55"></div>
+
+  <div class="head">
+    <h1>Go Study! <span>flyer set</span></h1>
+    <p>5 formats · real app screenshots</p>
+  </div>
+  <div class="rule"></div>
+
+  <div class="row">
+    <div class="item">
+      <div class="frame" style="width:367px;height:508px;"><img src="render/01-a4.png" alt="A4 flyer" /></div>
+      <div class="cap"><b>A4 poster</b><span>210 × 297 mm</span></div>
+    </div>
+    <div class="item">
+      <div class="frame" style="width:508px;height:508px;"><img src="render/02-square.png" alt="Square flyer" /></div>
+      <div class="cap"><b>Instagram square</b><span>1080 × 1080</span></div>
+    </div>
+    <div class="item">
+      <div class="frame" style="width:412px;height:508px;"><img src="render/03-portrait.png" alt="Portrait flyer" /></div>
+      <div class="cap"><b>Instagram portrait</b><span>1080 × 1350</span></div>
+    </div>
+    <div class="item">
+      <div class="frame" style="width:298px;height:508px;"><img src="render/04-story.png" alt="Story flyer" /></div>
+      <div class="cap"><b>Story / Reel</b><span>1080 × 1920</span></div>
+    </div>
+    <div class="item">
+      <div class="frame" style="width:881px;height:508px;"><img src="render/05-banner.png" alt="Landscape banner" /></div>
+      <div class="cap"><b>Landscape banner</b><span>1920 × 1080</span></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>Rendered at 300 dpi · A4 print-ready PDF included</span>
+    <span>goostudy.vercel.app</span>
+  </div>
+</div>
+</body>
+</html>

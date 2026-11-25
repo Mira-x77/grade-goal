@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { completeOAuthFromCallback, navigateAfterAuthSession } from "@/lib/auth-config";
+import {
+  completeOAuthFromCallback,
+  navigateAfterAuthSession,
+  waitForSupabaseSession,
+} from "@/lib/auth-config";
+
+const CALLBACK_TIMEOUT_MS = 20_000;
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [isRestoring, setIsRestoring] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const handledRef = useRef(false);
@@ -16,58 +20,49 @@ const AuthCallback = () => {
     if (handledRef.current) return;
     handledRef.current = true;
 
-    const checkUserData = async (userId: string): Promise<boolean> => {
-      try {
-        const { data: profile, error } = await supabase
-          .from("user_profile")
-          .select("id")
-          .eq("user_id", userId)
-          .maybeSingle();
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-        if (error) {
-          console.error("Error checking user profile:", error);
-          return false;
-        }
-
-        return !!profile;
-      } catch (err) {
-        console.error("Error checking user data:", err);
-        return false;
-      }
-    };
-
-    const restoreUserData = async (userId: string): Promise<void> => {
-      try {
-        setIsRestoring(true);
-        const { restoreUserData: restore } = await import("@/services/hybridSyncService");
-        await restore(userId);
-      } catch (err) {
-        console.error("AuthCallback: Failed to restore user data:", err);
-      } finally {
-        setIsRestoring(false);
-      }
+    const fail = (message: string) => {
+      console.error("Auth callback error:", message);
+      setErrorMessage(message);
+      setHasError(true);
+      setTimeout(() => navigate("/welcome", { replace: true }), 4000);
     };
 
     const handleCallback = async () => {
-      const result = await completeOAuthFromCallback();
+      timeoutId = setTimeout(() => {
+        void (async () => {
+          const session = await waitForSupabaseSession(500);
+          if (session) {
+            await navigateAfterAuthSession(navigate, session.user.id);
+            return;
+          }
+          fail("Sign-in is taking too long. Please try again.");
+        })();
+      }, CALLBACK_TIMEOUT_MS);
 
-      if (!result.ok) {
-        console.error("Auth callback error:", result.error);
-        setErrorMessage(result.error);
-        setHasError(true);
-        setTimeout(() => navigate("/welcome", { replace: true }), 4000);
-        return;
+      try {
+        const result = await completeOAuthFromCallback();
+
+        let session = result.ok ? result.session : null;
+        if (!session) {
+          // Native deep link may have exchanged the code before this page mounted
+          session = await waitForSupabaseSession(5000);
+        }
+
+        if (!session) {
+          fail(result.ok ? "No session after sign-in" : result.error);
+          return;
+        }
+
+        // Cloud restore runs in AuthContext.syncOnLogin on SIGNED_IN — avoid duplicate work here
+        await navigateAfterAuthSession(navigate, session.user.id);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Sign-in failed";
+        fail(message);
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
       }
-
-      const userId = result.session.user.id;
-      const hasLocalData = !!localStorage.getItem("scoretarget_state");
-      const hasCloudData = await checkUserData(userId);
-
-      if (hasCloudData && !hasLocalData) {
-        await restoreUserData(userId);
-      }
-
-      await navigateAfterAuthSession(navigate, userId);
     };
 
     void handleCallback();
@@ -93,9 +88,7 @@ const AuthCallback = () => {
       ) : (
         <>
           <div className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <p className="text-sm font-bold text-muted-foreground">
-            {isRestoring ? t("restoringYourData") : t("signingIn")}
-          </p>
+          <p className="text-sm font-bold text-muted-foreground">{t("signingIn")}</p>
         </>
       )}
     </div>

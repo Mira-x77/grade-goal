@@ -1,4 +1,4 @@
-import {
+﻿import {
   ExamPaper,
   DownloadProgress,
   DownloadedPaper,
@@ -38,6 +38,7 @@ import {
   readLifetimeDownloadPeak,
 } from "@/lib/download-quota-lifetime";
 import { quotaService } from "@/services/quotaService";
+import { subscriptionService } from "@/services/subscriptionService";
 
 // Get current user ID from persisted session (same pattern as storage.ts)
 function getCurrentUserId(): string | null {
@@ -101,40 +102,38 @@ class DownloadService {
     message?: string;
   }> {
     try {
-      const deviceId = await getDeviceId();
-
-      const { data, error } = await supabase.rpc("get_download_quota_status", {
-        p_device_id: deviceId,
-      });
-
-      if (error) {
-        console.error("Error checking download quota:", error);
-        const status = await quotaService.getQuotaStatus();
+      const status = await quotaService.getQuotaStatus();
+      if (status.hasPremium || status.canDownload) {
         return {
-          canDownload: status.canDownload,
+          canDownload: true,
           downloadsUsed: status.downloadsUsed,
           quotaLimit: status.quotaLimit,
           downloadsRemaining: status.downloadsRemaining,
           hasPremium: status.hasPremium,
-          message: status.canDownload ? "Using local quota check" : "Download limit reached. Upgrade to premium.",
+          message: undefined,
         };
       }
 
-      const quota = Array.isArray(data) ? data[0] : data;
-      const status = await quotaService.getQuotaStatus();
-
       return {
-        canDownload: status.canDownload,
+        canDownload: false,
         downloadsUsed: status.downloadsUsed,
         quotaLimit: status.quotaLimit,
         downloadsRemaining: status.downloadsRemaining,
-        hasPremium: status.hasPremium,
-        message: status.canDownload
-          ? undefined
-          : "Download limit reached. Upgrade to premium for unlimited downloads.",
+        hasPremium: false,
+        message: "Download limit reached. Upgrade to premium for unlimited downloads.",
       };
     } catch (error) {
       console.error("Error checking download quota:", error);
+      const paid = (await subscriptionService.getStatus()).hasPremiumAccess;
+      if (paid) {
+        return {
+          canDownload: true,
+          downloadsUsed: 0,
+          quotaLimit: 999999,
+          downloadsRemaining: 999999,
+          hasPremium: true,
+        };
+      }
       const localUsed = Math.max(readLocalQuotaUsed(), readLifetimeDownloadPeak());
       const canDownload = localUsed < 5;
       return {
@@ -182,6 +181,18 @@ class DownloadService {
       }
 
       const result = Array.isArray(data) ? data[0] : data;
+      if (result && result.success === false) {
+        const paid = (await subscriptionService.getStatus()).hasPremiumAccess;
+        if (paid) {
+          return {
+            success: true,
+            message: "Premium download",
+            downloads_used: result.downloads_used ?? 0,
+            quota_limit: 999999,
+            has_premium: true,
+          };
+        }
+      }
       return result;
     } catch (error) {
       console.warn(
@@ -197,13 +208,24 @@ class DownloadService {
    * Writes to the same localStorage key that quotaService reads so the UI
    * counter stays in sync regardless of whether the Supabase RPC succeeds.
    */
-  private incrementDownloadCountLocal(): {
+  private async incrementDownloadCountLocal(): Promise<{
     success: boolean;
     message: string;
     downloads_used: number;
     quota_limit: number;
     has_premium: boolean;
-  } {
+  }> {
+    const paid = (await subscriptionService.getStatus()).hasPremiumAccess;
+    if (paid) {
+      return {
+        success: true,
+        message: "Premium download",
+        downloads_used: 0,
+        quota_limit: 999999,
+        has_premium: true,
+      };
+    }
+
     const LOCAL_QUOTA_KEY = "scoretarget_local_quota_used";
     const month = new Date().toISOString().slice(0, 7);
     let current = 0;

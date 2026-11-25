@@ -1,4 +1,6 @@
 import { FilterCriteria, ExamType } from "@/types/exam-library";
+import { OFFICIAL_EXAM_TYPES } from "@/lib/library-filters";
+import { ClassLevelFilter } from "@/components/exam/ClassLevelFilter";
 import { X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -9,14 +11,19 @@ interface PaperFiltersProps {
   onClear: () => void;
   subjects: string[];
   years: number[];
-  classLevels: string[];  // Added this
+  classLevels: string[];
+  examTypes?: string[];
 }
 
-const EXAM_TYPES: ExamType[] = ["Baccalauréat", "Composition", "Devoir", "Interro", "midterm", "Practice", "Revision"];
+const DEFAULT_EXAM_TYPES: ExamType[] = [...OFFICIAL_EXAM_TYPES];
 
-export function PaperFilters({ filters, onFilterChange, onClear, subjects, years, classLevels }: PaperFiltersProps) {
+export function PaperFilters({ filters, onFilterChange, onClear, subjects, years, classLevels, examTypes }: PaperFiltersProps) {
   const { t } = useLanguage();
   const hasActiveFilters = filters.classLevel || filters.subject || filters.year || filters.examType;
+  const paperTypes = Array.from(new Set([
+    ...DEFAULT_EXAM_TYPES,
+    ...(examTypes ?? []),
+  ].filter(Boolean))).sort((a, b) => a.localeCompare(b, "fr"));
 
   return (
     <div className="rounded-2xl bg-card p-4 card-shadow">
@@ -35,26 +42,19 @@ export function PaperFilters({ filters, onFilterChange, onClear, subjects, years
 
       <div className="grid grid-cols-2 gap-3">
         {/* Class Level */}
-        <div>
+        <div className="col-span-2">
           <label className="text-xs font-bold text-muted-foreground mb-1 block">
             {t("classLevel")}
           </label>
-          <Select
+          <ClassLevelFilter
             value={filters.classLevel || ""}
-            onValueChange={(value) => onFilterChange({ ...filters, classLevel: value || undefined })}
-          >
-            <SelectTrigger className="h-9 text-xs">
-              <SelectValue placeholder={t("allLevels")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">{t("allLevels")}</SelectItem>
-              {classLevels.map((level) => (
-                <SelectItem key={level} value={level}>
-                  {level}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(classLevel) =>
+              onFilterChange({
+                ...filters,
+                classLevel: classLevel || undefined,
+              })
+            }
+          />
         </div>
 
         {/* Subject */}
@@ -63,14 +63,14 @@ export function PaperFilters({ filters, onFilterChange, onClear, subjects, years
             {t("subject")}
           </label>
           <Select
-            value={filters.subject || ""}
-            onValueChange={(value) => onFilterChange({ ...filters, subject: value || undefined })}
+            value={filters.subject || "all"}
+            onValueChange={(value) => onFilterChange({ ...filters, subject: value === "all" ? undefined : value })}
           >
             <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder={t("allSubjects")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t("allSubjects")}</SelectItem>
+              <SelectItem value="all">{t("allSubjects")}</SelectItem>
               {subjects.map((subject) => (
                 <SelectItem key={subject} value={subject}>
                   {subject}
@@ -86,14 +86,14 @@ export function PaperFilters({ filters, onFilterChange, onClear, subjects, years
             {t("year")}
           </label>
           <Select
-            value={filters.year?.toString() || ""}
-            onValueChange={(value) => onFilterChange({ ...filters, year: value ? parseInt(value) : undefined })}
+            value={filters.year?.toString() || "all"}
+            onValueChange={(value) => onFilterChange({ ...filters, year: value === "all" ? undefined : parseInt(value) })}
           >
             <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder={t("allYears")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t("allYears")}</SelectItem>
+              <SelectItem value="all">{t("allYears")}</SelectItem>
               {years.map((year) => (
                 <SelectItem key={year} value={year.toString()}>
                   {year}
@@ -109,15 +109,15 @@ export function PaperFilters({ filters, onFilterChange, onClear, subjects, years
             {t("paperType")}
           </label>
           <Select
-            value={filters.examType || ""}
-            onValueChange={(value) => onFilterChange({ ...filters, examType: value as ExamType || undefined })}
+            value={filters.examType || "all"}
+            onValueChange={(value) => onFilterChange({ ...filters, examType: value === "all" ? undefined : value as ExamType })}
           >
             <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder={t("allPaperTypes")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t("allPaperTypes")}</SelectItem>
-              {EXAM_TYPES.map((type) => (
+              <SelectItem value="all">{t("allPaperTypes")}</SelectItem>
+              {paperTypes.map((type) => (
                 <SelectItem key={type} value={type}>
                   {type}
                 </SelectItem>

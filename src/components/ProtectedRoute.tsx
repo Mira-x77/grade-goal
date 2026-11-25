@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ export default function ProtectedRoute({
 }) {
   const { session, loading, syncing } = useAuth();
   const [directSession, setDirectSession] = useState<boolean | null>(null);
+  const [syncTimedOut, setSyncTimedOut] = useState(false);
 
   const isDevBypass = import.meta.env.DEV && localStorage.getItem("dev_bypass") === "true";
   const isGuestMode = localStorage.getItem("guest_mode") === "true";
@@ -29,11 +30,20 @@ export default function ProtectedRoute({
     if (session) clearAuthJustCompleted();
   }, [session]);
 
+  useEffect(() => {
+    if (!syncing) {
+      setSyncTimedOut(false);
+      return;
+    }
+    const timer = setTimeout(() => setSyncTimedOut(true), 10_000);
+    return () => clearTimeout(timer);
+  }, [syncing]);
+
   const hasSession = !!session || directSession === true;
   const canPassThrough =
     hasLocalData || isGuestMode || isDevBypass || hasSession || authJustCompleted;
 
-  if (!canPassThrough && (loading || syncing || directSession === null)) {
+  if (!canPassThrough && (loading || (syncing && !syncTimedOut) || directSession === null)) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
         <div className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />

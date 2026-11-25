@@ -1,21 +1,22 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getAuthRedirectUrl, navigateAfterAuthSession } from "@/lib/auth-config";
+import { getAuthRedirectUrl } from "@/lib/auth-config";
 
 interface Props {
   open: boolean;
-  onClose: () => void;
+  /** Called when the sheet closes. `signedIn` is true after a successful OAuth sign-in. */
+  onClose: (signedIn?: boolean) => void;
+  message?: string;
 }
 
-export default function AuthSheet({ open, onClose }: Props) {
+export default function AuthSheet({ open, onClose, message }: Props) {
   const { t } = useLanguage();
-  const navigate = useNavigate();
   const [oauthLoading, setOauthLoading] = useState<"google" | "apple" | null>(null);
   const [error, setError] = useState("");
 
@@ -32,8 +33,7 @@ export default function AuthSheet({ open, onClose }: Props) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && event === "SIGNED_IN" && !session.user.is_anonymous) {
         setOauthLoading(null);
-        onClose();
-        void navigateAfterAuthSession(navigate, session.user.id);
+        onClose(true);
       }
     });
 
@@ -42,7 +42,7 @@ export default function AuthSheet({ open, onClose }: Props) {
       Browser.removeAllListeners();
       subscription.unsubscribe();
     };
-  }, [open, onClose, navigate]);
+  }, [open, onClose]);
 
   const handleOAuth = async (provider: "google" | "apple") => {
     setError("");
@@ -85,7 +85,7 @@ export default function AuthSheet({ open, onClose }: Props) {
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={() => onClose(false)}
             className="fixed inset-0 z-[60] bg-black/50"
           />
 
@@ -103,14 +103,14 @@ export default function AuthSheet({ open, onClose }: Props) {
             <div className="w-10 h-1.5 rounded-full bg-foreground/20 mx-auto mb-6" />
 
             {/* Close */}
-            <button onClick={onClose} className="absolute top-5 right-5 text-muted-foreground active:scale-90 transition-transform">
+            <button onClick={() => onClose(false)} className="absolute top-5 right-5 text-muted-foreground active:scale-90 transition-transform">
               <X className="h-5 w-5" />
             </button>
 
             {/* Title */}
             <div className="text-center mb-8">
               <p className="text-sm font-semibold text-muted-foreground mt-1">
-                {t("signInToContinue")}
+                {message ?? t("signInToContinue")}
               </p>
             </div>
 
@@ -157,11 +157,11 @@ export default function AuthSheet({ open, onClose }: Props) {
             {/* Passive consent notice */}
             <p className="text-[11px] font-semibold text-muted-foreground text-center mt-6 leading-relaxed px-2">
               {t("consentPassive")}{" "}
-              <Link to="/terms" className="underline text-foreground/70" onClick={onClose}>
+              <Link to="/terms" className="underline text-foreground/70" onClick={() => onClose(false)}>
                 {t("termsTitle")}
               </Link>
               {" "}{t("consentAnd")}{" "}
-              <Link to="/privacy" className="underline text-foreground/70" onClick={onClose}>
+              <Link to="/privacy" className="underline text-foreground/70" onClick={() => onClose(false)}>
                 {t("privacyPolicyTitle")}
               </Link>
             </p>

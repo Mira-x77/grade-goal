@@ -119,11 +119,7 @@ export default function FeedbackBoard() {
   const handleRefresh = async () => {
     console.log('🔄 Refreshing feedback from server...');
     await fetchItems();
-    toast.success(
-      language === 'fr' 
-        ? 'Commentaires actualisés' 
-        : 'Feedback refreshed'
-    );
+    toast.success(t("feedbackRefreshed"));
   };
 
   useEffect(() => {
@@ -190,11 +186,7 @@ export default function FeedbackBoard() {
     if (!user) return;
     
     // Show confirmation dialog
-    const confirmed = window.confirm(
-      language === 'fr' 
-        ? 'Êtes-vous sûr de vouloir supprimer cette idée ? Cette action ne peut pas être annulée.'
-        : 'Are you sure you want to delete this idea? This action cannot be undone.'
-    );
+    const confirmed = window.confirm(t("feedbackDeleteConfirm"));
     
     if (!confirmed) return;
     
@@ -212,18 +204,10 @@ export default function FeedbackBoard() {
       if (error) throw error;
       
       setItems(prev => prev.filter(item => item.id !== feedbackId));
-      toast.success(
-        language === 'fr' 
-          ? 'Idée supprimée avec succès' 
-          : 'Idea deleted successfully'
-      );
+      toast.success(t("feedbackDeleteSuccess"));
     } catch (e: any) {
       console.error('Delete error:', e);
-      toast.error(
-        language === 'fr'
-          ? 'Échec de la suppression de l\'idée: ' + (e.message ?? 'Erreur inconnue')
-          : 'Failed to delete idea: ' + (e.message ?? 'Unknown error')
-      );
+      toast.error(`${t("feedbackDeleteFailed")}: ${e.message ?? t("errorOccurred")}`);
     } finally {
       setDeletingId(null);
     }
@@ -265,7 +249,7 @@ export default function FeedbackBoard() {
             onClick={handleRefresh}
             disabled={loading}
             className="h-9 w-9 flex items-center justify-center rounded-xl bg-card border-2 border-foreground active:scale-95 transition-transform shrink-0 disabled:opacity-50"
-            title={language === 'fr' ? 'Actualiser les commentaires' : 'Refresh feedback'}
+            title={t("feedbackRefreshTitle")}
           >
             <RefreshCw className={`h-4 w-4 text-foreground ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -300,12 +284,12 @@ export default function FeedbackBoard() {
           <div className="flex flex-col items-center justify-center py-20 gap-6 text-center">
             <div className="text-5xl">📡</div>
             <div>
-              <p className="text-lg font-black text-foreground">You're offline</p>
+              <p className="text-lg font-black text-foreground">{t("offlineTitle")}</p>
               <p className="text-sm font-semibold text-muted-foreground mt-1">
-                Can't load ideas without a connection.
+                {t("feedbackOfflineBody")}
               </p>
               <p className="text-sm font-semibold text-muted-foreground">
-                Connect to the internet to view and submit ideas.
+                {t("feedbackConnectInternet")}
               </p>
             </div>
           </div>
@@ -461,7 +445,7 @@ export default function FeedbackBoard() {
                       onClick={() => handleDeleteFeedback(selectedItem.id)}
                       disabled={deletingId === selectedItem.id}
                       className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors disabled:opacity-50"
-                      title={language === 'fr' ? 'Supprimer cette idée' : 'Delete this idea'}
+                      title={t("feedbackDeleteTitle")}
                     >
                       {deletingId === selectedItem.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -486,7 +470,7 @@ export default function FeedbackBoard() {
                 {/* Description */}
                 <div>
                   <h3 className="text-sm font-black text-foreground mb-3 uppercase tracking-widest">
-                    {language === 'fr' ? 'Description' : 'Description'}
+                    {t("descriptionLabel")}
                   </h3>
                   <p className="text-sm font-semibold text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {selectedItem.description}
@@ -497,13 +481,11 @@ export default function FeedbackBoard() {
                 <div className="flex items-center justify-between p-4 bg-muted rounded-2xl border-2 border-border">
                   <div>
                     <p className="text-sm font-black text-foreground">
-                      {language === 'fr' ? 'Votes de la communauté' : 'Community Votes'}
+                      {t("communityVotes")}
                     </p>
                     <p className="text-xs font-semibold text-muted-foreground">
-                      {selectedItem.vote_count} {selectedItem.vote_count === 1 ? 
-                        (language === 'fr' ? 'vote' : 'vote') : 
-                        (language === 'fr' ? 'votes' : 'votes')
-                      }
+                      {selectedItem.vote_count}{" "}
+                      {selectedItem.vote_count === 1 ? t("voteSingular") : t("votePlural")}
                     </p>
                   </div>
                   <VoteButton 
@@ -516,25 +498,17 @@ export default function FeedbackBoard() {
                 {/* Status Info */}
                 <div className="p-4 bg-card rounded-2xl border-2 border-border">
                   <h3 className="text-sm font-black text-foreground mb-2 uppercase tracking-widest">
-                    {language === 'fr' ? 'Statut' : 'Status'}
+                    {t("statusLabel")}
                   </h3>
                   <div className="flex items-center gap-3">
                     <span className={`text-xs font-black px-3 py-1.5 rounded-full border ${STATUS_COLORS[selectedItem.status] ?? STATUS_COLORS.under_review}`}>
                       {t(STATUS_LABEL_KEYS[selectedItem.status] ?? STATUS_LABEL_KEYS.under_review)}
                     </span>
                     <p className="text-xs font-semibold text-muted-foreground">
-                      {selectedItem.status === 'under_review' && (language === 'fr' ? 
-                        'Votre idée est en cours d\'examen par notre équipe.' : 
-                        'Your idea is being reviewed by our team.')}
-                      {selectedItem.status === 'planned' && (language === 'fr' ? 
-                        'Cette fonctionnalité est planifiée pour une future mise à jour.' : 
-                        'This feature is planned for a future update.')}
-                      {selectedItem.status === 'in_progress' && (language === 'fr' ? 
-                        'Nous travaillons actuellement sur cette fonctionnalité.' : 
-                        'We are currently working on this feature.')}
-                      {selectedItem.status === 'completed' && (language === 'fr' ? 
-                        'Cette fonctionnalité a été implémentée !' : 
-                        'This feature has been implemented!')}
+                      {selectedItem.status === 'under_review' && t("feedbackStatusUnderReviewDesc")}
+                      {selectedItem.status === 'planned' && t("feedbackStatusPlannedDesc")}
+                      {selectedItem.status === 'in_progress' && t("feedbackStatusInProgressDesc")}
+                      {selectedItem.status === 'completed' && t("feedbackStatusCompletedDesc")}
                     </p>
                   </div>
                 </div>
@@ -542,9 +516,7 @@ export default function FeedbackBoard() {
                 {/* Additional Info */}
                 <div className="text-center pt-4">
                   <p className="text-xs font-bold text-muted-foreground">
-                    {language === 'fr' ? 
-                      'Merci de partager vos idées pour améliorer l\'application !' : 
-                      'Thank you for sharing your ideas to improve the app!'}
+                    {t("feedbackThankYou")}
                   </p>
                 </div>
               </div>

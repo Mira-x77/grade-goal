@@ -4,6 +4,20 @@ import "@/lib/debug-tools"; // Load debug tools for console diagnostics
 applyAndroid8Polyfills();
 applyPdfPolyfills();
 
+// Cursor's embedded browser often reports navigator.onLine === false even when
+// localhost and APIs work. Keep local preview online so you can check the app.
+if (import.meta.env.DEV) {
+  try {
+    Object.defineProperty(Navigator.prototype, "onLine", {
+      get: () => true,
+      configurable: true,
+    });
+    window.dispatchEvent(new Event("online"));
+  } catch {
+    /* ignore */
+  }
+}
+
 import { Capacitor } from "@capacitor/core";
 import { createRoot } from "react-dom/client";
 import { ErrorBoundary } from "@/components/ErrorBoundary";

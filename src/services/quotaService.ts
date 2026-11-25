@@ -4,6 +4,7 @@ import {
   bumpLifetimeDownloadPeak,
   readLifetimeDownloadPeak,
 } from '@/lib/download-quota-lifetime';
+import { subscriptionService } from '@/services/subscriptionService';
 
 export interface DownloadQuota {
   downloadsUsed: number;
@@ -82,7 +83,7 @@ class QuotaService {
 
       if (error) {
         console.error('Error getting quota status:', error);
-        return this.fallbackQuota();
+        return await this.fallbackQuota();
       }
 
       const quota = Array.isArray(data) ? data[0] : data;
@@ -92,7 +93,8 @@ class QuotaService {
       const downloadsUsed = Math.max(serverUsed, localUsed, lifetimePeak);
       bumpLifetimeDownloadPeak(downloadsUsed);
       const quotaLimit = quota.quota_limit ?? 5;
-      const hasPremium = quota.has_premium ?? false;
+      const paidLocal = (await subscriptionService.getStatus()).hasPremiumAccess;
+      const hasPremium = paidLocal || (quota.has_premium ?? false);
       const atOrOverLimit = downloadsUsed >= quotaLimit;
 
       return {
@@ -107,11 +109,12 @@ class QuotaService {
       };
     } catch (error) {
       console.error('Error getting quota status:', error);
-      return this.fallbackQuota();
+      return await this.fallbackQuota();
     }
   }
 
-  private fallbackQuota(): DownloadQuota {
+  private async fallbackQuota(): Promise<DownloadQuota> {
+    const paid = (await subscriptionService.getStatus()).hasPremiumAccess;
     const localUsed = readLocalUsed();
     const lifetimePeak = readLifetimeDownloadPeak();
     const downloadsUsed = Math.max(localUsed, lifetimePeak);
@@ -120,10 +123,10 @@ class QuotaService {
     return {
       downloadsUsed,
       quotaLimit,
-      downloadsRemaining: Math.max(0, quotaLimit - downloadsUsed),
-      hasPremium: false,
+      downloadsRemaining: paid ? 999999 : Math.max(0, quotaLimit - downloadsUsed),
+      hasPremium: paid,
       monthYear: currentMonthYear(),
-      canDownload: downloadsUsed < quotaLimit,
+      canDownload: paid || downloadsUsed < quotaLimit,
     };
   }
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   GraduationCap,
+  Newspaper,
   Clock,
   Users,
   Star,
@@ -25,33 +26,55 @@ import { toast } from 'sonner';
 import TaskBar from '@/components/TaskBar';
 import { loadState, saveState } from '@/lib/storage';
 import CourseHeroCarousel from '@/components/CourseHeroCarousel';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { gradingSystemBadgeLabel } from '@/lib/i18n';
+import {
+  type FeedPost as Course,
+  collectFeedImages,
+  coverImage,
+  isNewsPost,
+  readFeedCache,
+  writeFeedCache,
+} from '@/lib/feed-posts';
+import { fetchStaticFeedPosts } from '@/services/staticCatalog';
 
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  instructor: string | null;
-  price: string | null;
-  duration: string | null;
-  level: string;
-  category: string;
-  image_url: string | null;
-  link_url: string | null;
-  is_featured: boolean;
-  created_at: string;
-}
-
-const CATEGORIES = ['All', 'Math', 'Science', 'Languages', 'Programming', 'Business', 'Art', 'Music', 'General'];
+const CATEGORIES = ['All', 'News', 'Math', 'Science', 'Languages', 'Programming', 'Business', 'Art', 'Music', 'General'];
 const LEVELS = ['All', 'Beginner', 'Intermediate', 'Advanced'];
 
 type ViewMode = 'grid' | 'list';
 
 export default function Courses() {
-  const [courses, setCourses] = useState<Course[]>([]);
+  const { t, language } = useLanguage();
+  const [courses, setCourses] = useState<Course[]>(() => readFeedCache());
 
   // Get grading system for badge display
   const userState = loadState();
   const gradingSystem = userState?.settings?.gradingSystem ?? 'apc';
+
+  const levelLabel = (level: string) => {
+    if (level === 'Beginner') return t('levelBeginner');
+    if (level === 'Intermediate') return t('levelIntermediate');
+    if (level === 'Advanced') return t('levelAdvanced');
+    if (level === 'All') return t('filterAll');
+    return level;
+  };
+
+  const categoryLabel = (category: string) => {
+    const map: Record<string, Parameters<typeof t>[0]> = {
+      All: 'filterAll',
+      News: 'categoryNews',
+      Math: 'categoryMath',
+      Science: 'categoryScience',
+      Languages: 'categoryLanguages',
+      Programming: 'categoryProgramming',
+      Business: 'categoryBusiness',
+      Art: 'categoryArt',
+      Music: 'categoryMusic',
+      General: 'categoryGeneral',
+    };
+    const key = map[category];
+    return key ? t(key) : category;
+  };
 
   // Analytics: Track page view (lazy loaded)
   useEffect(() => {
@@ -61,7 +84,7 @@ export default function Courses() {
       })
       .catch(() => {});
   }, []);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => readFeedCache().length === 0);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedLevel, setSelectedLevel] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,15 +112,15 @@ export default function Courses() {
       const next = new Set(prev);
       if (next.has(course.id)) {
         next.delete(course.id);
-        toast.success('Course removed from saved');
+        toast.success(t('courseRemoved'));
       } else {
         next.add(course.id);
-        toast.success('Course saved!');
+        toast.success(t('courseSaved'));
       }
       persistSaved(next);
       return next;
     });
-  }, [persistSaved]);
+  }, [persistSaved, t]);
 
   const [showSaved, setShowSaved] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -130,6 +153,8 @@ const SAMPLE_COURSES: Course[] = [
     level: "Advanced",
     category: "Math",
     image_url: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop&q=80",
+    image_urls: ["https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop&q=80"],
+    post_type: "course",
     link_url: "https://gostudy.app",
     is_featured: true,
     created_at: new Date().toISOString()
@@ -144,6 +169,8 @@ const SAMPLE_COURSES: Course[] = [
     level: "Intermediate",
     category: "Science",
     image_url: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=600&auto=format&fit=crop&q=80",
+    image_urls: ["https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=600&auto=format&fit=crop&q=80"],
+    post_type: "course",
     link_url: "https://gostudy.app",
     is_featured: true,
     created_at: new Date().toISOString()
@@ -158,34 +185,74 @@ const SAMPLE_COURSES: Course[] = [
     level: "Beginner",
     category: "Languages",
     image_url: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&auto=format&fit=crop&q=80",
+    image_urls: ["https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&auto=format&fit=crop&q=80"],
+    post_type: "course",
     link_url: "https://gostudy.app",
     is_featured: false,
     created_at: new Date().toISOString()
   }
 ];
 
-  const fetchCourses = async () => {
-    setLoading(true);
-    try {
-      console.log('📥 Courses: Fetching from Supabase...');
-      
-      const { data, error } = await supabase
+  const loadFeedRows = async () => {
+    const withFeedCols = await supabase
+      .from('course_posts')
+      .select('id, title, description, instructor, price, duration, level, category, image_url, image_urls, link_url, is_featured, created_at, post_type')
+      .eq('is_active', true)
+      .order('is_featured', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (withFeedCols.error && /image_urls|post_type/.test(withFeedCols.error.message)) {
+      return supabase
         .from('course_posts')
         .select('*')
         .eq('is_active', true)
         .order('is_featured', { ascending: false })
         .order('created_at', { ascending: false });
+    }
+    return withFeedCols;
+  };
 
+  /**
+   * The feed is database-first. When Supabase is restricted (HTTP 402) or
+   * answers with no active posts, the Actus page switches to the R2 catalogue
+   * the admin publishes, instead of showing the English sample courses.
+   */
+  const loadFeed = async (): Promise<{ posts: Course[]; source: 'supabase' | 'r2' | 'none' }> => {
+    try {
+      const { data, error } = await loadFeedRows();
       if (!error && data && data.length > 0) {
-        console.log(`✅ Courses: Fetched ${data.length} courses`);
-        setCourses(data);
-      } else {
-        console.log('⚠️ Courses: No data, using samples');
+        return { posts: data as Course[], source: 'supabase' };
+      }
+    } catch (err) {
+      console.warn('Feed database unavailable:', err);
+    }
+
+    const staticPosts = await fetchStaticFeedPosts();
+    if (staticPosts.length > 0) {
+      return { posts: staticPosts, source: 'r2' };
+    }
+
+    return { posts: [], source: 'none' };
+  };
+
+  const fetchCourses = async () => {
+    const hadCache = courses.length > 0;
+    if (!hadCache) setLoading(true);
+    try {
+      const { posts, source } = await loadFeed();
+
+      if (posts.length > 0) {
+        setCourses(posts);
+        writeFeedCache(posts);
+      } else if (!hadCache) {
         setCourses(SAMPLE_COURSES);
+      }
+      if (source === 'r2') {
+        console.log('📰 Feed served from the R2 catalogue');
       }
     } catch (err) {
       console.warn('Using sample courses fallback:', err);
-      setCourses(SAMPLE_COURSES);
+      if (!hadCache) setCourses(SAMPLE_COURSES);
     } finally {
       setLoading(false);
     }
@@ -194,32 +261,25 @@ const SAMPLE_COURSES: Course[] = [
   const handleRefresh = async () => {
     console.log('🔄 Refreshing courses from server...');
     setLoading(true);
-    
-    try {
-      // Force fresh fetch by using a timestamp query parameter to bypass cache
-      const { data, error } = await supabase
-        .from('course_posts')
-        .select('*')
-        .eq('is_active', true)
-        .order('is_featured', { ascending: false })
-        .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        console.log(`✅ Courses Refreshed: ${data.length} courses`);
-        setCourses(data);
-        toast.success('Courses refreshed');
+    try {
+      const { posts, source } = await loadFeed();
+
+      if (posts.length > 0) {
+        setCourses(posts);
+        writeFeedCache(posts);
+        toast.success(t('coursesRefreshed'));
       } else {
         console.log('⚠️ No courses found after refresh');
-        if (data && data.length === 0) {
-          setCourses([]);
-          toast.success('Courses refreshed (empty)');
-        } else {
-          throw error;
-        }
+        setCourses([]);
+        toast.success(t('coursesRefreshed'));
+      }
+      if (source === 'r2') {
+        console.log('📰 Feed refreshed from the R2 catalogue');
       }
     } catch (err) {
       console.error('Refresh error:', err);
-      toast.error('Failed to refresh courses');
+      toast.error(t('coursesRefreshFailed'));
     } finally {
       setLoading(false);
     }
@@ -248,12 +308,14 @@ const SAMPLE_COURSES: Course[] = [
       window.open(course.link_url, '_blank');
       setSelectedCourse(null);
     } else {
-      toast.error('No registration link available');
+      toast.error(t('coursesNoLink'));
     }
   };
 
   const filteredCourses = courses.filter(course => {
-    const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'All'
+      || course.category === selectedCategory
+      || (selectedCategory === 'News' && isNewsPost(course));
     const matchesLevel = selectedLevel === 'All' || course.level === selectedLevel;
     const matchesSearch = searchQuery === '' || 
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -289,7 +351,7 @@ const SAMPLE_COURSES: Course[] = [
             ? 'bg-secondary border-secondary text-secondary-foreground'
             : 'bg-card border-border text-muted-foreground hover:border-foreground/50'
         }`}
-        title={saved ? 'Remove from saved' : 'Save course'}
+        title={saved ? t('removeFromSaved') : t('saveCourse')}
       >
         {saved
           ? <BookmarkCheck className={icon} />
@@ -298,7 +360,11 @@ const SAMPLE_COURSES: Course[] = [
     );
   };
 
-  const CourseCard = ({ course, featured = false }: { course: Course; featured?: boolean }) => (
+  const CourseCard = ({ course, featured = false }: { course: Course; featured?: boolean }) => {
+    const cover = coverImage(course);
+    const extras = collectFeedImages(course).length;
+    const news = isNewsPost(course);
+    return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -307,20 +373,26 @@ const SAMPLE_COURSES: Course[] = [
       }`}
     >
       {/* Image */}
-      {course.image_url ? (
+      {cover ? (
         <div className="relative overflow-hidden rounded-t-2xl bg-muted" style={{ height: '180px' }}>
           <img 
-            src={course.image_url} 
+            src={cover} 
             alt={course.title}
             loading="lazy"
             decoding="async"
+            width={600}
+            height={360}
             className="w-full h-full object-cover"
-            style={{ contentVisibility: 'auto' }}
           />
+          {extras > 1 && (
+            <div className="absolute bottom-3 right-3 bg-background/85 text-foreground px-2 py-0.5 rounded-lg text-[10px] font-black">
+              {t("photoCount").replace("{n}", String(extras))}
+            </div>
+          )}
           {featured && (
             <div className="absolute top-3 left-3 bg-secondary text-secondary-foreground px-2 py-1 rounded-lg text-xs font-black">
               <Star className="h-3 w-3 inline mr-1" />
-              Featured
+              {t('featured')}
             </div>
           )}
         </div>
@@ -330,7 +402,7 @@ const SAMPLE_COURSES: Course[] = [
           {featured && (
             <div className="absolute top-3 left-3 bg-secondary text-secondary-foreground px-2 py-1 rounded-lg text-xs font-black">
               <Star className="h-3 w-3 inline mr-1" />
-              Featured
+              {t('featured')}
             </div>
           )}
         </div>
@@ -342,10 +414,10 @@ const SAMPLE_COURSES: Course[] = [
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-black bg-muted text-muted-foreground px-2 py-1 rounded-lg">
-              {course.category}
+              {news ? t('feedsNews') : categoryLabel(course.category)}
             </span>
             <span className={`text-xs font-black px-2 py-1 rounded-lg border ${getLevelColor(course.level)}`}>
-              {course.level}
+              {levelLabel(course.level)}
             </span>
           </div>
           <h3 className="text-lg font-black text-foreground leading-tight">{course.title}</h3>
@@ -375,7 +447,7 @@ const SAMPLE_COURSES: Course[] = [
         {/* Price & Action */}
         <div className="flex items-center justify-between pt-2">
           <div>
-            {course.price && (
+            {!news && course.price && (
               <span className="text-lg font-black text-foreground">
                 {course.price}
               </span>
@@ -387,7 +459,7 @@ const SAMPLE_COURSES: Course[] = [
               onClick={() => handleCourseClick(course)}
               className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-black text-sm active:scale-95 transition-transform"
             >
-              <span>View Details</span>
+              <span>{t('feedsReadMore')}</span>
               <Eye className="h-4 w-4" />
             </button>
           </div>
@@ -395,8 +467,12 @@ const SAMPLE_COURSES: Course[] = [
       </div>
     </motion.div>
   );
+  };
 
-  const CourseListItem = ({ course, featured = false }: { course: Course; featured?: boolean }) => (
+  const CourseListItem = ({ course, featured = false }: { course: Course; featured?: boolean }) => {
+    const cover = coverImage(course);
+    const news = isNewsPost(course);
+    return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -407,15 +483,16 @@ const SAMPLE_COURSES: Course[] = [
       <div className="flex gap-4 p-4">
         {/* Image */}
         <div className="flex-shrink-0">
-          {course.image_url ? (
+          {cover ? (
             <div className="relative w-24 h-24 overflow-hidden rounded-xl bg-muted">
               <img 
-                src={course.image_url} 
+                src={cover} 
                 alt={course.title}
                 loading="lazy"
                 decoding="async"
+                width={192}
+                height={192}
                 className="w-full h-full object-cover"
-                style={{ contentVisibility: 'auto' }}
               />
               {featured && (
                 <div className="absolute top-1 left-1 bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded text-xs font-black">
@@ -441,10 +518,10 @@ const SAMPLE_COURSES: Course[] = [
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs font-black bg-muted text-muted-foreground px-2 py-0.5 rounded">
-                {course.category}
+                {news ? t('feedsNews') : categoryLabel(course.category)}
               </span>
               <span className={`text-xs font-black px-2 py-0.5 rounded border ${getLevelColor(course.level)}`}>
-                {course.level}
+                {levelLabel(course.level)}
               </span>
               {featured && (
                 <Star className="h-3 w-3 text-secondary fill-current" />
@@ -474,7 +551,7 @@ const SAMPLE_COURSES: Course[] = [
                 </div>
               )}
             </div>
-            {course.price && (
+            {!news && course.price && (
               <span className="text-sm font-black text-foreground">
                 {course.price}
               </span>
@@ -490,12 +567,13 @@ const SAMPLE_COURSES: Course[] = [
             className="flex items-center gap-1 px-3 py-2 bg-primary text-primary-foreground rounded-xl font-black text-xs active:scale-95 transition-transform"
           >
             <Eye className="h-3 w-3" />
-            <span className="hidden sm:inline">Details</span>
+            <span className="hidden sm:inline">{t('feedsReadMore')}</span>
           </button>
         </div>
       </div>
     </motion.div>
   );
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -509,32 +587,20 @@ const SAMPLE_COURSES: Course[] = [
           >
             <div>
               <h1 className="text-xl font-black text-foreground flex items-center gap-2">
-                <GraduationCap className="h-6 w-6 text-secondary" />
-                Cours en Ligne
+                <Newspaper className="h-6 w-6 text-secondary" />
+                {t('feedsTitle')}
               </h1>
               <p className="text-xs font-bold text-muted-foreground mt-0.5">
-                Découvrez des formations disponibles
+                {t('feedsSubtitle')}
               </p>
               {/* System Badge */}
               <div className="mt-1.5">
-                {gradingSystem === "apc" && (
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30">
-                    <div className="w-1 h-1 rounded-full bg-blue-500"></div>
-                    <span className="text-[10px] font-bold text-blue-400">APC System</span>
-                  </div>
-                )}
-                {gradingSystem === "french" && (
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30">
-                    <div className="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <span className="text-[10px] font-bold text-purple-400">French System</span>
-                  </div>
-                )}
-                {gradingSystem === "nigerian_university" && (
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/15 border border-green-500/30">
-                    <div className="w-1 h-1 rounded-full bg-green-500"></div>
-                    <span className="text-[10px] font-bold text-green-400">Nigerian System</span>
-                  </div>
-                )}
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30">
+                  <div className="w-1 h-1 rounded-full bg-blue-500"></div>
+                  <span className="text-[10px] font-bold text-blue-400">
+                    {gradingSystemBadgeLabel(gradingSystem, language)}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -542,7 +608,7 @@ const SAMPLE_COURSES: Course[] = [
                 onClick={handleRefresh}
                 disabled={loading}
                 className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow disabled:opacity-50"
-                title="Refresh courses"
+                title={t('refreshCourses')}
               >
                 <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
               </button>
@@ -555,7 +621,7 @@ const SAMPLE_COURSES: Course[] = [
               <button
                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
                 className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-foreground bg-card text-foreground active:scale-95 transition-all card-shadow"
-                title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+                title={viewMode === 'grid' ? t('switchListView') : t('switchGridView')}
               >
                 {viewMode === 'grid' ? <List className="h-5 w-5" /> : <Grid3X3 className="h-5 w-5" />}
               </button>
@@ -567,7 +633,7 @@ const SAMPLE_COURSES: Course[] = [
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Rechercher des cours..."
+              placeholder={t('coursesSearchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-card border-2 border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
@@ -585,7 +651,7 @@ const SAMPLE_COURSES: Course[] = [
               >
                 {/* Categories */}
                 <div>
-                  <p className="text-xs font-black text-muted-foreground mb-2">CATÉGORIE</p>
+                  <p className="text-xs font-black text-muted-foreground mb-2 uppercase">{t("category")}</p>
                   <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
                     {CATEGORIES.map(category => (
                       <button
@@ -597,7 +663,7 @@ const SAMPLE_COURSES: Course[] = [
                             : 'bg-muted text-muted-foreground hover:bg-muted/80'
                         }`}
                       >
-                        {category}
+                        {categoryLabel(category)}
                       </button>
                     ))}
                   </div>
@@ -605,7 +671,7 @@ const SAMPLE_COURSES: Course[] = [
 
                 {/* Levels */}
                 <div>
-                  <p className="text-xs font-black text-muted-foreground mb-2">NIVEAU</p>
+                  <p className="text-xs font-black text-muted-foreground mb-2 uppercase">{t("levelLabel")}</p>
                   <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
                     {LEVELS.map(level => (
                       <button
@@ -617,7 +683,7 @@ const SAMPLE_COURSES: Course[] = [
                             : 'bg-muted text-muted-foreground hover:bg-muted/80'
                         }`}
                       >
-                        {level}
+                        {levelLabel(level)}
                       </button>
                     ))}
                   </div>
@@ -649,7 +715,7 @@ const SAMPLE_COURSES: Course[] = [
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <BookmarkCheck className="h-5 w-5 text-secondary shrink-0" />
-                    <span className="text-base font-black text-foreground truncate">Saved Courses</span>
+                    <span className="text-base font-black text-foreground truncate">{t('savedCourses')}</span>
                     <span className="text-xs font-black bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full shrink-0">
                       {savedIds.size}
                     </span>
@@ -682,14 +748,15 @@ const SAMPLE_COURSES: Course[] = [
                             >
                               {/* Thumbnail */}
                               <div className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-muted flex items-center justify-center border border-border">
-                                {course.image_url
+                                {coverImage(course)
                                   ? <img 
-                                      src={course.image_url} 
+                                      src={coverImage(course)!} 
                                       alt={course.title} 
                                       loading="lazy"
                                       decoding="async"
+                                      width={112}
+                                      height={112}
                                       className="w-full h-full object-cover" 
-                                      style={{ contentVisibility: 'auto' }}
                                     />
                                   : <GraduationCap className="h-6 w-6 text-muted-foreground/50" />}
                               </div>
@@ -702,7 +769,7 @@ const SAMPLE_COURSES: Course[] = [
                                     {course.category}
                                   </span>
                                   <span className={`text-[10px] font-black px-1.5 py-0.5 rounded border ${getLevelColor(course.level)}`}>
-                                    {course.level}
+                                    {levelLabel(course.level)}
                                   </span>
                                 </div>
                               </div>
@@ -718,7 +785,7 @@ const SAMPLE_COURSES: Course[] = [
                                 <button
                                   onClick={(e) => toggleSave(course, e)}
                                   className="h-8 w-8 flex items-center justify-center rounded-xl bg-secondary/20 border border-secondary/40 text-secondary active:scale-90 transition-transform"
-                                  title="Remove from saved"
+                                  title={t('removeFromSaved')}
                                 >
                                   <BookmarkCheck className="h-3.5 w-3.5" />
                                 </button>
@@ -736,7 +803,7 @@ const SAMPLE_COURSES: Course[] = [
               <div>
                 <h2 className="text-lg font-black text-foreground mb-4 flex items-center gap-2">
                   <Star className="h-5 w-5 text-secondary" />
-                  Cours en Vedette
+                  {t('feedsFeatured')}
                 </h2>
                 {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -760,7 +827,7 @@ const SAMPLE_COURSES: Course[] = [
                 {featuredCourses.length > 0 && (
                   <h2 className="text-lg font-black text-foreground mb-4 flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-primary" />
-                    Tous les Cours
+                    {t('feedsAll')}
                   </h2>
                 )}
                 {viewMode === 'grid' ? (
@@ -786,9 +853,9 @@ const SAMPLE_COURSES: Course[] = [
                   <GraduationCap className="h-9 w-9 text-muted-foreground/50" />
                 </div>
                 <div className="text-center">
-                  <p className="font-black text-foreground text-base">Aucun cours trouvé</p>
+                  <p className="font-black text-foreground text-base">{t('feedsEmpty')}</p>
                   <p className="text-sm font-semibold text-muted-foreground mt-1">
-                    Essayez de modifier vos filtres de recherche
+                    {t('feedsEmptyHint')}
                   </p>
                 </div>
               </div>
@@ -823,16 +890,18 @@ const SAMPLE_COURSES: Course[] = [
               <div className="flex items-center justify-between px-6 py-3 border-b border-border">
                 <div className="flex items-center gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/20 border-2 border-secondary/30">
-                    <GraduationCap className="h-6 w-6 text-secondary" />
+                    {isNewsPost(selectedCourse)
+                      ? <Newspaper className="h-6 w-6 text-secondary" />
+                      : <GraduationCap className="h-6 w-6 text-secondary" />}
                   </div>
                   <div>
                     <h2 className="text-lg font-black text-foreground">{selectedCourse.title}</h2>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs font-black bg-muted text-muted-foreground px-2 py-1 rounded-lg">
-                        {selectedCourse.category}
+                        {isNewsPost(selectedCourse) ? t('feedsNews') : categoryLabel(selectedCourse.category)}
                       </span>
                       <span className={`text-xs font-black px-2 py-1 rounded-lg border ${getLevelColor(selectedCourse.level)}`}>
-                        {selectedCourse.level}
+                        {levelLabel(selectedCourse.level)}
                       </span>
                       {selectedCourse.is_featured && (
                         <Star className="h-4 w-4 text-secondary fill-current" />
@@ -850,20 +919,28 @@ const SAMPLE_COURSES: Course[] = [
 
               {/* Content */}
               <div className="overflow-y-auto max-h-[70vh] p-6 space-y-6">
-                {/* Course Image */}
-                {selectedCourse.image_url && (
-                  <div className="rounded-2xl overflow-hidden border-2 border-border">
-                    <img 
-                      src={selectedCourse.image_url} 
-                      alt={selectedCourse.title}
-                      className="w-full h-auto object-contain"
-                    />
+                {collectFeedImages(selectedCourse).length > 0 && (
+                  <div className="flex gap-3 overflow-x-auto hide-scrollbar snap-x snap-mandatory pb-1">
+                    {collectFeedImages(selectedCourse).map((src, i) => (
+                      <div
+                        key={`${src}-${i}`}
+                        className="snap-center shrink-0 w-full rounded-2xl overflow-hidden border-2 border-border bg-muted"
+                      >
+                        <img
+                          src={src}
+                          alt={`${selectedCourse.title} ${i + 1}`}
+                          loading={i === 0 ? 'eager' : 'lazy'}
+                          decoding="async"
+                          className="w-full max-h-[50vh] object-contain"
+                        />
+                      </div>
+                    ))}
                   </div>
                 )}
 
                 {/* Description */}
                 <div>
-                  <h3 className="text-sm font-black text-foreground mb-2 uppercase tracking-widest">Description</h3>
+                  <h3 className="text-sm font-black text-foreground mb-2 uppercase tracking-widest">{t('descriptionLabel')}</h3>
                   <p className="text-sm font-semibold text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {selectedCourse.description}
                   </p>
@@ -875,7 +952,7 @@ const SAMPLE_COURSES: Course[] = [
                     <div className="bg-card rounded-xl border-2 border-border p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <Users className="h-4 w-4 text-secondary" />
-                        <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Instructeur</span>
+                        <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t('instructorLabel')}</span>
                       </div>
                       <p className="text-sm font-black text-foreground">{selectedCourse.instructor}</p>
                     </div>
@@ -885,49 +962,48 @@ const SAMPLE_COURSES: Course[] = [
                     <div className="bg-card rounded-xl border-2 border-border p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className="h-4 w-4 text-secondary" />
-                        <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Durée</span>
+                        <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t('durationLabel')}</span>
                       </div>
                       <p className="text-sm font-black text-foreground">{selectedCourse.duration}</p>
                     </div>
                   )}
 
-                  {selectedCourse.price && (
+                  {!isNewsPost(selectedCourse) && selectedCourse.price && (
                     <div className="bg-card rounded-xl border-2 border-border p-4 col-span-2">
                       <div className="flex items-center gap-2 mb-2">
                         <Award className="h-4 w-4 text-secondary" />
-                        <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Prix</span>
+                        <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t('priceLabel')}</span>
                       </div>
                       <p className="text-lg font-black text-foreground">{selectedCourse.price}</p>
                     </div>
                   )}
                 </div>
 
-                {/* Join Button */}
-                <div className="pt-4">
-                  {selectedCourse.link_url ? (
+                {selectedCourse.link_url && (
+                  <div className="pt-4">
                     <button
                       onClick={() => handleJoinCourse(selectedCourse)}
                       className="w-full flex items-center justify-center gap-3 py-4 bg-secondary text-secondary-foreground rounded-2xl font-black text-base active:scale-95 transition-transform border-2 border-foreground card-shadow"
                     >
-                      <GraduationCap className="h-5 w-5" />
-                      <span>Rejoindre le Cours</span>
+                      {isNewsPost(selectedCourse)
+                        ? <Newspaper className="h-5 w-5" />
+                        : <GraduationCap className="h-5 w-5" />}
+                      <span>{isNewsPost(selectedCourse) ? t('feedsOpenLink') : t('feedsJoinCourse')}</span>
                       <ExternalLink className="h-5 w-5" />
                     </button>
-                  ) : (
-                    <div className="w-full flex items-center justify-center gap-3 py-4 bg-muted text-muted-foreground rounded-2xl font-black text-base border-2 border-border">
-                      <span>Lien d'inscription non disponible</span>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
-                {/* Course Info */}
                 <div className="text-center pt-2">
                   <p className="text-xs font-bold text-muted-foreground">
-                    Cours ajouté le {new Date(selectedCourse.created_at).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
+                    {t('feedsPostedOn').replace(
+                      '{date}',
+                      new Date(selectedCourse.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-GB', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      }),
+                    )}
                   </p>
                 </div>
               </div>

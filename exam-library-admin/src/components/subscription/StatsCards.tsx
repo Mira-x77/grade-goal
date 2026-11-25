@@ -88,9 +88,9 @@ export function StatsCards() {
           <Crown className="h-4 w-4 text-yellow-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.used}</div>
+          <div className="text-2xl font-bold">{stats.activePremium}</div>
           <p className="text-xs text-muted-foreground">
-            Estimated active users
+            Non-expired premium (by code)
           </p>
         </CardContent>
       </Card>

@@ -1,24 +1,27 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Download, AlertCircle, Eye, FolderOpen, X, Check, Share2, ArrowLeft, BookOpen } from "lucide-react";
+import { Download, AlertCircle, Eye, FolderOpen, X, Check, BookOpen, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LibraryBook, UnifiedDownloadProgress } from "@/types/exam-library";
+import { CollapsiblePageHeader } from "@/components/CollapsiblePageHeader";
 import { bookService } from "@/services/bookService";
 import { downloadService } from "@/services/downloadService";
-import { fileShareService } from "@/services/fileShareService";
+import { subscriptionService } from "@/services/subscriptionService";
 import { InAppPDFViewer } from "@/components/exam/InAppPDFViewer";
 import { readBookFileAsBase64 } from "@/lib/filesystem";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePremium } from "@/contexts/AppConfigContext";
 import { useDownloadQuota } from "@/hooks/useDownloadQuota";
+import { useLibraryContentGate } from "@/hooks/useLibraryContentGate";
 
 const BookDetail = () => {
   const { bookId } = useParams<{ bookId: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { isPremium } = usePremium();
-  const { refreshQuota } = useDownloadQuota();
+  const { isPremium, openDownloadLimitGate } = usePremium();
+  const { canDownload, refreshQuota } = useDownloadQuota();
+  const { canView, requireViewAccess } = useLibraryContentGate();
 
   const [book, setBook] = useState<LibraryBook | null>(null);
   const [isDownloaded, setIsDownloaded] = useState(false);
@@ -79,6 +82,12 @@ const BookDetail = () => {
 
   const handleOpen = async () => {
     if (!book) return;
+    if (!requireViewAccess({
+      alreadyOnDevice: isDownloaded,
+      onSuccess: () => {
+        void handleOpen();
+      },
+    })) return;
     try {
       setError(null);
       const { Capacitor } = await import('@capacitor/core');
@@ -139,6 +148,13 @@ const BookDetail = () => {
 
   const handleDownload = async () => {
     if (!book) return;
+    const paidNow = isPremium || (await subscriptionService.getStatus()).hasPremiumAccess;
+    if (!paidNow && !canDownload) {
+      openDownloadLimitGate(() => {
+        void handleDownload();
+      });
+      return;
+    }
     try {
       setError(null);
       await downloadService.downloadBook(book, (progress) => {
@@ -160,8 +176,9 @@ const BookDetail = () => {
       
       // Check if it's a quota error
       if (errorMessage.includes('Download limit reached') || errorMessage.includes('limit reached')) {
-        setError(t("downloadLimitReached") || "Download limit reached. Upgrade to premium for unlimited downloads.");
-        toast.error(t("downloadLimitReached") || "Download limit reached");
+        openDownloadLimitGate(() => {
+          void handleDownload();
+        });
       } else {
         setError(errorMessage);
         toast.error(t("downloadFailedRetry") || "Download failed");
@@ -177,51 +194,6 @@ const BookDetail = () => {
       setDownloadProgress(null);
     } catch (err) {
       console.error("Failed to cancel download:", err);
-    }
-  };
-
-  const handleShare = async () => {
-    if (!book) return;
-    
-    try {
-      if (isDownloaded) {
-        const downloadInfo = await downloadService.getBookDownloadInfo(book.id);
-        if (downloadInfo && downloadInfo.localPath) {
-          await fileShareService.shareBook(downloadInfo.localPath, book.title);
-          return;
-        }
-      }
-      
-      // Fallback to deep link sharing (for non-downloaded books)
-      const appUrl = import.meta.env.VITE_APP_URL ?? 'https://gostudy.app';
-      const deepLink = `${appUrl}/book/${book.id}`;
-      const shareText = `${book.title} - ${book.subject} (${book.category})`;
-
-      const { Share } = await import('@capacitor/share');
-
-      const canShare = await Share.canShare();
-      if (canShare.value) {
-        await Share.share({
-          title: book.title,
-          text: shareText,
-          url: deepLink,
-          dialogTitle: t("share") || "Share",
-        });
-      } else if (navigator.share) {
-        await navigator.share({
-          title: book.title,
-          text: shareText,
-          url: deepLink,
-        });
-      } else {
-        await navigator.clipboard.writeText(deepLink);
-        toast.success(t("linkCopied") || "Link copied to clipboard");
-      }
-    } catch (err) {
-      console.error('Share failed:', err);
-      if (err instanceof Error && !err.message.includes('cancel')) {
-        toast.error(t("shareFailed") || "Sharing failed");
-      }
     }
   };
 
@@ -276,49 +248,43 @@ const BookDetail = () => {
 
   return (
     <div className="flex-1 bg-background min-h-screen overflow-x-hidden w-full max-w-[100vw] pb-24">
-      <div className="content-col p-4 safe-area-top min-w-0">
-        {/* Back button — fixed top left */}
-        <button
-          onClick={() => navigate(-1)}
-          className="fixed top-[max(1rem,env(safe-area-inset-top))] left-[max(1rem,env(safe-area-inset-left))] z-50 h-10 w-10 flex items-center justify-center rounded-full bg-card border-2 border-foreground card-shadow active:scale-95 transition-transform"
-        >
-          <ArrowLeft className="h-5 w-5 text-foreground" />
-        </button>
+      <CollapsiblePageHeader
+        title={book.title}
+        onBack={() => navigate(-1)}
+        backLabel={t("goBack")}
+        expandLabel={t("showDetails")}
+        collapseLabel={t("hideDetails")}
+      >
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-x-3 gap-y-2 text-sm min-w-0">
+          <div className="text-muted-foreground shrink-0">{t("subject") || "Subject"}</div>
+          <div className="font-bold text-right break-words min-w-0">{book.subject}</div>
 
-        {/* Book Info Card */}
-        <div className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border mb-6 mt-12 min-w-0">
-          <div className="p-4 sm:p-6">
-            <h1 className="text-xl sm:text-2xl font-black mb-4 leading-tight break-words pr-2">{book.title}</h1>
-            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-x-3 gap-y-3 text-sm min-w-0">
-              <div className="text-muted-foreground shrink-0">{t("subject") || "Subject"}</div>
-              <div className="font-bold text-right break-words min-w-0">{book.subject}</div>
-              
-              {book.author && (
-                <>
-                  <div className="text-muted-foreground">{t("author") || "Author"}</div>
-                  <div className="font-bold text-right break-words min-w-0">{book.author}</div>
-                </>
-              )}
-              
-              <div className="text-muted-foreground">{t("category") || "Category"}</div>
-              <div className="font-bold text-right break-words min-w-0">{book.category}</div>
-              
-              {book.published_year && (
-                <>
-                  <div className="text-muted-foreground">{t("publishedYear") || "Year"}</div>
-                  <div className="font-bold text-right break-words min-w-0">{book.published_year}</div>
-                </>
-              )}
-              
-              <div className="text-muted-foreground">{t("fileSize") || "File Size"}</div>
-              <div className="font-bold text-right break-words min-w-0">{book.file_size_formatted}</div>
-              
-              <div className="text-muted-foreground">{t("downloads") || "Downloads"}</div>
-              <div className="font-bold text-right break-words min-w-0">{book.downloads ?? 0}</div>
-            </div>
-          </div>
+          {book.author && (
+            <>
+              <div className="text-muted-foreground">{t("author") || "Author"}</div>
+              <div className="font-bold text-right break-words min-w-0">{book.author}</div>
+            </>
+          )}
+
+          <div className="text-muted-foreground">{t("category") || "Category"}</div>
+          <div className="font-bold text-right break-words min-w-0">{book.category}</div>
+
+          {book.published_year && (
+            <>
+              <div className="text-muted-foreground">{t("publishedYear") || "Year"}</div>
+              <div className="font-bold text-right break-words min-w-0">{book.published_year}</div>
+            </>
+          )}
+
+          <div className="text-muted-foreground">{t("fileSize") || "File Size"}</div>
+          <div className="font-bold text-right break-words min-w-0">{book.file_size_formatted}</div>
+
+          <div className="text-muted-foreground">{t("downloads") || "Downloads"}</div>
+          <div className="font-bold text-right break-words min-w-0">{book.downloads ?? 0}</div>
         </div>
+      </CollapsiblePageHeader>
 
+      <div className="content-col p-4 min-w-0">
         {/* Error Display */}
         {error && (
           <div className="bg-destructive/10 text-destructive text-sm p-4 rounded-xl mb-6 flex gap-3 items-start">
@@ -329,20 +295,38 @@ const BookDetail = () => {
 
         {/* Action Buttons */}
         <div className="space-y-3 min-w-0">
-          {/* View / Download / Share — single row */}
-          <div className="grid grid-cols-3 gap-2 min-w-0 w-full">
-            <button
-              onClick={handleOpen}
-              className="flex flex-col items-center justify-center gap-1.5 min-w-0 bg-card border-2 border-foreground py-3 px-1 rounded-2xl font-black text-[11px] sm:text-xs text-foreground text-center leading-tight active:scale-[0.98] transition-all card-shadow"
-            >
-              {isDownloaded ? <FolderOpen className="h-5 w-5 shrink-0" /> : <Eye className="h-5 w-5 shrink-0" />}
-              <span className="w-full truncate px-0.5">{isDownloaded ? t("open") || "Open" : t("view") || "View"}</span>
-            </button>
+          {/* View / Download */}
+          <div className="grid grid-cols-2 gap-2 min-w-0 w-full">
+            {!canView ? (
+              <button
+                onClick={() => openDownloadLimitGate()}
+                className="flex flex-col items-center justify-center gap-1.5 min-w-0 bg-muted border-2 border-border py-3 px-1 rounded-2xl font-black text-[11px] sm:text-xs text-muted-foreground text-center leading-tight active:scale-[0.98] transition-all"
+              >
+                <Lock className="h-5 w-5 shrink-0" />
+                <span className="w-full truncate px-0.5">{isDownloaded ? t("open") || "Open" : t("view") || "View"}</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleOpen}
+                className="flex flex-col items-center justify-center gap-1.5 min-w-0 bg-card border-2 border-foreground py-3 px-1 rounded-2xl font-black text-[11px] sm:text-xs text-foreground text-center leading-tight active:scale-[0.98] transition-all card-shadow"
+              >
+                {isDownloaded ? <FolderOpen className="h-5 w-5 shrink-0" /> : <Eye className="h-5 w-5 shrink-0" />}
+                <span className="w-full truncate px-0.5">{isDownloaded ? t("open") || "Open" : t("view") || "View"}</span>
+              </button>
+            )}
 
             {isDownloaded ? (
               <button disabled className="flex flex-col items-center justify-center gap-1.5 min-w-0 bg-muted border-2 border-border py-3 px-1 rounded-2xl font-black text-[11px] sm:text-xs text-muted-foreground text-center leading-tight opacity-60 cursor-default">
                 <Check className="h-5 w-5 shrink-0" />
                 <span className="w-full truncate px-0.5">{t("downloaded") || "Downloaded"}</span>
+              </button>
+            ) : !canView ? (
+              <button
+                onClick={() => openDownloadLimitGate()}
+                className="flex flex-col items-center justify-center gap-1.5 min-w-0 bg-muted border-2 border-border py-3 px-1 rounded-2xl font-black text-[11px] sm:text-xs text-muted-foreground text-center leading-tight active:scale-[0.98] transition-all"
+              >
+                <Lock className="h-5 w-5 shrink-0" />
+                <span className="w-full line-clamp-2 px-0.5">{t("downloadBook") || "Download"}</span>
               </button>
             ) : (
               <button
@@ -367,15 +351,6 @@ const BookDetail = () => {
                 )}
               </button>
             )}
-
-            <button
-              onClick={handleShare}
-              disabled={!isDownloaded}
-              className="flex flex-col items-center justify-center gap-1.5 min-w-0 bg-card border-2 border-foreground py-3 px-1 rounded-2xl font-black text-[11px] sm:text-xs text-foreground text-center leading-tight active:scale-[0.98] transition-all card-shadow disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Share2 className="h-5 w-5" />
-              {t("share") || "Share"}
-            </button>
           </div>
         </div>
 

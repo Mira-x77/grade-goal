@@ -1,12 +1,16 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ExamPaper, FilterCriteria, CachedPaper } from '@/types/exam-library';
 import { cacheService } from './cacheService';
+import { fetchStaticPaperRows } from './staticCatalog';
+import { paperMatchesClassFilter, paperMatchesSubjectFilter } from '@/lib/library-filters';
 
 interface SupabasePaper {
   id: string;
   title: string;
   subject: string;
   class_level: string;
+  class_levels?: string[];
+  subjects?: string[];
   year: number;
   exam_type: string;
   session: string;
@@ -206,6 +210,8 @@ class ExamService {
       tags: paper.tags,
       description: paper.description,
       preview_url: paper.preview_url,
+      classLevels: paper.class_levels as any,
+      subjects: paper.subjects,
     };
   }
 
@@ -274,9 +280,23 @@ class ExamService {
       return papers;
     } catch (error) {
       console.error('❌ ExamService: Failed to fetch papers from network:', error);
-      // Fallback to cached data
-      const cachedPapers = await this.getCachedPapers();
 
+      // A catalogue published next to the PDFs (R2/CDN) keeps real file URLs,
+      // so it wins over the IndexedDB cache while the database is unreachable.
+      const staticRows = await fetchStaticPaperRows();
+      if (staticRows.length > 0) {
+        console.log(`☁️ ExamService: Using ${staticRows.length} papers from the static catalogue`);
+        const papers = staticRows.map((p) => this.convertToExamPaper(p));
+        try {
+          await cacheService.cachePapers(papers);
+        } catch (cacheError) {
+          console.warn('⚠️ ExamService: Failed to cache static catalogue:', cacheError);
+        }
+        return papers;
+      }
+
+      // Offline (or no catalogue configured): fall back to the cache
+      const cachedPapers = await this.getCachedPapers();
       if (cachedPapers.length > 0) {
         console.log(`📦 ExamService: Using ${cachedPapers.length} cached papers`);
         return cachedPapers.map(this.convertCachedToExamPaper);
@@ -296,13 +316,8 @@ class ExamService {
         .from('exam_papers')
         .select('*');
 
-      // Apply filters
-      if (filters.classLevel) {
-        query = query.eq('class_level', filters.classLevel);
-      }
-      if (filters.subject) {
-        query = query.eq('subject', filters.subject);
-      }
+      // Class and subject are multi-value (one PDF can belong to 1ère C and
+      // 1ère D, or cover Histoire and Géographie). Filter them in JS.
       if (filters.year) {
         query = query.eq('year', filters.year);
       }
@@ -320,13 +335,34 @@ class ExamService {
         throw error;
       }
 
-      return (data as SupabasePaper[]).map(p => this.convertToExamPaper(p));
+      let papers = (data as SupabasePaper[]).map(p => this.convertToExamPaper(p));
+      if (filters.classLevel) {
+        papers = papers.filter((p) => paperMatchesClassFilter(p, filters.classLevel));
+      }
+      if (filters.subject) {
+        papers = papers.filter((p) => paperMatchesSubjectFilter(p, filters.subject));
+      }
+      return papers;
     } catch (error) {
       console.error('Failed to fetch filtered papers:', error);
       // Fallback to client-side filtering of cached data
       const cachedPapers = await this.getCachedPapers();
-      return this.filterPapersClientSide(cachedPapers, filters);
+      if (cachedPapers.length > 0) {
+        return this.filterPapersClientSide(cachedPapers, filters);
+      }
+      const staticRows = await fetchStaticPaperRows();
+      return staticRows
+        .map((p) => this.convertToExamPaper(p))
+        .filter((paper) => this.matchesFilters(paper, filters));
     }
+  }
+
+  private matchesFilters(paper: ExamPaper, filters: FilterCriteria): boolean {
+    if (filters.classLevel && !paperMatchesClassFilter(paper, filters.classLevel)) return false;
+    if (filters.subject && !paperMatchesSubjectFilter(paper, filters.subject)) return false;
+    if (filters.year && paper.year !== filters.year) return false;
+    if (filters.examType && paper.examType !== filters.examType) return false;
+    return true;
   }
 
   /**
@@ -334,8 +370,8 @@ class ExamService {
    */
   private filterPapersClientSide(papers: CachedPaper[], filters: FilterCriteria): ExamPaper[] {
     const filtered = papers.filter(paper => {
-      if (filters.classLevel && paper.classLevel !== filters.classLevel) return false;
-      if (filters.subject && paper.subject !== filters.subject) return false;
+      if (filters.classLevel && !paperMatchesClassFilter(paper, filters.classLevel)) return false;
+      if (filters.subject && !paperMatchesSubjectFilter(paper, filters.subject)) return false;
       if (filters.year && paper.year !== filters.year) return false;
       if (filters.examType && paper.examType !== filters.examType) return false;
       return true;
@@ -356,11 +392,11 @@ class ExamService {
       year: cached.year,
       examType: cached.examType,
       session: cached.session,
-      fileUrl: '',
-      fileName: '',
+      fileUrl: cached.fileUrl ?? '',
+      fileName: cached.fileName ?? '',
       fileSize: cached.fileSize,
       fileSizeFormatted: cached.fileSizeFormatted,
-      contentHash: '',
+      contentHash: cached.contentHash ?? '',
       uploadDate: {
         seconds: new Date(cached.uploadDate).getTime() / 1000,
         nanoseconds: 0,
@@ -368,7 +404,10 @@ class ExamService {
       } as any,
       downloads: cached.downloads,
       tags: cached.tags,
-      description: cached.description
+      description: cached.description,
+      preview_url: cached.preview_url,
+      classLevels: cached.classLevels,
+      subjects: cached.subjects,
     };
   }
 
@@ -422,6 +461,12 @@ class ExamService {
     // Check sample papers
     const sampleMatch = SAMPLE_PAPERS.find((p) => p.id === paperId);
     if (sampleMatch) return sampleMatch;
+
+    // Check the published static catalogue first: it carries the real file URL,
+    // while a cache entry written before the catalogue fallback may not.
+    const staticRows = await fetchStaticPaperRows();
+    const staticMatch = staticRows.find((p) => p.id === paperId);
+    if (staticMatch) return this.convertToExamPaper(staticMatch);
 
     // Check cached papers
     const cachedPapers = await this.getCachedPapers();

@@ -5,8 +5,18 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+    alias: [
+      // Shared app modules (`@app/...`) import their siblings as `@/lib/*`.
+      // Keep `@` pointing at this admin, but route the one shared sibling that
+      // only exists in the app source tree back there.
+      {
+        find: /^@\/lib\/subjects-data$/,
+        replacement: path.resolve(__dirname, '../src/lib/subjects-data'),
+      },
+      { find: /^@$/, replacement: path.resolve(__dirname, './src') },
+      { find: /^@app$/, replacement: path.resolve(__dirname, '../src') },
+      { find: /^@\//, replacement: path.resolve(__dirname, './src') + '/' },
+      { find: /^@app\//, replacement: path.resolve(__dirname, '../src') + '/' },
+    ],
   },
 });

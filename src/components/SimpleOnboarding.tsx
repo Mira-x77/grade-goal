@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SimpleOnboarding — the ONE and ONLY onboarding in the app.
  *
  * Steps:
@@ -299,7 +299,9 @@ export default function SimpleOnboarding() {
       saveState(updated);
       localStorage.setItem("grade_calculator_setup_done", "true");
 
-      // If user is authenticated, save to Supabase
+      // Ensure anonymous cloud session for app-only users (no Google required)
+      await import("@/lib/guest-auth").then(({ ensureGuestSession }) => ensureGuestSession());
+
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         try {
@@ -327,7 +329,7 @@ export default function SimpleOnboarding() {
       navigate("/", { replace: true });
     } catch (error) {
       console.error("Failed to complete onboarding:", error);
-      toast.error("Failed to save your settings. Please try again.");
+      toast.error(t("failedSaveSettings"));
     } finally {
       setSaving(false);
     }
@@ -478,9 +480,9 @@ export default function SimpleOnboarding() {
                 <img src={searchImg} alt="Search" className="w-full h-full object-cover" />
               </div>
               <div className="text-center">
-                <h1 className="text-2xl font-black text-foreground">Almost there!</h1>
+                <h1 className="text-2xl font-black text-foreground">{t("almostThereTitle")}</h1>
                 <p className="text-sm font-semibold text-muted-foreground mt-1">
-                  {isNigerian ? "Tell us about your university year" : "Tell us about your class"}
+                  {isNigerian ? t("tellUsAboutUniversity") : t("tellUsAboutClass")}
                 </p>
               </div>
 
@@ -490,11 +492,11 @@ export default function SimpleOnboarding() {
                 {isNigerian && (
                   <>
                     <div>
-                      <label className="text-sm font-bold text-muted-foreground mb-1 block">Department / Faculty</label>
+                      <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("departmentFaculty")}</label>
                       <AppDropdown
                         value={department}
                         onChange={(val) => { setDepartment(val); setUniLevel(""); }}
-                        placeholder="Select your department"
+                        placeholder={t("selectYourDepartment")}
                         options={NIGERIAN_DEPARTMENTS.map(d => ({ value: d, label: d }))}
                       />
                     </div>
@@ -507,11 +509,11 @@ export default function SimpleOnboarding() {
                           exit={{ opacity: 0, height: 0 }}
                           className="overflow-hidden"
                         >
-                          <label className="text-sm font-bold text-muted-foreground mb-1 block">Level</label>
+                          <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("levelLabel")}</label>
                           <AppDropdown
                             value={uniLevel}
                             onChange={setUniLevel}
-                            placeholder="Select your level"
+                            placeholder={t("selectYourLevel")}
                             options={NIGERIAN_LEVELS.map(lvl => ({ value: lvl, label: `${lvl} Level` }))}
                           />
                         </motion.div>
@@ -526,7 +528,7 @@ export default function SimpleOnboarding() {
                           exit={{ opacity: 0, height: 0 }}
                           className="overflow-hidden"
                         >
-                          <label className="text-sm font-bold text-muted-foreground mb-1 block">Semester</label>
+                          <label className="text-sm font-bold text-muted-foreground mb-1 block">{t("semester")}</label>
                           <div className="flex flex-col gap-2">
                             {(["First Semester", "Second Semester"] as const).map((sem) => (
                               <button
@@ -767,12 +769,12 @@ export default function SimpleOnboarding() {
             (step === 1 && !name.trim()) ||
             (step === 3 && !step3Valid)
           }
-          label="Next →"
+          label={`${t("next")} →`}
           hint={
             step === 3 && !step3Valid && (department || classLevel) ? (
               <p className="text-xs font-bold text-muted-foreground text-center">
                 {isNigerian
-                  ? !department ? "Select your department" : !uniLevel ? "Select your level" : "Select your semester"
+                  ? !department ? t("selectYourDepartment") : !uniLevel ? t("selectYourLevel") : t("selectYourSemester")
                   : !classLevel ? t("chooseYourClass")
                   : isLycee(classLevel) && !serie ? t("chooseYourSerie")
                   : t("chooseYourSemester")}

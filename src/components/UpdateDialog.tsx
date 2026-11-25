@@ -7,7 +7,6 @@ import {
   DialogFooter 
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   Download, 
@@ -39,7 +38,6 @@ export function UpdateDialog({
   onUpdateCompleted 
 }: UpdateDialogProps) {
   const [isDownloading, setIsDownloading] = useState(false);
-  const [downloadProgress, setDownloadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
 
   const formatFileSize = (bytes: number): string => {
@@ -57,23 +55,17 @@ export function UpdateDialog({
 
     try {
       setIsDownloading(true);
-      setDownloadProgress(0);
       setErrorMessage('');
-      
       onUpdateStarted();
 
-      const success = await updateService.downloadAndInstallUpdate(
-        update,
-        (progress) => {
-          setDownloadProgress(progress);
-        }
-      );
+      const success = await updateService.openStoreUpdate(update);
 
       if (success) {
-        toast.success('Update downloaded successfully! The app will restart to complete installation.');
+        toast.success('Opening Google Play to update Go Study!');
         onUpdateCompleted();
+        if (!update.isMandatory) onDismiss();
       } else {
-        throw new Error('Update installation failed');
+        throw new Error('Could not open Google Play');
       }
     } catch (error) {
       console.error('Update failed:', error);
@@ -176,16 +168,10 @@ export function UpdateDialog({
 
           {/* Download Progress */}
           {isDownloading && (
-            <div className="space-y-3 p-4 bg-muted rounded-lg">
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-sm">Downloading Update...</h4>
-                <span className="text-sm font-medium text-primary">
-                  {downloadProgress}%
-                </span>
-              </div>
-              <Progress value={downloadProgress} className="h-2" />
-              <p className="text-xs text-muted-foreground text-center">
-                Please don't close the app while downloading
+            <div className="space-y-2 p-4 bg-muted rounded-lg text-center">
+              <h4 className="font-semibold text-sm">Opening Google Play…</h4>
+              <p className="text-xs text-muted-foreground">
+                Tap Update on the Play Store page to install the latest version.
               </p>
             </div>
           )}
@@ -226,7 +212,7 @@ export function UpdateDialog({
               className="w-full sm:w-auto"
             >
               <Download className="h-4 w-4 mr-2" />
-              {update.isMandatory ? 'Update Now' : 'Download & Install'}
+              {update.isMandatory ? 'Update on Google Play' : 'Update on Google Play'}
             </Button>
           )}
 

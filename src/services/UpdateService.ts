@@ -1,7 +1,11 @@
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import { CommunityDevice } from '@capacitor-community/device';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { supabase } from '../integrations/supabase/client';
+
+const PLAY_STORE_URL =
+  'https://play.google.com/store/apps/details?id=com.gostudy.student';
 
 export interface AppUpdate {
   id: number;
@@ -87,36 +91,37 @@ class UpdateService {
   }
 
   /**
-   * Download and install APK update
+   * Open Google Play for updates (Play policy: no sideloaded APK installs).
    */
-  async downloadAndInstallUpdate(update: AppUpdate, onProgress?: (progress: number) => void): Promise<boolean> {
+  async openStoreUpdate(_update?: AppUpdate): Promise<boolean> {
     try {
-      // Only works on Android
-      if (Capacitor.getPlatform() !== 'android') {
-        throw new Error('APK updates only supported on Android');
+      if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
+        await Browser.open({ url: PLAY_STORE_URL });
+        return true;
       }
-
-      // Download APK
-      const downloadPath = await this.downloadAPK(update, onProgress);
-      
-      // Install APK
-      await this.installAPK(downloadPath);
-      
+      window.open(PLAY_STORE_URL, '_blank', 'noopener,noreferrer');
       return true;
     } catch (error) {
-      console.error('Failed to download and install update:', error);
+      console.error('Failed to open store update page:', error);
       return false;
     }
   }
 
+  /** @deprecated Use openStoreUpdate — kept for callers during migration */
+  async downloadAndInstallUpdate(
+    update: AppUpdate,
+    _onProgress?: (progress: number) => void,
+  ): Promise<boolean> {
+    return this.openStoreUpdate(update);
+  }
+
   /**
-   * Download APK file
+   * Download APK file (legacy sideload path — not used on Play builds)
    */
   private async downloadAPK(update: AppUpdate, onProgress?: (progress: number) => void): Promise<string> {
     const fileName = `app-update-v${update.versionName}.apk`;
     
     try {
-      // Use fetch for download
       const response = await fetch(update.downloadUrl);
       if (!response.ok) {
         throw new Error(`Download failed: ${response.status}`);

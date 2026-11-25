@@ -7,7 +7,6 @@ import {
   Search,
   X,
   AlertTriangle,
-  Share2,
   CheckCircle2,
   Circle,
   CloudDownload,
@@ -26,9 +25,9 @@ import {
 } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { downloadService } from "@/services/downloadService";
+import { subscriptionService } from "@/services/subscriptionService";
 import { cacheService } from "@/services/cacheService";
 import { examService } from "@/services/examService";
-import { fileShareService } from "@/services/fileShareService";
 import {
   getCloudOnlyDownloads,
   CloudDownload as CloudDownloadType,
@@ -54,12 +53,14 @@ import { useIsTablet } from "@/hooks/useIsTablet";
 import { useAuth } from "@/contexts/AuthContext";
 import TaskBar from "@/components/TaskBar";
 import { useDownloadQuota } from "@/hooks/useDownloadQuota";
+import { useLibraryContentGate } from "@/hooks/useLibraryContentGate";
 import { usePremium } from "@/contexts/AppConfigContext";
 import {
   DownloadQuotaDisplay,
   DownloadQuotaDisplayRef,
 } from "@/components/DownloadQuotaDisplay";
 import { BookCard } from "@/components/library/BookCard";
+import { externalPdfService } from "@/services/externalPdfService";
 
 const MyDownloads = () => {
   const navigate = useNavigate();
@@ -68,6 +69,7 @@ const MyDownloads = () => {
   const isTablet = useIsTablet();
   const { quota, refreshQuota, canDownload } = useDownloadQuota();
   const { isPremium, openPremiumGate, openDownloadLimitGate } = usePremium();
+  const { requireViewAccess } = useLibraryContentGate();
   const quotaDisplayRef = useRef<DownloadQuotaDisplayRef>(null);
   const [downloadedPapers, setDownloadedPapers] = useState<CachedPaper[]>([]);
   const [downloadedBooks, setDownloadedBooks] = useState<CachedBook[]>([]);
@@ -105,6 +107,7 @@ const MyDownloads = () => {
   const [selectedPapers, setSelectedPapers] = useState<Set<string>>(new Set());
   const [selectedBooks, setSelectedBooks] = useState<Set<string>>(new Set());
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
+  const [isBrowsingPhone, setIsBrowsingPhone] = useState(false);
 
   const [tempFilters, setTempFilters] = useState({ examType: "" });
   const [appliedFilters, setAppliedFilters] = useState({ examType: "" });
@@ -126,11 +129,14 @@ const MyDownloads = () => {
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
+    const handleDownloadsUpdated = () => { void loadDownloads(); };
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
+    window.addEventListener("gostudy-downloads-updated", handleDownloadsUpdated);
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("gostudy-downloads-updated", handleDownloadsUpdated);
     };
   }, []);
 
@@ -194,6 +200,28 @@ const MyDownloads = () => {
     }
   };
 
+  const handleBrowsePhonePDFs = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      toast.error(t("browsePhoneOnlyNative") || "This feature is only available on the mobile app");
+      return;
+    }
+
+    setIsBrowsingPhone(true);
+    try {
+      const count = await externalPdfService.pickMultiplePdfs();
+      if (count === 0) {
+        toast.info(t("noPDFsSelected") || "No PDFs selected");
+      } else {
+        await loadDownloads();
+      }
+    } catch (error) {
+      console.error("Failed to browse phone PDFs:", error);
+      toast.error(t("failedBrowsePhone") || "Failed to browse PDFs from your phone");
+    } finally {
+      setIsBrowsingPhone(false);
+    }
+  };
+
   const handlePaperClick = async (
     item: CachedPaper | CachedBook,
     type: "paper" | "book",
@@ -210,6 +238,7 @@ const MyDownloads = () => {
       setRevealedDelete(null);
       return;
     }
+    if (!requireViewAccess({ alreadyOnDevice: true })) return;
     const isWeb = Capacitor.getPlatform() === "web";
     try {
       console.log(`📄 Opening ${type}:`, item.title);
@@ -376,68 +405,6 @@ const MyDownloads = () => {
     }
   };
 
-  const handleMultiShare = async () => {
-    const totalSelected = selectedPapers.size + selectedBooks.size;
-    if (totalSelected === 0) return;
-    if (!isPremium) {
-      openPremiumGate();
-      return;
-    }
-
-    const isWeb = Capacitor.getPlatform() === "web";
-    if (isWeb) {
-      toast.error(t("shareNotAvailableWeb"));
-      return;
-    }
-
-    try {
-      const selectedPapersList = downloadedPapers.filter((p) =>
-        selectedPapers.has(p.id),
-      );
-      const selectedBooksList = downloadedBooks.filter((b) =>
-        selectedBooks.has(b.id),
-      );
-      const shareItems: Array<{
-        path: string;
-        title: string;
-        type: "paper" | "book";
-      }> = [];
-
-      selectedPapersList
-        .filter((p) => p.localPath)
-        .forEach((p) =>
-          shareItems.push({
-            path: p.localPath!,
-            title: p.title,
-            type: "paper",
-          }),
-        );
-
-      selectedBooksList
-        .filter((b) => b.localPath)
-        .forEach((b) =>
-          shareItems.push({
-            path: b.localPath!,
-            title: b.title,
-            type: "book",
-          }),
-        );
-
-      if (shareItems.length === 0) {
-        toast.error(t("noFilesToShare"));
-        return;
-      }
-
-      await fileShareService.shareMixed(shareItems);
-      exitMultiSelectMode();
-    } catch (error) {
-      console.error("Failed to share items:", error);
-      if (error instanceof Error && !error.message.includes("cancel")) {
-        toast.error(t("failedShareItems"));
-      }
-    }
-  };
-
   const startLongPress = useCallback(
     (itemId: string, type: "paper" | "book") => {
       longPressTimer.current = setTimeout(() => {
@@ -460,7 +427,8 @@ const MyDownloads = () => {
   }, []);
 
   const handleRedownload = async (cloudPaper: CloudDownloadType) => {
-    if (!isPremium && !canDownload) {
+    const paidNow = isPremium || (await subscriptionService.getStatus()).hasPremiumAccess;
+    if (!paidNow && !canDownload) {
       openDownloadLimitGate();
       return;
     }
@@ -528,38 +496,6 @@ const MyDownloads = () => {
         setDeletingId(null);
       }
     }, 300);
-  };
-
-  const handleSharePaper = async (paper: CachedPaper) => {
-    if (!isPremium) {
-      openPremiumGate();
-      return;
-    }
-    try {
-      if (!paper.localPath) {
-        toast.error("File not found locally.");
-        return;
-      }
-      await fileShareService.sharePaper(paper.localPath, paper.title);
-    } catch (err) {
-      console.error("Share failed:", err);
-    }
-  };
-
-  const handleShareBook = async (book: CachedBook) => {
-    if (!isPremium) {
-      openPremiumGate();
-      return;
-    }
-    try {
-      if (!book.localPath) {
-        toast.error("File not found locally.");
-        return;
-      }
-      await fileShareService.shareBook(book.localPath, book.title);
-    } catch (err) {
-      console.error("Share failed:", err);
-    }
   };
 
   const getFilteredItems = () => {
@@ -697,7 +633,20 @@ const MyDownloads = () => {
                         </p>
                       </div>
                     </div>
-                    <OpenLocalPdfButton variant="card" className="w-full mt-2" />
+                    <div className="flex gap-2 px-4 pb-3">
+                      <OpenLocalPdfButton variant="card" className="flex-1" />
+                      {Capacitor.isNativePlatform() && (
+                        <button
+                          type="button"
+                          onClick={handleBrowsePhonePDFs}
+                          disabled={isBrowsingPhone}
+                          className="flex-1 rounded-xl bg-secondary/50 hover:bg-secondary/70 border-2 border-border px-4 py-3 text-sm font-black text-foreground active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          {isBrowsingPhone ? t("browsing") || "Browsing..." : t("browsePhone") || "Browse Phone"}
+                        </button>
+                      )}
+                    </div>
                   </motion.div>
                 </>
               )}
@@ -944,17 +893,6 @@ const MyDownloads = () => {
                             <span className="text-[9px] font-black text-muted-foreground">
                               {paper.fileSizeFormatted}
                             </span>
-                            {!isMultiSelectMode && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSharePaper(paper);
-                                }}
-                                className="p-1 text-muted-foreground active:scale-90 transition-all"
-                              >
-                                <Share2 className="h-3 w-3" />
-                              </button>
-                            )}
                           </div>
                         </div>
                       </motion.div>
@@ -1019,7 +957,6 @@ const MyDownloads = () => {
                           isOpening={deletingId === book.id}
                           onClick={() => handlePaperClick(cached, "book")}
                           downloadStatus={downloadStatus}
-                          onShare={() => handleShareBook(cached)}
                         />
 
                         {/* Always visible Trash Delete Button overlay in downloads mode */}
@@ -1189,15 +1126,8 @@ const MyDownloads = () => {
                 <div className="px-5 py-4">
                   <div className="flex gap-3">
                     <button
-                      onClick={handleMultiShare}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-primary border-2 border-foreground text-primary-foreground font-black text-sm card-shadow active:scale-95 transition-transform"
-                    >
-                      <Share2 className="h-4 w-4" />
-                      {t("share")}
-                    </button>
-                    <button
                       onClick={handleMultiDelete}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-destructive border-2 border-foreground text-destructive-foreground font-black text-sm card-shadow active:scale-95 transition-transform"
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-destructive border-2 border-foreground text-destructive-foreground font-black text-sm card-shadow active:scale-95 transition-transform"
                     >
                       <Trash2 className="h-4 w-4" />
                       {t("delete")}

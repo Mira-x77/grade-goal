@@ -7,6 +7,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getGradingSystemFromState, getSchoolFromProfile } from '@/lib/subscription-profile';
 import { RedeemCodeSuccess } from './RedeemCodeSuccess';
+import { HowToGetCodeLink } from './HowToGetCodeLink';
+import { isGuestUser } from '@/lib/guest-auth';
+import AuthSheet from '@/components/AuthSheet';
 import premiumMascot from '@/assets/get-premium.jpeg';
 
 interface PremiumGateSheetProps {
@@ -34,6 +37,10 @@ export function PremiumGateSheet({ open, onClose, onSuccess, subjectName }: Prem
   };
 
   const handleActivate = async () => {
+    if (isGuestUser(user)) {
+      setError(t('premiumSignInRequired'));
+      return;
+    }
     if (code.replace(/-/g, '').length !== 12) {
       setError(t('enterValidCode'));
       return;
@@ -62,6 +69,16 @@ export function PremiumGateSheet({ open, onClose, onSuccess, subjectName }: Prem
     }
   };
 
+  if (open && isGuestUser(user)) {
+    return (
+      <AuthSheet
+        open={open}
+        onClose={(signedIn) => { if (!signedIn) onClose(); }}
+        message={t('premiumSignInRequired')}
+      />
+    );
+  }
+
   return (
     <>
       <Sheet open={open && !showSuccess} onBackdropClick={() => !loading && onClose()} zIndex={75}>
@@ -88,6 +105,7 @@ export function PremiumGateSheet({ open, onClose, onSuccess, subjectName }: Prem
             className="w-full rounded-2xl border-2 border-foreground bg-card px-4 py-4 text-xl font-black text-center tracking-widest"
           />
           {error && <p className="text-sm font-bold text-destructive text-center">{error}</p>}
+          <HowToGetCodeLink onNavigate={() => !loading && onClose()} />
           <button
             type="button"
             onClick={handleActivate}

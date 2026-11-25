@@ -12,7 +12,7 @@ GoStudy: Smart exam planner, past papers & grade calculator for students.
 GoStudy is your all-in-one academic success companion built for APC, French (AEFE/DNB/Baccalauréat), and Nigerian University students.
 
 📚 EXAM LIBRARY
-Browse and read 63+ real past exam papers — Baccalauréat, BEPC, Probatoire, DNB, and Nigerian University entrance exams — directly inside the app. No external browser needed.
+Browse and read 75+ real past exam papers — Baccalauréat, BEPC, Probatoire, DNB, and APC (Togo) exams — directly inside the app with preview thumbnails. No external browser needed.
 
 🎯 GRADE CALCULATOR & SIMULATOR
 Instantly calculate your semester average, simulate grade scenarios, and find out exactly what you need in upcoming exams to hit your target.
@@ -39,25 +39,66 @@ Start studying smarter today.
 
 ---
 
-## ✅ What's New in this Version (v1.2.0)
+## ✅ Release Notes — v1.2.0 (versionCode 7)
+
+Paste into Play Console → **Release → Release notes** (English).
+
+### English (recommended)
 ```
-• New: Onboarding-first flow — set up your profile before signing in
-• New: Google Sign-In available at end of onboarding
-• Improved: Library PDF viewer performance
-• Improved: Course pages now load offline with sample content
-• Fixed: Sign-in pages no longer appear twice
-• Fixed: App mascot redesigned — cleaner, modern look
-• Fixed: Storage permissions for Android 13+ devices
-• Fixed: Supabase database reconnected to official GoStudy backend
+What's new in Go Study! 1.2.0:
+
+• Exam library: 75+ APC past papers with preview thumbnails
+• Smarter library filters — papers match your class and série
+• Read PDFs in-app; download for offline study
+• Weekly schedule & study reminders on the home screen
+• Premium: redeem access codes; guide to get codes in Settings
+• Guest users are prompted to sign in before premium actions
+• Improved Settings, schedule, and How to Get Code pages
+• Bug fixes and performance improvements
+```
+
+### French (Français)
+```
+Nouveautés Go Study! 1.2.0 :
+
+• Bibliothèque : 75+ sujets APC avec aperçus
+• Filtres par classe et série
+• PDF intégrés et téléchargements hors ligne
+• Emploi du temps et rappels sur l'accueil
+• Premium : codes d'accès et guide dans Paramètres
+• Connexion requise pour les actions premium (invité)
+• Améliorations Paramètres, emploi du temps et pages d'aide
+• Corrections et performances
+```
+
+### Short version (if character limit)
+```
+75+ APC exam papers with previews, class/série filters, in-app PDFs, schedule reminders, premium codes, and sign-in improvements.
 ```
 
 ---
 
-## ✅ Sensitive Permissions Declaration (Enter in Play Console → App content → Sensitive app permissions)
+## ✅ Privacy Policy URL (Google Play)
 
-### REQUEST_INSTALL_PACKAGES
-**Justification:**
-GoStudy delivers in-app updates (new APK versions) directly to users without requiring them to open the Play Store. When an update is published by the admin, users receive an in-app notification and can download and install the update with one tap. This permission is used solely for this purpose and is triggered only by explicit user action.
+Use this in Play Console → Store listing → Privacy policy:
+
+**https://goostudy.vercel.app/privacy**
+
+(Static backup: **https://goostudy.vercel.app/privacy.html**)
+
+Website policy matches the in-app policy exactly (`PrivacyPolicy.tsx` / `src/lib/i18n.ts` legal strings). Source: `cible-your-smart-grade-guide/src/lib/privacy-policy-content.ts` — redeploy after edits:
+
+```powershell
+cd C:\Users\Skydrake\Documents\cible-your-smart-grade-guide
+npx vercel login   # once, if needed
+npx vercel --prod
+```
+
+---
+
+## ✅ Sensitive Permissions — REQUEST_INSTALL_PACKAGES
+
+**Removed in v1.2.1 (versionCode 8).** Updates go through Google Play only. Do not declare this permission.
 
 ---
 

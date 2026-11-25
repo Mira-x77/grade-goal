@@ -1,13 +1,14 @@
 package com.gostudy.student;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.ConsoleMessage;
-import android.webkit.WebChromeClient;
 import android.util.Log;
 import com.getcapacitor.BridgeActivity;
 import com.gostudy.student.plugins.AppInstaller;
+import com.gostudy.student.plugins.IncomingPdf;
 
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "MainActivity";
@@ -15,9 +16,58 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(AppInstaller.class);
+        registerPlugin(IncomingPdf.class);
+        grantIncomingPdfUri(getIntent());
         super.onCreate(savedInstanceState);
-        // Allow Chrome DevTools → chrome://inspect while debugging blank screen
         WebView.setWebContentsDebuggingEnabled(true);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        grantIncomingPdfUri(intent);
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().post(() ->
+                getBridge().eval("window.dispatchEvent(new CustomEvent('gostudy-incoming-pdf'))", value -> {}));
+        }
+    }
+
+    /** Keep the VIEW/SEND grant so JS Filesystem.readFile can load phone PDFs. */
+    private void grantIncomingPdfUri(Intent intent) {
+        if (intent == null) return;
+        Uri uri = intent.getData();
+        if (uri == null && Intent.ACTION_SEND.equals(intent.getAction())) {
+            uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+            if (uri != null) {
+                intent.setDataAndType(uri, "application/pdf");
+                setIntent(intent);
+            }
+        } else if (uri == null && Intent.ACTION_SEND_MULTIPLE.equals(intent.getAction())) {
+            java.util.ArrayList<Uri> uris = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+            if (uris != null && !uris.isEmpty()) {
+                for (Uri u : uris) {
+                    if (u != null && "content".equals(u.getScheme())) {
+                        try {
+                            getContentResolver().takePersistableUriPermission(
+                                u, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        } catch (SecurityException ignored) {}
+                    }
+                }
+                if (uris.get(0) != null) {
+                    uri = uris.get(0);
+                    intent.setDataAndType(uri, "application/pdf");
+                    setIntent(intent);
+                }
+            }
+        }
+        if (uri == null || !"content".equals(uri.getScheme())) return;
+        try {
+            getContentResolver().takePersistableUriPermission(
+                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (SecurityException ignored) {
+            // Temporary FLAG_GRANT_READ_URI_PERMISSION from Files is enough for this session.
+        }
     }
 
     @Override
@@ -62,16 +112,8 @@ public class MainActivity extends BridgeActivity {
             webView.setLongClickable(false);
             webView.setHapticFeedbackEnabled(false);
 
-            // Add console message handler for debugging
-            webView.setWebChromeClient(new WebChromeClient() {
-                @Override
-                public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                    Log.d(TAG, "WebView Console: " + consoleMessage.message() +
-                        " -- From line " + consoleMessage.lineNumber() +
-                        " of " + consoleMessage.sourceId());
-                    return true;
-                }
-            });
+            // Do not replace WebChromeClient — Capacitor's client opens the
+            // system folder picker for <input type="file">.
 
             Log.d(TAG, "WebView configured successfully");
         }

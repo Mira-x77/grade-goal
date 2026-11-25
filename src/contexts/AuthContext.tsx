@@ -5,9 +5,15 @@ import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { useNavigate } from "react-router-dom";
 import { restoreUserData as restoreUserDataFromCloud, pushLocalData as pushLocalDataToCloud } from "@/services/hybridSyncService";
-import { navigateAfterAuthSession } from "@/lib/auth-config";
+import {
+  handleNativeOAuthRedirect,
+  navigateAfterAuthSession,
+  withTimeout,
+} from "@/lib/auth-config";
 import { Capacitor } from "@capacitor/core";
 import { loadState } from "@/lib/storage";
+import { clearLocalSubscription } from "@/services/subscriptionService";
+import { persistSignedInAccount, clearSignedInAccount } from "@/lib/guest-auth";
 
 interface AuthContextType {
   session: Session | null;
@@ -37,6 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Prevents double-sync when handleAuthDeepLink already called syncOnLogin and
   // onAuthStateChange fires SIGNED_IN immediately after for the same session.
   const syncInProgressRef = useRef(false);
+  const explicitSignOutRef = useRef(false);
   const navigate = useNavigate();
 
   const navigateAfterAuth = async (userId?: string) => {
@@ -44,56 +51,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleAuthDeepLink = async (url: string) => {
-    if (!url.includes("auth/callback") && !url.includes("access_token") && !url.includes("code=")) {
-      return false;
-    }
-
     await Browser.close().catch(() => {});
 
-    let urlObj: URL;
-    try {
-      urlObj = new URL(url);
-    } catch {
-      urlObj = new URL(url.replace(/^([a-z0-9.+-]+):\/\//i, "https://"));
-    }
+    const { handled, session, error } = await handleNativeOAuthRedirect(url);
+    if (!handled) return false;
 
-    const code = urlObj.searchParams.get("code");
-    if (code) {
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-      if (error) {
-        console.error("[AuthContext] PKCE exchange failed:", error.message);
-        navigate("/welcome", { replace: true });
-        return true;
-      }
-      // Restore cloud data BEFORE navigating so localStorage is populated when
-      // navigateAfterAuthSession checks it and when LandingRoute renders.
-      const userId = data.session?.user?.id;
-      if (userId) await syncOnLogin(userId);
-      await navigateAfterAuth(userId);
+    if (!session) {
+      console.error("[AuthContext] OAuth redirect failed:", error);
+      navigate("/welcome", { replace: true });
       return true;
     }
 
-    const hashParams = new URLSearchParams(urlObj.hash.replace("#", ""));
-    const accessToken = hashParams.get("access_token");
-    const refreshToken = hashParams.get("refresh_token");
-    if (accessToken && refreshToken) {
-      const { data, error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-      if (error) {
-        console.error("[AuthContext] setSession failed:", error.message);
-        navigate("/welcome", { replace: true });
-        return true;
-      }
-      // Restore cloud data BEFORE navigating (same reason as above).
-      const userId = data.session?.user?.id;
-      if (userId) await syncOnLogin(userId);
-      await navigateAfterAuth(userId);
-      return true;
-    }
-
-    return false;
+    const userId = session.user.id;
+    await syncOnLogin(userId);
+    await navigateAfterAuth(userId);
+    return true;
   };
 
   /**
@@ -124,7 +96,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const cloudState = await (async () => {
         try {
           const { loadAppStateFromCloud } = await import('@/services/cloudSyncService');
-          return await loadAppStateFromCloud(userId);
+          return await withTimeout(
+            loadAppStateFromCloud(userId),
+            5000,
+            "loadAppStateFromCloud",
+          );
         } catch {
           return null;
         }
@@ -182,7 +158,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       clearTimeout(loadingTimeout);
       setSession(session);
-      if (session?.user) {
+      if (session?.user && !session.user.is_anonymous) {
+        persistSignedInAccount(session.user);
+        syncInBackground(session.user.id);
+      } else if (session?.user) {
         syncInBackground(session.user.id);
       }
       setLoading(false);
@@ -205,19 +184,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let appStateListener: { remove: () => void } | null = null;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      if (session && !session.user.is_anonymous) {
-        localStorage.removeItem("guest_mode");
+      // Token refresh can fail offline and emit SIGNED_OUT. Keep the local account
+      // so downloaded files and tracker still work until they are online again.
+      if (event === "SIGNED_OUT" && !explicitSignOutRef.current && !navigator.onLine) {
+        console.warn("[AuthContext] Ignoring offline SIGNED_OUT");
+        return;
       }
-      if (event === "SIGNED_IN" && session?.user && !session.user.is_anonymous) {
+
+      setSession(session);
+      if (session?.user && !session.user.is_anonymous) {
+        persistSignedInAccount(session.user);
+      }
+      if (event === "SIGNED_IN" && session?.user) {
         if (initialSessionRestoredRef.current) {
           await syncOnLogin(session.user.id);
         }
       }
       if (event === "SIGNED_OUT") {
+        explicitSignOutRef.current = false;
+        clearSignedInAccount();
         localStorage.removeItem("scoretarget_state");
         localStorage.removeItem("scoretarget_history");
         localStorage.removeItem("scoretarget_streak");
+        clearLocalSubscription();
       }
     });
 
@@ -263,6 +252,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signOut = async () => {
+    explicitSignOutRef.current = true;
+    clearSignedInAccount();
     await supabase.auth.signOut();
   };
 

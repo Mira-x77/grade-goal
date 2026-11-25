@@ -2,13 +2,18 @@ import { z } from 'zod';
 
 // Type unions
 export type ClassLevel =
+  | "Primaire" | "CP1" | "CP2" | "CE1" | "CE2" | "CM1" | "CM2" | "CEPD"
   | "6ème" | "5ème" | "4ème" | "3ème"
   | "2nde"
   | "2nde A4" | "2nde CD" | "2nde E" | "2nde F" | "2nde G"
   | "1ère" | "1ère A4" | "1ère C" | "1ère D" | "1ère E" | "1ère F" | "1ère G"
-  | "Tle"  | "Tle A4"  | "Tle C"  | "Tle D"  | "Tle E"  | "Tle F"  | "Tle G";
+  | "Tle"  | "Tle A4"  | "Tle C"  | "Tle D"  | "Tle E"  | "Tle F"  | "Tle G"
+  | "CAP" | "Autre";
 
-export type ExamType = "Baccalauréat" | "Composition" | "Devoir" | "Interro" | "midterm" | "Practice" | "Revision";
+export type ExamType =
+  | "Baccalauréat" | "Probatoire" | "BEPC" | "CEPD" | "CAP"
+  | "Concours" | "Annales" | "Composition" | "Devoir" | "Interro"
+  | "Exercices";
 
 export type Session = "1st Semester" | "2nd Semester" | "Annual" | "term1" | "term2" | "term3" | "Regular";
 
@@ -32,6 +37,10 @@ export interface ExamPaper {
   tags: string[];
   description?: string;
   preview_url?: string;
+  /** Every class/série the paper belongs to (multi-value title, e.g. "Tle C, Tle D"). */
+  classLevels?: ClassLevel[];
+  /** Every subject the paper covers ("Histoire" + "Géographie" for an HG paper). */
+  subjects?: string[];
 }
 
 // Cached paper interface (IndexedDB)
@@ -50,11 +59,16 @@ export interface CachedPaper {
   tags: string[];
   description?: string;
   preview_url?: string;
+  fileUrl?: string;
+  fileName?: string;
+  contentHash?: string;
   isDownloaded: boolean;
   localPath?: string;
   localThumbnailPath?: string;
   downloadedAt?: string;
   lastFetched: string;
+  classLevels?: ClassLevel[];
+  subjects?: string[];
 }
 
 // Downloaded paper interface (IndexedDB)
@@ -125,7 +139,10 @@ export const ClassLevelSchema = z.enum([
   "Tle",  "Tle A4",  "Tle C",  "Tle D",  "Tle E",  "Tle F",  "Tle G",
 ]);
 
-export const ExamTypeSchema = z.enum(["Baccalauréat", "Composition", "Devoir", "Interro", "midterm", "Practice", "Revision"]);
+export const ExamTypeSchema = z.enum([
+  "Baccalauréat", "Probatoire", "BEPC", "CEPD", "CAP", "Concours", "Annales",
+  "Composition", "Devoir", "Interro", "Exercices",
+]);
 
 export const SessionSchema = z.enum(["1st Semester", "2nd Semester", "Annual", "term1", "term2", "term3", "Regular"]);
 
@@ -156,9 +173,11 @@ export interface LibraryBook {
   title: string;
   author: string | null;
   subject: string;
+  subjects?: string[];
   category: string;
   system: string;
   class_level: string | null;
+  class_levels?: string[] | null;
   description: string | null;
   cover_url: string | null;
   file_url: string;
@@ -177,12 +196,20 @@ export interface CachedBook {
   title: string;
   author: string | null;
   subject: string;
+  subjects?: string[];
   category: string;
   fileSize: number;
   fileSizeFormatted: string;
   tags: string[];
   downloads: number;
   publishedYear: number | null;
+  fileUrl?: string;
+  fileName?: string;
+  coverUrl?: string | null;
+  description?: string | null;
+  classLevel?: string | null;
+  classLevels?: string[] | null;
+  system?: string;
   isDownloaded: boolean;
   localPath?: string;
   downloadedAt?: string;

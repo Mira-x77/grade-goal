@@ -1,4 +1,4 @@
-import { BookOpen, FileText, Download, Check, Share2, X } from "lucide-react";
+import { BookOpen, Download, Check, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { LibraryBook, UnifiedDownloadProgress, DownloadStatus } from '@/types/exam-library';
 
@@ -10,7 +10,6 @@ interface BookCardProps {
   downloadProgress?: UnifiedDownloadProgress;
   onDownload?: () => void;
   onCancelDownload?: () => void;
-  onShare?: () => void;
 }
 
 export function BookCard({ 
@@ -21,7 +20,6 @@ export function BookCard({
   downloadProgress, 
   onDownload, 
   onCancelDownload, 
-  onShare 
 }: BookCardProps) {
   const isDownloaded = downloadStatus?.isDownloaded || false;
   const isDownloading = downloadStatus?.isDownloading || false;
@@ -33,13 +31,6 @@ export function BookCard({
       onCancelDownload();
     } else if (!isDownloaded && onDownload) {
       onDownload();
-    }
-  };
-
-  const handleShareClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onShare) {
-      onShare();
     }
   };
 
@@ -104,7 +95,6 @@ export function BookCard({
 
         {/* Action buttons */}
         <div className="flex gap-2">
-          {/* Download button */}
           <button
             onClick={handleDownloadClick}
             disabled={isDownloaded}
@@ -142,17 +132,6 @@ export function BookCard({
               </>
             )}
           </button>
-
-          {/* Share button - only show if downloaded */}
-          {isDownloaded && onShare && (
-            <button
-              onClick={handleShareClick}
-              className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-black bg-card border border-foreground text-foreground transition-all active:scale-95"
-            >
-              <Share2 className="h-3 w-3" />
-              Share
-            </button>
-          )}
         </div>
       </div>
     </motion.div>

@@ -1,16 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Download, AlertCircle, Eye, Crown, Lock, X, Check, Share2, ArrowLeft } from "lucide-react";
+import { Download, AlertCircle, Eye, Crown, Lock, X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExamPaper, DownloadProgress } from "@/types/exam-library";
+import { formatPaperClassLabel } from "@/lib/library-filters";
+import { CollapsiblePageHeader } from "@/components/CollapsiblePageHeader";
 import { examService } from "@/services/examService";
 import { downloadService } from "@/services/downloadService";
-import { fileShareService } from "@/services/fileShareService";
 import { subscriptionService } from "@/services/subscriptionService";
 import { PaymentSheet } from "@/components/subscription/PaymentSheet";
 import { PlanSelectSheet } from "@/components/subscription/PlanSelectSheet";
 import { InAppPDFViewer } from "@/components/exam/InAppPDFViewer";
 import { useDownloadQuota } from "@/hooks/useDownloadQuota";
+import { useLibraryContentGate } from "@/hooks/useLibraryContentGate";
 import { DownloadQuotaDisplay } from "@/components/DownloadQuotaDisplay";
 import { toast } from "sonner";
 import TaskBar from "@/components/TaskBar";
@@ -30,6 +31,7 @@ const PaperDetail = () => {
   const { t, language } = useLanguage();
   const { isPremium, openPremiumGate, openDownloadLimitGate } = usePremium();
   const { canDownload, refreshQuota } = useDownloadQuota();
+  const { canView, requireViewAccess } = useLibraryContentGate();
 
   const [paper, setPaper] = useState<ExamPaper | null>(null);
   const [isDownloaded, setIsDownloaded] = useState(false);
@@ -100,13 +102,15 @@ const PaperDetail = () => {
       toast.error(t("failedOpenPDFDesc"));
       return;
     }
-    
-    // Check if user has reached download limit and is not premium
-    if (!isPremium && !canDownload) {
-      openDownloadLimitGate();
-      return;
-    }
-    
+    if (!requireViewAccess({
+      alreadyOnDevice: isDownloaded,
+      onSuccess: () => {
+        setError(null);
+        setStreamPdfUrl(paper.fileUrl);
+        setShowPDFViewer(true);
+      },
+    })) return;
+
     setError(null);
     setStreamPdfUrl(paper.fileUrl);
     setShowPDFViewer(true);
@@ -114,8 +118,11 @@ const PaperDetail = () => {
 
   const handleDownload = async () => {
     if (!paper) return;
-    if (!isPremium && !canDownload) {
-      openDownloadLimitGate();
+    const paidNow = isPremium || (await subscriptionService.getStatus()).hasPremiumAccess;
+    if (!paidNow && !canDownload) {
+      openDownloadLimitGate(() => {
+        void handleDownload();
+      });
       return;
     }
     try {
@@ -134,7 +141,9 @@ const PaperDetail = () => {
       console.error("Download failed:", err);
       const errorMessage = err instanceof Error ? err.message : t("downloadFailedRetry");
       if (errorMessage.includes('Download limit reached') || errorMessage.includes('limit reached')) {
-        openDownloadLimitGate();
+        openDownloadLimitGate(() => {
+          void handleDownload();
+        });
       } else {
         setError(errorMessage);
         toast.error(t("downloadFailedRetry"));
@@ -143,9 +152,12 @@ const PaperDetail = () => {
     }
   };
 
-  const handleDownloadClick = () => {
-    if (!isPremium && !canDownload) {
-      openDownloadLimitGate();
+  const handleDownloadClick = async () => {
+    const paidNow = isPremium || (await subscriptionService.getStatus()).hasPremiumAccess;
+    if (!paidNow && !canDownload) {
+      openDownloadLimitGate(() => {
+        void handleDownload();
+      });
       return;
     }
     void handleDownload();
@@ -158,28 +170,6 @@ const PaperDetail = () => {
       setDownloadProgress(null);
     } catch (err) {
       console.error("Failed to cancel download:", err);
-    }
-  };
-
-  const handleShare = async () => {
-    if (!paper || !isPremium) {
-      openPremiumGate();
-      return;
-    }
-    if (!isDownloaded) {
-      toast.error(t("downloadPDF"));
-      return;
-    }
-    try {
-      const downloadInfo = await downloadService.getDownloadInfo(paper.id);
-      if (downloadInfo?.localPath) {
-        await fileShareService.sharePaper(downloadInfo.localPath, paper.title);
-      }
-    } catch (err) {
-      if (err instanceof Error && !err.message.toLowerCase().includes('cancel')) {
-        console.error("Share failed:", err);
-        toast.error(t("shareFailed"));
-      }
     }
   };
 
@@ -224,35 +214,30 @@ const PaperDetail = () => {
 
   return (
     <div className="flex-1 bg-background min-h-screen overflow-x-hidden w-full max-w-[100vw] pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
-      <div className="content-col p-4 safe-area-top min-w-0">
-        {/* Back button — fixed top left */}
-        <button
-          onClick={() => navigate(-1)}
-          className="fixed top-[max(1rem,env(safe-area-inset-top))] left-[max(1rem,env(safe-area-inset-left))] z-50 h-10 w-10 flex items-center justify-center rounded-full bg-card border-2 border-foreground card-shadow active:scale-95 transition-transform"
-          aria-label={t("goBack")}
-        >
-          <ArrowLeft className="h-5 w-5 text-foreground" />
-        </button>
-        <div className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border mb-6 mt-12 min-w-0">
-          <div className="p-4 sm:p-6">
-            <h1 className="text-xl sm:text-2xl font-black mb-4 leading-tight break-words pr-2">{paper.title}</h1>
-            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-x-3 gap-y-3 text-sm min-w-0">
-              <div className="text-muted-foreground shrink-0">{t("subject")}</div>
-              <div className="font-bold text-right break-words min-w-0">{paper.subject}</div>
-              <div className="text-muted-foreground shrink-0">{t("classLevel")}</div>
-              <div className="font-bold text-right break-words min-w-0">{paper.classLevel}</div>
-              <div className="text-muted-foreground shrink-0">{t("year")}</div>
-              <div className="font-bold text-right break-words min-w-0">{paper.year}</div>
-              <div className="text-muted-foreground shrink-0">{t("examType")}</div>
-              <div className="font-bold text-right break-words min-w-0">{paper.examType}</div>
-              <div className="text-muted-foreground shrink-0">{t("fileSize")}</div>
-              <div className="font-bold text-right break-words min-w-0">{paper.fileSizeFormatted}</div>
-              <div className="text-muted-foreground shrink-0">{t("downloads")}</div>
-              <div className="font-bold text-right break-words min-w-0">{paper.downloads ?? 0}</div>
-            </div>
-          </div>
+      <CollapsiblePageHeader
+        title={paper.title}
+        onBack={() => navigate(-1)}
+        backLabel={t("goBack")}
+        expandLabel={t("showDetails")}
+        collapseLabel={t("hideDetails")}
+      >
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-x-3 gap-y-2 text-sm min-w-0">
+          <div className="text-muted-foreground shrink-0">{t("subject")}</div>
+          <div className="font-bold text-right break-words min-w-0">{paper.subject}</div>
+          <div className="text-muted-foreground shrink-0">{t("classLevel")}</div>
+          <div className="font-bold text-right break-words min-w-0">{formatPaperClassLabel(paper)}</div>
+          <div className="text-muted-foreground shrink-0">{t("year")}</div>
+          <div className="font-bold text-right break-words min-w-0">{paper.year}</div>
+          <div className="text-muted-foreground shrink-0">{t("examType")}</div>
+          <div className="font-bold text-right break-words min-w-0">{paper.examType}</div>
+          <div className="text-muted-foreground shrink-0">{t("fileSize")}</div>
+          <div className="font-bold text-right break-words min-w-0">{paper.fileSizeFormatted}</div>
+          <div className="text-muted-foreground shrink-0">{t("downloads")}</div>
+          <div className="font-bold text-right break-words min-w-0">{paper.downloads ?? 0}</div>
         </div>
+      </CollapsiblePageHeader>
 
+      <div className="content-col p-4 min-w-0">
         {/* Download Quota Display */}
         <div className="mb-4">
           <DownloadQuotaDisplay
@@ -269,10 +254,10 @@ const PaperDetail = () => {
         )}
 
         <div className="space-y-3 min-w-0">
-          {/* View / Download / Share — single row */}
-          <div className="grid grid-cols-3 gap-2 min-w-0 w-full">
+          {/* View / Download */}
+          <div className="grid grid-cols-2 gap-2 min-w-0 w-full">
             {/* View Button - Locked when download limit reached for free users */}
-            {!isPremium && !canDownload ? (
+            {!canView ? (
               <button
                 onClick={() => openDownloadLimitGate()}
                 className="flex flex-col items-center justify-center gap-1.5 min-w-0 bg-muted border-2 border-border py-3 px-1 rounded-2xl font-black text-[11px] sm:text-xs text-muted-foreground text-center leading-tight active:scale-[0.98] transition-all"
@@ -330,19 +315,6 @@ const PaperDetail = () => {
                 <span className="w-full line-clamp-2 px-0.5">{t("downloadPDF")}</span>
               </button>
             )}
-
-            <button
-              onClick={handleShare}
-              disabled={!isPremium || !isDownloaded}
-              className={`flex flex-col items-center justify-center gap-1.5 min-w-0 py-3 px-1 rounded-2xl font-black text-[11px] sm:text-xs text-center leading-tight active:scale-[0.98] transition-all card-shadow ${
-                isPremium && isDownloaded
-                  ? 'bg-card border-2 border-foreground text-foreground'
-                  : 'bg-muted border-2 border-border text-muted-foreground opacity-60 cursor-default'
-              }`}
-            >
-              <Share2 className="h-5 w-5 shrink-0" />
-              <span className="w-full truncate px-0.5">{t("share")}</span>
-            </button>
           </div>
 
           {/* Premium card — scrollable; bottom bar is fixed separately */}
@@ -403,8 +375,6 @@ const PaperDetail = () => {
           subjectName={paper?.subject}
           onClose={() => { setShowPDFViewer(false); setStreamPdfUrl(null); }}
           onPremiumNudge={() => { setShowPDFViewer(false); setStreamPdfUrl(null); setPrepOpen(true); }}
-          showShare={isPremium && isDownloaded}
-          onShare={handleShare}
         />
       )}
 

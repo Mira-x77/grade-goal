@@ -11,7 +11,6 @@ interface BookGridProps {
   downloadProgresses?: Map<string, UnifiedDownloadProgress>;
   onDownload?: (book: LibraryBook) => void;
   onCancelDownload?: (bookId: string) => void;
-  onShare?: (book: LibraryBook) => void;
 }
 
 export function BookGrid({ 
@@ -23,7 +22,6 @@ export function BookGrid({
   downloadProgresses, 
   onDownload, 
   onCancelDownload, 
-  onShare 
 }: BookGridProps) {
   if (loading) {
     return (
@@ -62,7 +60,6 @@ export function BookGrid({
           downloadProgress={downloadProgresses?.get(book.id)}
           onDownload={onDownload ? () => onDownload(book) : undefined}
           onCancelDownload={onCancelDownload ? () => onCancelDownload(book.id) : undefined}
-          onShare={onShare ? () => onShare(book) : undefined}
         />
       ))}
     </div>

@@ -1,34 +1,36 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { BookOpen, LayoutDashboard, Upload, FileText, BarChart3, LogOut, Ticket, Bell, Settings, Sparkles, GraduationCap, Lightbulb, Smartphone } from 'lucide-react';
-import { toast } from 'sonner';
+import { BookOpen, LayoutDashboard, Upload, FileText, BarChart3, Ticket, Bell, Settings, Sparkles, GraduationCap, Lightbulb, Smartphone, Users, AlertTriangle, Cloud, Database } from 'lucide-react';
+import { hasServiceRoleKey } from '../lib/supabaseClient';
+import { getR2Diagnostics } from '../lib/r2Client';
+import { useStorageTarget } from '../lib/storage-target';
+import { useSupabaseStatus } from '../lib/supabase-status';
+import SupabaseNotice from './SupabaseNotice';
 
 export default function Layout() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isSubscriptionPage = location.pathname === '/subscription-codes';
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast.success('Logged out successfully');
-      navigate('/login');
-    } catch (error) {
-      toast.error('Failed to logout');
-    }
-  };
+  const r2 = getR2Diagnostics();
+  const [target] = useStorageTarget();
+  const supabaseStatus = useSupabaseStatus();
+  const pageHasOwnNotice =
+    location.pathname === '/' ||
+    location.pathname === '/papers' ||
+    location.pathname === '/analytics';
 
   const navItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/upload', icon: Upload, label: 'Upload' },
-    { path: '/papers', icon: FileText, label: 'Papers' },
-    { path: '/courses', icon: GraduationCap, label: 'Courses' },
+    { path: '/papers', icon: FileText, label: 'Library' },
+    { path: '/courses', icon: GraduationCap, label: 'Feeds / Actus' },
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/notifications', icon: Bell, label: 'Notifications' },
     { path: '/feedback', icon: Lightbulb, label: 'Feedback' },
     { path: '/app-updates', icon: Smartphone, label: 'App Updates' },
     { path: '/subscription-codes', icon: Ticket, label: 'Subscriptions' },
+    { path: '/users', icon: Users, label: 'Students' },
     { path: '/app-settings', icon: Settings, label: 'App Settings' },
   ];
 
@@ -92,13 +94,9 @@ export default function Layout() {
               <p className="text-xs text-gray-500">Administrator</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
-          >
-            <LogOut className="h-5 w-5" />
-            <span className="font-semibold">Logout</span>
-          </button>
+          <p className="px-4 py-2 text-xs text-gray-500">
+            Local admin tool — no sign-in required
+          </p>
         </div>
       </aside>
 
@@ -109,13 +107,14 @@ export default function Layout() {
           <h2 className="text-xl font-bold text-white">
             {location.pathname === '/' && 'Dashboard'}
             {location.pathname === '/upload' && 'Upload Papers'}
-            {location.pathname === '/papers' && 'Manage Papers'}
-            {location.pathname === '/courses' && 'Course Management'}
+            {location.pathname === '/papers' && 'Manage Library'}
+            {location.pathname === '/courses' && 'Feeds / Actus'}
             {location.pathname === '/analytics' && 'Analytics'}
             {location.pathname === '/notifications' && 'Notifications'}
             {location.pathname === '/feedback' && 'Feedback Management'}
             {location.pathname === '/app-updates' && 'App Updates'}
             {location.pathname === '/subscription-codes' && 'Subscription Codes'}
+            {location.pathname === '/users' && 'Students & Accounts'}
             {location.pathname === '/app-settings' && 'App Settings'}
           </h2>
 
@@ -132,6 +131,76 @@ export default function Layout() {
         </div>
 
         <div className="p-8">
+          {!hasServiceRoleKey() && (
+            <div className="mb-6 flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-100">
+              <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5 text-amber-400" />
+              <div className="text-sm">
+                <p className="font-semibold text-amber-200">Service role key missing</p>
+                <p className="mt-1 text-amber-100/90">
+                  Add <code className="rounded bg-black/30 px-1">VITE_SUPABASE_SERVICE_ROLE_KEY</code> to{' '}
+                  <code className="rounded bg-black/30 px-1">exam-library-admin/.env</code> (Supabase → Settings → API → service_role), then restart the dev server. Without it, Students and device counts won&apos;t load.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div
+            className={`mb-6 flex items-start gap-3 rounded-lg border px-4 py-3 ${
+              !r2.configured
+                ? 'border-amber-500/40 bg-amber-500/10 text-amber-100'
+                : target === 'r2'
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-100'
+                  : 'border-sky-500/40 bg-sky-500/10 text-sky-100'
+            }`}
+          >
+            {!r2.configured ? (
+              <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5 text-amber-400" />
+            ) : target === 'r2' ? (
+              <Cloud className="h-5 w-5 shrink-0 mt-0.5 text-emerald-400" />
+            ) : (
+              <Database className="h-5 w-5 shrink-0 mt-0.5 text-sky-400" />
+            )}
+            <div className="text-sm">
+              <p className="font-semibold">
+                Upload destination: {!r2.configured ? 'Supabase Storage' : target === 'r2' ? 'Cloudflare R2' : 'Supabase Storage'}
+              </p>
+              <p
+                className={`mt-1 ${
+                  !r2.configured
+                    ? 'text-amber-100/90'
+                    : target === 'r2'
+                      ? 'text-emerald-100/90'
+                      : 'text-sky-100/90'
+                }`}
+              >
+                {!r2.configured ? (
+                  <>
+                    R2 is not configured yet. Add{' '}
+                    <code className="rounded bg-black/30 px-1">VITE_R2_ACCOUNT_ID</code>,{' '}
+                    <code className="rounded bg-black/30 px-1">VITE_R2_ACCESS_KEY_ID</code>,{' '}
+                    <code className="rounded bg-black/30 px-1">VITE_R2_SECRET_ACCESS_KEY</code> and{' '}
+                    <code className="rounded bg-black/30 px-1">VITE_R2_PUBLIC_URL</code> to{' '}
+                    <code className="rounded bg-black/30 px-1">exam-library-admin/.env</code>, then restart the dev server.
+                  </>
+                ) : (
+                  <>
+                    You can switch destination before each upload. Bucket{' '}
+                    <code className="rounded bg-black/30 px-1">{r2.bucket}</code> · public base{' '}
+                    <code className="rounded bg-black/30 px-1">{r2.publicUrl}</code>
+                  </>
+                )}
+              </p>
+              {supabaseStatus === 'restricted' && (
+                <p className="mt-1 font-semibold text-amber-200">
+                  New uploads are blocked: the PDF can be stored in R2, but the database
+                  row cannot be created until Supabase is upgraded.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {!pageHasOwnNotice && <SupabaseNotice status={supabaseStatus} className="mb-6" />}
+
           <Outlet />
         </div>
 

@@ -1,6 +1,12 @@
 import { supabase } from '../lib/supabaseClient';
 import { storageAdapter } from '../lib/storage-adapter';
 import {
+  fetchCatalogueBooks,
+  fetchCataloguePapers,
+  fetchCatalogueSummary,
+  type LibraryBook,
+} from '../lib/r2-catalog';
+import {
   ExamPaper,
   StorageAnalytics,
   DownloadAnalytics,
@@ -12,6 +18,10 @@ import {
 } from '../types';
 
 import { formatBytes } from '../lib/integrity';
+import { checkSupabaseStatus } from '../lib/supabase-status';
+
+/** Where the last library read came from. */
+export type ContentSource = 'supabase' | 'r2-catalogue' | 'none';
 
 export interface NewExamPaper {
   title: string;
@@ -49,6 +59,19 @@ export function validatePDFFile(file: File): { valid: boolean; error?: string } 
 }
 
 class AdminService {
+  private paperSource: ContentSource = 'none';
+  private bookSource: ContentSource = 'none';
+
+  /** Where the papers shown in the admin came from. */
+  getPaperSource(): ContentSource {
+    return this.paperSource;
+  }
+
+  /** Where the books shown in the admin came from. */
+  getBookSource(): ContentSource {
+    return this.bookSource;
+  }
+
   /**
    * Upload PDF to Supabase Storage
    * Returns storage URL
@@ -80,7 +103,7 @@ class AdminService {
 
     const storagePath = `${sanitizedClassLevel}/${sanitizedSubject}/${metadata.year}/${sanitizedFileName}`;
 
-    console.log('📤 Uploading PDF to Supabase Storage:', storagePath);
+    console.log(`📤 Uploading PDF to ${storageAdapter.providerLabel}:`, storagePath);
 
     // Upload file using storage adapter
     const downloadURL = await storageAdapter.uploadFile(storagePath, file);
@@ -212,28 +235,45 @@ class AdminService {
 
   /**
    * Get storage analytics
+   *
+   * Falls back to the R2 catalogue totals when the database is unreachable or
+   * restricted (HTTP 402), so the dashboard shows the real library size.
    */
   async getStorageAnalytics(): Promise<StorageAnalytics> {
-    const { data: papers, error } = await supabase
-      .from('exam_papers')
-      .select('file_size');
+    let papers: Array<{ file_size: number | null }> | null = null;
+    let error: unknown = null;
 
-    if (error) {
-      console.error('Failed to fetch papers for analytics:', error);
+    if ((await checkSupabaseStatus()) === 'ok') {
+      const response = await supabase.from('exam_papers').select('file_size');
+      papers = response.data;
+      error = response.error;
+    }
+
+    if (!error && papers && papers.length > 0) {
+      const totalSize = papers.reduce((sum, p) => sum + (p.file_size || 0), 0);
       return {
         id: 'storage',
-        totalFiles: 0,
-        totalSizeBytes: 0,
+        totalFiles: papers.length,
+        totalSizeBytes: totalSize,
         lastUpdated: new Date()
       };
     }
 
-    const totalSize = papers?.reduce((sum, p) => sum + (p.file_size || 0), 0) || 0;
+    const summary = await fetchCatalogueSummary();
+    if (summary.files > 0) {
+      console.warn('⚠️ Using R2 catalogue for storage analytics:', summary);
+      return {
+        id: 'storage',
+        totalFiles: summary.files,
+        totalSizeBytes: summary.totalBytes,
+        lastUpdated: summary.generatedAt ?? new Date()
+      };
+    }
 
     return {
       id: 'storage',
-      totalFiles: papers?.length || 0,
-      totalSizeBytes: totalSize,
+      totalFiles: 0,
+      totalSizeBytes: 0,
       lastUpdated: new Date()
     };
   }
@@ -242,14 +282,35 @@ class AdminService {
    * Get download analytics
    */
   async getDownloadAnalytics(): Promise<DownloadAnalytics> {
-    const { data: papers, error } = await supabase
-      .from('exam_papers')
-      .select('id, title, downloads, subject')
-      .order('downloads', { ascending: false })
-      .limit(10);
+    let papers: Array<{ id: string; title: string; downloads: number | null; subject: string | null }> | null = null;
+    let error: unknown = null;
 
-    if (error) {
-      console.error('Failed to fetch download analytics:', error);
+    if ((await checkSupabaseStatus()) === 'ok') {
+      const response = await supabase
+        .from('exam_papers')
+        .select('id, title, downloads, subject')
+        .order('downloads', { ascending: false })
+        .limit(10);
+      papers = response.data;
+      error = response.error;
+    }
+
+    // No database rows (restricted project or empty table): use the catalogue.
+    if (error || !papers || papers.length === 0) {
+      const cataloguePapers = await fetchCataloguePapers();
+      if (cataloguePapers.length > 0) {
+        return {
+          id: 'downloads',
+          totalDownloads: cataloguePapers.reduce((sum, p) => sum + (p.downloads || 0), 0),
+          downloadsBySubject: {},
+          topPapers: cataloguePapers.slice(0, 10).map(p => ({
+            paperId: p.id,
+            title: p.title,
+            downloads: p.downloads || 0
+          })),
+          lastUpdated: new Date()
+        };
+      }
       return {
         id: 'downloads',
         totalDownloads: 0,
@@ -342,25 +403,42 @@ class AdminService {
   }
 
   /**
-   * Get all papers
+   * Get all papers.
+   *
+   * Reads Supabase first; when the project is restricted (402) or the table is
+   * empty, the R2 catalogue is used so the admin shows the real 319 papers.
    */
   async getAllPapers(): Promise<ExamPaper[]> {
-    console.log('📥 Admin: Fetching all papers from Supabase...');
-    
-    const { data, error } = await supabase
-      .from('exam_papers')
-      .select('*')
-      .order('created_at', { ascending: false });
+    console.log('📥 Admin: Fetching all papers...');
 
-    if (error) {
-      console.error('❌ Admin: Failed to fetch papers:', error);
+    let data: any[] | null = null;
+    let error: unknown = null;
+
+    if ((await checkSupabaseStatus()) === 'ok') {
+      const response = await supabase
+        .from('exam_papers')
+        .select('*')
+        .order('created_at', { ascending: false });
+      data = response.data;
+      error = response.error;
+    }
+
+    if (error || !data || data.length === 0) {
+      if (error) console.warn('⚠️ Admin: Supabase papers unavailable');
+      const cataloguePapers = await fetchCataloguePapers();
+      if (cataloguePapers.length > 0) {
+        this.paperSource = 'r2-catalogue';
+        console.info(`📚 Admin: Using R2 catalogue — ${cataloguePapers.length} papers`);
+        return cataloguePapers;
+      }
+      this.paperSource = 'none';
       return [];
     }
 
-    console.log(`✅ Admin: Fetched ${data?.length || 0} papers from Supabase`);
-    console.log('📋 Admin: First 3 papers:', data?.slice(0, 3));
+    this.paperSource = 'supabase';
+    console.info(`✅ Admin: Fetched ${data.length} papers from Supabase`);
 
-    return (data || []).map(paper => ({
+    return data.map(paper => ({
       id: paper.id,
       title: paper.title,
       subject: paper.subject,
@@ -383,6 +461,60 @@ class AdminService {
       tags: paper.tags,
       description: paper.description,
       previewUrl: paper.preview_url
+    }));
+  }
+
+  /**
+   * Get all books (library_books), with the R2 catalogue as fallback.
+   */
+  async getAllBooks(): Promise<LibraryBook[]> {
+    console.log('📥 Admin: Fetching all books...');
+
+    let data: any[] | null = null;
+    let error: unknown = null;
+
+    if ((await checkSupabaseStatus()) === 'ok') {
+      const response = await supabase
+        .from('library_books')
+        .select('*')
+        .order('created_at', { ascending: false });
+      data = response.data;
+      error = response.error;
+    }
+
+    if (error || !data || data.length === 0) {
+      if (error) console.warn('⚠️ Admin: Supabase books unavailable');
+      const catalogueBooks = await fetchCatalogueBooks();
+      if (catalogueBooks.length > 0) {
+        this.bookSource = 'r2-catalogue';
+        console.info(`📚 Admin: Using R2 catalogue — ${catalogueBooks.length} books`);
+        return catalogueBooks;
+      }
+      this.bookSource = 'none';
+      return [];
+    }
+
+    this.bookSource = 'supabase';
+
+    return data.map(book => ({
+      id: book.id,
+      title: book.title,
+      author: book.author ?? null,
+      subject: book.subject,
+      category: book.category ?? 'Reference',
+      system: book.system ?? 'apc',
+      classLevel: book.class_level ?? null,
+      description: book.description ?? null,
+      coverUrl: book.cover_url ?? null,
+      fileUrl: book.file_url,
+      fileName: book.file_name,
+      fileSize: book.file_size,
+      fileSizeFormatted: book.file_size_formatted,
+      contentHash: book.content_hash ?? '',
+      tags: book.tags ?? [],
+      downloads: book.downloads ?? 0,
+      publishedYear: book.published_year ?? null,
+      createdAt: book.created_at,
     }));
   }
 

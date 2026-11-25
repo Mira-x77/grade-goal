@@ -1,15 +1,18 @@
 import { supabase } from '@/integrations/supabase/client';
 import { LibraryBook, BookFilterCriteria, CachedBook } from '@/types/exam-library';
 import { cacheService } from './cacheService';
+import { fetchStaticBookRows } from './staticCatalog';
 
 interface SupabaseBook {
   id: string;
   title: string;
   author: string | null;
   subject: string;
+  subjects?: string[];
   category: string;
   system: string;
   class_level: string | null;
+  class_levels?: string[] | null;
   description: string | null;
   cover_url: string | null;
   file_url: string;
@@ -73,9 +76,11 @@ class BookService {
       title: book.title,
       author: book.author,
       subject: book.subject,
+      subjects: book.subjects,
       category: book.category,
       system: book.system,
       class_level: book.class_level,
+      class_levels: book.class_levels,
       description: book.description,
       cover_url: book.cover_url,
       file_url: book.file_url,
@@ -124,8 +129,22 @@ class BookService {
       return books;
     } catch (error) {
       console.error('Failed to fetch books:', error);
-      const cachedBooks = await this.getCachedBooks();
 
+      // Catalogue published next to the PDFs (R2/CDN): keeps real file URLs,
+      // so it wins over the IndexedDB cache while the database is down.
+      const staticRows = await fetchStaticBookRows();
+      if (staticRows.length > 0) {
+        console.log(`☁️ Using ${staticRows.length} books from the static catalogue`);
+        const books = staticRows.map((b) => this.convertToLibraryBook(b));
+        try {
+          await cacheService.cacheBooks(books);
+        } catch (cacheError) {
+          console.warn('⚠️ Failed to cache static catalogue books:', cacheError);
+        }
+        return books;
+      }
+
+      const cachedBooks = await this.getCachedBooks();
       if (cachedBooks.length > 0) {
         console.log(`📦 Using ${cachedBooks.length} cached books`);
         return cachedBooks.map(this.convertCachedToLibraryBook);
@@ -172,9 +191,25 @@ class BookService {
       return (data as SupabaseBook[]).map(b => this.convertToLibraryBook(b));
     } catch (error) {
       console.error('Failed to fetch filtered books:', error);
-      // Fallback to client-side filtering of cached data
+      // Prefer the published catalogue: it has the real file URLs.
+      const staticRows = await fetchStaticBookRows();
+      if (staticRows.length > 0) {
+        return staticRows
+          .map((b) => this.convertToLibraryBook(b))
+          .filter((book) => {
+            if (filters?.category && book.category !== filters.category) return false;
+            if (filters?.subject && book.subject !== filters.subject) return false;
+            if (filters?.system && book.system !== filters.system) return false;
+            if (filters?.classLevel && book.class_level !== filters.classLevel) return false;
+            return true;
+          });
+      }
+
       const cachedBooks = await this.getCachedBooks();
-      return this.filterBooksClientSide(cachedBooks, filters);
+      if (cachedBooks.length > 0) {
+        return this.filterBooksClientSide(cachedBooks, filters);
+      }
+      return [];
     }
   }
 
@@ -187,8 +222,6 @@ class BookService {
     const filtered = books.filter(book => {
       if (filters.category && book.category !== filters.category) return false;
       if (filters.subject && book.subject !== filters.subject) return false;
-      if (filters.classLevel && book.category !== filters.classLevel) return false;
-      // Note: system filtering not available in cached books
       return true;
     });
 
@@ -205,12 +238,12 @@ class BookService {
       author: cached.author,
       subject: cached.subject,
       category: cached.category,
-      system: '', // Not available in cached data
-      class_level: null, // Not available in cached data
-      description: null, // Not available in cached data
-      cover_url: null, // Not available in cached data
-      file_url: '',
-      file_name: '',
+      system: cached.system ?? '', // Not available in older cached rows
+      class_level: cached.classLevel ?? null,
+      description: cached.description ?? null,
+      cover_url: cached.coverUrl ?? null,
+      file_url: cached.fileUrl ?? '',
+      file_name: cached.fileName ?? '',
       file_size: cached.fileSize,
       file_size_formatted: cached.fileSizeFormatted,
       tags: cached.tags,
@@ -263,17 +296,20 @@ class BookService {
 
       if (error) {
         console.error('Supabase get book error:', error);
-        return null;
+        throw error;
       }
 
       return this.convertToLibraryBook(data as SupabaseBook);
     } catch (error) {
       console.error('Failed to fetch book:', error);
 
-      // Fallback to cached data
+      // Catalogue first: it always carries the real file URL.
+      const staticRows = await fetchStaticBookRows();
+      const staticMatch = staticRows.find((b) => b.id === bookId);
+      if (staticMatch) return this.convertToLibraryBook(staticMatch);
+
       const cachedBooks = await cacheService.getCachedBooks();
       const cachedBook = cachedBooks.find(b => b.id === bookId);
-
       if (cachedBook) {
         return this.convertCachedToLibraryBook(cachedBook);
       }

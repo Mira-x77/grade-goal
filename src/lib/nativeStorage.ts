@@ -10,6 +10,9 @@ const KEYS = [
   "gostudy_accent",
   "scoretarget_tour_seen",
   "guest_mode",
+  "scoretarget_has_account",
+  "scoretarget_last_user_id",
+  "scoretarget_subscription",
 ];
 
 /**

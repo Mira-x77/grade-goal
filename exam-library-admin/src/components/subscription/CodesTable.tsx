@@ -11,14 +11,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Copy, Search } from 'lucide-react';
-import { subscriptionService, type SubscriptionCode } from '@/services/subscriptionService';
+import { subscriptionService, type EnrichedSubscriptionCode } from '@/services/subscriptionService';
 import { toast } from 'sonner';
 
 type FilterType = 'all' | 'unused' | 'used';
 
 export function CodesTable() {
-  const [codes, setCodes] = useState<SubscriptionCode[]>([]);
-  const [filteredCodes, setFilteredCodes] = useState<SubscriptionCode[]>([]);
+  const [codes, setCodes] = useState<EnrichedSubscriptionCode[]>([]);
+  const [filteredCodes, setFilteredCodes] = useState<EnrichedSubscriptionCode[]>([]);
   const [filter, setFilter] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -34,14 +34,7 @@ export function CodesTable() {
   const loadCodes = async () => {
     setLoading(true);
     try {
-      let data: SubscriptionCode[];
-      
-      if (filter === 'all') {
-        data = await subscriptionService.getAllCodes();
-      } else {
-        data = await subscriptionService.getCodesByStatus(filter === 'used');
-      }
-      
+      const data = await subscriptionService.getEnrichedCodes(filter);
       setCodes(data);
     } catch (error) {
       console.error('Failed to load codes:', error);
@@ -58,9 +51,13 @@ export function CodesTable() {
     }
 
     const query = searchQuery.toLowerCase();
-    const filtered = codes.filter(code =>
-      code.code.toLowerCase().includes(query) ||
-      code.used_by?.toLowerCase().includes(query)
+    const filtered = codes.filter(
+      (code) =>
+        code.code.toLowerCase().includes(query) ||
+        code.studentName?.toLowerCase().includes(query) ||
+        code.used_by?.toLowerCase().includes(query) ||
+        code.redeemed_by?.toLowerCase().includes(query) ||
+        code.school?.toLowerCase().includes(query)
     );
     setFilteredCodes(filtered);
   };
@@ -70,47 +67,34 @@ export function CodesTable() {
     toast.success('Copied to clipboard');
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 items-center">
+      <div className="flex gap-4 items-center flex-wrap">
         <div className="flex gap-2">
-          <Button
-            variant={filter === 'all' ? 'default' : 'outline'}
-            onClick={() => setFilter('all')}
-            size="sm"
-          >
+          <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter('all')} size="sm">
             All ({codes.length})
           </Button>
-          <Button
-            variant={filter === 'unused' ? 'default' : 'outline'}
-            onClick={() => setFilter('unused')}
-            size="sm"
-          >
+          <Button variant={filter === 'unused' ? 'default' : 'outline'} onClick={() => setFilter('unused')} size="sm">
             Unused
           </Button>
-          <Button
-            variant={filter === 'used' ? 'default' : 'outline'}
-            onClick={() => setFilter('used')}
-            size="sm"
-          >
+          <Button variant={filter === 'used' ? 'default' : 'outline'} onClick={() => setFilter('used')} size="sm">
             Used
           </Button>
         </div>
 
-        <div className="flex-1 relative">
+        <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search codes..."
+            placeholder="Search code, name, school..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -118,77 +102,92 @@ export function CodesTable() {
         </div>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Code</TableHead>
               <TableHead>Duration</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Redeemed By</TableHead>
+              <TableHead>Student</TableHead>
+              <TableHead>Devices</TableHead>
+              <TableHead>Expires</TableHead>
+              <TableHead>Device ID</TableHead>
               <TableHead>School</TableHead>
               <TableHead>System</TableHead>
               <TableHead>Source</TableHead>
-              <TableHead>Redeemed At</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Redeemed</TableHead>
+              <TableHead className="text-right">Copy</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-8">
+                <TableCell colSpan={12} className="text-center py-8">
                   Loading codes...
                 </TableCell>
               </TableRow>
             ) : filteredCodes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
                   {searchQuery ? 'No codes found matching your search' : 'No codes generated yet'}
                 </TableCell>
               </TableRow>
             ) : (
               filteredCodes.map((code) => (
                 <TableRow key={code.id}>
-                  <TableCell className="font-mono font-medium">
-                    {code.code}
+                  <TableCell className="font-mono font-medium whitespace-nowrap">{code.code}</TableCell>
+                  <TableCell>
+                    {code.duration_months} {code.duration_months === 1 ? 'mo' : 'mos'}
                   </TableCell>
                   <TableCell>
-                    {code.duration_months} {code.duration_months === 1 ? 'month' : 'months'}
+                    {code.is_used ? (
+                      code.isActivePremium ? (
+                        <Badge className="bg-green-600">Active</Badge>
+                      ) : (
+                        <Badge variant="secondary">Expired</Badge>
+                      )
+                    ) : (
+                      <Badge variant="outline">Unused</Badge>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={code.is_used ? 'secondary' : 'default'}>
-                      {code.is_used ? 'Used' : 'Unused'}
-                    </Badge>
+                    <div className="text-sm font-medium">{code.studentName || '—'}</div>
+                    {code.authMethod && (
+                      <div className="text-[10px] text-muted-foreground capitalize">
+                        {code.authMethod.replace('_', ' ')}
+                        {code.isGuest ? ' · guest' : ''}
+                      </div>
+                    )}
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground font-mono max-w-[100px] truncate" title={code.redeemed_by || code.used_by}>
-                    {code.redeemed_by
-                      ? code.redeemed_by.substring(0, 8) + '…'
-                      : code.used_by
-                        ? code.used_by.substring(0, 8) + '…'
-                        : '-'}
+                  <TableCell>
+                    {code.is_used ? (
+                      <span className="text-sm font-mono">
+                        {code.deviceCount ?? (code.used_by ? 1 : 0)}/2
+                      </span>
+                    ) : (
+                      '—'
+                    )}
                   </TableCell>
-                  <TableCell className="text-sm max-w-[120px] truncate" title={code.school}>
-                    {code.school || '-'}
+                  <TableCell className="text-sm whitespace-nowrap">
+                    {code.expiresAt ? formatDate(code.expiresAt) : '—'}
                   </TableCell>
-                  <TableCell className="text-xs capitalize">
-                    {code.grading_system?.replace('_', ' ') || '-'}
+                  <TableCell
+                    className="text-xs text-muted-foreground font-mono max-w-[90px] truncate"
+                    title={code.used_by}
+                  >
+                    {code.used_by ? `${code.used_by.slice(0, 8)}…` : '—'}
                   </TableCell>
-                  <TableCell className="text-xs capitalize">
-                    {code.code_source || '-'}
+                  <TableCell className="text-sm max-w-[100px] truncate" title={code.school}>
+                    {code.school || '—'}
                   </TableCell>
-                  <TableCell className="text-sm">
-                    {code.used_at ? formatDate(code.used_at) : '-'}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {formatDate(code.created_at)}
+                  <TableCell className="text-xs capitalize">{code.grading_system?.replace('_', ' ') || '—'}</TableCell>
+                  <TableCell className="text-xs capitalize">{code.code_source || '—'}</TableCell>
+                  <TableCell className="text-sm whitespace-nowrap">
+                    {code.used_at ? formatDate(code.used_at) : '—'}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(code.code)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(code.code)}>
                       <Copy className="h-4 w-4" />
                     </Button>
                   </TableCell>

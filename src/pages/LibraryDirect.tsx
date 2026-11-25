@@ -11,6 +11,7 @@ import {
   List,
   FileText,
   ChevronDown,
+  ChevronUp,
   Check,
   SlidersHorizontal,
 } from "lucide-react";
@@ -18,14 +19,28 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cacheService } from "@/services/cacheService";
 import { examService } from "@/services/examService";
 import { loadState } from "@/lib/storage";
+import {
+  paperMatchesClassFilter,
+  paperMatchesSubjectFilter,
+  collectPaperSubjects,
+  uniqueSubjectsFromPapers,
+  formatPaperClassLabel,
+  OFFICIAL_EXAM_TYPES,
+  seriesForCycle,
+  splitOnboardingClassFilter,
+} from "@/lib/library-filters";
+import { buildFullClassLevel } from "@/lib/subjects-data";
+import { ClassLevelFilter } from "@/components/exam/ClassLevelFilter";
 import TaskBar from "@/components/TaskBar";
 import ScreenIntro from "@/components/ScreenIntro";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { gradingSystemBadgeLabel } from "@/lib/i18n";
 import { usePremiumNudge } from "@/hooks/usePremiumNudge";
 import { usePremium } from "@/contexts/AppConfigContext";
 import { PremiumIntroSheet } from "@/components/subscription/PremiumIntroSheet";
 import { useIsTablet } from "@/hooks/useIsTablet";
 import { DownloadQuotaDisplay } from "@/components/DownloadQuotaDisplay";
+import { OpenLocalPdfButton } from "@/components/pdf/OpenLocalPdfButton";
 
 export default function LibraryDirect() {
   // Analytics: Track page view (lazy loaded to not block render)
@@ -37,7 +52,7 @@ export default function LibraryDirect() {
       .catch(() => {});
   }, []);
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { openPremiumGate } = usePremium();
   const isTablet = useIsTablet();
   const headerRef = useRef<HTMLDivElement>(null);
@@ -54,10 +69,15 @@ export default function LibraryDirect() {
   const gradingSystem = userState?.settings?.gradingSystem ?? "apc";
   const isNigerian = gradingSystem === "nigerian_university";
   const userClassLevel = isNigerian ? null : (userState?.classLevel ?? null);
+  const userSerie = isNigerian ? null : (userState?.serie ?? null);
+  const userFullClassLevel = userClassLevel
+    ? buildFullClassLevel(userClassLevel, userSerie)
+    : null;
 
   const [papers, setPapers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [headerExpanded, setHeaderExpanded] = useState(true);
 
   useEffect(() => {
     if (!headerRef.current) return;
@@ -78,7 +98,7 @@ export default function LibraryDirect() {
   const [showFilterSheet, setShowFilterSheet] = useState(false);
 
   const [filters, setFilters] = useState({
-    classLevel: userClassLevel ?? "",
+    classLevel: userFullClassLevel ?? "",
     subject: initialSubject,
     year: "",
     examType: "",
@@ -166,56 +186,43 @@ export default function LibraryDirect() {
   };
 
   const filteredPapers = papers.filter((p) => {
-    if (
-      filters.classLevel &&
-      p.class_level?.toLowerCase() !== filters.classLevel.toLowerCase()
-    )
+    if (filters.classLevel && !paperMatchesClassFilter(p, filters.classLevel)) {
       return false;
+    }
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       if (
         !p.title?.toLowerCase().includes(query) &&
-        !p.subject?.toLowerCase().includes(query)
+        !p.subject?.toLowerCase().includes(query) &&
+        !collectPaperSubjects(p).some((s) => s.toLowerCase().includes(query))
       )
         return false;
     }
-    if (filters.subject && p.subject !== filters.subject) return false;
-    if (filters.year && p.year.toString() !== filters.year) return false;
-    if (filters.examType && p.exam_type !== filters.examType) return false;
+    if (filters.subject && !paperMatchesSubjectFilter(p, filters.subject)) {
+      return false;
+    }
+    if (filters.year && String(p.year) !== filters.year) return false;
+    const examType = p.exam_type ?? p.examType;
+    if (filters.examType && examType !== filters.examType) return false;
     return true;
   });
 
-  const activeClassLevel = filters.classLevel || null;
-  const classPapers = activeClassLevel
-    ? papers.filter(
-        (p) => p.class_level?.toLowerCase() === activeClassLevel.toLowerCase(),
-      )
-    : papers;
-  // Nigerian users have no matching classLevel in APC/French papers — always show all
-  const effectivePapers = isNigerian
-    ? papers
-    : classPapers.length > 0
-      ? classPapers
-      : papers;
-
-  const uniqueSubjects = Array.from(
-    new Set(effectivePapers.map((p: any) => p.subject)),
-  ).sort() as string[];
+  // Atomic subjects: a "Histoire, Géographie" paper must be selectable from
+  // both Histoire and Géographie, not only from its combined label.
+  const uniqueSubjects = uniqueSubjectsFromPapers(papers);
   const uniqueYears = Array.from(
-    new Set(effectivePapers.map((p) => p.year)),
+    new Set(papers.map((p) => p.year).filter(Boolean)),
   ).sort((a: number, b: number) => b - a);
-  const uniqueExamTypes = Array.from(
-    new Set(effectivePapers.map((p) => p.exam_type)),
-  ).sort();
+  const uniqueExamTypes = OFFICIAL_EXAM_TYPES.filter((type) =>
+    papers.some((p: any) => (p.exam_type ?? p.examType) === type),
+  );
 
-  const hasActiveFilters =
-    (filters.classLevel && filters.classLevel !== (userClassLevel ?? "")) ||
-    filters.subject ||
-    filters.year ||
-    filters.examType;
+  const hasActiveFilters = Boolean(
+    filters.classLevel || filters.subject || filters.year || filters.examType,
+  );
   const clearFilters = () =>
     setFilters({
-      classLevel: userClassLevel ?? "",
+      classLevel: "",
       subject: "",
       year: "",
       examType: "",
@@ -240,31 +247,58 @@ export default function LibraryDirect() {
                   {gradingSystem === "apc" && (
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/15 border border-blue-500/30">
                       <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                      <span className="text-xs font-bold text-blue-400">APC (Togo) Papers</span>
+                      <span className="text-xs font-bold text-blue-400">{gradingSystemBadgeLabel("apc", language)}</span>
                     </div>
                   )}
                   {gradingSystem === "french" && (
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 border border-purple-500/30">
                       <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
-                      <span className="text-xs font-bold text-purple-400">French (AEFE) Papers</span>
+                      <span className="text-xs font-bold text-purple-400">{gradingSystemBadgeLabel("french", language)}</span>
                     </div>
                   )}
                   {gradingSystem === "nigerian_university" && (
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/15 border border-green-500/30">
                       <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                      <span className="text-xs font-bold text-green-400">Nigerian University Papers</span>
+                      <span className="text-xs font-bold text-green-400">{gradingSystemBadgeLabel("nigerian_university", language)}</span>
                     </div>
                   )}
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setHeaderExpanded((open) => !open)}
+                aria-expanded={headerExpanded}
+                aria-controls="library-header-filters"
+                aria-label={headerExpanded ? t("hideFilters") : t("showFilters")}
+                className="h-9 w-9 shrink-0 flex items-center justify-center rounded-full bg-card border-2 border-foreground card-shadow active:scale-95 transition-transform"
+              >
+                {headerExpanded ? (
+                  <ChevronDown className="h-4 w-4 text-foreground" />
+                ) : (
+                  <ChevronUp className="h-4 w-4 text-foreground" />
+                )}
+              </button>
             </div>
 
+            <AnimatePresence initial={false}>
+              {headerExpanded && (
+                <motion.div
+                  key="header-filters"
+                  id="library-header-filters"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
             {/* Download Quota Display */}
-            <div className="mt-3">
+            <div className="mt-3 space-y-2">
               <DownloadQuotaDisplay
                 showUpgradeButton={true}
                 onUpgradeClick={() => openPremiumGate()}
               />
+              <OpenLocalPdfButton variant="card" className="w-full" />
             </div>
 
             {/* Search + Filters */}
@@ -297,16 +331,9 @@ export default function LibraryDirect() {
                         <SlidersHorizontal className="h-4 w-4" />
                       </button>
                       <div className="flex gap-2 overflow-x-auto hide-scrollbar flex-1">
-                        <FilterPill
+                        <ClassFilterPill
                           label={t("classLevel")}
                           value={filters.classLevel}
-                          options={
-                            Array.from(
-                              new Set(papers.map((p) => p.class_level)),
-                            )
-                              .filter(Boolean)
-                              .sort() as string[]
-                          }
                           onSelect={(v) =>
                             setFilters({ ...filters, classLevel: v })
                           }
@@ -338,12 +365,15 @@ export default function LibraryDirect() {
                             onClick={clearFilters}
                             className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold bg-danger/10 text-danger border-2 border-danger/30 active:scale-95 transition-transform"
                           >
-                            <X className="h-3 w-3" /> Clear
+                            <X className="h-3 w-3" /> {t("clear")}
                           </button>
                         )}
                       </div>
                     </div>
                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -518,9 +548,9 @@ export default function LibraryDirect() {
                             {paper.title || `${paper.subject} ${paper.year}`}
                           </h3>
                           <div className="flex flex-wrap items-center gap-1 mt-1.5">
-                            {paper.class_level && (
+                            {formatPaperClassLabel(paper) && (
                               <span className="bg-muted text-muted-foreground font-extrabold px-1.5 py-0.5 rounded text-[9px]">
-                                {paper.class_level}
+                                {formatPaperClassLabel(paper)}
                               </span>
                             )}
                             {paper.exam_type && (
@@ -563,7 +593,7 @@ export default function LibraryDirect() {
                         </h3>
                         <p className="text-xs font-bold text-muted-foreground mt-0.5 truncate flex items-center gap-1.5">
                           <span className="bg-muted px-1.5 py-0.5 rounded text-[10px]">
-                            {paper.class_level}
+                            {formatPaperClassLabel(paper)}
                           </span>
                           <span>
                             {paper.exam_type}
@@ -605,37 +635,21 @@ export default function LibraryDirect() {
             !loading &&
             !error &&
             papers.length > 0 &&
-            classPapers.length === 0 &&
-            effectivePapers === papers &&
-            !isNigerian && (
-              <div className="content-col py-12 text-center">
-                <div className="bg-muted/50 rounded-2xl p-8">
-                  <p className="text-lg font-bold text-foreground mb-2">
-                    {t("noPapersForClass")}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {t("papersWillAppear").replace(
-                      "{class}",
-                      userClassLevel ?? "your class",
-                    )}
-                  </p>
-                </div>
-              </div>
-            )}
-
-          {!isOffline &&
-            !loading &&
-            !error &&
-            classPapers.length > 0 &&
             filteredPapers.length === 0 && (
               <div className="content-col py-12 text-center">
                 <div className="bg-muted/50 rounded-2xl p-8">
                   <p className="text-lg font-bold text-foreground mb-2">
                     {t("noMatchFilters")}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {t("tryAdjustFilters")}
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {t("tryAdjustingFilters")}
                   </p>
+                  <button
+                    onClick={clearFilters}
+                    className="text-sm font-black text-primary active:scale-95 transition-transform"
+                  >
+                    {t("clearFilters")}
+                  </button>
                 </div>
               </div>
             )}
@@ -719,39 +733,10 @@ export default function LibraryDirect() {
                   <label className="text-xs font-black text-muted-foreground uppercase tracking-wide mb-3 block">
                     {t("classLevel")}
                   </label>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => setFilters({ ...filters, classLevel: "" })}
-                      className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all active:scale-95 ${
-                        !filters.classLevel
-                          ? "bg-primary/10 border-primary text-primary"
-                          : "bg-card border-border text-foreground"
-                      }`}
-                    >
-                      All
-                    </button>
-                    {Array.from(new Set(papers.map((p) => p.class_level)))
-                      .filter(Boolean)
-                      .sort()
-                      .map((level) => (
-                        <button
-                          key={level}
-                          onClick={() =>
-                            setFilters({
-                              ...filters,
-                              classLevel: level as string,
-                            })
-                          }
-                          className={`px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all active:scale-95 ${
-                            filters.classLevel === level
-                              ? "bg-primary/10 border-primary text-primary"
-                              : "bg-card border-border text-foreground"
-                          }`}
-                        >
-                          {level}
-                        </button>
-                      ))}
-                  </div>
+                  <ClassLevelFilter
+                    value={filters.classLevel}
+                    onChange={(classLevel) => setFilters({ ...filters, classLevel })}
+                  />
                 </div>
 
                 {/* Subject */}
@@ -911,6 +896,81 @@ export default function LibraryDirect() {
   );
 }
 
+function ClassFilterPill({
+  label,
+  value,
+  onSelect,
+}: {
+  label: string;
+  value: string;
+  onSelect: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const active = !!value;
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold border-2 transition-all active:scale-95 shrink-0 ${
+          active
+            ? "bg-primary/10 border-primary text-primary"
+            : "bg-card border-border text-foreground"
+        }`}
+      >
+        {active ? value : label}
+        {active ? (
+          <X
+            className="h-3 w-3 opacity-70"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect("");
+            }}
+          />
+        ) : (
+          <ChevronDown className="h-3 w-3 opacity-60" />
+        )}
+      </button>
+
+      {open &&
+        createPortal(
+          <>
+            <div
+              className="fixed inset-x-0 top-0 bottom-0 z-[200] bg-black/40"
+              onClick={() => setOpen(false)}
+            />
+            <div className="fixed inset-0 z-[201] flex items-end sm:items-center justify-center px-4 pointer-events-none">
+              <div className="pointer-events-auto w-full max-w-sm rounded-2xl bg-card border border-border shadow-xl overflow-hidden mb-8 sm:mb-0">
+                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                  <p className="text-sm font-black text-foreground">{label}</p>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="p-1 rounded-lg bg-muted"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="p-4">
+                  <ClassLevelFilter
+                    value={value}
+                    onChange={(next) => {
+                      onSelect(next);
+                      const { cycle, serie } = splitOnboardingClassFilter(next);
+                      const needsSerie = seriesForCycle(cycle).length > 0;
+                      if (!next || !needsSerie || serie) setOpen(false);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </>,
+          document.body,
+        )}
+    </>
+  );
+}
+
 // ── FilterPill ──────────────────────────────────────────────────────────────
 interface FilterPillProps {
   label: string;
@@ -920,6 +980,7 @@ interface FilterPillProps {
 }
 
 function FilterPill({ label, value, options, onSelect }: FilterPillProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const active = !!value;
 
@@ -969,7 +1030,7 @@ function FilterPill({ label, value, options, onSelect }: FilterPillProps) {
                     }}
                     className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-colors hover:bg-muted/60 ${!value ? "text-primary" : "text-muted-foreground"}`}
                   >
-                    All {label}s{!value && <Check className="h-3.5 w-3.5" />}
+                    {t("all")}{!value && <Check className="h-3.5 w-3.5" />}
                   </button>
                   <div className="h-px bg-border mx-3" />
                   {options.map((opt) => (

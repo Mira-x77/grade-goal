@@ -1,0 +1,58 @@
+'KEEP CREATING & BUILDING!' size=8.2 col=6583435 font=SegoeUI-Bold bbox=[55.9, 40.6, 179.8, 51.6]
+---
+"THE CREATOR'S GUIDEBOOK" size=8.2 col=6583435 font=SegoeUI-Bold bbox=[429.6, 40.6, 549.5, 51.6]
+---
+'Congratulations on completing The' size=24.0 col=16738336 font=ArialBlack bbox=[45.4, 54.1, 506.7, 87.9]
+---
+"Creator's Guidebook!" size=24.0 col=16738336 font=ArialBlack bbox=[45.4, 87.9, 321.4, 121.8]
+---
+'You now have the fundamental knowledge to code with AI, buil' size=9.8 col=1976635 font=SegoeUI bbox=[45.4, 130.9, 516.0, 143.9]
+---
+'explore robotics.' size=9.8 col=1976635 font=SegoeUI bbox=[45.4, 145.1, 116.9, 158.1]
+---
+'Recommended Software Links' size=10.2 col=988970 font=SegoeUI-Bold bbox=[55.1, 167.2, 197.8, 180.9]
+---
+'  Scratch Editor:' size=13.8 col=4674921 font=SegoeUI-Bold bbox=[55.1, 183.0, 156.4, 201.6]
+' ' size=13.8 col=4674921 font=SegoeUI bbox=[156.4, 183.0, 160.1, 201.6]
+'scratch.mit.edu' size=13.8 col=4674921 font=Consolas bbox=[160.1, 185.2, 272.9, 201.6]
+' or turbo warp.' size=13.8 col=4674921 font=SegoeUI bbox=[272.9, 183.0, 362.5, 201.6]
+---
+'  ' size=13.8 col=4674921 font=SegoeUI bbox=[55.1, 204.4, 62.6, 223.0]
+'CapCut Desktop:' size=13.8 col=4674921 font=SegoeUI-Bold bbox=[62.6, 204.4, 169.6, 223.0]
+' ' size=13.8 col=4674921 font=SegoeUI bbox=[169.7, 204.4, 173.4, 223.0]
+'capcut.com' size=13.8 col=4674921 font=Consolas bbox=[173.4, 206.6, 248.5, 223.0]
+' (Free video editor for PC/Mac/Phone).' size=13.8 col=4674921 font=SegoeUI bbox=[248.5, 204.4, 480.8, 223.0]
+---
+'  IDE Code Editor:' size=13.8 col=4674921 font=SegoeUI-Bold bbox=[55.1, 225.8, 167.5, 244.5]
+' ' size=13.8 col=4674921 font=SegoeUI bbox=[167.5, 225.8, 171.2, 244.5]
+'code.visualstudio.com' size=13.8 col=4674921 font=Consolas bbox=[171.2, 228.1, 329.1, 244.5]
+' or ' size=13.8 col=4674921 font=SegoeUI bbox=[329.0, 225.8, 349.3, 244.5]
+'cursor.com' size=13.8 col=4674921 font=Consolas bbox=[349.3, 228.1, 424.4, 244.5]
+' or kiro or antigravity' size=13.8 col=4674921 font=SegoeUI bbox=[424.4, 225.8, 551.1, 244.5]
+---
+'Download the Gostudy! app for more' size=15.3 col=0 font=ArialBlack bbox=[245.4, 737.8, 538.4, 760.2]
+---
+'opportunities like this at' size=15.3 col=0 font=ArialBlack bbox=[245.4, 760.2, 442.8, 782.6]
+---
+'goostudy.vercel.app' size=15.3 col=0 font=ArialBlack bbox=[245.4, 782.6, 407.8, 805.0]
+---
+'About the Author' size=21.6 col=0 font=DubaiMedium bbox=[248.6, 266.5, 417.8, 303.6]
+---
+'SkyDrake (Chukwudumueme Miracle Chidera)' size=17.7 col=0 font=DubaiMedium bbox=[252.8, 303.6, 579.5, 334.0]
+---
+'is an automotive engineering student, soft-' size=17.7 col=0 font=DubaiMedium bbox=[252.8, 334.0, 563.4, 364.4]
+---
+'ware developer, and entrepreneur based in' size=17.7 col=0 font=DubaiMedium bbox=[252.8, 364.4, 559.3, 394.7]
+---
+'Lomé, Togo. He runs Skydrake, a company' size=17.7 col=0 font=DubaiMedium bbox=[252.8, 394.7, 552.5, 425.1]
+---
+'building apps and SaaS tools for the West' size=17.7 col=0 font=DubaiMedium bbox=[252.8, 425.1, 550.5, 455.5]
+---
+'African market, and created this guidebook' size=17.7 col=0 font=DubaiMedium bbox=[252.8, 455.5, 563.4, 485.9]
+---
+'to make coding, design, and robotics simple' size=17.7 col=0 font=DubaiMedium bbox=[252.8, 485.9, 561.0, 516.3]
+---
+'and accessible for young creators.' size=17.7 col=0 font=DubaiMedium bbox=[252.8, 516.3, 496.2, 546.7]
+---
+'Signature:' size=22.0 col=0 font=Arial,Italic bbox=[286.8, 571.1, 387.1, 595.7]
+---

@@ -2,9 +2,21 @@ import { useState, FormEvent, ChangeEvent } from 'react';
 import { Upload, FileText, AlertCircle, Loader2 } from 'lucide-react';
 import { calculateFileHash } from '../lib/integrity';
 import { generatePDFPreview } from '../lib/pdf-preview-generator';
+import { parseMentionedClassLevels, mergeClassTags } from '@app/lib/library-filters';
 import { ClassLevel, ExamType, Session, AcademicSystem } from '../types';
+import {
+  ADMIN_CLASS_LEVELS,
+  ADMIN_EXAM_TYPES,
+  ADMIN_SESSIONS,
+  composeClassLevel,
+  needsSeries,
+  seriesForClass,
+} from '../lib/class-catalog';
 import { toast } from 'sonner';
 import { createClient } from '@supabase/supabase-js';
+import { storageAdapter } from '../lib/storage-adapter';
+import StorageTargetSelect from './StorageTargetSelect';
+import { useStorageTarget } from '../lib/storage-target';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL || 'https://aaayzhvqgqptgqaxxbdh.supabase.co',
@@ -28,18 +40,9 @@ interface FormErrors {
   [key: string]: string;
 }
 
-const CLASS_LEVELS: ClassLevel[] = [
-  "6ème", "5ème", "4ème", "3ème",
-  "2nde", "2nde A4", "2nde CD", "2nde E", "2nde F", "2nde G",
-  "1ère", "1ère A4", "1ère C", "1ère D", "1ère E", "1ère F", "1ère G",
-  "Tle",  "Tle A4",  "Tle C",  "Tle D",  "Tle E",  "Tle F",  "Tle G",
-];
-
-const SERIES = ["A", "C", "D", "E"];  // For Première and Terminale only
-
-const EXAM_TYPES: ExamType[] = ["Baccalauréat", "Composition", "Devoir", "Interro"];
-
-const SESSIONS: Session[] = ["1st Semester", "2nd Semester", "Annual"];
+const CLASS_LEVELS = ADMIN_CLASS_LEVELS;
+const EXAM_TYPES = ADMIN_EXAM_TYPES;
+const SESSIONS = [...ADMIN_SESSIONS] as Session[];
 
 // const SYSTEMS: AcademicSystem[] = ["apc", "french", "english"];
 
@@ -63,6 +66,7 @@ export default function UploadForm() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [target] = useStorageTarget();
 
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -116,10 +120,17 @@ export default function UploadForm() {
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'year' ? parseInt(value) || new Date().getFullYear() : value
-    }));
+    setFormData(prev => {
+      const next = {
+        ...prev,
+        [name]: name === 'year' ? parseInt(value) || new Date().getFullYear() : value,
+      };
+      if (name === 'classLevel') {
+        const allowed = seriesForClass(String(next.classLevel));
+        if (!allowed.includes(next.series)) next.series = '';
+      }
+      return next;
+    });
 
     // Clear error for this field
     if (errors[name]) {
@@ -148,9 +159,8 @@ export default function UploadForm() {
       newErrors.classLevel = 'Class level is required';
     }
 
-    // Validate series for Première and Terminale
-    if ((formData.classLevel === '1ère' || formData.classLevel === 'Tle') && !formData.series) {
-      newErrors.series = 'Series is required for Première and Terminale';
+    if (needsSeries(formData.classLevel) && !formData.series) {
+      newErrors.series = 'Série requise pour 2nde, 1ère et Tle (A4, C, D, E, F, G — 2nde uses CD)';
     }
 
     if (!formData.year || formData.year < 2000 || formData.year > 2100) {
@@ -210,6 +220,12 @@ export default function UploadForm() {
     setUploading(true);
     setUploadProgress(0);
 
+    // Track what landed in storage so a failed database insert does not leave
+    // orphan objects behind (Supabase still returns 402, for example).
+    let uploadedFileUrl: string | null = null;
+    let uploadedPreviewUrl: string | null = null;
+    let rowCreated = false;
+
     try {
       console.log('🚀 Starting upload process...');
       console.log('📄 File:', file.name, file.size, 'bytes');
@@ -231,28 +247,27 @@ export default function UploadForm() {
         });
       }, 200);
 
-      // Combine class level and series for Première and Terminale
-      const fullClassLevel = (formData.classLevel === '1ère' || formData.classLevel === 'Tle') && formData.series
-        ? `${formData.classLevel} ${formData.series}`
-        : formData.classLevel;
+      const fullClassLevel = composeClassLevel(formData.classLevel, formData.series);
 
       console.log('📋 Full class level:', fullClassLevel);
 
-      // Upload PDF to Supabase Storage directly
-      console.log('📤 Uploading PDF to Supabase Storage...');
+      // Upload PDF to the storage provider (R2 when configured)
+      console.log(`📤 Uploading PDF to ${storageAdapter.providerLabel}...`);
       const fileName = `${Date.now()}_${file.name}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('exam-papers')
-        .upload(fileName, file);
-
-      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
-
-      const { data: { publicUrl: fileUrl } } = supabase.storage
-        .from('exam-papers')
-        .getPublicUrl(fileName);
+      let fileUrl: string;
+      try {
+        fileUrl = await storageAdapter.uploadFile(fileName, file, {
+          contentType: 'application/pdf',
+        });
+      } catch (uploadError) {
+        throw new Error(
+          `Upload failed: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`,
+        );
+      }
 
       console.log('✅ PDF uploaded, URL:', fileUrl);
+      uploadedFileUrl = fileUrl;
 
       clearInterval(progressInterval);
       setUploadProgress(70);
@@ -264,17 +279,11 @@ export default function UploadForm() {
         const previewBlob = await generatePDFPreview(file);
         const previewFileName = `preview_${fileName}.png`;
 
-        const { error: previewError } = await supabase.storage
-          .from('exam-papers')
-          .upload(previewFileName, previewBlob);
-
-        if (!previewError) {
-          const { data: { publicUrl } } = supabase.storage
-            .from('exam-papers')
-            .getPublicUrl(previewFileName);
-          previewUrl = publicUrl;
-          console.log('✅ Preview generated:', previewUrl);
-        }
+        previewUrl = await storageAdapter.uploadFile(previewFileName, previewBlob, {
+          contentType: 'image/png',
+        });
+        uploadedPreviewUrl = previewUrl;
+        console.log('✅ Preview generated:', previewUrl);
       } catch (previewError) {
         console.warn('⚠️ Preview generation failed (non-fatal):', previewError);
       }
@@ -284,6 +293,10 @@ export default function UploadForm() {
       // Create database record directly via Supabase
       console.log('💾 Creating database record...');
       const tags = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+      const mentioned = parseMentionedClassLevels(
+        `${formData.title} ${file.name} ${fullClassLevel} ${formData.description}`,
+      );
+      const classTags = mergeClassTags(tags, [String(fullClassLevel), ...mentioned]);
 
       const { data: insertedData, error: dbError } = await supabase
         .from('exam_papers')
@@ -301,7 +314,7 @@ export default function UploadForm() {
           file_size_formatted: formatBytes(file.size),
           content_hash: contentHash,
           preview_url: previewUrl,
-          tags: tags,
+          tags: classTags,
           description: formData.description.trim() || null,
           downloads: 0
         })
@@ -314,6 +327,7 @@ export default function UploadForm() {
       }
 
       const paperId = insertedData.id;
+      rowCreated = true;
 
       console.log('✅ Database record created, ID:', paperId);
 
@@ -333,6 +347,17 @@ export default function UploadForm() {
         stack: error instanceof Error ? error.stack : undefined,
         fullError: error
       });
+
+      // No database row -> remove the files we just stored.
+      if (!rowCreated) {
+        for (const url of [uploadedPreviewUrl, uploadedFileUrl]) {
+          if (!url) continue;
+          await storageAdapter.deleteFile(url).catch((cleanupError) => {
+            console.warn('⚠️ Could not roll back stored file:', url, cleanupError);
+          });
+        }
+      }
+
       toast.error(error instanceof Error ? error.message : 'Failed to upload exam paper');
       setUploading(false);
       setUploadProgress(0);
@@ -498,8 +523,8 @@ export default function UploadForm() {
             )}
           </div>
 
-          {/* Series (only for 1ère and Tle) */}
-          {(formData.classLevel === '1ère' || formData.classLevel === 'Tle') && (
+          {/* Series for 2nde / 1ère / Tle so stored class_level matches app filters */}
+          {needsSeries(formData.classLevel) && (
             <div>
               <label htmlFor="series" className="block text-sm font-medium text-gray-300 mb-2">
                 Série *
@@ -513,7 +538,7 @@ export default function UploadForm() {
                 className="w-full px-3 py-2 border border-gray-700 bg-[#0f1117] text-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="" style={{background:"#1a1d2e",color:"#e2e8f0"}}>Sélectionner la série</option>
-                {SERIES.map(s => (
+                {seriesForClass(formData.classLevel).map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
@@ -660,6 +685,9 @@ export default function UploadForm() {
         </div>
       )}
 
+      {/* Destination */}
+      <StorageTargetSelect disabled={uploading} />
+
       {/* Action Buttons */}
       <div className="flex items-center justify-end gap-3">
         <button
@@ -683,7 +711,7 @@ export default function UploadForm() {
           ) : (
             <>
               <Upload className="h-5 w-5" />
-              Upload Paper
+              Upload Paper{target === 'r2' ? ' to R2' : ' to Supabase'}
             </>
           )}
         </button>

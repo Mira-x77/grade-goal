@@ -1,7 +1,8 @@
 import { ExamPaper, CachedPaper } from "@/types/exam-library";
+import { formatPaperClassLabel } from "@/lib/library-filters";
 import { Download, CheckCircle, FileText } from "lucide-react";
 import { motion } from "framer-motion";
-import { t } from "@/lib/i18n";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PaperCardProps {
   paper: ExamPaper | CachedPaper;
@@ -10,6 +11,7 @@ interface PaperCardProps {
 }
 
 export function PaperCard({ paper, isDownloaded, onClick }: PaperCardProps) {
+  const { t } = useLanguage();
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -33,7 +35,7 @@ export function PaperCard({ paper, isDownloaded, onClick }: PaperCardProps) {
             {paper.title}
           </h3>
           <p className="text-xs font-semibold text-muted-foreground mt-1">
-            {paper.subject} • {paper.classLevel}
+            {paper.subject} • {formatPaperClassLabel(paper)}
           </p>
           <div className="flex items-center gap-2 mt-2">
             <span className="text-xs font-bold text-muted-foreground">

@@ -1,6 +1,13 @@
 import { useState, useMemo } from 'react';
 import { FileText, Trash2, Edit, Download, Eye, Search } from 'lucide-react';
 import { ExamPaper, ClassLevel, ExamType, AcademicSystem } from '../types';
+import {
+  collectPaperSubjects,
+  paperMatchesClassFilter,
+  paperMatchesSubjectFilter,
+  uniqueClassLevelsFromPapers,
+  uniqueSubjectsFromPapers,
+} from '@app/lib/library-filters';
 
 interface FilterCriteria {
   classLevel?: ClassLevel;
@@ -16,15 +23,23 @@ interface PapersTableProps {
   onEdit: (paper: ExamPaper) => void;
   onDelete: (paper: ExamPaper) => void;
   deletingId: string | null;
+  /** Catalogue rows are read-only: editing/deleting needs the database. */
+  readOnly?: boolean;
 }
 
 const selectClass = "w-full px-3 py-2 border border-gray-700 bg-[#0f1117] text-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm";
 
-export default function PapersTable({ papers, onEdit, onDelete, deletingId }: PapersTableProps) {
+export default function PapersTable({ papers, onEdit, onDelete, deletingId, readOnly = false }: PapersTableProps) {
   const [filters, setFilters] = useState<FilterCriteria>({});
 
-  const uniqueClassLevels = useMemo(() => Array.from(new Set(papers.map(p => p.classLevel))).sort(), [papers]);
-  const uniqueSubjects = useMemo(() => Array.from(new Set(papers.map(p => p.subject))).sort(), [papers]);
+  const uniqueClassLevels = useMemo(() => {
+    const present = uniqueClassLevelsFromPapers(papers).filter((l) => l !== 'All');
+    // Keep catalogue-only values (e.g. "All") visible instead of silently hiding rows.
+    const extras = Array.from(new Set(papers.map((p) => p.classLevel as string)))
+      .filter((l) => l && !present.includes(l as any));
+    return [...present, ...extras];
+  }, [papers]);
+  const uniqueSubjects = useMemo(() => uniqueSubjectsFromPapers(papers), [papers]);
   const uniqueYears = useMemo(() => Array.from(new Set(papers.map(p => p.year))).sort((a, b) => b - a), [papers]);
   const uniqueExamTypes = useMemo(() => Array.from(new Set(papers.map(p => p.examType))).sort(), [papers]);
 
@@ -32,10 +47,15 @@ export default function PapersTable({ papers, onEdit, onDelete, deletingId }: Pa
     let result = [...papers];
     if (filters.search) {
       const q = filters.search.toLowerCase();
-      result = result.filter(p => p.title.toLowerCase().includes(q) || p.subject.toLowerCase().includes(q) || p.classLevel.toLowerCase().includes(q));
+      result = result.filter(p =>
+        p.title.toLowerCase().includes(q) ||
+        p.subject.toLowerCase().includes(q) ||
+        p.classLevel.toLowerCase().includes(q) ||
+        collectPaperSubjects(p).some(s => s.toLowerCase().includes(q))
+      );
     }
-    if (filters.classLevel) result = result.filter(p => p.classLevel === filters.classLevel);
-    if (filters.subject) result = result.filter(p => p.subject === filters.subject);
+    if (filters.classLevel) result = result.filter(p => paperMatchesClassFilter(p, filters.classLevel));
+    if (filters.subject) result = result.filter(p => paperMatchesSubjectFilter(p, filters.subject));
     if (filters.year) result = result.filter(p => p.year === filters.year);
     if (filters.examType) result = result.filter(p => p.examType === filters.examType);
     if (filters.system) result = result.filter(p => p.system === filters.system);
@@ -127,7 +147,7 @@ export default function PapersTable({ papers, onEdit, onDelete, deletingId }: Pa
               {/* Preview */}
               <div className="relative h-52 bg-gray-900 group overflow-hidden">
                 {paper.previewUrl ? (
-                  <img src={paper.previewUrl} alt={paper.title} className="w-full h-full object-cover" />
+                  <img src={paper.previewUrl} alt={paper.title} loading="lazy" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900/20 to-purple-900/20">
                     <FileText className="h-16 w-16 text-gray-700 mb-2" />
@@ -158,12 +178,20 @@ export default function PapersTable({ papers, onEdit, onDelete, deletingId }: Pa
                   <span>{formatDate(paper.uploadDate)}</span>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => onEdit(paper)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 rounded-lg transition-colors">
+                  <button
+                    onClick={() => onEdit(paper)}
+                    disabled={readOnly}
+                    title={readOnly ? 'Editing needs the Supabase database, which is currently restricted' : undefined}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
                     <Edit className="h-4 w-4" />Edit
                   </button>
-                  <button onClick={() => onDelete(paper)} disabled={deletingId === paper.id}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors disabled:opacity-50">
+                  <button
+                    onClick={() => onDelete(paper)}
+                    disabled={readOnly || deletingId === paper.id}
+                    title={readOnly ? 'Deleting needs the Supabase database, which is currently restricted' : undefined}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
                     <Trash2 className="h-4 w-4" />Delete
                   </button>
                 </div>

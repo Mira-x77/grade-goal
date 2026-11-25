@@ -5,8 +5,61 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { AppState } from '@/types/exam';
+import { AppState, GradingSystem } from '@/types/exam';
 import { HistoryEntry, StreakData } from '@/lib/storage';
+
+type AcademicSystem = 'APC' | 'FRENCH' | 'NIGERIAN';
+
+function toAcademicSystem(gradingSystem?: GradingSystem): AcademicSystem {
+  if (gradingSystem === 'nigerian_university') return 'NIGERIAN';
+  if (gradingSystem === 'french' || gradingSystem === 'aefe') return 'FRENCH';
+  return 'APC';
+}
+
+function resolveAuthMethod(session: { user: { is_anonymous?: boolean; app_metadata?: Record<string, unknown> } } | null): string {
+  if (!session?.user) return 'offline';
+  if (session.user.is_anonymous) return 'app_guest';
+  const provider = session.user.app_metadata?.provider;
+  if (provider === 'google') return 'google';
+  if (provider === 'apple') return 'apple';
+  return 'oauth';
+}
+
+/** Upsert queryable profile row so admins can count users by name (incl. non-Google signups). */
+export async function syncUserProfileToCloud(userId: string, state: AppState): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const { data: existing } = await supabase
+    .from('user_profile')
+    .select('metadata')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  const existingMeta = (existing?.metadata as Record<string, unknown> | null) ?? {};
+
+  const { error } = await supabase.from('user_profile').upsert(
+    {
+      user_id: userId,
+      student_name: state.studentName?.trim() || null,
+      academic_system: toAcademicSystem(state.settings?.gradingSystem),
+      metadata: {
+        ...existingMeta,
+        auth_method: resolveAuthMethod(session),
+        is_guest: session?.user?.is_anonymous ?? localStorage.getItem('guest_mode') === 'true',
+        classLevel: state.classLevel ?? null,
+        serie: state.serie ?? null,
+        department: state.department ?? null,
+        universityLevel: state.universityLevel ?? null,
+        semester: state.semester ?? null,
+        onboarding_completed: state.onboarding_completed ?? false,
+        last_synced_at: new Date().toISOString(),
+      },
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id' }
+  );
+
+  if (error) throw error;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -41,6 +94,12 @@ export async function saveAppStateToCloud(userId: string, state: AppState): Prom
     p_state: stateWithTimestamp as unknown as Record<string, unknown>,
   }));
   if (error) throw error;
+
+  try {
+    await syncUserProfileToCloud(userId, stateWithTimestamp as AppState);
+  } catch (profileErr) {
+    console.warn('user_profile sync failed (non-critical):', profileErr);
+  }
 }
 
 export async function loadAppStateFromCloud(userId: string): Promise<AppState | null> {

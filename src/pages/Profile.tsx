@@ -98,6 +98,52 @@ const Profile = () => {
     else navigate("/");
   }, [navigate]);
 
+  // Seed / sync the APC semester list *after* render. Doing this during render
+  // caused an infinite "Too many re-renders" loop when `state.subjects` was
+  // undefined (an empty array never equals undefined, so the sync never settled).
+  useEffect(() => {
+    if (!state) return;
+    if (state.settings?.gradingSystem === "nigerian_university") return;
+
+    const semesters: ApcSemester[] = state.apcSemesters ?? [];
+    const currentSubjects = state.subjects ?? [];
+
+    if (semesters.length === 0) {
+      const semId = crypto.randomUUID();
+      const seeded: ApcSemester = {
+        id: semId,
+        label: state.semester || "1st Semester",
+        academicYear: new Date().getFullYear() + "/" + (new Date().getFullYear() + 1),
+        classLevel: state.classLevel,
+        serie: state.serie,
+        subjects: currentSubjects,
+        targetMin: state.targetMin,
+        archived: false,
+      };
+      const newState = { ...state, apcSemesters: [seeded], activeApcSemesterId: semId };
+      saveState(newState);
+      setState(newState);
+      return;
+    }
+
+    // Keep the active semester's subjects in sync with state.subjects.
+    const activeId =
+      state.activeApcSemesterId ?? semesters[semesters.length - 1].id;
+    const activeSem = semesters.find((s) => s.id === activeId);
+    if (
+      activeSem &&
+      !activeSem.archived &&
+      JSON.stringify(activeSem.subjects ?? []) !== JSON.stringify(currentSubjects)
+    ) {
+      const synced = semesters.map((s) =>
+        s.id === activeId ? { ...s, subjects: currentSubjects } : s,
+      );
+      const newState = { ...state, apcSemesters: synced };
+      saveState(newState);
+      setState(newState);
+    }
+  }, [state]);
+
   if (!state) return null;
 
   const isNigerian = state?.settings?.gradingSystem === "nigerian_university";
@@ -539,19 +585,19 @@ const Profile = () => {
               <motion.div key="editing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-2">
                 <button
                   onClick={() => updateSetting("gradingSystem", "apc")}
-                  className={`rounded-xl px-4 py-3 text-left transition-all ${state.settings.gradingSystem === "apc" ? "bg-primary/15 text-primary border-2 border-primary" : "bg-muted text-foreground border-2 border-transparent"}`}
+                  className={`rounded-xl px-4 py-3 text-left transition-all ${state.settings?.gradingSystem === "apc" ? "bg-primary/15 text-primary border-2 border-primary" : "bg-muted text-foreground border-2 border-transparent"}`}
                 >
                   <span className="font-bold block">{t("apcTogolese")}</span>
                 </button>
                 <button
                   onClick={() => updateSetting("gradingSystem", "french")}
-                  className={`rounded-xl px-4 py-3 text-left transition-all ${state.settings.gradingSystem === "french" ? "bg-secondary/15 text-secondary border-2 border-secondary" : "bg-muted text-foreground border-2 border-transparent"}`}
+                  className={`rounded-xl px-4 py-3 text-left transition-all ${state.settings?.gradingSystem === "french" ? "bg-secondary/15 text-secondary border-2 border-secondary" : "bg-muted text-foreground border-2 border-transparent"}`}
                 >
                   <span className="font-bold block">{t("frenchTrad")}</span>
                 </button>
                 <button
                   onClick={() => updateSetting("gradingSystem", "nigerian_university")}
-                  className={`rounded-xl px-4 py-3 text-left transition-all ${state.settings.gradingSystem === "nigerian_university" ? "bg-primary/15 text-primary border-2 border-primary" : "bg-muted text-foreground border-2 border-transparent"}`}
+                  className={`rounded-xl px-4 py-3 text-left transition-all ${state.settings?.gradingSystem === "nigerian_university" ? "bg-primary/15 text-primary border-2 border-primary" : "bg-muted text-foreground border-2 border-transparent"}`}
                 >
                   <span className="font-bold block">Nigerian University</span>
                 </button>
@@ -559,8 +605,8 @@ const Profile = () => {
             ) : (
               <motion.div key="viewing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <InfoRow label={t("gradingSystemLabel")} value={
-                  state.settings.gradingSystem === "apc" ? t("apcTogolese")
-                  : state.settings.gradingSystem === "french" ? t("frenchTrad")
+                  state.settings?.gradingSystem === "apc" ? t("apcTogolese")
+                  : state.settings?.gradingSystem === "french" ? t("frenchTrad")
                   : t("nigerianUniversity")
                 } />
               </motion.div>
@@ -1055,39 +1101,9 @@ const Profile = () => {
           setShowApcAddSemesterForm(false);
         };
 
-        // Seed first semester from existing state for users who onboarded before this feature
-        if (apcSemesters.length === 0) {
-          const semId = crypto.randomUUID();
-          const seeded: ApcSemester = {
-            id: semId,
-            label: state.semester || "1st Semester",
-            academicYear: new Date().getFullYear() + "/" + (new Date().getFullYear() + 1),
-            classLevel: state.classLevel,
-            serie: state.serie,
-            subjects: state.subjects ?? [],
-            targetMin: state.targetMin,
-            archived: false,
-          };
-          const newState = { ...state, apcSemesters: [seeded], activeApcSemesterId: semId };
-          saveState(newState);
-          setState(newState);
-          return null; // re-render will show the section
-        }
-
-        // Keep active semester's subjects in sync with state.subjects (source of truth for APC)
-        const activeSem = apcSemesters.find(s => s.id === activeId);
-        if (activeSem && !activeSem.archived) {
-          const needsSync = JSON.stringify(activeSem.subjects) !== JSON.stringify(state.subjects);
-          if (needsSync) {
-            const synced = apcSemesters.map(s =>
-              s.id === activeId ? { ...s, subjects: state.subjects ?? [] } : s
-            );
-            const newState = { ...state, apcSemesters: synced };
-            saveState(newState);
-            setState(newState);
-            return null;
-          }
-        }
+        // Seeding + syncing happen in a useEffect above. Calling setState
+        // during render here used to loop forever when `state.subjects` was
+        // undefined ("Too many re-renders").
 
         return (
           <div className="content-col px-4 pb-4">

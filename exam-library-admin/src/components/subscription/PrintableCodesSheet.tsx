@@ -1,4 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { supabase } from '../../lib/supabaseClient';
+import {
+  CODE_PRICING_CONFIG_KEY,
+  DEFAULT_CODE_PRICING,
+  parseCodePricing,
+  formatCodePrice,
+} from '../../lib/code-pricing';
 import {
   Dialog,
   DialogContent,
@@ -28,12 +35,29 @@ export function PrintableCodesSheet({ open, onClose, onSuccess }: PrintableCodes
   const [loading, setLoading] = useState(false);
   const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
 
-  const prices: Record<number, string> = {
-    1: '500 FCFA',
-    3: '1,500 FCFA',
-    6: '3,000 FCFA',
-    12: '5,000 FCFA',
-  };
+  const [pricing, setPricing] = useState(DEFAULT_CODE_PRICING);
+
+  useEffect(() => {
+    if (!open) return;
+    supabase
+      .from('app_config')
+      .select('value')
+      .eq('key', CODE_PRICING_CONFIG_KEY)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) setPricing(parseCodePricing(data.value));
+      });
+  }, [open]);
+
+  const prices = useMemo(() => {
+    const p = pricing;
+    return {
+      1: formatCodePrice(p.month1, p.currency),
+      3: p.month3 ? formatCodePrice(p.month3, p.currency) : '—',
+      6: p.month6 ? formatCodePrice(p.month6, p.currency) : '—',
+      12: p.month12 ? formatCodePrice(p.month12, p.currency) : '—',
+    };
+  }, [pricing]);
 
   const handleGenerate = async () => {
     if (quantity < 1 || quantity > 100) {

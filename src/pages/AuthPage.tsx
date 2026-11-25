@@ -1,19 +1,18 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+﻿import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
-import { CheckCircle2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getAuthRedirectUrl, navigateAfterAuthSession } from "@/lib/auth-config";
+import { getAuthRedirectUrl } from "@/lib/auth-config";
+import { ensureGuestSession } from "@/lib/guest-auth";
 
 export default function AuthPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [oauthLoading, setOauthLoading] = useState<"google" | "apple" | null>(null);
   const [error, setError] = useState("");
-  const [signedIn, setSignedIn] = useState(false);
   const [showSkipHint, setShowSkipHint] = useState(false);
 
   useEffect(() => {
@@ -32,10 +31,6 @@ export default function AuthPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && event === "SIGNED_IN" && !session.user.is_anonymous) {
         setOauthLoading(null);
-        setSignedIn(true);
-        setTimeout(() => {
-          void navigateAfterAuthSession(navigate, session.user.id);
-        }, 800);
       }
     });
 
@@ -82,28 +77,6 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-background max-w-md mx-auto flex flex-col items-center justify-center px-6 gap-8">
-
-      {/* Success overlay */}
-      <AnimatePresence>
-        {signedIn && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center gap-5 px-8"
-          >
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 260, damping: 20 }}
-              className="flex h-20 w-20 items-center justify-center rounded-full bg-success/15 border-2 border-success"
-            >
-              <CheckCircle2 className="h-10 w-10 text-success" />
-            </motion.div>
-            <div className="text-center">
-              <p className="text-2xl font-black text-foreground">{t("signedIn")}</p>
-              <p className="text-sm font-semibold text-muted-foreground mt-1">{t("settingUpExperience")}</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Title */}
       <div className="text-center">
@@ -169,14 +142,15 @@ export default function AuthPage() {
         <button
           onClick={() => {
             localStorage.setItem("guest_mode", "true");
+            void ensureGuestSession();
             navigate("/onboarding", { replace: true });
           }}
           className="w-full rounded-2xl bg-card border-2 border-foreground py-4 text-base font-black text-foreground active:scale-[0.98] transition-transform card-shadow hover:bg-muted"
         >
           Skip & Continue as Guest
         </button>
-        <p className="text-xs text-center text-muted-foreground">
-          You can always sign in later from Settings • All data stays on your device
+        <p className="text-xs text-center text-muted-foreground font-semibold leading-relaxed px-2">
+          {t("guestCloudHint")}
         </p>
       </div>
     </div>

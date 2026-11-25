@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import UploadForm from '../components/UploadForm';
 import MassUpload from '../components/MassUpload';
 import BookUploadForm from '../components/BookUploadForm';
-import { Upload as UploadIcon, ListPlus, BookOpen, GraduationCap, Globe, School } from 'lucide-react';
+import { BookOpen, GraduationCap, Globe, School } from 'lucide-react';
 
 type UploadTab = 'apc' | 'french' | 'nigerian' | 'books';
 

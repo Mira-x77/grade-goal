@@ -2,21 +2,13 @@ import { useEffect, useState } from "react";
 import { externalPdfService, ExternalPdfPayload } from "@/services/externalPdfService";
 import { InAppPDFViewer } from "@/components/exam/InAppPDFViewer";
 
+/** Opens PDFs from the phone or “Open with Go Study”. Not gated by library download quota. */
 export function ExternalPdfViewerHost() {
   const [payload, setPayload] = useState<ExternalPdfPayload | null>(null);
 
   useEffect(() => {
-    // Initialize intent listeners
     externalPdfService.init();
-
-    // Subscribe to incoming PDF open events
-    const unsubscribe = externalPdfService.subscribe((newPayload) => {
-      setPayload(newPayload);
-    });
-
-    return () => {
-      unsubscribe();
-    };
+    return externalPdfService.subscribe(setPayload);
   }, []);
 
   if (!payload) return null;
@@ -27,10 +19,6 @@ export function ExternalPdfViewerHost() {
       pdfData={payload.pdfData}
       fileName={payload.fileName}
       onClose={() => externalPdfService.close()}
-      showShare={true}
-      onShare={() => {
-        // Native share if supported
-      }}
     />
   );
 }

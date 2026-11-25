@@ -12,17 +12,28 @@ import { examService } from "@/services/examService";
 import { cacheService } from "@/services/cacheService";
 import { loadState } from "@/lib/storage";
 import { FilterCriteria, ExamPaper, CachedPaper } from "@/types/exam-library";
-import { t } from "@/lib/i18n";
+import {
+  paperMatchesClassFilter,
+  paperMatchesSubjectFilter,
+  uniqueClassLevelsFromPapers,
+  uniqueSubjectsFromPapers,
+  collectPaperSubjects,
+  OFFICIAL_EXAM_TYPES,
+} from "@/lib/library-filters";
+import { buildFullClassLevel } from "@/lib/subjects-data";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Pagination constants
 const PAPERS_PER_PAGE = 50;
 
 const Library = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // Load user profile once — class level and subject names
   const [userState] = useState(() => loadState());
   const userClassLevel = userState?.classLevel ?? null;
+  const userSerie = userState?.serie ?? null;
   const userSubjectNames = userState?.subjects?.map(s => s.name) ?? [];
 
   const [papers, setPapers] = useState<(ExamPaper | CachedPaper)[]>([]);
@@ -36,6 +47,7 @@ const Library = () => {
   const [subjects, setSubjects] = useState<string[]>([]);
   const [years, setYears] = useState<number[]>([]);
   const [classLevels, setClassLevels] = useState<string[]>([]);
+  const [examTypes, setExamTypes] = useState<string[]>([]);
   const [downloadedPaperIds, setDownloadedPaperIds] = useState<Set<string>>(new Set());
   
   // Subscription dialogs
@@ -83,13 +95,15 @@ const Library = () => {
       setYears(uniqueYears);
 
       // Subjects from ALL papers (not filtered by user's subjects)
-      const availableSubjects = Array.from(new Set(fetchedPapers.map(p => p.subject))).sort();
+      const availableSubjects = uniqueSubjectsFromPapers(fetchedPapers);
       setSubjects(availableSubjects);
 
       // Class levels from ALL papers
-      const availableClassLevels = Array.from(new Set(fetchedPapers.map(p => p.classLevel))).sort();
-      setClassLevels(availableClassLevels);
-      console.log('📊 Library: Available class levels:', availableClassLevels);
+      setClassLevels(uniqueClassLevelsFromPapers(fetchedPapers));
+      const presentTypes = new Set(fetchedPapers.map(p => p.examType).filter(Boolean));
+      const availableExamTypes = OFFICIAL_EXAM_TYPES.filter(type => presentTypes.has(type));
+      setExamTypes([...availableExamTypes]);
+      console.log('📊 Library: Available class levels:', uniqueClassLevelsFromPapers(fetchedPapers));
     } catch (error) {
       console.error('❌ Library: Failed to load papers:', error);
       
@@ -114,10 +128,12 @@ const Library = () => {
     try {
       console.log('📋 Library: Loading filter state...');
       
-      // Start fresh - clear any problematic saved filters
-      // This ensures we show ALL papers on first load
-      await cacheService.saveFilterState({});
-      setFilters({});
+      const classLevel = userClassLevel
+        ? buildFullClassLevel(userClassLevel, userSerie)
+        : undefined;
+      const next = classLevel ? { classLevel } : {};
+      await cacheService.saveFilterState(next);
+      setFilters(next);
       
       console.log('✅ Library: Filters reset to show all papers');
     } catch (error) {
@@ -149,13 +165,13 @@ const Library = () => {
     // Apply explicit user-selected filters only
     if (filters.classLevel) {
       const before = result.length;
-      result = result.filter(p => p.classLevel === filters.classLevel);
+      result = result.filter(p => paperMatchesClassFilter(p, filters.classLevel));
       console.log(`  📐 Filter by classLevel="${filters.classLevel}": ${before} → ${result.length}`);
     }
     
     if (filters.subject) {
       const before = result.length;
-      result = result.filter(p => p.subject === filters.subject);
+      result = result.filter(p => paperMatchesSubjectFilter(p, filters.subject));
       console.log(`  📚 Filter by subject="${filters.subject}": ${before} → ${result.length}`);
     }
     
@@ -177,7 +193,8 @@ const Library = () => {
       const before = result.length;
       result = result.filter(p =>
         p.title.toLowerCase().includes(query) ||
-        p.subject.toLowerCase().includes(query)
+        (p.subject ?? "").toLowerCase().includes(query) ||
+        collectPaperSubjects(p).some(s => s.toLowerCase().includes(query))
       );
       console.log(`  🔎 Search "${searchQuery}": ${before} → ${result.length}`);
     }
@@ -305,6 +322,7 @@ const Library = () => {
               subjects={subjects}
               years={years}
               classLevels={classLevels}
+              examTypes={examTypes}
             />
           </motion.div>
 

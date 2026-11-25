@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Search, X, ArrowLeft, WifiOff, Download, Check, Share2, RefreshCw } from 'lucide-react';
+import { BookOpen, Search, X, ArrowLeft, WifiOff, Download, Check, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { loadState } from '@/lib/storage';
 import { toast } from 'sonner';
@@ -8,17 +9,24 @@ import { InAppPDFViewer } from '@/components/exam/InAppPDFViewer';
 import { BookGrid } from '@/components/library/BookGrid';
 import TaskBar from '@/components/TaskBar';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { gradingSystemBadgeLabel } from '@/lib/i18n';
+import {
+  paperMatchesClassFilter,
+  paperMatchesSubjectFilter,
+  collectPaperSubjects,
+  uniqueClassLevelsFromPapers,
+  uniqueSubjectsFromPapers,
+} from '@/lib/library-filters';
 import { usePremium } from '@/contexts/AppConfigContext';
 import { LibraryBook, UnifiedDownloadProgress, DownloadStatus } from '@/types/exam-library';
 import { bookService } from '@/services/bookService';
 import { downloadService } from '@/services/downloadService';
-import { fileShareService } from '@/services/fileShareService';
 import { readBookFileAsBase64 } from '@/lib/filesystem';
 import { cacheService } from '@/services/cacheService';
 
 export default function BooksLibrary() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { requirePremium } = usePremium();
 
   // Get grading system for badge display
@@ -41,9 +49,11 @@ export default function BooksLibrary() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
+  const [classFilter, setClassFilter] = useState('');
   const [showPDFViewer, setShowPDFViewer] = useState(false);
   const [currentPDF, setCurrentPDF] = useState<{ data: string; title: string } | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [headerExpanded, setHeaderExpanded] = useState(true);
 
   // Download state management
   const [downloadStatuses, setDownloadStatuses] = useState<Map<string, DownloadStatus>>(new Map());
@@ -79,23 +89,21 @@ export default function BooksLibrary() {
       if (gradingSystem === 'french' || gradingSystem === 'aefe') mappedSystem = 'french';
       if (gradingSystem === 'nigerian_university') mappedSystem = 'english';
 
-      // Use bookService to fetch books with system filtering
-      const fetchedBooks = await bookService.getBooks({ system: mappedSystem });
-      const allSystemBooks = await bookService.getBooks({ system: 'all' });
-      
-      const combinedBooks = [...fetchedBooks, ...allSystemBooks];
-      const uniqueBooks = combinedBooks.filter((book, index, self) => 
+      // Prefer user's system + universal books; fall back to full library
+      const [systemBooks, universalBooks, allBooks] = await Promise.all([
+        bookService.getBooks({ system: mappedSystem }),
+        bookService.getBooks({ system: 'all' }),
+        bookService.fetchBooks(),
+      ]);
+
+      const combinedBooks = [...systemBooks, ...universalBooks];
+      const uniqueBooks = combinedBooks.filter((book, index, self) =>
         index === self.findIndex(b => b.id === book.id)
       );
 
-      if (uniqueBooks.length > 0) {
-        console.log(`✅ BooksLibrary: Fetched ${uniqueBooks.length} books`);
-        setBooks(uniqueBooks);
-      } else {
-        console.log('[BooksLibrary] No system matches, fetching all/sample books');
-        const fallbackBooks = await bookService.fetchBooks();
-        setBooks(fallbackBooks);
-      }
+      const booksToShow = uniqueBooks.length > 0 ? uniqueBooks : allBooks;
+      console.log(`✅ BooksLibrary: Showing ${booksToShow.length} books`);
+      setBooks(booksToShow);
     } catch (err) {
       console.warn('[BooksLibrary] Failed to load books, using sample fallback:', err);
       const fallbackBooks = await bookService.fetchBooks();
@@ -115,7 +123,7 @@ export default function BooksLibrary() {
       console.warn('⚠️ Failed to clear books cache:', error);
     }
     await loadBooks();
-    toast.success('Books refreshed');
+    toast.success(t("booksRefreshed"));
   };
 
   const loadDownloadStatuses = async () => {
@@ -216,41 +224,27 @@ export default function BooksLibrary() {
         return newMap;
       });
       
-      toast.info('Download cancelled');
+      toast.info(t("operationCancelled"));
     } catch (error) {
       console.error('Failed to cancel download:', error);
     }
   };
 
-  const handleShareBook = async (book: LibraryBook) => {
-    try {
-      const downloadInfo = await downloadService.getBookDownloadInfo(book.id);
-      if (!downloadInfo) {
-        toast.error('Book not downloaded. Please download first to share.');
-        return;
-      }
-
-      await fileShareService.shareBook(downloadInfo.localPath, book.title);
-    } catch (error) {
-      console.error('Share failed:', error);
-      if (error instanceof Error && !error.message.includes('cancel')) {
-        toast.error(error.message);
-      }
-    }
-  };
-
   const categories = Array.from(new Set(books.map(b => b.category).filter(Boolean))).sort();
-  const subjects = Array.from(new Set(books.map(b => b.subject).filter(Boolean))).sort();
+  const subjects = uniqueSubjectsFromPapers(books);
+  const classLevels = uniqueClassLevelsFromPapers(books);
 
   const filtered = books.filter(b => {
     const q = search.toLowerCase();
     const matchSearch = !q ||
       b.title.toLowerCase().includes(q) ||
       (b.author ?? '').toLowerCase().includes(q) ||
-      b.subject.toLowerCase().includes(q);
+      b.subject.toLowerCase().includes(q) ||
+      collectPaperSubjects(b).some(s => s.toLowerCase().includes(q));
     const matchCategory = !categoryFilter || b.category === categoryFilter;
-    const matchSubject = !subjectFilter || b.subject === subjectFilter;
-    return matchSearch && matchCategory && matchSubject;
+    const matchSubject = !subjectFilter || paperMatchesSubjectFilter(b, subjectFilter);
+    const matchClass = paperMatchesClassFilter(b, classFilter || undefined);
+    return matchSearch && matchCategory && matchSubject && matchClass;
   });
 
   console.log('Filtered books:', filtered.length, 'from total:', books.length);
@@ -282,40 +276,53 @@ export default function BooksLibrary() {
               <ArrowLeft className="h-4 w-4 text-foreground" />
             </button>
             <div className="flex-1">
-              <h1 className="text-xl font-black text-foreground">Books</h1>
-              <p className="text-xs font-semibold text-muted-foreground">Textbooks & study guides</p>
+              <h1 className="text-xl font-black text-foreground">{t("booksTitle")}</h1>
+              <p className="text-xs font-semibold text-muted-foreground">{t("booksSubtitle")}</p>
               {/* System Badge */}
               <div className="mt-1.5">
-                {gradingSystem === "apc" && (
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30">
-                    <div className="w-1 h-1 rounded-full bg-blue-500"></div>
-                    <span className="text-[10px] font-bold text-blue-400">APC System</span>
-                  </div>
-                )}
-                {gradingSystem === "french" && (
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30">
-                    <div className="w-1 h-1 rounded-full bg-purple-500"></div>
-                    <span className="text-[10px] font-bold text-purple-400">French System</span>
-                  </div>
-                )}
-                {gradingSystem === "nigerian_university" && (
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/15 border border-green-500/30">
-                    <div className="w-1 h-1 rounded-full bg-green-500"></div>
-                    <span className="text-[10px] font-bold text-green-400">Nigerian System</span>
-                  </div>
-                )}
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30">
+                  <div className="w-1 h-1 rounded-full bg-blue-500"></div>
+                  <span className="text-[10px] font-bold text-blue-400">
+                    {gradingSystemBadgeLabel(gradingSystem, language)}
+                  </span>
+                </div>
               </div>
             </div>
             <button
               onClick={handleRefresh}
               disabled={loading}
               className="h-9 w-9 flex items-center justify-center rounded-xl bg-card border-2 border-foreground active:scale-95 transition-transform shrink-0 disabled:opacity-50"
-              title="Refresh books"
+              title={t("booksRefreshTitle")}
             >
               <RefreshCw className={`h-4 w-4 text-foreground ${loading ? 'animate-spin' : ''}`} />
             </button>
+            <button
+              type="button"
+              onClick={() => setHeaderExpanded(open => !open)}
+              aria-expanded={headerExpanded}
+              aria-controls="books-header-filters"
+              aria-label={headerExpanded ? t("hideFilters") : t("showFilters")}
+              className="h-9 w-9 flex items-center justify-center rounded-full bg-card border-2 border-foreground card-shadow active:scale-95 transition-transform shrink-0"
+            >
+              {headerExpanded ? (
+                <ChevronDown className="h-4 w-4 text-foreground" />
+              ) : (
+                <ChevronUp className="h-4 w-4 text-foreground" />
+              )}
+            </button>
           </div>
 
+          <AnimatePresence initial={false}>
+            {headerExpanded && (
+              <motion.div
+                key="books-header-filters"
+                id="books-header-filters"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.22, ease: 'easeInOut' }}
+                className="overflow-hidden"
+              >
           {/* Search */}
           {books.length > 0 && (
             <div className="mt-3 space-y-2">
@@ -325,7 +332,7 @@ export default function BooksLibrary() {
                   type="text"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  placeholder="Search books, authors..."
+                  placeholder={t("booksSearchPlaceholder")}
                   className="w-full bg-card border-2 border-foreground rounded-2xl py-2.5 pl-9 pr-10 text-sm font-semibold placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
                 />
                 {search && (
@@ -336,38 +343,66 @@ export default function BooksLibrary() {
               </div>
 
               {/* Filter pills */}
-              {(categories.length > 1 || subjects.length > 1) && (
-                <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-0.5">
-                  {categories.map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => setCategoryFilter(prev => prev === cat ? '' : cat)}
-                      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black border-2 transition-all active:scale-95 ${
-                        categoryFilter === cat
-                          ? 'bg-foreground text-background border-foreground'
-                          : 'bg-card text-foreground border-foreground/30'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                  {subjects.map(sub => (
-                    <button
-                      key={sub}
-                      onClick={() => setSubjectFilter(prev => prev === sub ? '' : sub)}
-                      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black border-2 transition-all active:scale-95 ${
-                        subjectFilter === sub
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-card text-foreground border-foreground/30'
-                      }`}
-                    >
-                      {sub}
-                    </button>
-                  ))}
+              {(categories.length > 1 || subjects.length > 1 || classLevels.length > 1) && (
+                <div className="space-y-2">
+                  {categories.length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-0.5">
+                      {categories.map(cat => (
+                        <button
+                          key={`cat-${cat}`}
+                          onClick={() => setCategoryFilter(prev => prev === cat ? '' : cat)}
+                          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black border-2 transition-all active:scale-95 ${
+                            categoryFilter === cat
+                              ? 'bg-foreground text-background border-foreground'
+                              : 'bg-card text-foreground border-foreground/30'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {subjects.length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-0.5">
+                      {subjects.map(sub => (
+                        <button
+                          key={`sub-${sub}`}
+                          onClick={() => setSubjectFilter(prev => prev === sub ? '' : sub)}
+                          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black border-2 transition-all active:scale-95 ${
+                            subjectFilter === sub
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-card text-foreground border-foreground/30'
+                          }`}
+                        >
+                          {sub}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {classLevels.length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-0.5">
+                      {classLevels.map(level => (
+                        <button
+                          key={`cls-${level}`}
+                          onClick={() => setClassFilter(prev => prev === level ? '' : level)}
+                          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black border-2 transition-all active:scale-95 ${
+                            classFilter === level
+                              ? 'bg-secondary text-secondary-foreground border-secondary'
+                              : 'bg-card text-foreground border-foreground/30'
+                          }`}
+                        >
+                          {level}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -379,12 +414,12 @@ export default function BooksLibrary() {
               <WifiOff className="h-8 w-8 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-lg font-black text-foreground">You're offline</p>
+              <p className="text-lg font-black text-foreground">{t("offlineTitle")}</p>
               <p className="text-sm font-semibold text-muted-foreground mt-1">
-                Can't load books without a connection.
+                {t("booksOfflineBody")}
               </p>
               <p className="text-sm font-semibold text-muted-foreground">
-                Connect to the internet to browse books.
+                {t("booksConnectInternet")}
               </p>
             </div>
           </div>
@@ -393,10 +428,10 @@ export default function BooksLibrary() {
         {!isOffline && error && (
           <div className="py-12 text-center">
             <div className="bg-muted/50 rounded-2xl p-8">
-              <p className="text-lg font-bold text-foreground mb-2">Couldn't load books</p>
+              <p className="text-lg font-bold text-foreground mb-2">{t("booksLoadError")}</p>
               <p className="text-sm text-muted-foreground mb-4">{error}</p>
               <button onClick={loadBooks} className="text-sm font-black text-primary active:scale-95 transition-transform">
-                Retry
+                {t("retry")}
               </button>
             </div>
           </div>
@@ -426,7 +461,6 @@ export default function BooksLibrary() {
               downloadProgresses={downloadProgresses}
               onDownload={handleDownloadBook}
               onCancelDownload={handleCancelDownload}
-              onShare={handleShareBook}
             />
           </>
         )}
