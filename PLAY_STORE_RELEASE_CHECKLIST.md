@@ -32,7 +32,7 @@ All your data and downloaded PDFs work offline. Your progress syncs to the cloud
 🌐 BILINGUAL
 Full English and French language support — switch instantly from any screen.
 
-GoStudy supports Cameroonian APC and French-track systems, AEFE/French-curriculum schools, and Nigerian University students across all departments.
+GoStudy supports the APC system and French-track systems, AEFE/French-curriculum schools, and Nigerian University students across all departments.
 
 Start studying smarter today.
 ```

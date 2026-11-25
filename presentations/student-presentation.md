@@ -30,7 +30,7 @@
 ✅ Set targets and track progress
 ✅ Study smarter, not harder
 
-**Built specifically for Cameroon's APC system**
+**Built specifically for the APC system**
 From 6ème to Terminale (all series: A4, C, D, E)
 
 ---
@@ -545,4 +545,4 @@ Ask your school about premium codes today!
 
 *Presentation for students*
 *Version 1.0 - November 2026*
-*Made with ❤️ for Cameroonian students*
+*Made with ❤️ for APC students*

@@ -43,7 +43,7 @@ export default function Test() {
     description: ''
   });
 
-  // Cameroon education system options - MUST match app's ClassLevel type
+  // APC education system options - MUST match app's ClassLevel type
   const classLevels = ['Sixième', 'Cinquième', 'Quatrième', 'Troisième', 'Seconde', 'Première', 'Terminale'];
   const series = ['A', 'C', 'D', 'E'];
   const subjects = [

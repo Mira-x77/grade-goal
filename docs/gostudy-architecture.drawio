@@ -171,7 +171,7 @@
       <mxGeometry x="800" y="720" width="500" height="20" as="geometry" />
     </mxCell>
 
-    <mxCell id="gs_apc" value="🇨🇲 APC / Cameroonian&#xa;grading-apc.ts&#xa;Interro / Devoir / Compo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+    <mxCell id="gs_apc" value="APC&#xa;grading-apc.ts&#xa;Interro / Devoir / Compo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
       <mxGeometry x="800" y="750" width="170" height="70" as="geometry" />
     </mxCell>
 

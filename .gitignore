@@ -64,3 +64,6 @@ scripts/r2/.env
 scripts/epreuves/.env
 scripts/epreuves/output/
 
+# Microsoft Office lock files (~$report.docx) created while a document is open
+~$*
+

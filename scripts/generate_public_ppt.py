@@ -145,7 +145,7 @@ def build_slide_1():
     p2.space_before = Pt(8)
     
     p3 = tf.add_paragraph()
-    p3.text = "Built specifically for students & parents navigating APC Cameroon, French secondary schools, and Nigerian Universities."
+    p3.text = "Built specifically for students & parents navigating the APC system, French secondary schools, and Nigerian Universities."
     p3.font.name = FONT_BODY
     p3.font.size = Pt(13)
     p3.font.color.rgb = MUTED_TEXT
@@ -228,7 +228,7 @@ def build_slide_2():
         ),
         (
             "4. Complex Grading Systems",
-            "Cameroon APC (40/60 compo splits), French benchmarks, and Nigerian 5.0 CGPAs have strict math rules that students struggle to track manually.",
+            "APC (40/60 compo splits), French benchmarks, and Nigerian 5.0 CGPAs have strict math rules that students struggle to track manually.",
             PURPLE_PALE,
             PURPLE,
             "❌ Confusing academic rules"
@@ -651,7 +651,7 @@ def build_slide_8():
     
     systems = [
         (
-            "🇨🇲 Cameroon APC System",
+            "APC System",
             "Secondary & High School",
             [
                 "Interro, Devoir, and Composition inputs",
@@ -809,7 +809,7 @@ def build_slide_10():
     # Left: 3 Quick Steps
     steps = [
         ("1. Open the App (or Try Guest Mode)", "Install the Android APK or visit the web app. You can start immediately as a Guest with zero password hassle.", YELLOW_PALE),
-        ("2. Select Your Class & Target", "Choose your grading system (APC Cameroon, French, or Nigerian University) and set your target grade.", SKY_BLUE_PALE),
+        ("2. Select Your Class & Target", "Choose your grading system (APC, French, or Nigerian University) and set your target grade.", SKY_BLUE_PALE),
         ("3. Enter Marks & Download Past Exams", "Input your first grades to unlock your live dashboard, simulate upcoming exams, and download revision PDFs.", GREEN_PALE),
     ]
     

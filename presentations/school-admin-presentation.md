@@ -5,7 +5,7 @@
 
 ## 📱 What is Go Study!?
 
-**The Complete Academic Management App for Cameroonian Students**
+**The Complete Academic Management App for APC Students**
 
 - 🎯 GPA Calculator & Target Tracker
 - 📊 Study Strategizer (AI-powered)
@@ -327,7 +327,7 @@
 
 ## 🎯 Why Choose Go Study!?
 
-✅ **Built for Cameroon** - APC system native, not adapted
+✅ **Built for APC** - native, not adapted
 ✅ **Proven Results** - Students show measurable improvement
 ✅ **Easy Revenue** - No operational overhead
 ✅ **Student Loved** - High engagement & satisfaction

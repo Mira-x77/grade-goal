@@ -20,8 +20,8 @@ then checked against the app source.
 3. **The product** — eight shipped tools, from GPA calculator to schedule and history.
 4. **How it works** — four setup steps plus a phone dashboard mock.
 5. **Study strategizer** — the impact-ranked study plan, with a worked example.
-6. **Content library** — 60+ papers, 2015–2024, BAC/BEPC/Probatoire, nine subjects, books.
-7. **Why now / market** — Cameroon beachhead, three grading systems, current coverage.
+6. **Content library** - 395 papers (2002-2027) and 415 books, BAC/BEPC/Probatoire/CEPD/CAP, sixteen subjects.
+7. **Why now / market** - APC beachhead, three grading systems, current coverage.
 8. **Access model** — free vs premium, public student pricing, school code distribution.
 9. **Trust** — data minimisation, offline-first, device limit, deletion.
 10. **Roadmap + CTA** — now/next/later, student and school/investor calls to action.

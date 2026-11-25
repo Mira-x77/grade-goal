@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const prompt = `You are an expert in the Cameroonian educational system (GCE and BAC/Baccalauréat).
+    const prompt = `You are an expert in the APC educational system (BEPC, Probatoire and Baccalauréat).
 Generate study intelligence for: Subject = "${subject}", Class Level = "${classLevel}".
 ${paperContext}
 
@@ -93,7 +93,7 @@ Rules:
 - stepBySolutions: 5 items — worked examples with clear steps
 - practiceTests: 8 items — exam-style questions
 - weakSpots: 6 items — common student failure areas with study tips
-- All content must be specific to ${subject} at ${classLevel} level in the Cameroonian curriculum
+- All content must be specific to ${subject} at ${classLevel} level in the APC curriculum
 - Use the language appropriate for the subject (French for French-medium subjects, English for English-medium)`;
 
     const geminiRes = await fetch(

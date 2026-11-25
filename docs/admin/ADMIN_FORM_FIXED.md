@@ -1,7 +1,7 @@
-# Admin Upload Form - Cameroon Education System Integration
+# Admin Upload Form - APC Education System Integration
 
 ## Problem Identified
-The admin panel's upload form (Test.tsx) was using text inputs instead of dropdowns, making it difficult to ensure consistent data entry matching the Cameroon education system.
+The admin panel's upload form (Test.tsx) was using text inputs instead of dropdowns, making it difficult to ensure consistent data entry matching the APC education system.
 
 ## Changes Made
 

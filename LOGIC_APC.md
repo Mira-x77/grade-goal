@@ -46,7 +46,7 @@ return available.reduce((a, b) => a + b, 0) / available.length;
 ```
 This gave Physics = 8.33 instead of 8.00, and final average ~12.88 instead of 12.97.
 
-**Fix:** Two-step Cameroonian school formula:
+**Fix:** Two-step APC school formula:
 ```ts
 // CORRECT
 // Step 1: Moy_classe = (Interro + Dev) / 2

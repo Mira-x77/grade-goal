@@ -1,7 +1,7 @@
 import { Subject } from "@/types/exam";
 
 /**
- * APC Subject Average — two-step Cameroonian school formula:
+ * APC Subject Average — two-step APC school formula:
  * Step 1: Moy_classe = average of present classwork marks (interro, dev)
  *         respecting markStatuses ("not_done" marks are excluded)
  * Step 2: Moy_sem = (Moy_classe + compo) / 2

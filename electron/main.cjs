@@ -368,11 +368,13 @@ function isLocal(url) {
 }
 
 function createWindow() {
+  // Guidebook screenshots need a phone-sized viewport, not the desktop default.
+  const capture = Boolean(CAPTURE_DIR);
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 860,
-    minWidth: 960,
-    minHeight: 640,
+    width: capture ? 430 : 1280,
+    height: capture ? 880 : 860,
+    minWidth: capture ? 320 : 960,
+    minHeight: capture ? 480 : 640,
     show: false,
     backgroundColor: '#0b0f19',
     title: 'GoStudy!',
@@ -443,6 +445,19 @@ function installMenu() {
 // ---------------------------------------------------------------------------
 
 /** A filled APC profile, so guidebook screenshots show real-looking numbers. */
+const DEMO_SCHEDULE = {
+  schedule: {
+    monday: ['Mathématiques', 'Français'],
+    tuesday: ['Physique-Chimie', 'Anglais'],
+    wednesday: ['Mathématiques', 'SVT', 'Histoire-Géographie'],
+    thursday: ['Français', 'Physique-Chimie'],
+    friday: ['Anglais', 'SVT'],
+  },
+  reminderSettings: { eveningEnabled: true, morningEnabled: true, eveningTime: '19:00', morningTime: '05:00' },
+  setupCompleted: true,
+  setupSkipped: false,
+};
+
 const DEMO_STATE = {
   step: 'marks',
   targetAverage: 15,
@@ -452,12 +467,12 @@ const DEMO_STATE = {
   serie: 'D',
   semester: '1er Semestre',
   subjects: [
-    { id: 's1', name: 'Mathématiques', coefficient: 4, marks: { interro: 15.5, dev: 14, compo: 13.5 } },
-    { id: 's2', name: 'Physique-Chimie', coefficient: 3, marks: { interro: 13, dev: 12.5, compo: 11 } },
-    { id: 's3', name: 'SVT', coefficient: 2, marks: { interro: 12, dev: 14, compo: 13 } },
+    { id: 's1', name: 'Mathématiques', coefficient: 4, marks: { interro: 15.5, dev: 14, compo: null } },
+    { id: 's2', name: 'Physique-Chimie', coefficient: 3, marks: { interro: 13, dev: null, compo: 11 } },
+    { id: 's3', name: 'SVT', coefficient: 2, marks: { interro: null, dev: 14, compo: 13 } },
     { id: 's4', name: 'Français', coefficient: 3, marks: { interro: 14, dev: 15, compo: 12.5 } },
-    { id: 's5', name: 'Anglais', coefficient: 2, marks: { interro: 16, dev: 15, compo: 14 } },
-    { id: 's6', name: 'Histoire-Géographie', coefficient: 2, marks: { interro: 11, dev: 12, compo: 10.5 } },
+    { id: 's5', name: 'Anglais', coefficient: 2, marks: { interro: 16, dev: 15, compo: null } },
+    { id: 's6', name: 'Histoire-Géographie', coefficient: 2, marks: { interro: 11, dev: null, compo: 10.5 } },
   ],
   settings: {
     weights: { interro: 1, dev: 1, compo: 2, locked: false },
@@ -476,22 +491,33 @@ const DEMO_STATE = {
 
 /** Screens the guidebook needs, in walking order. */
 const CAPTURE_ROUTES = [
-  ['01-home', '/', 4000],
-  ['02-library', '/library', 4000],
-  ['03-books', '/library/books', 3000],
-  ['04-paper-detail', '/library/edu-p-864', 5000],
-  ['05-simulator', '/simulator', 3000],
-  ['06-schedule', '/schedule', 2500],
-  ['07-actus', '/courses', 4500],
-  ['08-downloads', '/my-downloads', 2500],
-  ['09-profile', '/profile', 2500],
-  ['10-settings', '/settings', 2500],
+  ['01-home', '/', 7000],
+  ['02-library', '/library', 6000],
+  ['03-books', '/library/books', 5000],
+  ['04-paper-detail', '/library/edu-p-864', 7000],
+  ['05-simulator', '/simulator', 5000],
+  ['06-schedule', '/schedule', 6000],
+  ['07-actus', '/courses', 6000, 420],
+  ['08-downloads', '/my-downloads', 5000],
+  ['09-profile', '/profile', 5000],
+  ['10-settings', '/settings', 5000],
+  ['11-welcome', '/welcome', 4000],
+  ['12-quiz', '/quiz', 5000],
+  ['13-book-detail', '/book/edu-b-163', 6000],
+  ['14-get-code', '/premium/how-to-get-code', 5000],
 ];
 
 async function seedStudentProfile(webContents) {
   await webContents.executeJavaScript(`
     localStorage.setItem('scoretarget_state', JSON.stringify(${JSON.stringify(DEMO_STATE)}));
+    localStorage.setItem('scoretarget_schedule', JSON.stringify(${JSON.stringify(DEMO_SCHEDULE)}));
     localStorage.setItem('grade_calculator_setup_done', 'true');
+    // Skip the first-run tour and the per-screen intro sheets so screenshots
+    // show the page itself, not a coach mark.
+    localStorage.setItem('scoretarget_tour_seen', 'true');
+    ['library', 'simulator', 'profile'].forEach((k) =>
+      localStorage.setItem('scoretarget_intro_seen_' + k, 'true')
+    );
   `);
 }
 
@@ -569,14 +595,32 @@ async function runCapture(window) {
   window.setContentSize(430, 880);
   await fsp.mkdir(CAPTURE_DIR, { recursive: true });
 
+  // Hide scrollbars and horizontal overflow so screenshots look like a phone.
+  // Re-applied after every navigation, because insertCSS is per-document.
+  const CLEAN_CSS = `
+    ::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
+    html, body { scrollbar-width: none !important; overflow-x: hidden !important; }
+  `;
+  await webContents.insertCSS(CLEAN_CSS);
+
   const written = [];
-  for (const [slug, route, waitMs] of CAPTURE_ROUTES) {
+  for (const [slug, route, waitMs, scrollBy] of CAPTURE_ROUTES) {
     await window.loadURL(`${localBase}${route}`);
+    await webContents.insertCSS(CLEAN_CSS).catch(() => {});
     await new Promise((resolve) => setTimeout(resolve, waitMs ?? 2500));
+    if (scrollBy) {
+      // Wheel events scroll whatever pane sits under the pointer in the app.
+      for (let i = 0; i < 6; i += 1) {
+        webContents.sendInputEvent({ type: 'mouseWheel', x: 215, y: 500, deltaX: 0, deltaY: -scrollBy / 6, canScroll: true });
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+    } else {
+      await webContents.executeJavaScript('window.scrollTo(0, 0)').catch(() => {});
+    }
     const image = await webContents.capturePage();
     const file = path.join(CAPTURE_DIR, `${slug}.png`);
     await fsp.writeFile(file, image.toPNG());
-    written.push({ slug, route, href: webContents.getURL() });
+    written.push({ slug, route, href: webContents.getURL(), size: window.getContentSize() });
   }
 
   console.log(`CAPTURE_RESULT ${JSON.stringify(written)}`);

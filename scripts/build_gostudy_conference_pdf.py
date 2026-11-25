@@ -317,7 +317,7 @@ def page1(c):
     hrule(c, y)
     y -= 11
     rows = [
-        ("College / lycee APC", "Interro, devoir, composition, coefficients, target /20. Primary use case for a Togo/Cameroon conference."),
+        ("College / lycee APC", "Interro, devoir, composition, coefficients, target /20. Primary use case for the APC market."),
         ("French-style bulletin", "Same three marks plus class comparison and appreciation. Sibling mode, not a separate product."),
         ("Nigerian university", "Credit units, 0-100 scores, GPA/CGPA, degree class. Same app, different maths adapter."),
         ("Parents / teachers", "Live picture of the year. Teachers do not need a portal to understand the student story."),
@@ -1388,7 +1388,7 @@ def page10(c, img_road):
         "1. Informal PDF channels beat you on speed and social proof; you beat them on taxonomy, offline shelf, and year planning.",
         "2. uLesson/SchoolMouv beat you on teaching; you beat them on APC bulletin + local class lists. Do not fight their studio.",
         "3. Pronote beats you on truth of marks; you beat it by existing without a school IT project.",
-        "4. Annabac beats you on corriges prestige; you beat it on Togo/Cameroon series and compositions that Hatier will not typeset.",
+        "4. Annabac beats you on corriges prestige; you beat it on APC series and compositions that Hatier will not typeset.",
         "5. Photomath beats you on the stuck-now moment; you beat it on the year. Keep both jobs in the story, never pretend you solved question 3 with a camera.",
     ]
     for t in facts:

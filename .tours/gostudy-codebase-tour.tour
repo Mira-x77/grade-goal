@@ -24,7 +24,7 @@
       "file": "src/pages/Index.tsx",
       "line": 1,
       "title": "🎓 Onboarding Wizard (5 steps)",
-      "description": "This is the setup wizard new users go through:\n1. Enter your name\n2. Choose grading system (APC/Cameroonian, French, or Nigerian University)\n3. Pick your class level\n4. Set your target grade\n5. Choose your subjects\n\nWhen finished, it saves everything to localStorage and sends you to Home."
+      "description": "This is the setup wizard new users go through:\n1. Enter your name\n2. Choose grading system (APC, French, or Nigerian University)\n3. Pick your class level\n4. Set your target grade\n5. Choose your subjects\n\nWhen finished, it saves everything to localStorage and sends you to Home."
     },
     {
       "file": "src/pages/Home.tsx",

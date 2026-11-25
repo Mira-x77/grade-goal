@@ -1,7 +1,7 @@
 import { Subject, FeedbackStatus, MarkStatus } from "@/types/exam";
 
 /**
- * Subject average — two-step Cameroonian school formula:
+ * Subject average — two-step APC school formula:
  * Step 1: Moy_classe = average of present classwork marks (interro, dev)
  * Step 2: Moy_sem = (Moy_classe + compo) / 2
  *

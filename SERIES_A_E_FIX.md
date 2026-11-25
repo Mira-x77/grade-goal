@@ -62,7 +62,7 @@ export const ClassLevelSchema = z.enum([
 
 ## Complete Series Support
 
-### Cameroon Education System
+### APC Education System
 ```
 Collège (No Series):
 - Sixième (6ème)

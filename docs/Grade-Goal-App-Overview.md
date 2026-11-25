@@ -36,7 +36,7 @@ The app adapts its entire UI and math based on `gradingSystem`:
 
 | System | Typical users | Mark model | Averages |
 |--------|---------------|------------|----------|
-| **APC** (Cameroon) | Lycée / secondary | **Interro**, **Devoir**, **Composition** per subject, with coefficients | Classwork average + compo (optional 40/60 split); yearly average weighted by coefficient |
+| **APC** | Lycée / secondary | **Interro**, **Devoir**, **Composition** per subject, with coefficients | Classwork average + compo (optional 40/60 split); yearly average weighted by coefficient |
 | **French** | French-style schools | Same three mark types + optional **class average**, min/max, **appreciation** (1–5) | Student vs class comparison, percentiles, French summary views |
 | **Nigerian university** | University | **Credit units**, scores 0–100, **custom weighted assessments** | GPA/CGPA, letter grades, degree classification (First Class, etc.) |
 
@@ -95,7 +95,7 @@ The main hub after onboarding:
 **Exam papers**
 
 - Browse Supabase-backed **exam papers** (PDFs): filter by class level, subject, year, exam type (Baccalauréat, Composition, Devoir, Interro, etc.)
-- Cameroon/French class levels from **6ème** through **Tle** with série variants
+- APC/French class levels from **6ème** through **Tle** with série variants
 - **Search**, grid/list views, preview
 - **Download** for offline use; download counts tracked
 - **In-app PDF viewer**

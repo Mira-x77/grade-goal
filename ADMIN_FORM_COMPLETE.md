@@ -1,7 +1,7 @@
 # ✅ Admin Upload Form - COMPLETE FIX
 
 ## Summary
-Fixed the admin panel upload form to use proper dropdowns matching the Cameroon education system. Papers now upload correctly to Supabase and appear in the phone app.
+Fixed the admin panel upload form to use proper dropdowns matching the APC education system. Papers now upload correctly to Supabase and appear in the phone app.
 
 ## What Was Fixed
 

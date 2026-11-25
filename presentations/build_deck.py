@@ -282,7 +282,7 @@ def slide_cover(prs):
     s.shapes.add_picture(ICON, Inches(0.75), Inches(0.50), Inches(1.12), Inches(1.12))
     pill(s, 10.60, 0.58, 2.04, 0.32, "PUBLIC OVERVIEW · 2026", size=8.5,
          fill=WHITE, line=INK)
-    text(s, 2.18, 0.72, 5.4, 0.3, "FOR CAMEROONIAN STUDENTS", size=10,
+    text(s, 2.18, 0.72, 5.4, 0.3, "FOR APC STUDENTS", size=10,
          color=MUTED, bold=True)
     text(s, 2.18, 1.00, 5.4, 0.3, "6ÈME → TERMINALE  ·  A4 / C / D / E", size=10,
          color=MUTED, bold=True)
@@ -314,17 +314,17 @@ def slide_cover(prs):
     # sticky note
     note = rect(s, 8.32, 4.92, 3.45, 1.42, WHITE, INK, 2.0, 0.06, rot=-4.5)
     rect(s, 9.55, 4.82, 0.85, 0.22, YELLOW_SOFT, None, 0, 0.3, rot=-4.5)
-    text(s, 8.58, 5.12, 3.0, 0.4, "60+ EXAM PAPERS", size=18, bold=True,
+    text(s, 8.58, 5.12, 3.0, 0.4, "395 EXAM PAPERS", size=18, bold=True,
          font=DISPLAY, align=PP_ALIGN.CENTER)
     text(s, 8.58, 5.55, 3.0, 0.25, "BAC · BEPC · PROBATOIRE", size=9, bold=True,
          color=MUTED, align=PP_ALIGN.CENTER)
-    text(s, 8.58, 5.80, 3.0, 0.25, "2015 – 2024", size=9, bold=True,
+    text(s, 8.58, 5.80, 3.0, 0.25, "2002 - 2027", size=9, bold=True,
          color=MUTED, align=PP_ALIGN.CENTER)
 
     text(s, 11.4, 7.13, 1.2, 0.22, "01 / 10", size=7.5, color=MUTED,
          bold=True, align=PP_ALIGN.RIGHT)
 
-    notes(s, "Go Study! is a mobile-first academic companion built for Cameroon's "
+    notes(s, "Go Study! is a mobile-first academic companion built for the APC "
              "APC system. This public overview covers the student product, the "
              "content library, access model and roadmap — no confidential financials.")
 
@@ -380,7 +380,7 @@ def slide_problem(prs):
          size=8.6, bold=True)
 
     text(s, 0.72, 6.62, 9.8, 0.25,
-         "Pricing references: typical private-lesson and printed-paper costs in Cameroon (2026).",
+         "Pricing references: typical private-lesson and printed-paper costs in the APC market (2026).",
          size=8, color=MUTED, italic=True)
     footer(s, 2)
 
@@ -402,7 +402,7 @@ def slide_product(prs):
         ("02", "Target tracker", "Set an end-of-year goal; see if you're on track."),
         ("03", "What-if simulator", "Move missing marks and preview the result."),
         ("04", "Study strategizer", "Ranks subjects by impact on your average."),
-        ("05", "Exam library", "60+ BAC, BEPC and Probatoire papers as PDFs."),
+        ("05", "Exam library", "395 papers from 2002 to 2027, including BAC, BEPC, Probatoire, CEPD and CAP."),
         ("06", "Book library", "Digital books, downloadable for offline study."),
         ("07", "Smart schedule", "Weekly timetable plus study reminders."),
         ("08", "Progress history", "Streaks, mark history and semester archive."),
@@ -560,8 +560,8 @@ def slide_library(prs):
             y=2.28, size=11.5, w=5.4)
 
     stats = [
-        ("60+", "exam papers"),
-        ("10 yrs", "2015–2024 coverage"),
+        ("395", "exam papers"),
+        ("25 yrs", "2002-2027 coverage"),
         ("9", "core subjects"),
         ("2", "libraries: papers + books"),
     ]
@@ -579,9 +579,9 @@ def slide_library(prs):
     # right list card
     rect(s, 6.20, 1.92, 6.30, 2.92, WHITE, INK, 2.0, 0.10)
     rows = [
-        ("BAC", "~35 papers", "Séries A4 · C · D · E", "2015–2024"),
-        ("BEPC", "~20 papers", "3ème preparation", "Recent years prioritised"),
-        ("Probatoire", "~8 papers", "1ère · series-specific", "Recent years"),
+        ("BAC", "39 papers", "Séries A4 · C · D · E", "2002–2027"),
+        ("BEPC", "40 papers", "3ème preparation", "Recent years prioritised"),
+        ("Probatoire", "18 papers", "1ère · series-specific", "Recent years"),
     ]
     ry = 2.16
     for i, (name, count, meta, years) in enumerate(rows):
@@ -614,7 +614,7 @@ def slide_library(prs):
     footer(s, 6)
 
     notes(s, "Content is the retention engine. Use ranges, not precise counts that may "
-             "change weekly: '60+ papers', '2015–2024', nine core subjects, plus the book "
+             "change weekly: 395 papers from 2002 to 2027, sixteen subjects, plus the book "
              "library. The free tier includes five downloads a month.")
 
 
@@ -628,7 +628,7 @@ def slide_market(prs):
     mascot(s, "analyze", 10.95, 0.52, 1.90, 1.45)
 
     cols = [
-        ("START HERE", "Cameroon secondary",
+        ("START HERE", "APC secondary",
          "Seven year groups, arts, science and technical series, one national exam system. "
          "APC is the product's native language — not a translation.",
          ["6ème → Terminale", "A4 · C · D · E", "BEPC · Probatoire · BAC",
@@ -660,7 +660,7 @@ def slide_market(prs):
     rect(s, 0.72, 6.02, 11.86, 0.62, INK, None, 0, 0.18)
     text(s, 0.94, 6.13, 1.85, 0.24, "WHERE WE ARE TODAY", size=7.2, color=YELLOW,
          bold=True)
-    facts = ["Live on Android + web", "60+ papers", "7 class levels", "3 grading systems"]
+    facts = ["Live on Android + web", "395 papers", "7 class levels", "3 grading systems"]
     fx = 3.15
     for f in facts:
         oval(s, fx - 0.20, 6.27, 0.08, 0.08, YELLOW)
@@ -671,7 +671,7 @@ def slide_market(prs):
 
     notes(s, "For investors: this is a focused beachhead with a reusable engine. Do not "
              "quote TAM numbers without a source. The credible proof is product coverage: "
-             "eight levels, three grading systems, live Android and web, 60+ papers.")
+             "eight levels, three grading systems, live Android and web, 395 papers.")
 
 
 def slide_access(prs):
@@ -820,13 +820,13 @@ def slide_next(prs):
     s = prs.slides.add_slide(prs.slide_layouts[6])
     bg(s)
     eyebrow(s, "WHAT'S NEXT")
-    headline(s, "Built in Cameroon.\nReady to scale.", y=0.82, size=36, w=9.6)
+    headline(s, "Built for APC.\nReady to scale.", y=0.82, size=36, w=9.6)
     mascot(s, "triumph", 11.10, 0.42, 1.60, 1.24)
     star(s, 10.78, 1.56, 0.22)
 
     phases = [
         ("NOW", "Live and useful",
-         ["Android + web app", "60+ papers, books, planner", "School code distribution",
+         ["Android + web app", "395 papers, 415 books, planner", "School code distribution",
           "Free tier + premium"]),
         ("NEXT", "Deeper value",
          ["More papers and titles", "School partner dashboard", "Expanded exam prep",

@@ -53,7 +53,7 @@
 - ✓ Consistent data format
 - ✓ No typos possible
 - ✓ Easy filtering in app
-- ✓ Matches Cameroon education system
+- ✓ Matches the APC education system
 - ✓ Auto-combines class + series
 
 ## Data Flow Example

@@ -10,7 +10,7 @@ import {
   getAPCTeacherAppreciation,
 } from "@/lib/grading-apc";
 
-describe("APC Cameroonian/Togolese Report Card Calculation Tests", () => {
+describe("APC Report Card Calculation Tests", () => {
   // Official Semester 1 Data from Report Card
   const s1Subjects: Subject[] = [
     { id: "1", name: "Catéchèse", coefficient: 1, category: "autre", marks: { interro: 19.5, dev: 20, compo: 14.5 } },
