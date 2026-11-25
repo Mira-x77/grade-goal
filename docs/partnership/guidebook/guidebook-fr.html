@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>GoStudy — Guide produit 2026</title>
+<style>
+  :root {
+    --ink: #0b1220;
+    --ink-2: #1a2437;
+    --muted: #5b6577;
+    --line: #e5e9f0;
+    --teal: #0ea5e9;
+    --teal-deep: #0b6e99;
+    --amber: #f5b301;
+    --paper: #ffffff;
+    --soft: #f4f7fb;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #d9dee7;
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page { size: A4; margin: 0; }
+
+  .page {
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    background: var(--paper);
+    overflow: hidden;
+    page-break-after: always;
+    break-after: page;
+    padding: 18mm 16mm 16mm;
+    counter-increment: page;
+    margin: 0 auto;
+  }
+
+  .page:last-child { page-break-after: auto; break-after: auto; }
+
+  .page::after {
+    content: counter(page);
+    position: absolute;
+    right: 14mm;
+    bottom: 8mm;
+    font-size: 8pt;
+    font-weight: 700;
+    color: #9aa4b5;
+  }
+
+  .page.cover::after { content: none; }
+
+  /* ---------- shared type ---------- */
+
+  h1, h2, h3, h4 { margin: 0; line-height: 1.15; letter-spacing: -0.01em; }
+  h1 { font-size: 30pt; font-weight: 900; }
+  h2 { font-size: 19pt; font-weight: 900; }
+  h3 { font-size: 12.5pt; font-weight: 800; }
+  h4 { font-size: 10pt; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--teal-deep); }
+  p { margin: 0 0 3.2mm; }
+  ul { margin: 0 0 3.2mm; padding-left: 4.6mm; }
+  li { margin-bottom: 1.4mm; }
+  strong { font-weight: 800; }
+  .muted { color: var(--muted); }
+  .small { font-size: 8.8pt; }
+  .tiny { font-size: 7.8pt; }
+
+  .kicker {
+    display: inline-block;
+    font-size: 8pt;
+    font-weight: 900;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--teal-deep);
+    margin-bottom: 3mm;
+  }
+
+  .rule { height: 2px; background: var(--ink); width: 100%; margin: 3mm 0 5mm; }
+  .rule.thin { height: 1px; background: var(--line); }
+
+  .page-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8mm;
+    margin-bottom: 6mm;
+  }
+  .page-head h2 { max-width: 140mm; }
+
+  .lead { font-size: 11.5pt; color: var(--ink-2); }
+
+  /* ---------- cover ---------- */
+
+  .cover {
+    padding: 0;
+    background:
+      radial-gradient(120mm 90mm at 85% 8%, rgba(14,165,233,.34), transparent 65%),
+      radial-gradient(90mm 90mm at 10% 92%, rgba(245,179,1,.18), transparent 60%),
+      linear-gradient(155deg, #071019 0%, #0b1220 46%, #12243a 100%);
+    color: #fff;
+  }
+
+  .cover-inner {
+    position: relative;
+    height: 100%;
+    padding: 22mm 18mm 18mm;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .brandmark {
+    width: 30mm; height: 30mm;
+    border-radius: 8mm;
+    background: #fff;
+    padding: 4mm;
+    box-shadow: 0 8mm 20mm rgba(0,0,0,.35);
+  }
+  .brandmark img { width: 100%; height: 100%; object-fit: contain; }
+
+  .cover h1 {
+    font-size: 62pt;
+    letter-spacing: -0.035em;
+    margin-top: 14mm;
+  }
+  .cover h1 span { color: var(--teal); }
+
+  .cover .tagline {
+    font-size: 20pt;
+    font-weight: 800;
+    color: #dce9f5;
+    margin-top: 2mm;
+  }
+
+  .cover .sub {
+    margin-top: 8mm;
+    max-width: 130mm;
+    font-size: 12.5pt;
+    color: #b9c9da;
+    line-height: 1.45;
+  }
+
+  .cover .meta {
+    margin-top: auto;
+    display: flex;
+    gap: 6mm;
+    flex-wrap: wrap;
+    border-top: 1px solid rgba(255,255,255,.18);
+    padding-top: 6mm;
+    font-size: 9pt;
+    color: #9fb3c8;
+  }
+  .cover .meta b { display: block; color: #fff; font-size: 10pt; margin-bottom: 1mm; }
+
+  .cover .badge {
+    display: inline-block;
+    margin-top: 10mm;
+    padding: 2.4mm 5mm;
+    border: 1px solid rgba(14,165,233,.55);
+    border-radius: 99px;
+    font-size: 8.5pt;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #8fd6f7;
+  }
+
+  /* ---------- contents ---------- */
+
+  .toc { margin-top: 4mm; }
+  .toc-row {
+    display: flex;
+    align-items: baseline;
+    gap: 3mm;
+    padding: 2.6mm 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .toc-row .n {
+    width: 9mm;
+    font-weight: 900;
+    color: var(--teal);
+    font-size: 9pt;
+  }
+  .toc-row .t { flex: 1; font-weight: 700; }
+  .toc-row .d { color: var(--muted); font-size: 8.5pt; }
+
+  /* ---------- stat grid ---------- */
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4mm;
+    margin: 5mm 0 6mm;
+  }
+  .stat {
+    border: 1.5px solid var(--ink);
+    border-radius: 4mm;
+    padding: 4mm;
+    background: var(--soft);
+  }
+  .stat b { display: block; font-size: 21pt; font-weight: 900; letter-spacing: -0.03em; }
+  .stat span { font-size: 8.2pt; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+  .stat.dark { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .stat.dark span { color: #9fb3c8; }
+
+  /* Long numeric values (year ranges) must stay on one line. */
+  .stat b.fit { font-size: 16pt; white-space: nowrap; }
+
+  /* ---------- cards / tables ---------- */
+
+  .card {
+    border: 1.5px solid var(--ink);
+    border-radius: 4mm;
+    padding: 5mm 5.5mm;
+    margin-bottom: 4mm;
+    background: #fff;
+  }
+  .card.soft { background: var(--soft); border-color: var(--line); }
+  .card.accent { border-left: 4mm solid var(--teal); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.2pt;
+  }
+  th {
+    text-align: left;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    border-bottom: 1.5px solid var(--ink);
+    padding: 2mm 2mm 2mm 0;
+  }
+  td { padding: 2.2mm 2mm 2.2mm 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:last-child, th:last-child { padding-right: 0; }
+
+  .pill {
+    display: inline-block;
+    padding: 0.8mm 2.4mm;
+    border-radius: 99px;
+    font-size: 7.4pt;
+    font-weight: 900;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .pill.live { background: #d9f6e6; color: #0a6b3d; }
+  .pill.soon { background: #fff3d1; color: #7a5600; }
+  .pill.free { background: #e6f4fb; color: #0b6e99; }
+
+  /* ---------- screen pages ---------- */
+
+  .screen-layout {
+    display: flex;
+    gap: 7mm;
+    align-items: flex-start;
+    margin-top: 2mm;
+  }
+  .shot {
+    width: 74mm;
+    flex: 0 0 74mm;
+    border-radius: 6mm;
+    border: 1.5px solid var(--ink);
+    background: #0b0f19;
+    padding: 1.6mm;
+    box-shadow: 0 3mm 8mm rgba(11,18,32,.14);
+  }
+  .shot img { width: 100%; display: block; border-radius: 4.6mm; }
+  .shot-cap {
+    margin-top: 2mm;
+    font-size: 7.6pt;
+    color: var(--muted);
+    text-align: center;
+  }
+  .screen-body { flex: 1; min-width: 0; }
+  .screen-body h3 { margin-bottom: 1.4mm; }
+  .screen-body .route {
+    font-size: 7.6pt;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #9aa4b5;
+    margin-bottom: 3mm;
+  }
+  .label {
+    font-size: 7.8pt;
+    font-weight: 900;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--teal-deep);
+    margin: 3.4mm 0 1.2mm;
+  }
+  .screen-body p, .screen-body li { font-size: 9.4pt; }
+  .screen-body ul { padding-left: 4mm; }
+
+  .note {
+    margin-top: 3.5mm;
+    padding: 3mm 3.6mm;
+    background: var(--soft);
+    border-left: 1.4mm solid var(--amber);
+    border-radius: 2mm;
+    font-size: 8.8pt;
+  }
+  .note b { color: var(--ink); }
+
+  /* ---------- two screens page ---------- */
+
+  .duo { display: flex; gap: 8mm; }
+  .duo > div { flex: 1; }
+  .duo .shot { width: 100%; flex: none; }
+  .duo h3 { margin-top: 3mm; }
+
+  /* ---------- closing ---------- */
+
+  .closing {
+    background: linear-gradient(160deg, #071019, #0b1220 55%, #0f2338);
+    color: #fff;
+    padding: 24mm 18mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .closing h2 { font-size: 30pt; }
+  .closing p { color: #b9c9da; }
+  .closing .card { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.2); color: #fff; }
+
+  .divider { height: 1px; background: var(--line); margin: 5mm 0; }
+
+  .cols-2 { display: flex; gap: 7mm; }
+  .cols-2 > div { flex: 1; }
+</style>
+</head>
+<body>
+
+<!-- ============================== COUVERTURE ============================== -->
+<section class="page cover">
+  <div class="cover-inner">
+    <div class="brandmark"><img src="icon.png" alt="Mascotte GoStudy"></div>
+
+    <h1>Go<span>Study</span></h1>
+    <div class="tagline">Suivez. Entraînez-vous. Réussissez.</div>
+
+    <p class="sub">
+      Une seule application pour la moyenne, le planning et les anciens sujets.
+      GoStudy transforme chaque note en prochaine étape claire — conçue d'abord
+      pour le système APC.
+    </p>
+
+    <div class="badge">Guide produit · édition 2026</div>
+
+    <div class="meta">
+      <div><b>Version</b>1.3.4</div>
+      <div><b>Date</b>Novembre 2026</div>
+      <div><b>Destiné à</b>Investisseurs &amp; partenaires</div>
+      <div><b>Plateformes</b>Android · Web · Windows</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== SOMMAIRE ============================== -->
+<section class="page">
+  <span class="kicker">Sommaire</span>
+  <h2>Ce que contient ce guide</h2>
+  <div class="rule"></div>
+
+  <p class="lead">
+    Ce guide explique ce que fait GoStudy, écran par écran, en langage simple.
+    Il est écrit pour des lecteurs qui n'ont peut-être jamais ouvert
+    l'application : investisseurs, chefs d'établissement et partenaires. Chaque
+    capture d'écran provient de la version livrée.
+  </p>
+
+  <div class="toc">
+    <div class="toc-row"><span class="n">01</span><span class="t">Le problème que GoStudy résout</span><span class="d">Pourquoi l'app existe</span></div>
+    <div class="toc-row"><span class="n">02</span><span class="t">Le produit en un coup d'œil</span><span class="d">Chiffres et portée</span></div>
+    <div class="toc-row"><span class="n">03</span><span class="t">Une semaine avec GoStudy</span><span class="d">Le rythme quotidien</span></div>
+    <div class="toc-row"><span class="n">04</span><span class="t">Carte des fonctionnalités</span><span class="d">Tous les outils, en un tableau</span></div>
+    <div class="toc-row"><span class="n">05</span><span class="t">Guide écran par écran</span><span class="d">14 écrans expliqués</span></div>
+    <div class="toc-row"><span class="n">06</span><span class="t">La notation APC dans l'app</span><span class="d">Notes, poids, moyennes</span></div>
+    <div class="toc-row"><span class="n">07</span><span class="t">La bibliothèque de contenu</span><span class="d">Sujets et livres</span></div>
+    <div class="toc-row"><span class="n">08</span><span class="t">Gratuit et Premium</span><span class="d">Offres et tarifs</span></div>
+    <div class="toc-row"><span class="n">09</span><span class="t">Hors ligne, appareils et langues</span><span class="d">Où l'app fonctionne</span></div>
+    <div class="toc-row"><span class="n">10</span><span class="t">Systèmes et feuille de route</span><span class="d">Ce qui est prêt, ce qui arrive</span></div>
+    <div class="toc-row"><span class="n">11</span><span class="t">Confidentialité et confiance</span><span class="d">Ce que l'app fait des données</span></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h4>Comment lire une page écran</h4>
+  <div class="cols-2">
+    <div>
+      <p class="small"><strong>Ce que c'est</strong> — le rôle de l'écran en une phrase.</p>
+      <p class="small"><strong>Comment on l'utilise</strong> — les actions que l'élève y fait.</p>
+    </div>
+    <div>
+      <p class="small"><strong>Bon à savoir</strong> — les détails qui comptent pour les écoles et les partenaires.</p>
+      <p class="small muted">Les captures sont en français puisque c'est la langue par défaut de l'app ; chaque écran existe aussi en anglais.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 01 PROBLÈME ============================== -->
+<section class="page">
+  <span class="kicker">01 · Pourquoi GoStudy existe</span>
+  <h2>La moyenne d'un élève est un problème de maths que personne ne lui apprend à résoudre</h2>
+  <div class="rule"></div>
+
+  <div class="cols-2">
+    <div>
+      <h3>Le quotidien</h3>
+      <p>
+        Un élève du secondaire porte les notes d'interrogations, de devoirs et de
+        compositions dans six à dix matières. Chaque matière a un coefficient,
+        chaque type de note a un poids, et chaque établissement applique son
+        propre arrondi. Les élèves recopient des chiffres dans un cahier,
+        devinent leur moyenne, et découvrent trop tard qu'une matière faible
+        tire toute l'année vers le bas.
+      </p>
+      <p>
+        Les anciens sujets posent un autre problème : des PDF éparpillés entre
+        téléphones, groupes WhatsApp et photocopies, sans moyen de savoir à
+        quelle année, quel niveau ou quelle matière appartient un document.
+      </p>
+    </div>
+    <div>
+      <h3>Ce que GoStudy y répond</h3>
+      <ul>
+        <li><strong>Calcule la moyenne correctement</strong> — coefficients, poids des notes et arrondi sont gérés par l'app.</li>
+        <li><strong>Montre l'écart avec l'objectif</strong> — « il vous manque 1,65 point » au lieu d'une impression vague.</li>
+        <li><strong>Classe ce qu'il faut corriger d'abord</strong> — les matières sont ordonnées selon leur effet réel sur la moyenne.</li>
+        <li><strong>Met les sujets dans la poche</strong> — 395 sujets d'examen et 415 livres, consultables et téléchargeables.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="stats">
+    <div class="stat dark"><b>395</b><span>sujets d'examen</span></div>
+    <div class="stat"><b>415</b><span>livres</span></div>
+    <div class="stat"><b>2,03<span style="font-size:11pt"> Go</span></b><span>de bibliothèque</span></div>
+    <div class="stat"><b class="fit">2002–2027</b><span>années couvertes</span></div>
+  </div>
+
+  <div class="card accent">
+    <h3>Pensé pour l'APC d'abord</h3>
+    <p class="small" style="margin-bottom:0">
+      Le catalogue, les règles de notation et les outils de révision sont conçus
+      pour le système APC par compétences des lycées et collèges. Les systèmes
+      français et WAEC existent dans l'architecture du produit mais restent en
+      cours de développement ; ils ne sont pas présentés ici comme des
+      fonctionnalités terminées.
+    </p>
+  </div>
+</section>
+
+<!-- ============================== 02 EN UN COUP D'ŒIL ============================== -->
+<section class="page">
+  <span class="kicker">02 · Le produit en un coup d'œil</span>
+  <h2>Une application, trois missions : connaître sa moyenne, organiser son travail, s'entraîner sur de vrais sujets</h2>
+  <div class="rule"></div>
+
+  <table>
+    <tr><th style="width:36mm">Domaine</th><th>Ce qu'il comprend</th><th style="width:26mm">État</th></tr>
+    <tr>
+      <td><strong>Outils de notes</strong></td>
+      <td>Moyenne APC avec coefficients et poids des notes, suivi de l'objectif, simulateur, historique des semestres</td>
+      <td><span class="pill live">En ligne</span></td>
+    </tr>
+    <tr>
+      <td><strong>Planning</strong></td>
+      <td>Emploi du temps hebdomadaire, liste « livres à apporter aujourd'hui », rappels du matin et du soir</td>
+      <td><span class="pill live">En ligne</span></td>
+    </tr>
+    <tr>
+      <td><strong>Bibliothèque de sujets</strong></td>
+      <td>395 sujets de 2002 à 2027 : BAC, BEPC, Probatoire, CEPD, CAP, concours, compositions et séries d'entraînement</td>
+      <td><span class="pill live">En ligne</span></td>
+    </tr>
+    <tr>
+      <td><strong>Bibliothèque de livres</strong></td>
+      <td>415 livres : programmes, ouvrages de référence, manuels et guides d'étude</td>
+      <td><span class="pill live">En ligne</span></td>
+    </tr>
+    <tr>
+      <td><strong>Fil Actus</strong></td>
+      <td>Annonces, conseils d'examen et actualités partenaires, avec recherche et catégories</td>
+      <td><span class="pill live">En ligne</span></td>
+    </tr>
+    <tr>
+      <td><strong>Préparation d'examen</strong></td>
+      <td>Les 30 questions les plus répétées, guide « quoi étudier », thèmes clés, aide-mémoire, solutions étape par étape</td>
+      <td><span class="pill live">Premium</span></td>
+    </tr>
+    <tr>
+      <td><strong>Mode hors ligne</strong></td>
+      <td>Les sujets et livres téléchargés s'ouvrent sans connexion ; l'app Windows garde un catalogue local</td>
+      <td><span class="pill live">En ligne</span></td>
+    </tr>
+    <tr>
+      <td><strong>Langues</strong></td>
+      <td>Français et anglais, changeables à tout moment</td>
+      <td><span class="pill live">En ligne</span></td>
+    </tr>
+  </table>
+
+  <div class="divider"></div>
+
+  <div class="cols-2">
+    <div>
+      <h4>Pour qui</h4>
+      <ul class="small">
+        <li><strong>Élèves</strong> du collège et du lycée (de la 6ème à la Terminale).</li>
+        <li><strong>Parents</strong> qui veulent suivre les progrès sans interroger un adolescent.</li>
+        <li><strong>Écoles et revendeurs</strong> qui distribuent des codes d'activation et suivent une classe.</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Ce qui le distingue</h4>
+      <ul class="small">
+        <li>La moyenne est <strong>juste par construction</strong>, pas estimée.</li>
+        <li>Les conseils sont <strong>propres aux notes de l'élève</strong>, pas des astuces génériques.</li>
+        <li>La bibliothèque est <strong>classée et étiquetée</strong> — niveau, matière, année, type de document.</li>
+        <li>L'app fonctionne <strong>sans connexion</strong> une fois un sujet téléchargé.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 03 PARCOURS ============================== -->
+<section class="page">
+  <span class="kicker">03 · Une semaine avec GoStudy</span>
+  <h2>Cinq minutes par jour suffisent à garder toute l'année sur les rails</h2>
+  <div class="rule"></div>
+
+  <div class="card accent">
+    <h4>Étape 1 · S'inscrire une fois</h4>
+    <p class="small" style="margin-bottom:0">
+      L'élève saisit un nom, un niveau, une série, un semestre, une moyenne cible
+      et les matières étudiées. L'app applique les bons coefficients.
+      L'inscription prend environ deux minutes et reste modifiable depuis le
+      profil.
+    </p>
+  </div>
+
+  <div class="card accent">
+    <h4>Étape 2 · Noter les notes au fur et à mesure</h4>
+    <p class="small" style="margin-bottom:0">
+      Chaque matière a trois cases — <strong>interro</strong>,
+      <strong>devoir</strong> et <strong>composition</strong>. Les notes
+      s'ajoutent une par une ; les cases vides sont permises et l'app indique
+      quelle part de l'année est déjà saisie.
+    </p>
+  </div>
+
+  <div class="card accent">
+    <h4>Étape 3 · Lire le tableau de bord</h4>
+    <p class="small" style="margin-bottom:0">
+      L'accueil affiche la moyenne actuelle, une bande de statut
+      (Excellent / Bien / À améliorer), la distance à l'objectif, et les trois
+      matières qui feraient le plus bouger la moyenne si elles progressaient.
+    </p>
+  </div>
+
+  <div class="card accent">
+    <h4>Étape 4 · Simuler avant l'examen</h4>
+    <p class="small" style="margin-bottom:0">
+      Le simulateur liste toutes les notes encore manquantes et permet de faire
+      glisser une valeur pour chacune. La moyenne projetée se met à jour
+      instantanément : l'élève voit ce que ferait un 12 ou un 15 à la prochaine
+      composition.
+    </p>
+  </div>
+
+  <div class="card accent">
+    <h4>Étape 5 · S'entraîner sur de vrais sujets</h4>
+    <p class="small" style="margin-bottom:0">
+      Dans la bibliothèque, l'élève filtre par niveau, matière, année et type de
+      document, prévisualise un sujet, puis le télécharge. Les sujets
+      téléchargés restent disponibles hors ligne et apparaissent dans les
+      téléchargements.
+    </p>
+  </div>
+</section>
+
+<!-- ============================== 04 CARTE ============================== -->
+<section class="page">
+  <span class="kicker">04 · Carte des fonctionnalités</span>
+  <h2>Chaque outil de l'app, et à quoi il sert</h2>
+  <div class="rule"></div>
+
+  <table>
+    <tr><th style="width:42mm">Outil</th><th>Ce qu'il fait</th><th style="width:20mm">Offre</th></tr>
+    <tr><td><strong>Calcul de moyenne</strong></td><td>Applique coefficients, poids des notes et arrondi choisi pour produire la moyenne par matière et la moyenne générale.</td><td><span class="pill free">Gratuit</span></td></tr>
+    <tr><td><strong>Suivi de l'objectif</strong></td><td>Compare la moyenne à la fourchette visée et chiffre l'écart en points.</td><td><span class="pill free">Gratuit</span></td></tr>
+    <tr><td><strong>Classement des progrès</strong></td><td>Ordonne les matières selon leur impact pondéré : l'effort va là où il rapporte.</td><td><span class="pill free">Gratuit</span></td></tr>
+    <tr><td><strong>Simulateur</strong></td><td>Des curseurs pour les notes manquantes, une moyenne projetée en direct ; le scénario peut être enregistré.</td><td><span class="pill free">Gratuit</span></td></tr>
+    <tr><td><strong>Historique des semestres</strong></td><td>Archive chaque semestre pour revoir l'année entière, pas seulement le trimestre en cours.</td><td><span class="pill live">Premium</span></td></tr>
+    <tr><td><strong>Emploi du temps</strong></td><td>Matières par jour de la semaine, liste « aujourd'hui » des livres à apporter et heures de rappel.</td><td><span class="pill free">Gratuit</span></td></tr>
+    <tr><td><strong>Bibliothèque de sujets</strong></td><td>Recherche et filtres sur 395 sujets ; prévisualisation et téléchargement des PDF.</td><td><span class="pill free">Gratuit</span></td></tr>
+    <tr><td><strong>Bibliothèque de livres</strong></td><td>415 livres avec couvertures, catégories et le même parcours de téléchargement.</td><td><span class="pill free">Gratuit</span></td></tr>
+    <tr><td><strong>Téléchargements</strong></td><td>Quota, espace utilisé, accès hors ligne, recherche et suppression des fichiers enregistrés.</td><td><span class="pill free">Gratuit</span></td></tr>
+    <tr><td><strong>Fil Actus</strong></td><td>Annonces et conseils avec images, catégories et favoris.</td><td><span class="pill free">Gratuit</span></td></tr>
+    <tr><td><strong>Préparation d'examen</strong></td><td>Les 30 questions les plus répétées, guide d'étude, thèmes clés, aide-mémoire et corrigés détaillés par matière.</td><td><span class="pill live">Premium</span></td></tr>
+    <tr><td><strong>Codes Premium</strong></td><td>Codes d'activation achetés auprès d'une école ou d'un revendeur, activés dans l'app sans carte bancaire.</td><td><span class="pill live">Premium</span></td></tr>
+    <tr><td><strong>Profil et paramètres</strong></td><td>Identité, objectif, matières, thème, couleur d'accent, langue, poids des notes et arrondi.</td><td><span class="pill free">Gratuit</span></td></tr>
+  </table>
+
+  <div class="note">
+    <b>Principe de conception.</b> Rien dans GoStudy n'exige une carte bancaire,
+    un numéro de téléphone ou une adresse e-mail d'école. Un élève peut
+    installer l'app, créer son profil et commencer à travailler en moins de
+    trois minutes.
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 1 ============================== -->
+<section class="page">
+  <span class="kicker">05 · Guide écran par écran</span>
+  <div class="page-head">
+    <h2>Bienvenue et connexion</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/11-welcome.png" alt="Écran de bienvenue"></div>
+      <div class="shot-cap">Premier lancement : choisir la langue, se connecter ou continuer sans compte.</div>
+    </div>
+    <div class="screen-body">
+      <h3>La porte d'entrée</h3>
+      <div class="route">Route · /welcome</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        Le premier écran que voit un nouvel élève. Il pose le ton en une phrase —
+        suivre chaque note, voir sa moyenne en direct — et propose deux façons
+        d'entrer.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Continuer sans se connecter</strong> crée un profil invité enregistré sur l'appareil. Ni e-mail, ni mot de passe, ni carte.</li>
+        <li><strong>Se connecter</strong> ouvre la fiche de compte pour les élèves qui veulent retrouver leur profil sur plusieurs appareils.</li>
+        <li>Le bouton globe bascule l'interface entre français et anglais avant tout autre choix.</li>
+      </ul>
+
+      <div class="note">
+        <b>Pourquoi c'est important.</b> Le mode invité supprime le principal
+        point d'abandon des applications pour élèves : la création de compte. Un
+        élève peut calculer une moyenne moins d'une minute après l'installation.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 2 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Tableau de bord</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/01-home.png" alt="Tableau de bord"></div>
+      <div class="shot-cap">La vue quotidienne : moyenne, statut, écart à l'objectif et matières à améliorer.</div>
+    </div>
+    <div class="screen-body">
+      <h3>L'écran ouvert chaque jour</h3>
+      <div class="route">Route · /</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        Un résumé unique de l'année : la moyenne actuelle sur 20, une bande de
+        statut, la fourchette visée, la part de l'année déjà saisie et les
+        matières qui méritent attention.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Carte moyenne</strong> — toucher pour ajouter ou modifier les notes d'une matière.</li>
+        <li><strong>Carte objectif</strong> — affiche l'écart en points (« 1,65 point sous votre objectif de 14/20 ») et la bande : au-delà, dans les temps ou en retard.</li>
+        <li><strong>Ce qu'il faut améliorer</strong> — trois matières classées selon les points qu'elles peuvent rapporter, coefficient affiché.</li>
+        <li><strong>Stratégie enregistrée</strong> — si une simulation a été sauvegardée, sa moyenne projetée apparaît ici.</li>
+        <li><strong>Actions rapides</strong> — aller à la bibliothèque, au planning ou au simulateur.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> L'app indique la complétude du relevé — par exemple
+        « 13 notes sur 18 saisies (72 %) » — pour qu'une moyenne partielle ne
+        soit jamais prise pour une moyenne finale.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 3 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Bibliothèque de sujets</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/02-library.png" alt="Bibliothèque de sujets"></div>
+      <div class="shot-cap">Filtres, quota de téléchargement et fiches de sujets avec aperçu réel.</div>
+    </div>
+    <div class="screen-body">
+      <h3>Le catalogue des anciens sujets</h3>
+      <div class="route">Route · /library</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        395 sujets d'examen de 2002 à 2027, chacun étiqueté par matière, niveau,
+        année, type de document et taille de fichier. La première page de chaque
+        sujet sert de vignette : l'élève reconnaît un document avant de l'ouvrir.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Rechercher</strong> par titre ou par matière.</li>
+        <li><strong>Filtrer</strong> par niveau, matière, année et type de document ; le nombre de résultats se met à jour en direct.</li>
+        <li><strong>Prévisualiser</strong> un sujet dans la visionneuse intégrée, sans consommer de téléchargement.</li>
+        <li><strong>Télécharger</strong> un sujet pour le lire hors ligne ; les fiches déjà enregistrées portent la mention « Téléchargé ».</li>
+        <li><strong>Importer</strong> un PDF déjà présent sur le téléphone (Android) dans la même bibliothèque.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> La barre de téléchargement en haut affiche toujours
+        l'allocation mensuelle restante : l'élève n'est jamais surpris par une
+        limite.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 4 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Fiche d'un sujet</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/04-paper-detail.png" alt="Fiche d'un sujet"></div>
+      <div class="shot-cap">Métadonnées, aperçu, téléchargement et outils Premium de la matière.</div>
+    </div>
+    <div class="screen-body">
+      <h3>Tout sur un document</h3>
+      <div class="route">Route · /library/:paperId</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        La fiche d'un sujet unique : matière, niveau, année, type de document,
+        taille du fichier et nombre de téléchargements, suivis des actions dont
+        l'élève a besoin.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Voir</strong> ouvre le PDF immédiatement.</li>
+        <li><strong>Télécharger</strong> l'enregistre sur l'appareil ; une fois stocké, le bouton passe en état de confirmation et le sujet fonctionne hors ligne.</li>
+        <li><strong>Outils Premium</strong> de la matière, juste en dessous : questions clés, thèmes clés, aide-mémoire et solutions étape par étape.</li>
+        <li>Le quota de téléchargement est rappelé ici, car c'est sur cet écran qu'un téléchargement est réellement consommé.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> Les métadonnées rendent la bibliothèque utilisable à
+        cette échelle : l'élève sait que « Devoir surveillé 1er semestre, 1ère D,
+        2027 » est le bon document avant de télécharger 5 Mo.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 5 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Bibliothèque de livres</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/03-books.png" alt="Bibliothèque de livres"></div>
+      <div class="shot-cap">415 livres avec couvertures, filtres par catégorie et par matière.</div>
+    </div>
+    <div class="screen-body">
+      <h3>Des livres, pas seulement des sujets</h3>
+      <div class="route">Route · /library/books</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        Un second catalogue pour les documents longs : programmes officiels,
+        ouvrages de référence, manuels et guides d'étude. Chaque entrée a une
+        couverture, une catégorie, une matière et un niveau.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Filtres</strong> par catégorie (Programme, Référence, Guide d'étude, Manuel), par matière et par niveau.</li>
+        <li><strong>Recherche</strong> par titre ou par auteur.</li>
+        <li><strong>Téléchargement</strong> direct depuis la fiche, ou ouverture de la page du livre pour les détails.</li>
+        <li>Le compteur affiche la taille du catalogue — 415 livres dans cette version.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> Les livres suivent le même quota et les mêmes règles
+        hors ligne que les sujets : l'élève n'a qu'une seule logique à retenir.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 6 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Fiche d'un livre</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/13-book-detail.png" alt="Fiche d'un livre"></div>
+      <div class="shot-cap">Métadonnées, lecture et téléchargement, description et étiquettes.</div>
+    </div>
+    <div class="screen-body">
+      <h3>Un livre, entièrement décrit</h3>
+      <div class="route">Route · /book/:bookId</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        L'équivalent de la fiche sujet pour un livre : matière, auteur, catégorie,
+        année de publication, taille du fichier et nombre de téléchargements,
+        avec une description et des étiquettes.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Voir</strong> ouvre le PDF dans le lecteur.</li>
+        <li><strong>Télécharger le livre</strong> le garde sur l'appareil pour réviser hors ligne.</li>
+        <li><strong>Étiquettes</strong> montrent comment l'ouvrage est classé (catégorie, niveau, matière).</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> La même mise en page sert aux sujets et aux livres :
+        l'app reste prévisible, les actions sont toujours au même endroit.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 7 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Emploi du temps</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/06-schedule.png" alt="Emploi du temps"></div>
+      <div class="shot-cap">Les matières du jour, l'emploi du temps de la semaine et les heures de rappel.</div>
+    </div>
+    <div class="screen-body">
+      <h3>La semaine, organisée</h3>
+      <div class="route">Route · /schedule</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        Un planning hebdomadaire simple, construit autour de l'emploi du temps de
+        l'école. Il répond chaque matin à une seule question : quels livres
+        dois-je emporter aujourd'hui ?
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Aujourd'hui</strong> liste les matières du jour avec une case à cocher quand les livres sont prêts.</li>
+        <li><strong>Emploi du temps</strong> répartit les matières du lundi au vendredi.</li>
+        <li><strong>Rappels</strong> fixent une notification le matin et une le soir.</li>
+        <li>Tout le planning peut être réinitialisé depuis le même écran.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> C'est la fonction que les parents remarquent en
+        premier : elle transforme une calculatrice en habitude quotidienne.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 8 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Simulateur</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/05-simulator.png" alt="Simulateur"></div>
+      <div class="shot-cap">Chaque note manquante devient un curseur ; la moyenne se met à jour en direct.</div>
+    </div>
+    <div class="screen-body">
+      <h3>Voir la moyenne future avant l'examen</h3>
+      <div class="route">Route · /simulator</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        Le simulateur prend chaque note que l'élève n'a pas encore saisie et la
+        transforme en curseur. Déplacer un curseur change la moyenne annuelle
+        projetée en temps réel.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Fixer une valeur</strong> pour chaque composition, interro ou devoir à venir.</li>
+        <li><strong>Comparer</strong> la moyenne projetée à la fourchette visée, affichée en haut.</li>
+        <li><strong>Enregistrer la stratégie</strong> — le scénario est conservé et résumé sur l'accueil.</li>
+        <li>La liste est groupée par matière, avec le coefficient de chacune.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> C'est la fonction qui change le comportement :
+        l'élève voit qu'un 15 en mathématiques pèse plus qu'un 15 dans une
+        matière à coefficient 2, et organise ses révisions en conséquence.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 9 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Fil Actus</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/07-actus.png" alt="Fil Actus"></div>
+      <div class="shot-cap">Publication à la une, recherche, catégories et fil chronologique.</div>
+    </div>
+    <div class="screen-body">
+      <h3>L'actualité et les conseils, dans l'app</h3>
+      <div class="route">Route · /courses</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        Un fil léger pour les annonces : calendriers d'examen, conseils de
+        méthode, nouveaux contenus et messages des partenaires. C'est le canal de
+        communication de l'app avec les élèves.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Publication à la une</strong> en haut, pour l'annonce la plus importante.</li>
+        <li><strong>Recherche</strong> dans toutes les publications.</li>
+        <li><strong>Catégories et niveaux</strong> pour filtrer ce qui est pertinent.</li>
+        <li><strong>Mettre en favori</strong> une publication, et <strong>lire</strong> pour ouvrir le texte complet ou un lien externe.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> Les publications peuvent contenir des images et des
+        liens : une école peut diffuser une annonce qui ressemble à une partie du
+        produit, plutôt qu'à un message perdu dans un groupe WhatsApp.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 10 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Mes téléchargements</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/08-downloads.png" alt="Mes téléchargements"></div>
+      <div class="shot-cap">Quota, espace, fichiers hors ligne et import depuis le téléphone.</div>
+    </div>
+    <div class="screen-body">
+      <h3>L'étagère hors ligne</h3>
+      <div class="route">Route · /my-downloads</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        Tout ce que l'élève a enregistré sur l'appareil, avec l'espace utilisé,
+        l'espace restant et l'allocation mensuelle de téléchargements.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Ouvrir</strong> un sujet ou un livre téléchargé sans connexion.</li>
+        <li><strong>Rechercher et filtrer</strong> par type (tous les éléments, bibliothèque, sujets, livres).</li>
+        <li><strong>Supprimer</strong> un élément pour libérer de l'espace ; le quota n'est pas remboursé.</li>
+        <li><strong>Parcourir les dossiers</strong> (Android) pour importer des PDF venus de l'extérieur.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> L'espace est affiché en chiffres simples — utilisé,
+        libre, nombre d'éléments — car « l'app est pleine » est une raison
+        fréquente pour laquelle les élèves arrêtent de télécharger.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 11 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Préparation d'examen</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/12-quiz.png" alt="Préparation d'examen"></div>
+      <div class="shot-cap">Outils Premium, débloqués par matière ou pour toutes les matières.</div>
+    </div>
+    <div class="screen-body">
+      <h3>Réviser mieux, pas plus longtemps</h3>
+      <div class="route">Route · /quiz</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        Une section Premium qui transforme l'archive de sujets en plan de
+        révision : quelles questions reviennent, quels thèmes comptent, quelles
+        formules retenir et comment rédiger une réponse complète.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Choisir une matière</strong> pour voir son plan de préparation.</li>
+        <li><strong>Les 30 questions</strong> — celles qui apparaissent le plus souvent dans les sujets.</li>
+        <li><strong>Quoi étudier</strong> — un guide priorisé pour la matière.</li>
+        <li><strong>Solutions étape par étape</strong> — la méthode, pas seulement le résultat.</li>
+        <li><strong>Débloquer</strong> avec un code : une matière, ou toutes les matières.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> L'offre gratuite garde la calculatrice, le planning
+        et toute la bibliothèque. Premium ajoute la couche d'interprétation
+        au-dessus des sujets — c'est ce que les écoles et les parents acceptent
+        de payer.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 12 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Profil</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/09-profile.png" alt="Profil"></div>
+      <div class="shot-cap">Identité, fourchette cible, système de notation et matières.</div>
+    </div>
+    <div class="screen-body">
+      <h3>Le dossier de l'élève</h3>
+      <div class="route">Route · /profile</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        L'endroit où le profil derrière chaque calcul est stocké et modifié :
+        nom, niveau, série, semestre, moyenne cible, système de notation et liste
+        des matières avec leurs coefficients.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Modifier les informations</strong> — nom, niveau, série et semestre.</li>
+        <li><strong>Changer la fourchette cible</strong> — par exemple 14 à 20.</li>
+        <li><strong>Gérer les matières</strong> — ajouter, retirer ou créer une matière personnalisée avec son coefficient.</li>
+        <li><strong>Changer de système</strong> — APC par défaut ; les autres systèmes sont signalés comme en cours de travail.</li>
+        <li><strong>Ouvrir Premium</strong> depuis la bannière en haut.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> Modifier un coefficient ici change immédiatement
+        toutes les moyennes de l'app : c'est pourquoi le profil est la source
+        unique de vérité.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 13 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Paramètres</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/10-settings.png" alt="Paramètres"></div>
+      <div class="shot-cap">Apparence, langue, poids des notes, arrondi et données.</div>
+    </div>
+    <div class="screen-body">
+      <h3>Adapter l'app à l'établissement</h3>
+      <div class="route">Route · /settings</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        Toutes les préférences qui influencent l'interprétation des notes, plus
+        les options visuelles et de langue.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Apparence</strong> — thèmes clair, sombre, système, minuit ou encre, plus une couleur d'accent.</li>
+        <li><strong>Langue</strong> — français ou anglais, appliqué instantanément.</li>
+        <li><strong>Poids des évaluations</strong> — poids de l'interro, du devoir et de la composition, et la répartition 40/60 entre contrôle continu et examen.</li>
+        <li><strong>Règles d'arrondi</strong> — exact, standard ou arrondi de l'école.</li>
+        <li><strong>Notifications</strong> — alertes d'objectif, alertes de matière critique et confirmations d'enregistrement.</li>
+        <li><strong>Données</strong> — se déconnecter, effacer les données locales et lire la politique de confidentialité.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> Comme les écoles arrondissent différemment, l'arrondi
+        est un réglage et non une règle figée. Les mêmes notes donnent 13,45 ou
+        13,5 selon ce que l'établissement attend.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 ÉCRAN 14 ============================== -->
+<section class="page">
+  <div class="page-head">
+    <h2>Premium et codes d'activation</h2>
+  </div>
+
+  <div class="screen-layout">
+    <div>
+      <div class="shot"><img src="screens/14-get-code.png" alt="Comment obtenir un code"></div>
+      <div class="shot-cap">Tarifs, parcours revendeur et activation pas à pas.</div>
+    </div>
+    <div class="screen-body">
+      <h3>Ni carte, ni compte bancaire</h3>
+      <div class="route">Route · /premium/how-to-get-code</div>
+
+      <div class="label">Ce que c'est</div>
+      <p>
+        Un guide qui explique comment Premium s'achète dans la réalité : l'élève
+        paie une école ou un revendeur, reçoit un code d'activation et le saisit
+        dans l'app.
+      </p>
+
+      <div class="label">Comment on l'utilise</div>
+      <ul>
+        <li><strong>Consulter les tarifs</strong> — 1 mois, 3 mois, 6 mois ou 12 mois.</li>
+        <li><strong>Demander un code</strong> au secrétariat ou à un revendeur, et payer en espèces.</li>
+        <li><strong>Activer</strong> le code dans l'app ; Premium s'ouvre immédiatement sur ce compte.</li>
+        <li>Chaque code fonctionne sur <strong>deux appareils au maximum</strong> : un élève peut utiliser un téléphone et la tablette familiale.</li>
+      </ul>
+
+      <div class="note">
+        <b>Bon à savoir.</b> Ce parcours est conçu pour les marchés où le
+        paiement par carte est rare : l'argent change de mains hors ligne, et
+        l'app n'a qu'un code court à valider.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 06 NOTATION ============================== -->
+<section class="page">
+  <span class="kicker">06 · Notation</span>
+  <h2>Comment la notation APC fonctionne dans GoStudy</h2>
+  <div class="rule"></div>
+
+  <p class="lead">
+    L'APC ne fait pas une simple moyenne. Chaque matière a un coefficient, chaque
+    type de note a un poids, et l'établissement décide de l'arrondi. GoStudy
+    encode ces règles une fois et les applique de façon constante.
+  </p>
+
+  <div class="cols-2">
+    <div>
+      <h4>Les trois types de notes</h4>
+      <table>
+        <tr><th>Note</th><th>Signification</th><th style="width:14mm">Poids</th></tr>
+        <tr><td><strong>Interro</strong></td><td>Petit contrôle en classe</td><td>1</td></tr>
+        <tr><td><strong>Devoir</strong></td><td>Travail à la maison</td><td>1</td></tr>
+        <tr><td><strong>Composition</strong></td><td>Examen de fin de période</td><td>2</td></tr>
+      </table>
+      <p class="small muted" style="margin-top:2mm">Les poids sont modifiables dans les paramètres.</p>
+    </div>
+    <div>
+      <h4>La chaîne de calcul</h4>
+      <ul class="small">
+        <li>Les notes d'une matière sont combinées selon leur poids.</li>
+        <li>La moyenne de la matière est multipliée par son coefficient.</li>
+        <li>Les résultats pondérés sont additionnés puis divisés par le total des coefficients.</li>
+        <li>La règle d'arrondi (exact, standard ou école) s'applique en dernier.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="cols-2">
+    <div class="card soft">
+      <h4>Des fourchettes, pas un chiffre unique</h4>
+      <p class="small" style="margin-bottom:0">
+        L'élève fixe une fourchette, par exemple 14–20. L'app compare la moyenne
+        actuelle à la borne basse, donne l'écart en points et un statut :
+        <strong>au-delà</strong>, <strong>dans les temps</strong>,
+        <strong>en retard</strong> ou <strong>pas encore de données</strong>.
+      </p>
+    </div>
+    <div class="card soft">
+      <h4>De l'impact, pas des opinions</h4>
+      <p class="small" style="margin-bottom:0">
+        Le classement des progrès multiplie les points qu'une matière peut
+        rapporter par son coefficient. C'est pourquoi une matière à coefficient 4
+        apparaît avant une matière à coefficient 2, même quand les deux sont
+        aussi faibles.
+      </p>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Pourquoi c'est décisif commercialement.</b> Le moteur de notation est la
+    partie qu'une école ne peut pas reproduire facilement avec un tableur, et
+    c'est ce qui permet de lui confier les résultats d'une année.
+  </div>
+</section>
+
+<!-- ============================== 07 CONTENU ============================== -->
+<section class="page">
+  <span class="kicker">07 · Bibliothèque de contenu</span>
+  <h2>395 sujets et 415 livres, étiquetés pour un usage réel</h2>
+  <div class="rule"></div>
+
+  <div class="cols-2">
+    <div>
+      <h4>Sujets par type de document</h4>
+      <table>
+        <tr><th>Type</th><th style="width:14mm">Nombre</th></tr>
+        <tr><td>Séries d'entraînement</td><td>131</td></tr>
+        <tr><td>Compositions</td><td>71</td></tr>
+        <tr><td>BEPC</td><td>40</td></tr>
+        <tr><td>Baccalauréat</td><td>39</td></tr>
+        <tr><td>CEPD</td><td>34</td></tr>
+        <tr><td>Devoirs</td><td>26</td></tr>
+        <tr><td>Probatoire</td><td>18</td></tr>
+        <tr><td>Concours</td><td>11</td></tr>
+        <tr><td>Annales</td><td>10</td></tr>
+        <tr><td>Révision</td><td>9</td></tr>
+        <tr><td>CAP</td><td>6</td></tr>
+      </table>
+    </div>
+    <div>
+      <h4>Couverture</h4>
+      <ul class="small">
+        <li><strong>Années :</strong> de 2002 à 2027 — dont 313 sujets de 2026.</li>
+        <li><strong>Matières :</strong> 16, dont mathématiques, PCT, SVT, français, anglais, histoire-géographie, philosophie, économie, allemand, espagnol, musique, informatique et EPS.</li>
+        <li><strong>Niveaux :</strong> de la 6ème à la Terminale, séries A, C, D et G.</li>
+        <li><strong>Livres :</strong> 338 références, 42 programmes officiels, 18 manuels et 17 guides d'étude.</li>
+        <li><strong>Poids :</strong> 2,03 Go au total, diffusés à la demande plutôt qu'embarqués.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="stats">
+    <div class="stat"><b>16</b><span>matières</span></div>
+    <div class="stat"><b>313</b><span>sujets 2026</span></div>
+    <div class="stat"><b>415</b><span>livres</span></div>
+    <div class="stat"><b>2,03<span style="font-size:11pt"> Go</span></b><span>au total</span></div>
+  </div>
+
+  <div class="note">
+    <b>Chaîne de contenu.</b> Chaque document est catalogué avec un titre, une
+    matière, un niveau, une année, un type et une image d'aperçu avant d'arriver
+    dans l'app. Ce sont ces métadonnées qui rendent la recherche et les filtres
+    fiables à cette échelle.
+  </div>
+</section>
+
+<!-- ============================== 08 OFFRES ============================== -->
+<section class="page">
+  <span class="kicker">08 · Gratuit et Premium</span>
+  <h2>Une offre gratuite réellement utile, et une offre Premium que les écoles peuvent vendre</h2>
+  <div class="rule"></div>
+
+  <table>
+    <tr><th style="width:46mm">Ce que vous obtenez</th><th style="width:30mm">Gratuit</th><th>Premium</th></tr>
+    <tr><td>Matières dans le profil</td><td><strong>3</strong></td><td>Illimité</td></tr>
+    <tr><td>Téléchargements dans la bibliothèque</td><td><strong>5 par mois</strong></td><td>Illimité</td></tr>
+    <tr><td>Calcul de moyenne, objectif, simulateur</td><td>Inclus</td><td>Inclus</td></tr>
+    <tr><td>Emploi du temps et rappels</td><td>Inclus</td><td>Inclus</td></tr>
+    <tr><td>Bibliothèque de sujets et de livres</td><td>Inclus</td><td>Inclus</td></tr>
+    <tr><td>Fil Actus</td><td>Inclus</td><td>Inclus</td></tr>
+    <tr><td>Outils de préparation d'examen</td><td>—</td><td>Inclus</td></tr>
+    <tr><td>Historique des semestres</td><td>—</td><td>Inclus</td></tr>
+    <tr><td>Appareils par code d'activation</td><td>Aucune limite</td><td><strong>2</strong></td></tr>
+  </table>
+
+  <div class="divider"></div>
+
+  <h4>Tarifs Premium</h4>
+  <table>
+    <tr><th>Durée</th><th style="width:34mm">Prix</th><th>Remarques</th></tr>
+    <tr><td>1 mois</td><td><strong>1 500 FCFA</strong></td><td>Offre d'entrée</td></tr>
+    <tr><td>3 mois</td><td>4 500 FCFA</td><td>Un trimestre</td></tr>
+    <tr><td>6 mois</td><td>9 000 FCFA</td><td>Deux trimestres</td></tr>
+    <tr><td>12 mois</td><td><strong>18 000 FCFA</strong></td><td>Meilleur rapport, couvre l'année scolaire</td></tr>
+    <tr><td>Une matière</td><td>500 FCFA</td><td>Accès à vie aux outils de cette matière</td></tr>
+    <tr><td>Toutes les matières</td><td>1 500 FCFA</td><td>Accès à vie à toutes les matières</td></tr>
+  </table>
+
+  <div class="note">
+    <b>Distribution.</b> Les codes sont vendus par les écoles et les revendeurs,
+    pas par carte. Un code active Premium sur le compte qui l'utilise et
+    fonctionne sur deux appareils au maximum, ce qui correspond à la façon dont
+    les familles partagent téléphones et tablettes.
+  </div>
+</section>
+
+<!-- ============================== 09 HORS LIGNE ============================== -->
+<section class="page">
+  <span class="kicker">09 · Hors ligne, appareils et langues</span>
+  <h2>Fonctionne sur le téléphone que l'élève possède déjà</h2>
+  <div class="rule"></div>
+
+  <div class="cols-2">
+    <div class="card">
+      <h4>Android</h4>
+      <p class="small">
+        Une installation de 13,8 Mo. Tout le catalogue est consultable, les
+        sujets se téléchargent à la demande et les fichiers enregistrés s'ouvrent
+        sans connexion. Les PDF peuvent aussi être importés depuis d'autres
+        dossiers du téléphone.
+      </p>
+    </div>
+    <div class="card">
+      <h4>Web</h4>
+      <p class="small">
+        Le même produit dans un navigateur, pour les salles informatiques et les
+        élèves qui n'ont pas la place pour une application de plus. L'interface
+        s'adapte aux largeurs de téléphone et d'ordinateur.
+      </p>
+    </div>
+  </div>
+
+  <div class="cols-2">
+    <div class="card">
+      <h4>Windows</h4>
+      <p class="small">
+        Une version de bureau avec le catalogue inclus : la bibliothèque est
+        disponible dès le premier lancement, avant tout téléchargement. Un
+        installateur de 168,5 Mo et une version portable de 137 Mo sont produits
+        à partir du même code.
+      </p>
+    </div>
+    <div class="card">
+      <h4>Langues</h4>
+      <p class="small">
+        Français et anglais sur tous les écrans, changeables dans les paramètres
+        et sur l'écran de bienvenue. Le français est la langue par défaut du
+        marché APC.
+      </p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h4>Comportement hors ligne</h4>
+  <table>
+    <tr><th style="width:44mm">Situation</th><th>Ce que voit l'élève</th></tr>
+    <tr><td>Pas de connexion, rien de téléchargé</td><td>La bibliothèque et les Actus affichent un message clair avec une action de réessai ; la calculatrice et le planning continuent de fonctionner.</td></tr>
+    <tr><td>Pas de connexion, fichiers téléchargés</td><td>Les sujets et livres enregistrés s'ouvrent normalement ; l'écran des téléchargements fonctionne comme d'habitude.</td></tr>
+    <tr><td>La connexion revient</td><td>Le catalogue se rafraîchit automatiquement ; les nouveaux sujets apparaissent sans réinstallation.</td></tr>
+    <tr><td>Bureau Windows</td><td>Le catalogue est livré avec l'app et actualisé en arrière-plan ; les fichiers ouverts récemment sont mis en cache sur l'appareil.</td></tr>
+  </table>
+</section>
+
+<!-- ============================== 10 SYSTÈMES ============================== -->
+<section class="page">
+  <span class="kicker">10 · Systèmes et feuille de route</span>
+  <h2>L'APC est prêt. Le reste est annoncé honnêtement.</h2>
+  <div class="rule"></div>
+
+  <table>
+    <tr><th style="width:38mm">Système</th><th style="width:38mm">État</th><th>Ce qui existe aujourd'hui</th></tr>
+    <tr>
+      <td><strong>APC</strong></td>
+      <td><span class="pill live">En ligne</span></td>
+      <td>Moteur de notation complet, coefficients, répartition 40/60, suivi de l'objectif, simulateur et catalogue complet de 395 sujets et 415 livres.</td>
+    </tr>
+    <tr>
+      <td><strong>Français traditionnel</strong></td>
+      <td><span class="pill soon">En développement</span></td>
+      <td>La structure de notation et les écrans existent dans le produit, mais le catalogue et les règles propres aux établissements ne sont pas terminés. Non vendu comme un système fini.</td>
+    </tr>
+    <tr>
+      <td><strong>WAEC / NECO</strong></td>
+      <td><span class="pill soon">En développement</span></td>
+      <td>Prévu comme un modèle de notation et un ensemble de contenus distincts. Aucun sujet WAEC n'est encore dans la bibliothèque.</td>
+    </tr>
+    <tr>
+      <td><strong>GPA universitaire nigérian</strong></td>
+      <td><span class="pill soon">Début</span></td>
+      <td>Un calculateur GPA/CGPA existe à l'état exploratoire. Il ne fait pas partie de l'offre APC.</td>
+    </tr>
+  </table>
+
+  <div class="divider"></div>
+
+  <h4>La suite</h4>
+  <div class="cols-2">
+    <div>
+      <ul class="small">
+        <li><strong>Menu Cours</strong> — des leçons structurées à côté de la bibliothèque de sujets, prévues dans une prochaine version.</li>
+        <li><strong>Système français</strong> — terminer les règles de notation et ajouter les sujets du système français.</li>
+        <li><strong>WAEC / NECO</strong> — construire le modèle de notation et le catalogue correspondant.</li>
+      </ul>
+    </div>
+    <div>
+      <ul class="small">
+        <li><strong>Tableau de bord école</strong> — progression agrégée par classe, pour les écoles qui distribuent des codes.</li>
+        <li><strong>Plus d'outils</strong> — plans de révision plus profonds par matière et par session d'examen.</li>
+        <li><strong>Croissance du contenu</strong> — plus d'années, plus de séries, plus de livres.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Notre position.</b> Nous préférons livrer un système juste plutôt que trois
+    approximatifs. L'APC est complet ; les autres sont sur la feuille de route et
+    sont décrits comme tels partout dans le produit.
+  </div>
+</section>
+
+<!-- ============================== 11 CONFIDENTIALITÉ ============================== -->
+<section class="page">
+  <span class="kicker">11 · Confidentialité et confiance</span>
+  <h2>Les notes sont personnelles. L'app les traite comme telles.</h2>
+  <div class="rule"></div>
+
+  <div class="cols-2">
+    <div>
+      <h4>Ce que l'app demande</h4>
+      <ul class="small">
+        <li>Un nom (un prénom suffit).</li>
+        <li>Le niveau, la série et le semestre.</li>
+        <li>Une moyenne cible et une liste de matières.</li>
+      </ul>
+      <p class="small">
+        Aucun numéro de téléphone, aucune position, aucun contact, aucune caméra
+        et aucune donnée bancaire ne sont nécessaires pour utiliser l'app.
+      </p>
+    </div>
+    <div>
+      <h4>Ce que l'app ne fait pas</h4>
+      <ul class="small">
+        <li>Elle ne vend pas les données des élèves.</li>
+        <li>Elle n'utilise pas les données des élèves pour de la publicité ciblée.</li>
+        <li>Elle n'exige pas de compte pour calculer une moyenne.</li>
+      </ul>
+      <p class="small">
+        Les profils invités restent sur l'appareil. Un élève qui ne se connecte
+        jamais garde toutes ses notes en local.
+      </p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="card accent">
+    <h4>Pensé pour une conversation avec l'école</h4>
+    <p class="small" style="margin-bottom:0">
+      La politique de confidentialité est rédigée en langage clair et accessible
+      depuis les paramètres et depuis la fiche du store. Pour un pilote dans un
+      établissement, la promesse utile est simple : l'app ne demande rien à un
+      élève qu'une école ne possède déjà, et elle garde le dossier scolaire sur
+      l'appareil sauf si l'élève choisit de se connecter.
+    </p>
+  </div>
+
+  <div class="divider"></div>
+
+  <h4>Accessibilité et inclusion</h4>
+  <ul class="small">
+    <li>Grandes zones tactiles, thèmes à fort contraste et mode sombre pour réviser le soir.</li>
+    <li>Fonctionne sur des Android peu coûteux et sur un téléphone familial partagé.</li>
+    <li>Deux langues, l'interface changeable à tout instant.</li>
+    <li>Pensé hors ligne : une connexion faible ralentit l'app, elle ne la bloque pas.</li>
+  </ul>
+</section>
+
+<!-- ============================== CLÔTURE ============================== -->
+<section class="page closing">
+  <div style="max-width:150mm">
+    <span class="kicker" style="color:#8fd6f7">GoStudy · 2026</span>
+    <h2>Une app. Chaque note. Chaque sujet.</h2>
+    <p style="margin-top:5mm;font-size:12pt">
+      GoStudy fait déjà le plus difficile : il calcule correctement les moyennes
+      APC, les transforme en conseils et met 810 documents dans la poche d'un
+      élève. Le prochain chapitre, c'est la portée — plus d'écoles, plus de
+      systèmes, plus de langues.
+    </p>
+
+    <div class="card" style="margin-top:10mm">
+      <h3 style="color:#fff">En un coup d'œil</h3>
+      <div class="cols-2" style="margin-top:3mm">
+        <div class="small">
+          <p style="margin-bottom:1mm"><strong>395</strong> sujets · 2002–2027</p>
+          <p style="margin-bottom:1mm"><strong>415</strong> livres · 2,03 Go</p>
+          <p style="margin-bottom:1mm"><strong>16</strong> matières · 11 types de documents</p>
+        </div>
+        <div class="small">
+          <p style="margin-bottom:1mm"><strong>Android · Web · Windows</strong></p>
+          <p style="margin-bottom:1mm"><strong>Français · Anglais</strong></p>
+          <p style="margin-bottom:1mm"><strong>Offre gratuite · Codes Premium</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:14mm;border-top:1px solid rgba(255,255,255,.2);padding-top:6mm" class="small">
+      <p style="color:#8fa6bd;margin-bottom:0">
+        Préparé pour les investisseurs et les partenaires · Novembre 2026 · Version 1.3.4<br>
+        Captures prises sur la version livrée. Tarifs et offres tels que publiés
+        dans l'app au moment de la rédaction.
+      </p>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
